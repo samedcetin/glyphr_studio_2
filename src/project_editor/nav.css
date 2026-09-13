@@ -152,6 +152,19 @@ nav[id^='nav-dropdown']:focus {
 	outline: 0;
 }
 
+/*
+	The character chooser. Its width comes from its grid and its height is
+	capped so it is a menu rather than a second window - it used to open at
+	80% of the viewport in both directions.
+*/
+#nav-dropdown-chooser {
+	width: max-content;
+	min-width: 0;
+	max-width: none;
+	max-height: min(460px, calc(100vh - 120px));
+	overflow: hidden;
+}
+
 #nav-dropdown-page {
 	padding: var(--sp-2);
 }

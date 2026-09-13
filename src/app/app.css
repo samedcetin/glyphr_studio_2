@@ -260,6 +260,33 @@
 	min-width: 84px;
 }
 
+/*
+	The character itself, in the app's UI face rather than the font being
+	edited - the breadcrumb is chrome, and a glyph you are halfway through
+	drawing is not a label you can read.
+*/
+.breadcrumb__glyph {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+/*
+	What the letterform on its own cannot say. A, Alpha and the Cyrillic A are
+	one shape and three characters; this is the part that tells them apart, so
+	it is quiet but it is not optional.
+*/
+/* A little air between the letterform and its number - the button's own
+	gap is 2px, which is right for a word and its chevron and too tight for
+	two things that are not the same kind of thing. */
+.breadcrumb__codepoint {
+	margin-left: var(--sp-1);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
 .breadcrumb__button:hover {
 	background-color: var(--bg-hover);
 	border-color: transparent;

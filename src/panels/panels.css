@@ -54,11 +54,21 @@
 	line-height: 24px;
 }
 
+/*
+	`color`, not `fill`, and the canvas tokens rather than a hard-coded white.
+
+	The path inside carries fill="currentColor", and a `fill` set on the <svg>
+	is inherited - which loses to a presentation attribute on the element
+	itself. So the declaration did nothing and currentColor resolved to what it
+	inherited from the button: white, on a white plate. The thumbnail has been
+	drawing itself invisibly.
+*/
 .thumbnail-button svg {
-	background-color: white;
-	border: 1px solid var(--enabled-restingLight-border);
-	fill: var(--enabled-resting-fill);
-	border-radius: 4px;
+	background-color: var(--canvas-bg);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	color: var(--canvas-ink);
 	width: 24px;
 	height: 24px;
 	margin-bottom: -7px;
@@ -102,7 +112,7 @@
 
 .thumbnail-button:hover svg,
 .thumbnail-button:active svg {
-	fill: var(--enabled-resting-text);
+	border-color: var(--border-default);
 }
 
 .panel__card.full-width,
@@ -458,6 +468,92 @@
 nav .item-chooser__wrapper {
 	padding: 20px;
 	margin-top: 5px;
+}
+
+/* --------------------------------------------------------------
+	Compact item chooser
+
+	The character dropdown behind the breadcrumb. See
+	makeSingleItemTypeChooserContent for why it is built this way rather than
+	as the Characters page at 80% of the window.
+	------------------------------------------------------------ */
+
+nav .item-chooser__wrapper--compact {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
+	gap: var(--sp-4);
+	padding: 0;
+	margin: 0;
+	background-color: transparent;
+	min-height: 0;
+}
+
+.item-chooser__wrapper--compact .item-chooser__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-4);
+	padding: var(--sp-2) var(--sp-3) 0 var(--sp-3);
+}
+
+.item-chooser__wrapper--compact .item-chooser__header option-chooser {
+	width: auto;
+	min-width: 0;
+	flex: 1 1 auto;
+	max-width: 240px;
+}
+
+/* How many are in the range you are looking at - the answer to "is this all
+	of them", which a grid that scrolls cannot give you. */
+.item-chooser__count {
+	flex: 0 0 auto;
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/*
+	Ten columns of 40, which is what sets the dropdown's width - the grid
+	decides how wide the menu is, rather than the window deciding how wide the
+	grid is.
+*/
+.item-chooser__wrapper--compact .item-chooser__tile-grid {
+	display: grid;
+	grid-template-columns: repeat(10, 40px);
+	gap: var(--sp-1);
+	justify-content: start;
+	padding: 0 var(--sp-3);
+	/* Room for the scrollbar, always - so the last column does not shift
+		sideways the moment a range is long enough to scroll. */
+	scrollbar-gutter: stable;
+	overflow-y: auto;
+	min-height: 0;
+}
+
+.item-chooser__wrapper--compact .item-chooser__tile-grid glyph-tile {
+	display: block;
+	margin: 0;
+}
+
+/*
+	The handoff. This control is for browsing; the palette is for finding, and
+	it already searches every character by name, by the character itself and by
+	its id. Saying so is cheaper than building a second search.
+*/
+.item-chooser__footer {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	padding: var(--sp-3) var(--sp-3) var(--sp-2) var(--sp-3);
+	border-top: 1px solid var(--border-subtle);
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+}
+
+.item-chooser__footer code {
+	min-width: 20px;
+	height: 20px;
 }
 
 .content-page__right-area .item-chooser__wrapper {

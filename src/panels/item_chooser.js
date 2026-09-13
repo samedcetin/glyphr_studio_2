@@ -86,11 +86,38 @@ export function makeSingleItemTypeChooserContent(itemPageName, clickHandler) {
 			})
 		);
 	} else {
-		// Character Chooser
-		let header = makeElement({ tag: 'div', className: 'item-chooser__header' });
-		wrapper.appendChild(header);
+		/*
+			Character chooser, as it appears in the breadcrumb's dropdown.
+
+			It used to be the Characters page at 80% of the window - 1300px by
+			530 to pick one letter - with no way to find anything in it other
+			than reading. Ctrl+K already searches every character by name, by
+			the character itself and by its id, so searching is not this
+			control's job. Browsing is: seeing which glyphs are drawn and which
+			are still empty, and stepping to a neighbour. So it is sized to its
+			grid, the tiles are the letterforms and nothing else, and the way to
+			the search is written at the bottom.
+		*/
+		wrapper.classList.add('item-chooser__wrapper--compact');
+		const editor = getCurrentProjectEditor();
+		const count = editor.selectedCharacterRange?.getMemberIDs()?.length || 0;
+
+		const header = makeElement({ tag: 'div', className: 'item-chooser__header' });
 		header.appendChild(makeRangeChooser());
-		wrapper.appendChild(makeCharacterChooserTileGrid());
+		header.appendChild(
+			makeElement({
+				className: 'item-chooser__count',
+				content: `${count} character${count === 1 ? '' : 's'}`,
+			})
+		);
+		wrapper.appendChild(header);
+		wrapper.appendChild(makeCharacterChooserTileGrid(editor, true));
+		wrapper.appendChild(
+			makeElement({
+				className: 'item-chooser__footer',
+				innerHTML: `Somewhere else? Search every character with <code>Ctrl</code><code>K</code>`,
+			})
+		);
 	}
 
 	// log(`makeSingleItemTypeChooserContent`, 'end');
@@ -225,7 +252,7 @@ function addRangeOptionsToOptionChooser(optionChooser, editor = getCurrentProjec
 	// log(`addRangeOptionsToOptionChooser`, 'end');
 }
 
-function makeCharacterChooserTileGrid(editor = getCurrentProjectEditor()) {
+function makeCharacterChooserTileGrid(editor = getCurrentProjectEditor(), compact = false) {
 	// log(`makeCharacterChooserTileGrid`, 'start');
 	// console.time('makeCharacterChooserTileGrid');
 	// log(`Project Name: ${editor.project.settings.project.name}`);
@@ -245,6 +272,9 @@ function makeCharacterChooserTileGrid(editor = getCurrentProjectEditor()) {
 			const glyphID = `glyph-${charID}`;
 			// log(`glyphID: ${glyphID}`);
 			let oneTile = new GlyphTile({ 'displayed-item-id': glyphID, project: editor.project });
+			// In the breadcrumb's dropdown the tile is the letterform and nothing
+			// else - see :host([compact]) in glyph-tile.css.
+			if (compact) oneTile.setAttribute('compact', '');
 			if (isPrimaryProject && editor.selectedGlyphID === glyphID) {
 				oneTile.setAttribute('selected', '');
 			}

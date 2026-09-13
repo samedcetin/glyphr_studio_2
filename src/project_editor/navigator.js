@@ -2,6 +2,7 @@ import { showAppErrorPage } from '../app/app.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeLeftRail } from '../app/left_rail.js';
 import { accentColors } from '../common/colors.js';
+import { hexesToChars } from '../common/character_ids.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
 import { makeIcon } from '../common/graphics.js';
@@ -259,7 +260,7 @@ export function makeBreadcrumb() {
 			id: 'nav-button-l2',
 			className: 'breadcrumb__button breadcrumb__button--item',
 			attributes: { type: 'button', 'data-nav-type': 'EDITING', title: itemName },
-			innerHTML: `<span>${itemName}</span>${breadcrumbChevron}`,
+			innerHTML: makeItemLabel(editor, itemName) + breadcrumbChevron,
 		});
 		itemButton.addEventListener('click', () => toggleNavDropdown(itemButton));
 		wrapper.appendChild(itemButton);
@@ -275,7 +276,7 @@ export function makeBreadcrumb() {
 			callback: () => {
 				if (!itemButton.isConnected) return;
 				const newName = editor.project.getItemName(editor.selectedItemID || '', true);
-				itemButton.querySelector('span').textContent = newName;
+				itemButton.innerHTML = makeItemLabel(editor, newName) + breadcrumbChevron;
 				itemButton.setAttribute('title', newName);
 			},
 		});
@@ -285,6 +286,33 @@ export function makeBreadcrumb() {
 }
 
 const breadcrumbChevron = `<svg class="breadcrumb__chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/**
+ * What the breadcrumb says about the thing being edited.
+ *
+ * For a character, the character and its code point rather than its Unicode
+ * name. "Latin Capital Letter A" spent 142px of a 330px bar saying "A", and
+ * the full name is already on screen, in Character Info on the right. The
+ * code point comes with it because the letterform alone is not an answer: A,
+ * Alpha and the Cyrillic A are the same shape and three different characters.
+ *
+ * Everything else - ligatures, components, kern groups - has no code point
+ * and a name someone chose, so it keeps the name.
+ *
+ * @param {Object} editor - the project editor
+ * @param {String} itemName - the long name, used as the fallback
+ * @returns {String} - markup for the button's label
+ */
+function makeItemLabel(editor, itemName) {
+	const id = editor.selectedItemID || '';
+	const hex = id.startsWith('glyph-') ? id.replace('glyph-', '') : '';
+	const chars = hex ? hexesToChars(hex) : '';
+
+	if (!hex || !chars) return `<span>${itemName}</span>`;
+
+	const codePoint = `U+${hex.replace(/^0x/i, '').toUpperCase().padStart(4, '0')}`;
+	return `<span class="breadcrumb__glyph">${chars}</span><span class="breadcrumb__codepoint">${codePoint}</span>`;
+}
 
 export function makeNavButton(properties = {}) {
 	let title = properties.title || 't i t l e';
@@ -380,10 +408,16 @@ export function showNavDropdown(parentElement) {
 			closeAllNavMenus();
 		});
 
-		if (
+		if (editor.nav.page === 'Characters') {
+			/*
+				The character grid decides how wide this is - ten columns of
+				forty - rather than the window deciding how wide the grid is.
+				See #nav-dropdown-chooser in nav.css.
+			*/
+			size = '';
+		} else if (
 			(editor.nav.page === 'Ligatures' && countItems(project.ligatures) > 25) ||
-			(editor.nav.page === 'Components' && countItems(project.components) > 25) ||
-			editor.nav.page === 'Characters'
+			(editor.nav.page === 'Components' && countItems(project.components) > 25)
 		) {
 			size = '80%';
 		} else {

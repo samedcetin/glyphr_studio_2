@@ -582,8 +582,16 @@ export class GlyphrStudioProject {
 		// log(`itemWidth: ${itemWidth}`);
 		// log(svg);
 
+		/*
+			The size argument now reaches the markup. It was computing every
+			coordinate from `size` and then writing width="50px" height="50px"
+			regardless, so any caller passing anything else got a drawing laid
+			out for one box inside another. And with no viewBox there was
+			nothing to scale against: sizing the element in CSS moved the frame
+			and left the drawing where it was, which cropped it.
+		*/
 		let re = `
-		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="50px" height="50px">
+		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${size}px" height="${size}px" viewBox="0 0 ${size} ${size}">
 			<path
 				fill="currentColor"
 				transform="translate(${translateX},${translateY}) scale(${scale}, -${scale})"
