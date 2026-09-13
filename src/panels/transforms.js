@@ -1,7 +1,6 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
 import { clone, rad } from '../common/functions.js';
-import { Path } from '../project_data/path.js';
 
 // --------------------------------------------------------------
 // Transforms panel
@@ -103,28 +102,10 @@ function makeSkewCard() {
 	skewAngleApplyButton.addEventListener('click', () => {
 		const editor = getCurrentProjectEditor();
 		const skewAngle = Number(skewInput.getAttribute('value'));
-		let selShapes = editor.multiSelect.shapes.members;
-		let newShapes = [];
-		selShapes.forEach((shape) => {
-			if (shape.objType === 'Path') {
-				let newPath = new Path(shape);
-				newPath.skewAngle(skewAngle);
-				newShapes.push(newPath);
-			}
-		});
+		const count = skewSelectedPaths(editor, 'skewAngle', skewAngle);
 
-		editor.multiSelect.shapes.deleteShapes(false);
-
-		editor.multiSelect.shapes.clear();
-
-		newShapes.forEach((shape) => {
-			const addedShape = editor.selectedItem.addOneShape(shape);
-			editor.multiSelect.shapes.add(addedShape);
-		});
-
-		// Placeholder for now - just log the action
 		editor.history.addState(
-			`Skew ${selShapes.length} ${selShapes.length === 1 ? 'shape' : 'shapes'} by ${skewAngle}°`
+			`Skew ${count} ${count === 1 ? 'shape' : 'shapes'} by ${skewAngle}°`
 		);
 		editor.publish('currentItem', editor.selectedItem);
 	});
@@ -132,27 +113,10 @@ function makeSkewCard() {
 	skewDistanceApplyButton.addEventListener('click', () => {
 		const editor = getCurrentProjectEditor();
 		const skewDistance = Number(skewDistanceInput.getAttribute('value'));
-		let selShapes = editor.multiSelect.shapes.members;
-		let newShapes = [];
-		selShapes.forEach((shape) => {
-			if (shape.objType === 'Path') {
-				let newPath = new Path(shape);
-				newPath.skewDistance(skewDistance);
-				newShapes.push(newPath);
-			}
-		});
-
-		editor.multiSelect.shapes.deleteShapes(false);
-
-		editor.multiSelect.shapes.clear();
-
-		newShapes.forEach((shape) => {
-			const addedShape = editor.selectedItem.addOneShape(shape);
-			editor.multiSelect.shapes.add(addedShape);
-		});
+		const count = skewSelectedPaths(editor, 'skewDistance', skewDistance);
 
 		editor.history.addState(
-			`Skew ${selShapes.length} ${selShapes.length === 1 ? 'shape' : 'shapes'} by ${skewDistance}em`
+			`Skew ${count} ${count === 1 ? 'shape' : 'shapes'} by ${skewDistance}em`
 		);
 		editor.publish('currentItem', editor.selectedItem);
 	});
@@ -211,27 +175,41 @@ function makeOffsetCard() {
 
 	offsetPathApplyButton.addEventListener('click', () => {
 		const editor = getCurrentProjectEditor();
-		const offsetDistance = offsetPathInput.getAttribute('value');
-		let selShapes = editor.multiSelect.shapes.members;
-		let newShapes = [];
+		/*
+			Number, not the raw attribute. This one handed a string to the offset
+			maths, where only the unary minus in the counter-clockwise branch
+			coerced it back.
+		*/
+		const offsetDistance = Number(offsetPathInput.getAttribute('value'));
+		const item = editor.selectedItem;
+		/* A copy - the loop rewrites the selection as it goes. */
+		const selShapes = editor.multiSelect.shapes.members.slice();
+		const newSelection = [];
+		let count = 0;
+
 		selShapes.forEach((shape) => {
-			if (shape.objType === 'Path') {
-				const newPolySegment = shape.makePolySegment().makeOffsetPolySegment(offsetDistance);
-				newShapes.push(newPolySegment.path);
+			const index = item.shapes.indexOf(shape);
+			if (shape.objType !== 'Path' || index === -1) {
+				newSelection.push(shape);
+				return;
 			}
+
+			/*
+				Offsetting does produce a new path, so this one is a replacement -
+				but a replacement at the same index, not a delete and an append.
+			*/
+			const offsetShape = shape.makePolySegment().makeOffsetPolySegment(offsetDistance).path;
+			offsetShape.name = shape.name;
+			offsetShape.parent = item;
+			item.shapes[index] = offsetShape;
+			newSelection.push(offsetShape);
+			count++;
 		});
 
-		editor.multiSelect.shapes.deleteShapes(false);
-
-		editor.multiSelect.shapes.clear();
-
-		newShapes.forEach((shape) => {
-			const addedShape = editor.selectedItem.addOneShape(shape);
-			editor.multiSelect.shapes.add(addedShape);
-		});
-
+		item.changed();
+		editor.multiSelect.shapes.members = newSelection;
 		editor.history.addState(
-			`Offset path for ${selShapes.length} ${selShapes.length === 1 ? 'shape' : 'shapes'}`
+			`Offset path for ${count} ${count === 1 ? 'shape' : 'shapes'}`
 		);
 		editor.publish('currentItem', editor.selectedItem);
 	});
@@ -311,6 +289,35 @@ function makeRotationCard() {
 // --------------------------------------------------------------
 // Helpers
 // --------------------------------------------------------------
+
+/**
+ * Skew every selected path, in place.
+ *
+ * This used to build a new Path per shape, delete the originals, and append
+ * the copies - which quietly moved every skewed shape to the top of the
+ * stack. Skew a path that sits behind another and it jumped in front of it,
+ * and undo did not put it back. Path.skewAngle and Path.skewDistance both
+ * mutate the path they are called on, so there was never anything to
+ * replace.
+ *
+ * @param {Object} editor - the current project editor
+ * @param {String} method - 'skewAngle' or 'skewDistance'
+ * @param {Number} amount - degrees, or em units travelled by the top edge
+ * @returns {Number} how many paths were skewed
+ */
+function skewSelectedPaths(editor, method, amount) {
+	let count = 0;
+
+	editor.multiSelect.shapes.members.forEach((shape) => {
+		/* A component instance has no outline of its own to skew. */
+		if (shape.objType !== 'Path') return;
+		shape[method](amount);
+		count++;
+	});
+
+	if (count) editor.selectedItem.changed();
+	return count;
+}
 
 function updateApplyButtion(baseID = '') {
 	// log(`updateApplyButton`, 'start');
