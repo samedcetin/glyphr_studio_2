@@ -35,7 +35,7 @@
 	min-width: 0;
 }
 
-.numberInput:focus,
+.field:focus-within,
 .arrowWrapper:focus,
 .upArrow:focus,
 .downArrow:focus,
@@ -44,18 +44,40 @@
 	outline-offset: -1px;
 }
 
-/* Number input */
-.numberInput {
+/*
+	The field: the input, and whatever says what it is.
+
+	The plate - background, border, corner - is here rather than on the input,
+	because a prefix or a suffix has to sit inside it and read as part of the
+	same control rather than as a separate box alongside.
+*/
+.field {
+	grid-column: 1;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	min-width: var(--number-input-min-w, 50px);
 	background-color: var(--bg-surface-sunken);
-	color: var(--text-primary);
-	border-style: solid;
-	border-width: 1px;
-	border-color: var(--border-strong);
+	border: 1px solid var(--border-strong);
 	border-right-color: transparent;
 	border-radius: var(--r-md) 0 0 var(--r-md);
 	corner-shape: var(--corner-smooth);
-	grid-column: 1;
-	min-width: var(--number-input-min-w, 50px);
+}
+
+.field:hover,
+.field:focus-within {
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
+}
+
+/* Number input */
+.numberInput {
+	background-color: transparent;
+	color: var(--text-primary);
+	border: 0;
+	outline: none;
+	min-width: 0;
+	height: 100%;
 	padding: 0 var(--sp-3);
 	text-align: right;
 	font-family: var(--font-mono);
@@ -63,28 +85,60 @@
 	font-size: var(--fs-sm);
 }
 
-.numberInput:hover,
-.numberInput:active,
-.numberInput:focus {
-	background-color: var(--bg-surface);
-	border-color: var(--accent);
-	color: var(--text-primary);
+/*
+	An affix names the field or its unit: "X", "em", an angle mark. Figma's
+	idiom, and the one thing that lets a panel this narrow drop the label above
+	every field - a glyph in the field costs nothing, a label costs a row.
+
+	It is not a target: clicks pass to the field, which puts the caret in the
+	input.
+*/
+.affix {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-tertiary);
+	font-size: var(--fs-xs);
+	line-height: 1;
+	white-space: nowrap;
+	user-select: none;
+	-webkit-user-select: none;
+	pointer-events: none;
 }
 
-.numberInput[disabled],
-.numberInput[disabled]:hover,
-.numberInput[disabled]:focus,
-.numberInput[disabled]:active {
+.affix svg {
+	display: block;
+}
+
+.prefix {
+	padding-left: var(--sp-3);
+}
+
+.suffix {
+	padding-right: var(--sp-3);
+}
+
+/* The affix already holds the field's edge off the number. */
+.field:has(> .prefix) .numberInput {
+	padding-left: var(--sp-2);
+}
+
+.field:has(> .suffix) .numberInput {
+	padding-right: var(--sp-2);
+}
+
+.field:has(> .numberInput[disabled]),
+.field:has(> .numberInput[disabled]):hover {
 	background-color: var(--bg-disabled);
 	border-color: var(--border-subtle);
+}
+
+.numberInput[disabled] {
 	color: var(--text-disabled);
 }
 
-.numberInput[disabled] svg,
-.numberInput[disabled]:hover svg,
-.numberInput[disabled]:focus svg,
-.numberInput[disabled]:active svg {
-	fill: var(--icon-disabled);
+.field:has(> .numberInput[disabled]) .affix {
+	color: var(--text-disabled);
 }
 
 /* Arrows */

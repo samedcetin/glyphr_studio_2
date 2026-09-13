@@ -3,6 +3,7 @@ import { makeElement } from '../common/dom.js';
 import { round, transformOrigins } from '../common/functions.js';
 import { makeTransformOriginIcon } from '../common/graphics.js';
 import { makeLineIcon } from '../common/icons.js';
+import { syncTransformOriginChoosers, transformOriginName } from './transform_origin.js';
 
 // --------------------------------------------------------------
 // Common attributes card stuff
@@ -338,34 +339,6 @@ function toggleHandleInputs(handle, show) {
 	// log(group);
 	if (group) group.style.display = show ? 'grid' : 'none';
 	// log(`toggleHandleInputs`, 'end');
-}
-
-/**
- * "baseline-left" as "baseline left".
- * @param {String} origin - a transformOrigins name
- * @returns {String}
- */
-export function transformOriginName(origin) {
-	return `${origin}`.replace(/-/g, ' ');
-}
-
-/**
- * Show the same origin in every chooser on screen.
- *
- * The setting appears twice - beside width and height here, and at the top of
- * the Transform panel, which is where rotation and skew read it. Two views of
- * one property, and neither panel is rebuilt on the other's account, so
- * changing either has to move both.
- *
- * @param {String} origin - a transformOrigins name
- */
-export function syncTransformOriginChoosers(origin) {
-	const name = transformOriginName(origin);
-
-	document.querySelectorAll('.transform-origin-chooser').forEach((chooser) => {
-		/* selected-name only - writing selected-id fires a change event back out. */
-		chooser.setAttribute('selected-name', name);
-	});
 }
 
 /**

@@ -1,4 +1,5 @@
 import { makeElement } from '../../common/dom.js';
+import { hasLineIcon, makeLineIcon } from '../../common/icons.js';
 import { cancelDefaultEventActions } from '../../edit_canvas/events.js';
 import style from './input-number.css?inline';
 
@@ -26,6 +27,28 @@ export class InputNumber extends HTMLElement {
 		});
 		// @ts-expect-error 'property does exist'
 		this.numberInput.elementRoot = this;
+
+		/*
+			The field, holding the input and whatever says what it is.
+
+			`prefix` is an icon name or a character or two - "X", "W", an angle
+			mark - and `suffix` is the unit. Both are Figma's idiom, and the app
+			can afford them where it cannot afford a label: a glyph inside the
+			field costs nothing, a label above it costs a whole row of the panel.
+
+			They live in a box with the input because they have to read as one
+			control. The border and the corner moved here from the input for the
+			same reason.
+		*/
+		this.field = makeElement({ className: 'field' });
+		this.field.appendChild(this.numberInput);
+
+		/* An affix is part of the field, so clicking one lands in the field. */
+		this.field.addEventListener('mousedown', (event) => {
+			if (event.target === this.numberInput) return;
+			event.preventDefault();
+			this.numberInput.focus();
+		});
 
 		// Arrows
 		this.arrowWrapper = makeElement({
@@ -85,7 +108,7 @@ export class InputNumber extends HTMLElement {
 		this.arrowWrapper.appendChild(arrowSeparator);
 		this.arrowWrapper.appendChild(this.downArrow);
 
-		shadow.appendChild(this.numberInput);
+		shadow.appendChild(this.field);
 		shadow.appendChild(this.arrowWrapper);
 		shadow.appendChild(this.padlock);
 
@@ -108,10 +131,40 @@ export class InputNumber extends HTMLElement {
 	}
 
 	/**
+	 * Put the prefix and suffix in the field, if this one has them.
+	 *
+	 * Here rather than in the constructor because a custom element's
+	 * constructor runs at createElement time, before anything has had a chance
+	 * to set an attribute on it - so `prefix` was always null there.
+	 */
+	buildAffixes() {
+		if (this.affixesBuilt) return;
+		this.affixesBuilt = true;
+
+		const prefix = this.getAttribute('prefix');
+		if (prefix) {
+			this.field.insertBefore(
+				makeElement({
+					className: 'affix prefix',
+					content: hasLineIcon(prefix) ? makeLineIcon(prefix, 14) : prefix,
+				}),
+				this.numberInput
+			);
+		}
+
+		const suffix = this.getAttribute('suffix');
+		if (suffix) {
+			this.field.appendChild(makeElement({ className: 'affix suffix', content: suffix }));
+		}
+	}
+
+	/**
 	 * Initialize the component once it's being used
 	 */
 	connectedCallback() {
 		// log(`InputNumber.connectedCallback`, 'start');
+
+		this.buildAffixes();
 
 		/*
 			has-lock is the whole story: it shows the padlock and squares off the

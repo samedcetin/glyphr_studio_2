@@ -1,50 +1,50 @@
 import { getCurrentProjectEditor } from '../app/main.js';
-import { addAsChildren, makeElement } from '../common/dom.js';
-import {
-	deg,
-	rad,
-	resolveTransformOrigin,
-	round,
-	transformOrigins,
-} from '../common/functions.js';
-import { makeTransformOriginIcon } from '../common/graphics.js';
+import { makeElement } from '../common/dom.js';
+import { deg, rad, resolveTransformOrigin, round } from '../common/functions.js';
+import { makeLineIcon } from '../common/icons.js';
 import { makeActionButton } from './action_buttons.js';
-import {
-	makeSingleLabel,
-	syncTransformOriginChoosers,
-	transformOriginName,
-} from './cards.js';
+import { makeTransformOriginGrid, syncTransformOriginChoosers } from './transform_origin.js';
 
 // --------------------------------------------------------------
 // Transforms panel
 // --------------------------------------------------------------
 
 /*
-	Transform.
+	Transform, laid out the way a designer already knows how to read it.
 
-	This was three cards - Horizontal skew, Offset path, Rotation - each with
-	a heading restating the label underneath it, spending 280 pixels on four
-	number fields. They are one card now. The section header already says
-	Transform, so the three headings said nothing the panel had not said.
+	This was three cards - Horizontal skew, Offset path, Rotation - each with a
+	heading restating the label underneath it, spending 280 pixels on four
+	number fields. Then one card with a twelve-name dropdown for the origin,
+	which came to 316.
 
-	The other half of the change is what these fields mean. They are not
-	properties like x or width, they are verbs: "rotate by fifteen degrees".
-	So:
+	It is 180 now, and the saving is not compression for its own sake. It is
+	Figma's transform idiom, which most designers arrive already fluent in:
 
-		- Enter applies, the way Enter commits every other field in the app.
-		  It used to do nothing at all - the only way to act on a value was to
-		  notice a button that had appeared while you were typing.
+		- Each field says what it is from the inside. A mark on the left for
+		  the transform, the unit on the right. A label above every field cost
+		  a whole row each and said no more than the mark does.
 
-		- The Apply button is always there, and disabled when there is nothing
-		  to apply. It used to appear only once a shape was selected AND the
-		  value was non-zero. The code meant to show it disabled in between;
-		  two branches down, the else took that case and hid it again.
-		  Standing disabled, it is also the panel's empty state: with nothing
-		  selected, four greyed buttons say so.
+		- The origin is a grid of the twelve points, drawn as the em box they
+		  sit in, rather than a list of twelve names. Illustrator and Figma
+		  both put a reference point on a grid, and you can hit the corner you
+		  want without reading anything.
 
-		- The value stays after applying, so pressing Enter twice rotates
-		  twice. Clearing the field would read more like a verb, and would
-		  cost the most common use of these controls.
+		- Skew angle and skew distance share a row, because they are one
+		  operation in two units and always show the same skew.
+
+		- Apply is a 28px square at the end of its row rather than a word.
+		  Enter does the same thing from the field, the way Enter commits
+		  every other field in the app - it used to do nothing at all, so the
+		  only way to act on a value was to notice a button that had appeared
+		  while you were typing.
+
+	What is not borrowed: Figma's alignment row aligns to a frame, and nothing
+	here aligns shapes in the em box yet; its constraint dropdowns belong to
+	auto-layout.
+
+	The value stays in the field after applying, so pressing Enter twice
+	rotates twice. Clearing it would read more like a verb and would cost the
+	most common use of these controls.
 */
 
 /**
@@ -91,20 +91,16 @@ const quickTransforms = [
 const transformOperations = [
 	{
 		id: 'rotation',
-		label: 'Rotation angle',
-		info: `Select shapes, then enter an angle and press Enter, or use Apply.
-			<br><br>
-			A positive value rotates clockwise, a negative value counterclockwise.
-			Rotation is about the centre of the selection.`,
+		prefix: 'angle',
+		suffix: '°',
+		hint: 'Rotation angle\nPositive turns clockwise, negative counterclockwise, about the origin.\nEnter applies.',
 		apply: (editor, value) => rotateSelection(editor, value),
 	},
 	{
 		id: 'skewAngle',
-		label: 'Skew angle',
-		info: `Select shapes, then enter an angle and press Enter, or use Apply.
-			<br><br>
-			A positive value skews to the right, a negative value to the left.
-			This is the italicising transform.`,
+		prefix: 'skew',
+		suffix: '°',
+		hint: 'Skew angle\nPositive leans right, negative leans left. The italicising transform.\nEnter applies.',
 		apply: (editor, value) => {
 			const count = skewSelectedPaths(editor, 'skewAngle', value);
 			return `Skew ${count} ${count === 1 ? 'shape' : 'shapes'} by ${value}°`;
@@ -112,13 +108,9 @@ const transformOperations = [
 	},
 	{
 		id: 'skewDistance',
-		label: 'Skew distance',
-		info: `The same skew, measured as how far the top of the path travels
-			rather than as an angle.
-			<br><br>
-			The two fields track each other while a single path is selected. With
-			several selected they cannot: each path is skewed against its own
-			height, so one distance is a different angle for each of them.`,
+		prefix: 'skewDistance',
+		suffix: 'em',
+		hint: 'Skew distance\nThe same skew, as how far the top of the path travels.\nTracks the angle beside it while one path is selected.\nEnter applies.',
 		apply: (editor, value) => {
 			const count = skewSelectedPaths(editor, 'skewDistance', value);
 			return `Skew ${count} ${count === 1 ? 'shape' : 'shapes'} by ${value}em`;
@@ -126,24 +118,40 @@ const transformOperations = [
 	},
 	{
 		id: 'offsetPath',
-		label: 'Offset distance',
-		info: `Select shapes, then enter a distance and press Enter, or use Apply.
-			<br><br>
-			A positive value expands the path, a negative value contracts it.`,
+		prefix: 'offsetPath',
+		suffix: 'em',
+		hint: 'Offset distance\nPositive expands the path, negative contracts it.\nEnter applies.',
 		apply: (editor, value) => offsetSelectedPaths(editor, value),
 	},
 ];
 
+/** Lookup by id, for the row builders below. */
+const operationsById = Object.fromEntries(transformOperations.map((op) => [op.id, op]));
+
+/** The rows, and which fields share each row's Apply. */
+const transformRows = [['rotation'], ['skewAngle', 'skewDistance'], ['offsetPath']];
+
 export function makePanel_Transforms() {
 	const editor = getCurrentProjectEditor();
-	const card = makeElement({ className: 'panel__card' });
+	const card = makeElement({ className: 'panel__card transform-card' });
 
-	addAsChildren(card, makeTransformOriginRow());
-	card.appendChild(makeQuickTransformsArea());
+	/*
+		The header: the turns and flips that need no amount, and the origin
+		every one of them pivots about, side by side.
+	*/
+	const header = makeElement({ className: 'transform-card__header' });
+	header.appendChild(makeQuickTransformsArea());
+	header.appendChild(
+		makeTransformOriginGrid((origin) => {
+			const current = getCurrentProjectEditor();
+			transformOriginOwner(current).transformOrigin = origin;
+			syncTransformOriginChoosers(origin);
+			current.publish('editCanvasView', current.selectedItem);
+		})
+	);
+	card.appendChild(header);
 
-	transformOperations.forEach((operation) => {
-		addAsChildren(card, makeTransformRow(operation));
-	});
+	transformRows.forEach((ids) => card.appendChild(makeTransformFieldRow(ids)));
 
 	editor.subscribe({
 		topic: 'whichShapeIsSelected',
@@ -158,57 +166,6 @@ export function makePanel_Transforms() {
 	window.setTimeout(refreshTransformControls, 0);
 
 	return [card];
-}
-
-/**
- * The origin chooser.
- *
- * The same setting the Properties panel shows beside width and height, on the
- * same object - so the two are one control in two places rather than two
- * controls that disagree. It is here because this is where the other three
- * transforms are, and an origin nobody can see from where they are
- * transforming is an origin nobody knows they chose.
- *
- * @returns {Array} the label and the chooser
- */
-function makeTransformOriginRow() {
-	const owner = transformOriginOwner(getCurrentProjectEditor());
-
-	const label = makeSingleLabel(
-		'Origin',
-		`The point every transform here holds still: rotation pivots about it,
-			skew leans away from it, and resizing in Properties grows from it.
-			<br><br>
-			Baseline means y = 0, rather than the bottom of the shape.`
-	);
-
-	const chooser = makeElement({
-		tag: 'option-chooser',
-		className: 'transform-origin-chooser',
-		attributes: {
-			'selected-id': owner.transformOrigin,
-			'selected-name': transformOriginName(owner.transformOrigin),
-		},
-	});
-
-	transformOrigins.forEach((origin) => {
-		const option = makeElement({
-			tag: 'option',
-			attributes: { 'selection-id': origin },
-			innerHTML: `${makeTransformOriginIcon(origin)}${transformOriginName(origin)}`,
-		});
-
-		option.addEventListener('click', () => {
-			const editor = getCurrentProjectEditor();
-			transformOriginOwner(editor).transformOrigin = origin;
-			syncTransformOriginChoosers(origin);
-			editor.publish('editCanvasView', editor.selectedItem);
-		});
-
-		chooser.appendChild(option);
-	});
-
-	return [label, chooser];
 }
 
 /**
@@ -240,54 +197,90 @@ function makeQuickTransformsArea() {
 }
 
 /**
- * One label / field / Apply row.
- * @param {Object} operation - an entry from transformOperations
- * @returns {Array} the label and the row, for the card's two-column grid
+ * A row of one or two fields and the Apply that commits them.
+ *
+ * Two fields share an Apply when they share an operation - skew angle and
+ * skew distance are the same skew, so two buttons would have done the same
+ * thing twice.
+ *
+ * @param {Array} ids - operation ids, left to right
+ * @returns {HTMLElement}
  */
-function makeTransformRow(operation) {
-	const label = makeSingleLabel(operation.label, operation.info);
-
-	const input = makeElement({
-		tag: 'input-number',
-		attributes: { id: `${operation.id}_input`, value: '0' },
+function makeTransformFieldRow(ids) {
+	const row = makeElement({
+		className: ids.length > 1 ? 'transform-card__row transform-card__row--pair' : 'transform-card__row',
 	});
 
-	const applyButton = makeElement({
-		tag: 'fancy-button',
-		attributes: { secondary: '', disabled: '', id: `${operation.id}_applyButton` },
-		innerHTML: 'Apply',
-	});
+	const inputs = ids.map((id) => makeTransformField(operationsById[id]));
+	inputs.forEach((input) => row.appendChild(input));
 
-	/* A fancy-button is not a <button>, so `disabled` does not stop a click. */
+	/*
+		Which field the button acts on: the one holding a value. With a pair
+		they are the same skew in two units, so either will do - the angle is
+		the one that reads as the transform, and it is preferred.
+	*/
 	const run = () => {
 		if (applyButton.hasAttribute('disabled')) return;
-		applyTransform(operation, Number(input.getAttribute('value')));
+		const active =
+			inputs.find((input) => Number(input.getAttribute('value')) !== 0) || inputs[0];
+		applyTransform(operationsById[active.dataset.operation], Number(active.getAttribute('value')));
 	};
+
+	const applyButton = makeElement({
+		tag: 'button',
+		className: 'transform-card__apply',
+		title: 'Apply\nOr press Enter in the field.',
+		content: makeLineIcon('check', 18),
+		attributes: { id: `${ids[0]}_applyButton`, disabled: 'disabled' },
+	});
 
 	applyButton.addEventListener('click', run);
 
-	input.addEventListener('change', () => {
-		mirrorSkewUnits(operation, input);
-		refreshTransformControls();
+	inputs.forEach((input) => {
+		input.addEventListener('change', () => {
+			mirrorSkewUnits(operationsById[input.dataset.operation], input);
+			refreshTransformControls();
+		});
+
+		/*
+			input-number commits on blur, so on Enter the host attribute still
+			holds the last committed value rather than what is on screen.
+			commit() pushes the typed text through first, and this acts on the
+			result.
+		*/
+		input.addEventListener('keydown', (event) => {
+			if (event.key !== 'Enter') return;
+			event.preventDefault();
+			// @ts-expect-error 'method does exist on input-number'
+			input.commit();
+			if (applyButton.hasAttribute('disabled')) return;
+			applyTransform(operationsById[input.dataset.operation], Number(input.getAttribute('value')));
+		});
 	});
 
-	/*
-		input-number commits on blur, so on Enter the host attribute still holds
-		the last committed value rather than what is on screen. commit() pushes
-		the typed text through first, and this acts on the result.
-	*/
-	input.addEventListener('keydown', (event) => {
-		if (event.key !== 'Enter') return;
-		event.preventDefault();
-		// @ts-expect-error 'method does exist on input-number'
-		input.commit();
-		run();
+	row.appendChild(applyButton);
+	return row;
+}
+
+/**
+ * One number field, wearing its own name and unit.
+ * @param {Object} operation - an entry from transformOperations
+ * @returns {HTMLElement}
+ */
+function makeTransformField(operation) {
+	const input = makeElement({
+		tag: 'input-number',
+		title: operation.hint,
+		attributes: {
+			id: `${operation.id}_input`,
+			value: '0',
+			prefix: operation.prefix,
+			suffix: operation.suffix,
+			'data-operation': operation.id,
+		},
 	});
 
-	const row = makeElement({ className: 'doubleInput' });
-	addAsChildren(row, [input, makeElement({ tag: 'span' }), applyButton]);
-
-	return [label, row];
+	return input;
 }
 
 // --------------------------------------------------------------
@@ -465,16 +458,30 @@ function refreshTransformControls() {
 		else button.setAttribute('disabled', 'disabled');
 	});
 
+	/*
+		With nothing selected the fields go dead too, not just the buttons.
+		Four live fields that do nothing was the old empty state, and it took an
+		info bubble to explain itself.
+	*/
 	transformOperations.forEach((operation) => {
 		const input = document.getElementById(`${operation.id}_input`);
-		const applyButton = document.getElementById(`${operation.id}_applyButton`);
-		if (!input || !applyButton) return;
+		if (!input) return;
+		if (hasSelection) input.removeAttribute('disabled');
+		else input.setAttribute('disabled', '');
+	});
 
-		if (hasSelection && Number(input.getAttribute('value')) !== 0) {
-			applyButton.removeAttribute('disabled');
-		} else {
-			applyButton.setAttribute('disabled', '');
-		}
+	/* One Apply per row, enabled when any field in that row holds a value. */
+	transformRows.forEach((ids) => {
+		const applyButton = document.getElementById(`${ids[0]}_applyButton`);
+		if (!applyButton) return;
+
+		const hasValue = ids.some((id) => {
+			const input = document.getElementById(`${id}_input`);
+			return input && Number(input.getAttribute('value')) !== 0;
+		});
+
+		if (hasSelection && hasValue) applyButton.removeAttribute('disabled');
+		else applyButton.setAttribute('disabled', 'disabled');
 	});
 }
 

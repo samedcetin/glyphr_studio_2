@@ -484,6 +484,30 @@ lineIcons.linkToGlyph =
 lineIcons.round = `<path d="M4 20V10.5A6.5 6.5 0 0 1 10.5 4H20"/><path d="M4 20h1M8 20h1M12 20h1M16 20h1M20 20h.01M20 16v1M20 12v1M20 8v1"/>`;
 
 /*
+	The Transform panel's field marks. Each one sits inside its own input,
+	saying what the number is - which is what lets that panel drop the row of
+	label above every field.
+*/
+
+/* An angle: two arms, and the arc that measures between them. */
+lineIcons.angle = `<path d="M4.5 19.5V4.5"/><path d="M4.5 19.5h15"/><path d="M11.5 19.5a7 7 0 0 0-7-7"/>`;
+
+/* Skew: a rectangle leaning off its own base. */
+lineIcons.skew = `<path d="M4 20h8l8-13h-8z"/>`;
+
+/* The same lean, measured across the top rather than as an angle. */
+lineIcons.skewDistance =
+	`<path d="M4 20h8l8-13h-8z"/>` + `<path d="M12 4h8"/><path d="M12 2.5v3M20 2.5v3"/>`;
+
+/* Offset: the same outline again, further out. */
+lineIcons.offsetPath =
+	`<path d="M8 8h8v8H8z"/>` +
+	`<path d="M4.5 6A1.5 1.5 0 0 1 6 4.5h12A1.5 1.5 0 0 1 19.5 6v12a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18z"/>`;
+
+/* Commit - what the Apply buttons carry now that they are 28px squares. */
+lineIcons.check = `<path d="M5 12.5l4.5 4.5L19 7.5"/>`;
+
+/*
 	Turns. An arc most of the way round a circle, with the gap and the
 	arrowhead at the top: the head points the way the shape travels, so the
 	direction is read from the head rather than from which way the arc is
