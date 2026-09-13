@@ -163,12 +163,12 @@ nav[id^='nav-dropdown']:focus {
 	margin: 1px 0px;
 	padding: 0px var(--sp-3);
 	/*
-		36px and --r-xl, the same pairing the rail's and the toolbar's menu rows
+		40px and --r-xl, the same pairing the rail's and the toolbar's menu rows
 		use. At --row-h the browser would clamp the radius to half the height and
 		the highlight would come out a lozenge.
 	*/
-	height: calc(var(--row-h) + var(--sp-4));
-	min-height: calc(var(--row-h) + var(--sp-4));
+	height: calc(var(--row-h) + var(--sp-5));
+	min-height: calc(var(--row-h) + var(--sp-5));
 	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	border: 1px solid transparent;

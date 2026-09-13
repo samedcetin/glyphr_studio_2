@@ -597,10 +597,11 @@
 .drop-note__formats code {
 	display: inline-flex;
 	align-items: center;
-	height: 18px;
-	padding: 0 var(--sp-2);
+	height: 20px;
+	padding: 0 var(--sp-3);
+	margin: 0;
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	color: var(--text-secondary);
@@ -832,14 +833,20 @@
 	text-overflow: ellipsis;
 }
 
+/*
+	A cap set inline with a sentence rather than dropped into a row, so it is
+	not nesting in anything and takes a size that sits on a line of --fs-xs
+	text. The shape is the menus' cap at that size: --r-md, one step down from
+	the 24px version.
+*/
 .hub-modal__drop-hint code {
 	display: inline-flex;
 	align-items: center;
-	height: 16px;
-	padding: 0 var(--sp-2);
-	margin-left: 2px;
+	height: 20px;
+	padding: 0 var(--sp-3);
+	margin: 0 0 0 2px;
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	color: var(--text-secondary);

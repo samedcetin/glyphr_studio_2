@@ -253,15 +253,19 @@ dialog {
 	grid-template-columns: var(--icon-size-lg) minmax(0, 1fr) max-content;
 	align-items: center;
 	gap: var(--sp-4);
-	min-height: var(--row-h);
+	/*
+		40px, for every row rather than only the ones carrying a description.
+
+		Two reasons. A bare --row-h row is 28px, and a browser clamps a radius
+		to half the box, so --r-xl came out at 14 and the highlight was a
+		lozenge with corners rounder than the menu holding it. And a key cap can
+		only nest in a row's corner if it is the same distance from the right
+		edge as from the top and bottom - which needs one row height, not two.
+	*/
+	min-height: calc(var(--row-h) + var(--sp-5));
 	padding: 0 var(--sp-4) 0 var(--sp-3);
 	border: none;
-	/*
-		Concentric with the menu: --r-2xl less its --sp-2 of padding. On the
-		40px rows that carry a description - which is most of them - this is a
-		soft rectangle; on a bare 28px row the browser clamps it to half the
-		height and it comes out a lozenge.
-	*/
+	/* Concentric with the menu: --r-2xl less its --sp-2 of padding. */
 	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
@@ -349,9 +353,8 @@ dialog {
 	color: var(--text-disabled);
 }
 
-/* A row with two lines needs room for both. */
+/* A row with two lines needs the height it already has to breathe. */
 .context-menu-row:has(.row-description) {
-	min-height: 40px;
 	padding-top: var(--sp-2);
 	padding-bottom: var(--sp-2);
 }
@@ -377,20 +380,31 @@ dialog {
 	Key caps, drawn as caps. They used to inherit whatever a bare <code> looked
 	like, which meant Courier New on Windows - the one place bare `monospace`
 	always lands, and where most of this audience is.
+
+	--control-h-sm tall, which is what puts them --sp-4 from the top and bottom
+	of a 40px row - the same distance the row's own padding holds them from its
+	right edge. That is what makes a cap's corner nest inside the row's rather
+	than sit near it, and it is what the radius is derived from: the row's
+	--r-xl less the 8px, which is --r-md.
+
+	Every key cap in the app is this shape. See menu-button.css and
+	command-palette.css.
 */
 .context-menu-row .row-notes code {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 18px;
-	height: 18px;
-	padding: 0 var(--sp-2);
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	margin: 0;
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface-sunken);
 	color: var(--text-secondary);
 	font-family: var(--font-mono);
-	font-size: var(--fs-2xs);
+	font-size: var(--fs-xs);
 	line-height: 1;
 }
 

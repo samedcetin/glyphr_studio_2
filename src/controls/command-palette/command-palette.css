@@ -88,15 +88,17 @@
 
 .command-palette__row {
 	display: grid;
-	grid-template-columns: 18px minmax(0, 1fr) min-content min-content;
+	grid-template-columns: 18px minmax(0, 1fr) max-content;
 	align-items: center;
 	gap: var(--sp-4);
 	/*
-		36px and --r-xl, the pairing every menu row in the app now uses. At the
+		40px and --r-xl, the pairing every menu row in the app now uses. At the
 		32px this was, a browser clamps the radius to half the height and the
-		active row comes out a lozenge.
+		active row comes out a lozenge - and the height is also what puts a key
+		cap the same distance from the row's top and bottom as from its right
+		edge. See dialogs.css.
 	*/
-	height: calc(var(--row-h) + var(--sp-4));
+	height: calc(var(--row-h) + var(--sp-5));
 	padding: 0 var(--sp-4);
 	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
@@ -141,6 +143,13 @@
 	white-space: nowrap;
 }
 
+.command-palette__row-trailing {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
+	min-width: 0;
+}
+
 .command-palette__row-keys {
 	display: flex;
 	gap: 2px;
@@ -169,21 +178,27 @@
 	gap: var(--sp-2);
 }
 
-/* Shared key-cap styling for the palette and the shortcut sheet. */
+/*
+	Shared key-cap styling for the palette and the shortcut sheet, and the same
+	cap the menus draw - see dialogs.css. The heavy bottom border is gone: it
+	was a drawn bevel, a different idiom from every other cap in the app, and
+	it made the cap sit a pixel high in its own box.
+*/
 .command-palette code,
 .shortcut-sheet code {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 18px;
-	height: 18px;
-	padding: 0 var(--sp-2);
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	margin: 0;
 	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-default);
-	border-bottom-width: 2px;
-	border-radius: var(--r-xs);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	font-family: var(--font-mono);
-	font-size: var(--fs-2xs);
+	font-size: var(--fs-xs);
 	color: var(--text-secondary);
 	line-height: 1;
 }

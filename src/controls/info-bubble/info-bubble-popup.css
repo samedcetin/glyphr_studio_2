@@ -86,16 +86,17 @@
 	color: var(--text-accent);
 }
 
-/* The same key cap the menus and the palette use. */
+/* The menus' key cap, at the size that sits on a line of running text. */
 #bubble .content code {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 18px;
-	height: 18px;
-	padding: 0 var(--sp-2);
+	min-width: 20px;
+	height: 20px;
+	padding: 0 var(--sp-3);
+	margin: 0;
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface-sunken);
 	color: var(--text-secondary);

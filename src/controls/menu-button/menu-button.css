@@ -163,13 +163,14 @@
 		clipped away. The column flex container stretches the rows instead.
 	*/
 	/*
-		Taller than --row-h on purpose. The row highlight is --r-xl, and a
-		browser clamps a radius to half the box - so at 28px the 16 became 14
-		and the highlight came out a lozenge with corners rounder than the menu
-		holding it. 36 gives the corner room to be the corner it was asked for,
-		and lands these rows near the 40px the rail's menus run at.
+		40px, the same as the rail's menu rows. Taller than --row-h on purpose:
+		a browser clamps a radius to half the box, so --r-xl on a 28px row came
+		out at 14 and the highlight was a lozenge with corners rounder than the
+		menu holding it. 40 also puts a --control-h-sm key cap --sp-4 from the
+		top and bottom, which is the distance the row holds it from its right
+		edge - see the cap below.
 	*/
-	min-height: calc(var(--row-h) + var(--sp-4));
+	min-height: calc(var(--row-h) + var(--sp-5));
 	/* The same inset the rail's menu rows use, now that the tick gutter is
 		not holding the icon away from the edge. */
 	padding: 0 var(--sp-4) 0 var(--sp-3);
@@ -251,17 +252,20 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 18px;
-	height: 18px;
-	padding: 0 var(--sp-2);
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	margin: 0;
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xs);
+	/* Concentric with the row: its --r-xl less the --sp-4 the row holds this
+		off its edges by. See dialogs.css for the whole argument. */
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface-sunken);
 	color: var(--text-secondary);
 	font-family: var(--font-mono);
 	font-variant-numeric: tabular-nums;
-	font-size: var(--fs-2xs);
+	font-size: var(--fs-xs);
 	line-height: 1;
 }
 
