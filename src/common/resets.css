@@ -278,7 +278,13 @@ input,
 textarea,
 select {
 	padding: 0px var(--sp-3);
-	height: var(--control-h-sm);
+	/*
+		--control-h, not --control-h-sm. 24px is the WCAG target-size floor, and
+		a panel row full of fields sitting exactly on the floor is a row you have
+		to aim at. It also put text fields a step shorter than the option chooser
+		beside them once that grew. 28 is the app's control height.
+	*/
+	height: var(--control-h);
 	text-align: left;
 	font-family: var(--font-mono);
 	font-size: var(--fs-sm);
@@ -366,10 +372,22 @@ input[type='number'][disabled='disabled'] {
 	color: var(--text-disabled);
 }
 
-input[type='checkbox'] {
+/*
+	A checkbox draws itself. The rule above gives every input a sunken ground,
+	a border and a radius - which a text field wants and a native checkbox does
+	not: the browser paints its own box, and a background behind it turned an
+	unchecked one into a flat pale square with no edge and no tick to come.
+	accent-color is the one thing it takes from us.
+*/
+input[type='checkbox'],
+input[type='radio'] {
 	accent-color: var(--accent);
 	width: 14px;
 	height: 14px;
+	padding: 0;
+	background: none;
+	border: none;
+	border-radius: 0;
 	cursor: pointer;
 }
 

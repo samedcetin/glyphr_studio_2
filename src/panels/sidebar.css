@@ -141,7 +141,19 @@
 	border-top: 1px solid var(--border-subtle);
 }
 
-.sidebar__section-body .panel__card h3 {
+/*
+	Every group heading in a card is the same eyebrow.
+
+	Only h3 was. h4 fell through to the app-wide rule - 14px, sentence case,
+	semibold - so the Properties card had "GLYPH" set at 10px above
+	"Bulk-edit paths" at 14: the sub-heading was larger than the heading over
+	it. They are siblings in meaning, two groups in one card, and they look it
+	now.
+*/
+.sidebar__section-body .panel__card h3,
+.sidebar__section-body .panel__card h4,
+.sidebar__section-body .panel__card h5,
+.sidebar__section-body .panel__card h6 {
 	grid-column: 1 / -1;
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
@@ -150,6 +162,21 @@
 	/* --text-tertiary is 2.99:1 on --bg-surface, an AA failure at 10px. */
 	color: var(--text-secondary);
 	margin-bottom: var(--sp-1);
+}
+
+/*
+	A heading that follows a control starts a new group, so it takes the air
+	that says so. The first one in a card has the card's own padding above it
+	and needs none.
+*/
+.sidebar__section-body .panel__card h4,
+.sidebar__section-body .panel__card h5,
+.sidebar__section-body .panel__card h6 {
+	margin-top: var(--sp-5);
+}
+
+.sidebar__section-body .panel__card > :first-child {
+	margin-top: 0;
 }
 
 .sidebar__section-body .panel__card label {
@@ -260,7 +287,10 @@
 		padding-top: var(--sp-3);
 	}
 
-	.sidebar__section-body .panel__card h3 + label {
+	.sidebar__section-body .panel__card h3 + label,
+	.sidebar__section-body .panel__card h4 + label,
+	.sidebar__section-body .panel__card h5 + label,
+	.sidebar__section-body .panel__card h6 + label {
 		padding-top: 0;
 	}
 

@@ -30,36 +30,36 @@ function makeSkewCard() {
 		innerHTML: `
 				<h3>Horizontal skew</h3>
 				<label class="info">
-					<span>Skew angle:</span>
+					<span>Skew angle</span>
 					<info-bubble>
 						Select shapes, then provide a skew angle to apply. <br><br>
 						A positive value will skew the path to the right, and a negative value will skew the path to the left.
 					</info-bubble>
 				</label>
-				<div class="doubleInput" style="height: 32px;">
+				<div class="doubleInput">
 					<input-number id="skewAngle_input"></input-number>
 					<span></span>
 					<fancy-button
 						secondary
 						id="skewAngle_applyButton"
-						style="margin-top: -2px; display: none;"
+						style="display: none;"
 					>
 					Apply</fancy-button>
 				</div>
 				<label class="info">
-					<span>Skew distance:</span>
+					<span>Skew distance</span>
 					<info-bubble>
 						Select shapes, then provide a skew distance to apply. <br><br>
 						A positive value will skew the path to the right, and a negative value will skew the path to the left.
 					</info-bubble>
 				</label>
-				<div class="doubleInput" style="height: 32px;">
+				<div class="doubleInput">
 					<input-number id="skewDistance_input"></input-number>
 					<span></span>
 					<fancy-button
 						secondary
 						id="skewDistance_applyButton"
-						style="margin-top: -2px; display: none;"
+						style="display: none;"
 					>
 					Apply</fancy-button>
 				</div>
@@ -172,20 +172,20 @@ function makeOffsetCard() {
 		innerHTML: `
 				<h3>Offset path</h3>
 				<label class="info">
-					<span>Offset distance:</span>
+					<span>Offset distance</span>
 					<info-bubble>
 						Select shapes, then provide an offset distance to apply. <br><br>
 						A positive value will expand the path, and a negative value will
 						contract the path.
 					</info-bubble>
 				</label>
-				<div class="doubleInput" style="height: 32px;">
+				<div class="doubleInput">
 					<input-number id="offsetPath_input"></input-number>
 					<span></span>
 					<fancy-button
 						secondary
 						id="offsetPath_applyButton"
-						style="margin-top: -2px; display: none;"
+						style="display: none;"
 					>
 					Apply</fancy-button>
 				</div>
@@ -251,20 +251,20 @@ function makeRotationCard() {
 		innerHTML: `
 				<h3>Rotation</h3>
 				<label class="info">
-					<span>Rotation angle:</span>
+					<span>Rotation angle</span>
 					<info-bubble>
 						Select shapes, then provide a rotation angle to apply. <br><br>
 						A positive value will rotate the path clockwise, and a negative value will
 						rotate the path counterclockwise. Rotation is applied around the shape's center.
 					</info-bubble>
 				</label>
-				<div class="doubleInput" style="height: 32px;">
+				<div class="doubleInput">
 					<input-number id="rotation_input"></input-number>
 					<span></span>
 					<fancy-button
 						secondary
 						id="rotation_applyButton"
-						style="margin-top: -2px; display: none;"
+						style="display: none;"
 					>
 					Apply</fancy-button>
 				</div>

@@ -312,6 +312,15 @@ export function makeContextMenu(rows = [], x, y, width, height, isDropdown = fal
 	});
 
 	/*
+		A menu whose rows have no icons does not hold a column open for them.
+		Every row builds an empty icon cell so that a menu mixing rows with and
+		without icons still lines up - but when none of them has one, that is 20
+		pixels of gutter plus a gap indenting the whole list for nothing.
+	*/
+	const hasIcons = rows.some((item) => item && (item.icon || item.iconMarkup));
+	if (!hasIcons) element.classList.add('context-menu--no-icons');
+
+	/*
 		Position only. The radius used to be set here too - square on the edge
 		that met the bar, rounded on the other three - so the menu read as an
 		extension of the control that opened it. That was a top-bar idea; the
@@ -458,9 +467,21 @@ function makeOneContextMenuRow(data = {}) {
 	let row = makeElement({
 		tag: 'button',
 		className: data?.className || 'context-menu-row',
-		attributes: { type: 'button', role: 'menuitem' },
+		attributes: { type: 'button', role: data.selected === undefined ? 'menuitem' : 'menuitemradio' },
 	});
 	if (isDisabled) row.setAttribute('disabled', '');
+
+	/*
+		The chosen one, in a menu that is choosing between things - the option
+		chooser's list. Marked with the accent rather than ticked: a tick needs
+		a column, and a column held open on every row so that one of them can
+		show a mark is a list of empty boxes. aria-checked carries the same
+		thing to a screen reader.
+	*/
+	if (data.selected !== undefined) {
+		row.setAttribute('aria-checked', data.selected ? 'true' : 'false');
+		if (data.selected) row.setAttribute('selected', '');
+	}
 
 	/*
 		Icon. Either `icon` (a name from common/graphics.js) or `iconMarkup`

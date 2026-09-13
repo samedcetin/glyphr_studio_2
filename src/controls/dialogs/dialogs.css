@@ -287,6 +287,31 @@ dialog {
 	background-color: var(--bg-hover);
 }
 
+/*
+	The chosen row in a chooser. Same mark the toolbar's tool menus use: the
+	accent held back to a tint, kept on hover because it is a statement rather
+	than an offer - and with weight as well, so it is not the tint alone saying
+	which one you are on.
+*/
+.context-menu-row[selected],
+.context-menu-row[selected]:hover {
+	background-color: var(--bg-selected);
+	color: var(--text-primary);
+}
+
+.context-menu-row[selected] .row-name {
+	font-weight: var(--fw-semibold);
+}
+
+/* No icons in this menu, so no gutter held open for them. */
+.context-menu--no-icons .context-menu-row {
+	grid-template-columns: minmax(0, 1fr) max-content;
+}
+
+.context-menu--no-icons .context-menu-row .row-icon {
+	display: none;
+}
+
 .context-menu-row[disabled],
 .context-menu-row[disabled]:hover {
 	background-color: transparent;
@@ -340,6 +365,17 @@ dialog {
 	looking for in a folder, and quiet because it is the answer to a question
 	the row's own label has already asked.
 */
+/*
+	Some labels bring a picture with them - the transform-origin chooser draws
+	the nine anchor points rather than trying to say them. That mark is inside
+	the name, so the row's own column gap does not reach it and the words
+	started flush against the drawing.
+*/
+.context-menu-row .row-name svg {
+	vertical-align: middle;
+	margin-right: var(--sp-3);
+}
+
 .context-menu-row .row-description {
 	font-family: var(--font-mono);
 	font-size: var(--fs-2xs);

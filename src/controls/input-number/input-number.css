@@ -23,7 +23,7 @@
 	display: grid;
 	background-color: transparent;
 	grid-template-columns: minmax(0, 1fr) 24px min-content;
-	height: var(--control-h-sm, 26px);
+	height: var(--control-h);
 	min-width: 0;
 }
 
@@ -84,11 +84,13 @@
 	grid-column-start: 2;
 	display: grid;
 	/* grid-template-rows: 1fr 1px 1fr; */
-	grid-template-rows: 13px 1px 12px;
+	/* Two halves and a hairline, so the arrows fill whatever height the
+		control is rather than a 26 written down here. */
+	grid-template-rows: 1fr 1px 1fr;
 	background-color: transparent;
-	border:0;
+	border: 0;
 	width: 24px;
-	height: 26px;
+	height: 100%;
 }
 
 .arrowWrapper:hover,

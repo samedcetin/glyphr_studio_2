@@ -231,6 +231,17 @@
 	grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr);
 }
 
+/*
+	A row that is one field and a button, not two fields. The three-column
+	track put the button at the left edge of a 130px column, so it floated
+	twenty pixels off its own field with a hundred of nothing after it. It sits
+	against the field it belongs to now.
+*/
+.panel__card .doubleInput:has(> button),
+.panel__card .doubleInput:has(> fancy-button) {
+	grid-template-columns: minmax(0, 1fr) var(--sp-2) max-content;
+}
+
 .panel__card input,
 .panel__card option-chooser,
 .panel__card option-toggle {
@@ -249,8 +260,11 @@
 .panel-card__action-button:hover,
 .panel-card__action-button:focus,
 .panel-card__action-button:active {
-	width: min-content;
-	height: var(--control-h-sm);
+	/* Square, and the same height as the field it sits beside. It was
+		--control-h-sm, four
+		pixels short of every control in the row, and 25 wide against 28 tall. */
+	width: var(--control-h);
+	height: var(--control-h);
 	padding: 2px;
 	margin: 0px 0px 0px 2px;
 	border-radius: var(--r-md);

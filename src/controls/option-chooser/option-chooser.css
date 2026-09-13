@@ -23,7 +23,7 @@
 	align-items: center;
 	margin: 0;
 	padding: 0;
-	height: var(--control-h-sm);
+	height: var(--control-h);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--r-md);
