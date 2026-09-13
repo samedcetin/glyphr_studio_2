@@ -286,6 +286,30 @@ export function makeMenu(menuName) {
 					...openProjects,
 					{ name: 'hr' },
 					{ type: 'heading', name: 'Actions' },
+					{
+						/*
+							The way back.
+
+							makePage_OpenProject had exactly two callers: once at
+							startup, and once as a modal for a *second* project. So
+							after opening a project there was no route to a different
+							one - the menu called Projects could not open a project, and
+							changing fonts meant reloading the tab.
+
+							The import target is set explicitly rather than left to its
+							fallback. It is sticky: a previous "open a second project"
+							leaves it pointing at slot two, and this would then quietly
+							replace the wrong project.
+						*/
+						name: 'Open a different project…',
+						description: `Replaces ${editor.project.settings.project.name} in this slot`,
+						icon: 'menu_projects',
+						onClick: () => {
+							const liveApp = getGlyphrStudioApp();
+							liveApp.editorImportTarget = liveApp.selectedProjectEditor;
+							showModalDialog(makePage_OpenProject(false), 760, true);
+						},
+					},
 					...(onlyOneProject
 						? [
 								{
