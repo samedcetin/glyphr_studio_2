@@ -332,17 +332,30 @@
 	as "bearings: left right". --text-tertiary is the role it wants and it moves
 	with the theme.
 
-	The padding-top was nudging it onto the label's baseline; it is aligned by
-	its own line box now, which also stops it from shifting when the label
-	wraps.
+	This one lives inside the label text, so it stays inline - giving it a
+	display of its own broke "bearings: left / right" into three lines. The
+	16px box is what puts air either side of a glyph that carries none, and
+	the padding-top that used to nudge it onto the baseline is gone: it is
+	aligned by its own line box now, so it no longer shifts when a label wraps.
 */
 .dimSplit {
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	display: inline-block;
 	width: 16px;
 	color: var(--text-tertiary);
 	font-size: var(--fs-xs);
+	text-align: center;
+}
+
+/*
+	The same span, but standing in the middle column of a field pair rather than
+	in a run of text. Here it is a cell, and it centres its glyph on the two
+	fields either side.
+*/
+.panel__card .doubleInput > .dimSplit {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
 	line-height: 1;
 }
 
