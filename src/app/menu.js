@@ -43,9 +43,13 @@ const themeLabels = {
  * @returns {Element}
  */
 export function makeThemeToggle() {
+	/*
+		No class of its own. It lives in the left rail, which styles it, and the
+		top-bar class it used to carry set a 28px box and no radius - both of
+		which outranked the rail's rule and gave the button a square hover.
+	*/
 	const button = makeElement({
 		tag: 'button',
-		className: 'top-bar__theme-toggle',
 		title: themeLabels[getThemePreference()],
 		innerHTML: themeIcons[getThemePreference()],
 		attributes: { 'aria-label': themeLabels[getThemePreference()] },
@@ -104,10 +108,15 @@ function menuAnchor(entryPoint) {
  * @returns {Element}
  */
 export function makeMenu(menuName) {
+	/*
+		Same as the theme toggle: no class here. `menu-entry-point` was a top bar
+		style - 24px tall, --r-xs corners, a text label's padding - and it beat
+		the rail's own rule, so File, Projects and Help hovered as small square
+		chips in a column of 32px rounded ones.
+	*/
 	let entryPoint = makeElement({
 		tag: 'button',
 		innerHTML: menuName,
-		className: 'menu-entry-point',
 	});
 	const editor = getCurrentProjectEditor();
 	if (menuName === 'File') {
