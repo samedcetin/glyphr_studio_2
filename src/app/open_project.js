@@ -1,4 +1,5 @@
 import { addAsChildren, makeElement } from '../common/dom.js';
+import { makeLineIcon } from '../common/icons.js';
 import logoHorizontal from '../common/graphics/logo-wordmark-horizontal-small.svg?raw';
 import { closeEveryTypeOfDialog, showError, showToast } from '../controls/dialogs/dialogs.js';
 import { makeProgressIndicator } from '../controls/progress-indicator/progress_indicator.js';
@@ -54,15 +55,19 @@ const hubViews = {
 	open: { label: 'Open a file', icon: 'upload', title: 'Open a file' },
 };
 
-const hubIcons = {
-	clock: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 1a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM8 4a.5.5 0 0 1 .5.5v3.3l2.1 1.2a.5.5 0 1 1-.5.9L7.75 8.55A.5.5 0 0 1 7.5 8.1V4.5A.5.5 0 0 1 8 4Z"/></svg>`,
-	sparkle: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 9.3 5.2a2 2 0 0 0 1.5 1.3L14.5 8l-3.7 1.5a2 2 0 0 0-1.5 1.3L8 14.5l-1.3-3.7a2 2 0 0 0-1.5-1.3L1.5 8l3.7-1.5a2 2 0 0 0 1.5-1.3L8 1.5Z"/></svg>`,
-	plus: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3a.5.5 0 0 1 .5.5v4h4a.5.5 0 0 1 0 1h-4v4a.5.5 0 0 1-1 0v-4h-4a.5.5 0 0 1 0-1h4v-4A.5.5 0 0 1 8 3Z"/></svg>`,
-	upload: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.7a.5.5 0 0 1 .35.15l3 3a.5.5 0 1 1-.7.7L8.5 3.4v6.6a.5.5 0 0 1-1 0V3.4L5.35 5.55a.5.5 0 1 1-.7-.7l3-3A.5.5 0 0 1 8 1.7ZM2.5 10a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 12.5 14h-9A1.5 1.5 0 0 1 2 12.5v-2a.5.5 0 0 1 .5-.5Z"/></svg>`,
-	system: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h9A1.5 1.5 0 0 1 14 3.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 9.5v-6Zm1.5-.5a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-9ZM5 13h6v1H5v-1Z"/></svg>`,
-	light: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0-1a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0-9a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 1-1 0V1.5A.5.5 0 0 1 8 1Zm0 12a.5.5 0 0 1 .5.5V15a.5.5 0 0 1-1 0v-1.5A.5.5 0 0 1 8 13ZM15 8a.5.5 0 0 1-.5.5H13a.5.5 0 0 1 0-1h1.5A.5.5 0 0 1 15 8ZM3 8a.5.5 0 0 1-.5.5H1a.5.5 0 0 1 0-1h1.5A.5.5 0 0 1 3 8Zm9.9-4.9a.5.5 0 0 1 0 .7l-1 1a.5.5 0 1 1-.8-.7l1-1a.5.5 0 0 1 .8 0ZM4.9 11.1a.5.5 0 0 1 0 .7l-1 1a.5.5 0 0 1-.8-.7l1-1a.5.5 0 0 1 .8 0Zm8 1.8a.5.5 0 0 1-.8 0l-1-1a.5.5 0 0 1 .8-.7l1 1a.5.5 0 0 1 0 .7ZM4.9 4.9a.5.5 0 0 1-.8 0l-1-1a.5.5 0 1 1 .8-.7l1 1a.5.5 0 0 1 0 .7Z"/></svg>`,
-	dark: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.2 2.1a.5.5 0 0 1 .1.6 5 5 0 0 0 6.9 6.9.5.5 0 0 1 .7.6A6 6 0 1 1 5.6 2a.5.5 0 0 1 .6.1Zm-1.3 1.3a5 5 0 1 0 7.7 7.7A6 6 0 0 1 4.9 3.4Z"/></svg>`,
-};
+/**
+ * Hub icons, by name, from the one line set.
+ *
+ * This used to be seven 16x16 filled SVG strings written out here - a fifth
+ * icon set living in a page file. The names are unchanged, so every call site
+ * below still reads hubIcons.plus and friends.
+ *
+ * @type {Object<string, string>}
+ */
+const hubIcons = {};
+['clock', 'sparkle', 'plus', 'upload', 'system', 'light', 'dark'].forEach((name) => {
+	hubIcons[name] = makeLineIcon(name, 20);
+});
 
 const themeLabels = {
 	system: 'Theme: follow system',

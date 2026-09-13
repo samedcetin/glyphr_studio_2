@@ -78,10 +78,15 @@
 	cursor: pointer;
 }
 
+/*
+	No `fill` here. The hub icons are strokes now, and they carry
+	fill="none" stroke="currentColor" as presentation attributes - which a CSS
+	`fill` declaration outranks, filling every outline back in. Colour reaches
+	them through `color` instead, which is what currentColor reads.
+*/
 .hub-sidebar__nav-item svg {
 	width: var(--icon-size);
 	height: var(--icon-size);
-	fill: currentColor;
 	color: var(--icon-default);
 }
 
@@ -208,7 +213,6 @@
 .hub-button svg {
 	width: var(--icon-size);
 	height: var(--icon-size);
-	fill: currentColor;
 }
 
 .hub-button:hover {
@@ -425,7 +429,7 @@
 .hub-drop__icon svg {
 	width: 28px;
 	height: 28px;
-	fill: var(--icon-default);
+	color: var(--icon-default);
 }
 
 .hub-drop__title {
