@@ -376,10 +376,16 @@ button.project-card:hover .project-card__bar {
 }
 
 /*
-	Side padding equal to the card's radius, which is what keeps the name and
-	the Switch chip clear of the corner as it curves away. The vertical padding
-	is what actually sets the height: a 24px chip plus 4px top and bottom, so
-	the strip grows out of the control it holds rather than out of a number.
+	The right padding is 4px, not 12, and that is the whole trick: the Switch
+	chip has to sit the same distance from the card's right edge as it does
+	from the bottom one, or its corner cannot be concentric with the card's.
+	The bottom distance is the strip's vertical padding, so the right one has
+	to match it. The name keeps its 12px on the left, where there is no corner
+	to nest inside - only one to stay clear of.
+
+	The vertical padding is also what sets the height: a 24px chip plus 4px top
+	and bottom, so the strip grows out of the control it holds rather than out
+	of a number.
 */
 .project-card__bar {
 	display: flex;
@@ -388,7 +394,7 @@ button.project-card:hover .project-card__bar {
 	gap: var(--sp-4);
 	min-width: 0;
 	min-height: var(--row-h);
-	padding: var(--sp-2) var(--sp-5);
+	padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-5);
 	border-top: 1px solid var(--border-subtle);
 	background-color: var(--bg-surface);
 	transition: var(--transition-color);
@@ -423,6 +429,12 @@ button.project-card:hover .project-card__bar {
 		one with the word, and two cards in a stack are read against each other.
 	*/
 	height: var(--control-h-sm);
+	/*
+		Lands this word's right edge where the chip's word lands on the card
+		below: 4px of strip padding plus the chip's own 8px. Two cards in a
+		stack, two labels down the right, one line.
+	*/
+	padding-right: var(--sp-4);
 	font-size: var(--fs-xs);
 	font-weight: var(--fw-medium);
 	color: var(--text-accent);
@@ -434,9 +446,14 @@ button.project-card:hover .project-card__bar {
 	align-items: center;
 	flex: 0 0 auto;
 	height: var(--control-h-sm);
-	padding: 0 var(--sp-5);
+	padding: 0 var(--sp-4);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-md);
+	/*
+		Concentric with the card's bottom-right corner: the card's radius less
+		its own border, less the 4px the strip holds the chip off its edges.
+		A token would have to be 7px to land here, and 8 was visibly loose.
+	*/
+	border-radius: calc(var(--r-lg) - 1px - var(--sp-2));
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	color: var(--text-secondary);
