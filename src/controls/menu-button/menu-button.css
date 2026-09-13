@@ -1,0 +1,231 @@
+/*
+	MENU BUTTON
+	-----------
+	Split control: a face that runs the active item, a chevron that offers the
+	rest. Sized from the control tokens so it lines up with the plain tool
+	buttons standing next to it in the same strip.
+*/
+
+.menu-button {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+/* --------------------------------------------------------------
+	The face
+	------------------------------------------------------------ */
+
+.menu-button__face {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tool-size);
+	height: var(--tool-size);
+	padding: 0;
+	border: none;
+	border-radius: var(--r-sm);
+	background-color: transparent;
+	color: var(--icon-default);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.menu-button__face:hover {
+	background-color: var(--bg-hover);
+	color: var(--icon-strong);
+}
+
+.menu-button__face--pressed,
+.menu-button__face--pressed:hover {
+	background-color: var(--accent);
+	color: var(--icon-on-accent);
+}
+
+.menu-button__face[disabled],
+.menu-button__face[disabled]:hover {
+	background-color: transparent;
+	color: var(--icon-disabled);
+	cursor: default;
+}
+
+.menu-button__face svg {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+	pointer-events: none;
+}
+
+/* --------------------------------------------------------------
+	The chevron
+
+	Narrow on purpose - it is the secondary half of the control - but it
+	keeps a full-height hit area, so the target clears the 24px floor even
+	though the arrow drawn inside it is 12px.
+	------------------------------------------------------------ */
+
+.menu-button__chevron {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: var(--tool-size);
+	padding: 0;
+	border: none;
+	border-radius: var(--r-sm);
+	background-color: transparent;
+	color: var(--icon-default);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity var(--dur-fast) var(--ease), var(--transition-color);
+}
+
+/*
+	The chevron appears on hover, on focus, and while its menu is open - the
+	way Figma does it. It is always in the layout, so nothing shifts when it
+	fades in, and it is always reachable by keyboard whether or not it shows.
+*/
+.menu-button:hover .menu-button__chevron,
+.menu-button__chevron:focus-visible,
+.menu-button--open .menu-button__chevron {
+	opacity: 1;
+}
+
+.menu-button__chevron:hover {
+	color: var(--icon-strong);
+}
+
+.menu-button__chevron svg {
+	width: 12px;
+	height: 12px;
+	pointer-events: none;
+}
+
+/* --------------------------------------------------------------
+	The menu
+	------------------------------------------------------------ */
+
+/*
+	Explicit, because the `display: flex` below outranks the user-agent's
+	`[hidden] { display: none }` and the closed menus rendered as empty panels
+	hanging off both strips.
+*/
+.menu-button__menu[hidden] {
+	display: none;
+}
+
+.menu-button__menu {
+	position: absolute;
+	left: 0;
+	top: calc(100% + var(--sp-3));
+	z-index: var(--z-canvas-float);
+	/*
+		Sized to its longest row rather than to a guessed constant, so a tool
+		name is never clipped and a menu of short names is never a wide empty
+		box. The cap keeps a long name wrapping to an ellipsis instead of
+		stretching the menu across the canvas.
+	*/
+	width: max-content;
+	min-width: 180px;
+	max-width: 320px;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: var(--sp-2);
+	background-color: var(--bg-surface-raised);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-md);
+	box-shadow: var(--shadow-3);
+}
+
+/*
+	The zoom menu lives in the strip at the bottom right of the canvas, so it
+	opens upward, and anchors to its right edge so it cannot hang off the window.
+*/
+.menu-button__menu--up {
+	top: auto;
+	bottom: calc(100% + var(--sp-3));
+	left: auto;
+	right: 0;
+}
+
+.menu-button__row {
+	display: grid;
+	grid-template-columns: 16px var(--icon-size-lg) minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-4);
+	/*
+		No `width: 100%`. The menu sizes itself with max-content, so a percentage
+		width on the row resolves against a container that is waiting on the row -
+		the track collapsed and every row rendered as a 24px stub with its name
+		clipped away. The column flex container stretches the rows instead.
+	*/
+	min-height: var(--row-h);
+	padding: 0 var(--sp-4) 0 var(--sp-2);
+	border: none;
+	border-radius: var(--r-xs);
+	background-color: transparent;
+	color: var(--text-primary);
+	font-size: var(--fs-sm);
+	text-align: left;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.menu-button__row:hover {
+	background-color: var(--bg-hover);
+}
+
+.menu-button__row[aria-checked='true'] {
+	color: var(--text-primary);
+}
+
+.menu-button__row[disabled],
+.menu-button__row[disabled]:hover {
+	background-color: transparent;
+	color: var(--text-disabled);
+	cursor: default;
+}
+
+.menu-button__check,
+.menu-button__row-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--icon-default);
+}
+
+.menu-button__check svg {
+	width: 12px;
+	height: 12px;
+}
+
+.menu-button__row-icon svg {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+}
+
+.menu-button__row[disabled] .menu-button__row-icon {
+	color: var(--icon-disabled);
+}
+
+.menu-button__row-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/*
+	Shortcut letters are numerals-and-caps in a proportional face, which sets
+	them at ragged widths down the column. Mono with tabular figures lines the
+	column up the way a key cap column should read.
+*/
+.menu-button__row-key {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+}
+
+.menu-button__row[disabled] .menu-button__row-key {
+	color: var(--text-disabled);
+}

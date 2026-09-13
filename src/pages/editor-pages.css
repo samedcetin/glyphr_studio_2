@@ -120,12 +120,28 @@
 	border-radius: var(--r-pill);
 }
 
-/* The spacer the tool list inserts between create and edit tools. */
-.editor-page__tools-area > div:empty {
+/*
+	Divider between groups in either floating strip.
+
+	It used to be `> div:empty` with an !important height, which meant any empty
+	div the tool list happened to produce turned into a divider, and the strip's
+	layout depended on an element being childless. It is a named class now.
+*/
+.editor-page__strip-divider {
+	flex: 0 0 auto;
 	width: 1px;
-	height: 20px !important;
+	height: var(--icon-size-lg);
 	margin: 0 var(--sp-2);
 	background-color: var(--border-default);
+}
+
+/*
+	The panel toggle is the last thing in the top strip and is not a drawing
+	tool, so a divider separates it - drawn on the button rather than as an
+	element, because it is the only such case in that strip.
+*/
+.editor-page__tools-area .menu-button + .editor-page__panel-toggle {
+	margin-left: var(--sp-3);
 }
 
 /* --------------------------------------------------------------
@@ -214,16 +230,29 @@ body.is-resizing-sidebar * {
 	gap: var(--sp-1);
 }
 
+/*
+	The zoom field. Mono with tabular figures so the strip does not change width
+	as the number does - at 34.9% against 100% a proportional face moves every
+	control to its right on each wheel tick.
+*/
 .editor-page__zoom-readout {
-	width: 4.5em;
+	width: 5.5em;
 	height: var(--control-h-sm);
-	text-align: right;
-	padding-right: var(--sp-2);
+	text-align: center;
+	padding: 0 var(--sp-2);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-xs);
+	color: var(--text-primary);
 	background-color: transparent;
 	border-color: transparent;
+	cursor: text;
 }
 
-.editor-page__zoom-readout:hover,
+.editor-page__zoom-readout:hover {
+	background-color: var(--bg-hover);
+}
+
 .editor-page__zoom-readout:focus {
 	background-color: var(--bg-surface-sunken);
 	border-color: var(--border-strong);
@@ -460,9 +489,15 @@ code.warning {
 	}
 }
 
-/* View buttons inside the floating zoom pill */
-.editor-page__zoom-area button,
-.editor-page__responsive-group button {
+/*
+	View buttons inside the floating zoom pill.
+
+	Direct children only. As a descendant selector this also caught every button
+	inside the zoom menu and overrode the menu row's own `display: grid`, so each
+	row collapsed to a 24px square with its name clipped away to nothing.
+*/
+.editor-page__zoom-area > button,
+.editor-page__responsive-group > button {
 	width: var(--control-h-sm);
 	height: var(--control-h-sm);
 	min-height: var(--control-h-sm);
@@ -476,15 +511,15 @@ code.warning {
 	box-shadow: none;
 }
 
-.editor-page__zoom-area button:hover,
-.editor-page__responsive-group button:hover {
+.editor-page__zoom-area > button:hover,
+.editor-page__responsive-group > button:hover {
 	background-color: var(--bg-hover);
 	border-color: transparent;
 	color: var(--icon-strong);
 }
 
-.editor-page__zoom-area button svg,
-.editor-page__responsive-group button svg {
+.editor-page__zoom-area > button svg,
+.editor-page__responsive-group > button svg {
 	width: var(--icon-size);
 	height: var(--icon-size);
 }

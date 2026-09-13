@@ -1,5 +1,6 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
 import { addAsChildren, makeElement } from '../../common/dom.js';
+import { makeMenuButton } from '../../controls/menu-button/menu_button.js';
 import { arePanelsHidden, setPanelsHidden } from '../../panels/sidebar.js';
 import { round, valuesAreClose } from '../../common/functions.js';
 import { drawShape } from '../../display_canvas/draw_paths.js';
@@ -80,46 +81,6 @@ export function makeEditToolsButtons() {
 		toolButtonData.pathAddPoint.disabled = true;
 	}
 
-	// Make all the new buttons
-	let toolButtonElements = {};
-
-	Object.keys(toolButtonData).forEach((buttonName) => {
-		// log(`buttonName: ${buttonName}`);
-
-		let isSelected = editor.selectedTool === buttonName;
-
-		const toolTitle = toolButtonData[buttonName].shortcut
-			? `${toolButtonData[buttonName].title}  (${toolButtonData[buttonName].shortcut})`
-			: toolButtonData[buttonName].title;
-
-		let newToolButton = makeElement({
-			tag: 'button',
-			title: toolTitle,
-			className: 'editor-page__tool',
-			innerHTML: makeToolButtonSVG({
-				name: buttonName,
-				selected: isSelected,
-				disabled: toolButtonData[buttonName].disabled,
-			}),
-		});
-
-		newToolButton.addEventListener('click', () => selectTool(buttonName));
-
-		if (isSelected) newToolButton.classList.add('editor-page__tool-selected');
-
-		editor.subscribe({
-			topic: 'whichToolIsSelected',
-			subscriberID: `tools.${buttonName}`,
-			callback: (newSelectedTool) => {
-				let isSelected = newSelectedTool === buttonName;
-				newToolButton.classList.toggle('editor-page__tool-selected', isSelected);
-				newToolButton.innerHTML = makeToolButtonSVG({ name: buttonName, selected: isSelected });
-			},
-		});
-
-		toolButtonElements[buttonName] = newToolButton;
-	});
-
 	// Put it all together
 	let content = [];
 
@@ -127,32 +88,114 @@ export function makeEditToolsButtons() {
 	const onComponentPage = editor.nav.page === 'Components';
 	const onLigaturesPage = editor.nav.page === 'Ligatures';
 	const selectedItem = editor.selectedItem;
+	const canDrawNewShapes =
+		onGlyphEditPage || onLigaturesPage || (onComponentPage && selectedItem && !selectedItem.pathPoints);
 
-	if (onGlyphEditPage || onLigaturesPage) {
-		if (pixelMode) content.push(toolButtonElements.pixelPen);
-		content.push(toolButtonElements.newRectangle);
-		content.push(toolButtonElements.newOval);
-		content.push(toolButtonElements.newPath);
-	}
+	/*
+		Tools are grouped by what they are for rather than listed flat: one slot
+		per family, showing whichever member was used last, with the rest a
+		chevron away. Eight buttons in a row asked the user to remember which of
+		three arrow-ish icons did what; three slots ask them to remember three
+		families, and the menu names every member and its key.
 
-	if (onComponentPage && selectedItem && !selectedItem.pathPoints) {
-		if (pixelMode) content.push(toolButtonElements.pixelPen);
-		content.push(toolButtonElements.newRectangle);
-		content.push(toolButtonElements.newOval);
-		content.push(toolButtonElements.newPath);
-	}
+		The group only appears if at least one of its members is available on
+		this page, and a group of one renders as a plain button - a chevron over
+		a menu with a single row is a control that lies about having a choice.
+	*/
+	const toolGroups = [
+		{
+			id: 'select',
+			name: 'Select',
+			members: ['resize', 'pathEdit', 'pan'],
+			available: onGlyphEditPage || onComponentPage || onLigaturesPage,
+		},
+		{
+			id: 'shape',
+			name: 'Shape',
+			members: ['newRectangle', 'newOval'],
+			available: canDrawNewShapes,
+		},
+		{
+			id: 'draw',
+			name: 'Draw',
+			members: pixelMode
+				? ['newPath', 'pathAddPoint', 'pixelPen']
+				: ['newPath', 'pathAddPoint'],
+			available: canDrawNewShapes || onGlyphEditPage || onComponentPage || onLigaturesPage,
+		},
+	];
 
-	if (onGlyphEditPage || onComponentPage || onLigaturesPage) {
-		content.push(toolButtonElements.pathAddPoint);
-		content.push(makeElement({ tag: 'div', style: 'height: 20px;' }));
-		content.push(toolButtonElements.pathEdit);
-		content.push(toolButtonElements.resize);
-	}
+	toolGroups.forEach((group) => {
+		if (!group.available) return;
+		const members = group.members.filter((name) => toolButtonData[name] || name === 'pan');
+		if (!members.length) return;
+		content.push(makeToolGroup(group, members, toolButtonData));
+	});
 
 	if (content.length) content.push(makePanelToggleButton());
 
 	// log('makeEditToolsButtons', 'end');
 	return content;
+}
+
+/**
+	The Pan tool sits in the Select group but is built by makeViewToolsButtons,
+	so its label lives here rather than in toolButtonData. Space-drag pans from
+	any tool (events_keyboard.js), which is what the hint reports - there is no
+	letter bound to pan, and inventing one would collide with Pen, which already
+	answers to both W and H.
+*/
+const panToolData = { title: 'Pan', shortcut: 'Space' };
+
+/**
+ * Builds one tool family as a split button: the face runs the member used last,
+ * the chevron lists the family.
+ *
+ * @param {Object} group - { id, name }
+ * @param {Array} members - tool names in this group, in menu order
+ * @param {Object} toolButtonData - titles, shortcuts and disabled state
+ * @returns {Element}
+ */
+function makeToolGroup(group, members, toolButtonData) {
+	const editor = getCurrentProjectEditor();
+
+	const items = members.map((name) => {
+		const data = name === 'pan' ? panToolData : toolButtonData[name];
+		return {
+			id: name,
+			name: data?.title || name,
+			shortcut: data?.shortcut || '',
+			disabled: !!data?.disabled,
+			icon: makeToolButtonSVG({ name: name, selected: false, disabled: !!data?.disabled }),
+		};
+	});
+
+	/* Open on whichever member is live, so the strip reflects the canvas. */
+	const selected = members.includes(editor.selectedTool) ? editor.selectedTool : members[0];
+
+	const menuButton = makeMenuButton({
+		items: items,
+		activeID: selected,
+		groupName: group.name,
+		className: `editor-page__tool-group editor-page__tool-group--${group.id}`,
+		isFacePressed: () => members.includes(getCurrentProjectEditor().selectedTool),
+		onSelect: (toolName) => selectTool(toolName),
+	});
+
+	/*
+		A shortcut key selects a tool without going through this control, so the
+		group follows the editor rather than the other way round.
+	*/
+	editor.subscribe({
+		topic: 'whichToolIsSelected',
+		subscriberID: `tools.group.${group.id}`,
+		callback: (newSelectedTool) => {
+			if (members.includes(newSelectedTool)) menuButton.setActiveID(newSelectedTool);
+			else menuButton.refresh();
+		},
+	});
+
+	return menuButton.element;
 }
 
 /**
@@ -223,12 +266,15 @@ function makePanelToggleButton() {
 export function makeViewToolsButtons() {
 	// log(`makeViewToolsButtons`, 'start');
 
-	// Button data
+	/*
+		Only the buttons that still stand on their own in the strip. Pan moved
+		into the Select group at the top, and the two zoom presets moved into the
+		zoom menu below - each of them made a button here and a subscription, and
+		a button that is never added to the DOM keeps its subscription alive for
+		the life of the page.
+	*/
 	let viewButtonTitles = {
 		displayMode: 'Toggle fill / outline display mode',
-		pan: 'Pan the edit canvas',
-		zoom1to1: 'Zoom so 1 pixel = 1 em',
-		zoomEm: 'Zoom to fit a full Em',
 		zoomIn: 'Zoom in 10%',
 		zoomOut: 'Zoom out 10%',
 	};
@@ -292,30 +338,108 @@ export function makeViewToolsButtons() {
 	let view = editor.view;
 	if (view) zoomReadoutNumber = '' + round(editor.view.dz * 100, 2);
 
+	/*
+		The readout is an editable field, not a label. It used to carry the
+		disabled attribute, so the change handler below it could never fire and
+		typing a zoom level was impossible - the only ways to a specific zoom
+		were the 10% buttons and the two presets.
+
+		`this` in that handler was the module, not the input, so it would have
+		read undefined even had it run.
+	*/
 	let zoomReadout = makeElement({
 		tag: 'input',
 		className: 'editor-page__zoom-readout',
-		title: 'Zoom level',
-		innerHTML: `${zoomReadoutNumber}%`,
+		attributes: {
+			type: 'text',
+			inputmode: 'decimal',
+			'aria-label': 'Zoom level, percent',
+			title: 'Zoom level',
+		},
 	});
-	zoomReadout.setAttribute('value', zoomReadoutNumber);
-	zoomReadout.setAttribute('disabled', '');
-	zoomReadout.addEventListener('change', () => {
-		getCurrentProjectEditor().setViewZoom(this.value);
-		this.innerHTML = `${this.value}%`;
-		this.value = `${zoomReadoutNumber}%`;
+	zoomReadout.setAttribute('value', `${zoomReadoutNumber}%`);
+
+	/** Reads the field, and puts the view back on screen if it is nonsense. */
+	function commitZoomReadout() {
+		const input = /** @type {HTMLInputElement} */ (zoomReadout);
+		const typed = parseFloat(input.value.replace('%', '').trim());
+		const liveEditor = getCurrentProjectEditor();
+		if (isFinite(typed) && typed > 0) liveEditor.setViewZoom(typed);
+		else input.value = `${round(liveEditor.view.dz * 100, 2)}%`;
+	}
+
+	zoomReadout.addEventListener('change', commitZoomReadout);
+	zoomReadout.addEventListener('keydown', (event) => {
+		const keyEvent = /** @type {KeyboardEvent} */ (event);
+		if (keyEvent.key === 'Enter') {
+			event.preventDefault();
+			commitZoomReadout();
+			/** @type {HTMLInputElement} */ (zoomReadout).blur();
+		}
+		if (keyEvent.key === 'Escape') {
+			/** @type {HTMLInputElement} */ (zoomReadout).value = `${round(
+				getCurrentProjectEditor().view.dz * 100,
+				2
+			)}%`;
+			/** @type {HTMLInputElement} */ (zoomReadout).blur();
+		}
 	});
+	/* Select the whole value on focus, so typing replaces rather than appends. */
+	zoomReadout.addEventListener('focus', () =>
+		/** @type {HTMLInputElement} */ (zoomReadout).select()
+	);
 
 	editor.subscribe({
 		topic: 'editCanvasView',
 		subscriberID: 'tools.zoomReadout',
 		callback: (newView) => {
-			let zoomReadoutNumber = round(newView.dz * 100, 2);
-			zoomReadout.setAttribute('value', '' + zoomReadoutNumber);
-			zoomReadout.innerHTML = `${zoomReadoutNumber}%`;
+			/* Not while the user is typing in it. */
+			if (document.activeElement === zoomReadout) return;
 			// @ts-expect-error 'property does exist'
-			zoomReadout.value = `${zoomReadoutNumber}%`;
+			zoomReadout.value = `${round(newView.dz * 100, 2)}%`;
 		},
+	});
+
+	/*
+		The zoom presets. Figma puts these behind the percentage itself; here they
+		are behind a chevron beside it, because the percentage is a field the user
+		can type into and a field that also opens a menu is two controls wearing
+		one coat.
+
+		sticky is off: these are actions, not modes, so running one must not
+		change what the chevron would offer next time.
+	*/
+	const zoomMenu = makeMenuButton({
+		items: [
+			{
+				id: 'zoomEm',
+				name: 'Zoom to fit',
+				icon: makeToolButtonSVG({ name: 'zoomEm', selected: false }),
+			},
+			{
+				id: 'zoom1to1',
+				name: 'Actual size, 1 em = 1 pixel',
+				icon: makeToolButtonSVG({ name: 'zoom1to1', selected: false }),
+			},
+			{
+				id: 'zoomIn',
+				name: 'Zoom in',
+				shortcut: '+',
+				icon: makeToolButtonSVG({ name: 'zoomIn', selected: false }),
+			},
+			{
+				id: 'zoomOut',
+				name: 'Zoom out',
+				shortcut: '-',
+				icon: makeToolButtonSVG({ name: 'zoomOut', selected: false }),
+			},
+		],
+		activeID: 'zoomEm',
+		groupName: 'Zoom',
+		className: 'editor-page__zoom-menu',
+		sticky: false,
+		openUp: true,
+		onSelect: (id) => selectTool(id),
 	});
 
 	// Live Preview pop-out
@@ -338,21 +462,32 @@ export function makeViewToolsButtons() {
 		// log(`Live Preview Pop Out CLICK HANDLER`, 'end');
 	});
 
-	// Put it all together
-	let responsiveGroup = makeElement({ className: 'editor-page__responsive-group' });
+	/*
+		Put it all together: the zoom stepper and its field, then the zoom menu,
+		then the two view toggles - grouped, in that order, because the first
+		group changes how much you see and the second changes what you see.
 
+		The dividers were two &emsp; text nodes, which is a space character doing
+		a border's job; they are elements with a rule now, as in the top strip.
+	*/
+	const makeDivider = () => makeElement({ className: 'editor-page__strip-divider' });
+
+	let responsiveGroup = makeElement({ className: 'editor-page__responsive-group' });
 	addAsChildren(responsiveGroup, [
-		makeElement({ tag: 'div', content: '&emsp;' }),
 		viewButtonElements.zoomOut,
 		zoomReadout,
 		viewButtonElements.zoomIn,
-		makeElement({ tag: 'div', content: '&emsp;' }),
-		viewButtonElements.displayMode,
-		viewButtonElements.zoom1to1,
 	]);
 
 	// log(`makeViewToolsButtons`, 'end');
-	return [viewButtonElements.pan, responsiveGroup, viewButtonElements.zoomEm, livePreviewPopOut];
+	return [
+		responsiveGroup,
+		makeDivider(),
+		zoomMenu.element,
+		makeDivider(),
+		viewButtonElements.displayMode,
+		livePreviewPopOut,
+	];
 }
 
 /**

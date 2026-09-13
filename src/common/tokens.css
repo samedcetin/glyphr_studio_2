@@ -233,6 +233,13 @@
 	*/
 	--panel-label-col: 96px;
 
+	/*
+		Stacking. The first step of the z-scale, named for what already sits at
+		this value: chrome floating over the edit canvas. The rest of the scale
+		is still hand-picked at its call sites and migrates separately.
+	*/
+	--z-canvas-float: 10;
+
 	/* Motion. Two durations, one easing. Resist adding more. */
 	--dur-fast: 90ms;
 	--dur-base: 140ms;

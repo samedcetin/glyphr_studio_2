@@ -4,6 +4,7 @@ import { round } from '../../common/functions.js';
 import { makeIcon } from '../../common/graphics.js';
 import { sXcX, sYcY } from '../../edit_canvas/edit_canvas.js';
 import { closeAllNavMenus } from '../../project_editor/navigator.js';
+import { closeAllMenuButtons } from '../menu-button/menu_button.js';
 
 // --------------------------------------------------------------
 // Generic dialog stuff
@@ -21,6 +22,7 @@ export function closeEveryTypeOfDialog() {
 	closeAllToasts();
 	closeAllNotations();
 	closeAllInfoBubbles();
+	closeAllMenuButtons();
 	// log(`closeEveryTypeOfDialog`, 'end');
 }
 
