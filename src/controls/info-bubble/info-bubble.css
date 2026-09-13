@@ -24,22 +24,43 @@
 	outline: 0;
 }
 
+/*
+	The "?" itself, on tokens rather than three hard-coded greys - it sat at
+	the same value in both themes, which made it nearly invisible on a dark
+	panel and heavier than the label beside it on a light one.
+*/
 #entryPoint {
-	border-style: solid;
-	border-width: 1px;
-	border-color: rgb(180, 180, 180);
-	background-color: transparent;
-	color: rgb(180, 180, 180);
-	border-radius: 50%;
-	font-family: monospace, verdana, sans-serif;
-	font-size: 8px;
-	font-weight: bold;
-	width: 12px;
-	height: 12px;
-	line-height: 11px;
-	text-align: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 13px;
+	height: 13px;
 	box-sizing: border-box;
-	padding: 0px 0px 1px 0.5px;
+	border: 1px solid var(--icon-default);
+	border-radius: 50%;
+	background-color: transparent;
+	color: var(--icon-default);
+	font-family: var(--font-ui);
+	font-size: 9px;
+	font-weight: var(--fw-semibold);
+	line-height: 1;
+	transition: var(--transition-color);
+}
+
+.wrapper:hover #entryPoint {
+	border-color: var(--icon-strong);
+	color: var(--icon-strong);
+}
+
+/*
+	Open. The accent fill the rail uses for the page you are on - this bubble
+	is the thing you are reading right now, and clicking the mark closes it.
+*/
+#entryPoint[open] {
+	border-color: var(--icon-accent);
+	background-color: var(--icon-accent);
+	color: var(--bg-surface);
+	cursor: pointer;
 }
 
 .wrapper:hover,

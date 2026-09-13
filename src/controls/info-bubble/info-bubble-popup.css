@@ -1,50 +1,105 @@
-* {
-	transition: inherit;
-}
+/*
+	The help bubble.
 
-:root {
-	--bgColor: var(--gray-l10);
-	--textColor: var(--gray-l95);
+	It used to be a dark slab with a triangle pointer, on its own --gray-l10
+	ground and its own 10px radius - a visual language nothing else in the app
+	spoke. It is the same floating surface as the menus and the toast now: app
+	surface, app border, app shadow, app corner. Being made of the same tokens
+	is also what makes it work in both themes without a second palette.
+
+	The pointer went with it. It was a bare CSS triangle, which cannot carry a
+	border or a shadow, so it always read as a separate dark shape stuck to the
+	side of the box - and a bubble that opens 8px from the control that owns it
+	does not need an arrow to say which control that is.
+
+	Every rule here is scoped to #bubble. This sheet is injected into the light
+	DOM, not a shadow root, so a bare `.content` would be styling anything in
+	the app that happens to carry that class.
+*/
+
+#bubble,
+#bubble * {
+	box-sizing: border-box;
 }
 
 #bubble {
-	z-index: var(--z-toast);
-	display: grid;
-	align-items: center;
-	grid-template-columns: 12px 1fr;
-	opacity: 1;
 	position: absolute;
-	left: 100px;
-	top: 100px;
-	text-align: center;
-	animation: var(--animate-fade-in);
-}
-
-.pointer {
-	width: 0px;
-	height: 0px;
-	border: 12px solid transparent;
-	border-top: 12px solid var(--bgColor);
-	background-color: transparent;
+	left: 0;
+	top: 0;
+	z-index: var(--z-menu);
+	/*
+		Explicit, because makeElement() builds a <span> and an inline box takes
+		neither width nor max-width - the bubble wrapped across two lines and
+		drew its border twice, once around each fragment.
+	*/
 	display: block;
-	margin: 0px auto;
+	width: max-content;
+	opacity: 1;
+	animation: var(--animate-fade-in-slide-down);
 }
 
-.content {
-	padding: 20px 24px 20px 20px;
-	/* On the scale, and with the corner smoothing the rest of the app uses. */
+#bubble .content {
+	display: block;
+	/*
+		Sized by its text, capped so a long paragraph wraps rather than running
+		the width of the window. It was clamped to a 300px floor, which padded
+		a six-word note out to the size of a panel.
+	*/
+	width: max-content;
+	max-width: min(360px, calc(100vw - var(--sp-9)));
+	padding: var(--sp-5) var(--sp-6);
+	background-color: var(--bg-surface-raised);
+	color: var(--text-primary);
+	border: 1px solid var(--border-default);
 	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
-	width: clamp(300px, 400px, 600px);
-	min-width: 300px;
-	color: var(--textColor);
-	background-color: var(--bgColor);
+	box-shadow: var(--shadow-3);
+	font-size: var(--fs-sm);
+	line-height: 1.5;
 	text-align: left;
-	display: block;
-	box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+	text-wrap: pretty;
 }
 
-.content code {
-	background-color: var(--gray-l20);
-	border-color: var(--gray-l30);
+#bubble .content h1,
+#bubble .content h2,
+#bubble .content h3,
+#bubble .content h4 {
+	margin: var(--sp-5) 0 var(--sp-2) 0;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+#bubble .content > :first-child {
+	margin-top: 0;
+}
+
+#bubble .content > :last-child {
+	margin-bottom: 0;
+}
+
+#bubble .content p {
+	margin: 0 0 var(--sp-4) 0;
+}
+
+#bubble .content a {
+	color: var(--text-accent);
+}
+
+/* The same key cap the menus and the palette use. */
+#bubble .content code {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 var(--sp-2);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	line-height: 1;
 }

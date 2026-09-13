@@ -2,13 +2,103 @@ dialog {
 	z-index: var(--z-dropdown);
 }
 
+/* --------------------------------------------------------------
+	Toast
+
+	It was a 300px green slab parked at a hard-coded `left: 520px`, sized for
+	a window that stopped existing several layouts ago - so on a wide screen it
+	sat off to the left of centre, and on a narrow one it sat over the panels.
+	Green said nothing: the same surface carried "Built 4 characters" and "Only
+	SVG files can be dropped on the canvas".
+
+	Now it is the app's floating surface, the same one the menus use, centred
+	at the top of the window where nothing else lives - the breadcrumb is top
+	left, the toolbar is bottom centre. It sizes to its message instead of
+	padding a fixed box, and it is legible in both themes because it is made of
+	the same tokens as everything else.
+	------------------------------------------------------------ */
+
+#toast {
+	display: none;
+	position: fixed;
+	top: var(--sp-6);
+	/*
+		Centred with auto margins rather than a translate. animateRemove()
+		animates `transform` on the way out, which would drop any translateX
+		the moment the exit starts and throw the toast sideways as it faded.
+	*/
+	left: 0;
+	right: 0;
+	margin-inline: auto;
+	/*
+		Sized to the message, with a floor. "Switched to / Oblegg" is 88px of
+		text, and a notice that small arriving at the top of a 1600px window
+		reads as a fragment of something rather than a message.
+	*/
+	width: max-content;
+	min-width: 260px;
+	max-width: min(420px, calc(100vw - var(--sp-9)));
+	padding: var(--sp-4) var(--sp-5);
+	z-index: var(--z-toast);
+	background-color: var(--bg-surface-raised);
+	color: var(--text-primary);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	line-height: 1.45;
+	text-align: left;
+	text-wrap: pretty;
+	animation: var(--dur-slow) var(--ease-out) toast-in;
+}
+
+
 /*
-	Notices, not menus. They float, so they take the same border, shadow and
-	corner smoothing as the menus - but --r-lg rather than --r-2xl: 20 on a
-	single line of text clamps to half the height and the notice arrives as a
-	lozenge. Radius follows how much surface there is to turn.
+	The emphatic toast. It used to be a purple gradient at 1.2em - a different
+	visual language from anything else in the app, arriving for two seconds and
+	leaving. It is the accent tint the rail and the project cards already use
+	for "this is the thing you are now in", which is exactly what the one
+	caller says: you just switched projects.
 */
-#toast,
+#toast[fancy] {
+	/*
+		The tint is translucent, so it needs an opaque surface under it - on its
+		own it let the canvas through and the toast changed colour depending on
+		which glyph happened to be behind it.
+	*/
+	background-color: var(--bg-surface-raised);
+	background-image: linear-gradient(var(--bg-selected), var(--bg-selected));
+	border-color: var(--border-selected);
+	color: var(--text-primary);
+}
+
+#toast a {
+	color: var(--text-accent);
+}
+
+/*
+	Down and settling, not just fading in. The toast appears without being
+	asked for, so it needs a moment of motion to be noticed - and --ease-out
+	lands it rather than stopping it dead.
+*/
+@keyframes toast-in {
+	from {
+		opacity: 0;
+		transform: translateY(-10px) scale(0.96);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* --------------------------------------------------------------
+	Error panel
+	------------------------------------------------------------ */
+
 #error {
 	display: none;
 	width: 300px;
@@ -16,30 +106,14 @@ dialog {
 	left: 520px;
 	top: 0px;
 	margin: 5px 0px 5px 0px;
-	background-color: var(--green-l90);
-	color: var(--green-l10);
 	padding: var(--sp-3) var(--sp-5);
 	z-index: var(--z-toast);
 	text-align: center;
-	border: 1px solid var(--green-l60);
+	border: 1px solid var(--danger);
 	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in-slide-down);
-}
-
-#toast[fancy] {
-	background-color: var(--purple-l30);
-	background: linear-gradient(135deg, var(--purple-l25), var(--purple-l10));
-	color: var(--purple-l95);
-	font-size: 1.2em;
-	border-color: var(--purple-l30);
-	padding: 10px;
-}
-
-#toast a {
-	/* color: rgb(155, 221, 255); */
-	color: var(--green-l10);
 }
 
 #notation {

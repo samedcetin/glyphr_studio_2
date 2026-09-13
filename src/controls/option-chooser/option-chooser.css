@@ -1,95 +1,120 @@
+/*
+	The option chooser - the app's select.
+
+	It was built on the --enabled-restingLight-* names from before the token
+	system, which meant it did not follow the theme: on a dark panel it kept a
+	light border and light text over a light ground. It also carried a 4px
+	radius, a hard-coded 24px height and a filled triangle, none of which
+	matched the inputs it sits beside in every panel.
+
+	It is an input now, and takes what inputs take: --control-h-sm, the sunken
+	ground, --border-strong, --r-xs, mono at --fs-sm. The point is that it
+	should be indistinguishable from the number field next to it until you
+	click it.
+*/
+
 * {
 	box-sizing: border-box;
-	transition: var(--global-transition);
 }
 
 .wrapper {
-	margin: 0px;
-	padding: 0px;
 	display: grid;
-	grid-template-columns: 1fr 24px;
-	border-width: 1px;
-	border-style: solid;
-	border-color: var(--enabled-restingLight-border);
-	background-color: var(--enabled-restingLight-background);
-	border-radius: 4px;
+	grid-template-columns: minmax(0, 1fr) 20px;
+	align-items: center;
+	margin: 0;
+	padding: 0;
+	height: var(--control-h-sm);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	transition: var(--transition-color);
 }
 
 .wrapper:hover,
 .wrapper:focus {
-	border-color: var(--enabled-focus-border);
+	border-color: var(--accent);
 	cursor: pointer;
+	outline: none;
 }
 
+/*
+	Open. It used to square off its own bottom corners, from a time when the
+	list of options was attached underneath it. The list is a context menu now
+	and floats free, so the control stayed a broken-off box for no reason.
+*/
 .wrapper[deployed] {
-	border-color: var(--enabled-focus-border);
-	border-radius: 4px 4px 0px 0px;
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
 }
 
-.wrapper[deployed] .selection-display {
-	color: var(--enabled-resting-text);
+.wrapper:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
 }
 
 .wrapper[disabled],
 .wrapper:hover[disabled],
 .wrapper:focus[disabled],
 .wrapper:active[disabled] {
-	background-color: var(--disabled-background);
-	border-color: var(--disabled-border);
-	color: var(--disabled-text);
-	text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+	background-color: var(--bg-disabled);
+	border-color: var(--border-subtle);
+	color: var(--text-disabled);
 	cursor: default;
 }
 
 .selection-display {
+	grid-column: 1;
+	min-width: 0;
+	padding: 0 var(--sp-3);
 	background-color: transparent;
 	border: 0;
-	border-radius: 4px 0px 0px 4px;
-	margin: 0;
-	margin-right: 0px;
-	color: var(--enabled-resting-text);
-	grid-column: 1;
-	min-width: 50px;
-	height: 24px;
-	line-height: 24px;
-	padding: 1px 8px 0px 8px;
+	color: inherit;
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
 	text-align: left;
-	font-family: monospace;
+	white-space: nowrap;
 	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
+/* The range a character set covers, and the like - the answer to a question
+	the name has already asked, so it steps back. */
 .selection-display .prefix {
-	color: var(--disabled-text);
-	font-size: 0.9em;
+	color: var(--text-secondary);
+}
+
+.wrapper[disabled] .selection-display .prefix {
+	color: var(--text-disabled);
 }
 
 .downArrow {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+	grid-column: 2;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	padding: 0;
 	margin: 0;
-	border-width: 1px;
-	text-align: center;
-	height: 24px;
-	border-radius: 4px;
-	grid-column: 2;
-	vertical-align: middle;
+	border: 0;
+	color: var(--icon-default);
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.wrapper:hover .downArrow,
+.wrapper[deployed] .downArrow {
+	color: var(--icon-strong);
+}
+
+.wrapper[disabled] .downArrow {
+	color: var(--icon-disabled);
 }
 
 .downArrow svg {
-	fill: var(--enabled-restingLight-fill);
-}
-
-.wrapper:hover .downArrow svg,
-.wrapper[deployed] .downArrow svg {
-	fill: var(--enabled-focus-fill);
-}
-
-.wrapper[disabled] .downArrow svg,
-.wrapper:hover[disabled] .downArrow svg,
-.wrapper:focus[disabled] .downArrow svg,
-.wrapper:active[disabled] .downArrow svg {
-	fill: var(--disabled-fill);
+	width: 14px;
+	height: 14px;
+	display: block;
 }

@@ -148,11 +148,15 @@ export function animateRemove(element, animationLength = 120, scale = 0.98, tran
 // Toast
 // -----------------------------------------------------------------
 
+/** Countdown for the toast currently on screen, so a new one can cancel it. */
+let toastTimer = 0;
+
 /**
  * Creates and shows a little message at the top/center
  * of the screen, which disappears after a set time
  * @param {String} message - message to show
  * @param {Number} duration - how long to show the message (milliseconds)
+ * @param {Boolean =} fancy - mark it with the accent, for a change of state
  */
 export function showToast(message = '0_o', duration = 3000, fancy = false) {
 	// log(`showToast`, 'start');
@@ -171,17 +175,44 @@ export function showToast(message = '0_o', duration = 3000, fancy = false) {
 		element = makeElement({
 			tag: 'div',
 			id: 'toast',
-			attributes: { tabindex: '-1' },
+			/*
+				A toast is announced, not focused. It is removed on a timer, so
+				moving focus into it would strand the keyboard when it goes -
+				and role="status" reads it without taking focus at all.
+			*/
+			attributes: { role: 'status', 'aria-live': 'polite' },
 			style: 'display: none;',
 		});
-		if (fancy) element.setAttribute('fancy', '');
 		document.body.appendChild(element);
 	}
 
+	/*
+		Set every time, not only when the element is built. The toast element is
+		reused, so the first fancy toast of a session used to make every toast
+		after it fancy, and a fancy one arriving after a plain one was plain.
+	*/
+	if (fancy) element.setAttribute('fancy', '');
+	else element.removeAttribute('fancy');
+
 	element.innerHTML = message;
 	element.style.display = 'block';
-	window.setTimeout(() => {
-		// log(`showToast - timeout animateRemove`);
+	/*
+		Restart the entry animation. The element survives between toasts, and a
+		CSS animation does not replay just because the text changed - a second
+		toast within the first one's lifetime appeared with no motion at all.
+	*/
+	element.style.animation = 'none';
+	void element.offsetWidth;
+	element.style.animation = '';
+
+	/*
+		One timer, belonging to the element. They used to accumulate: a second
+		toast arriving before the first had expired inherited the first one's
+		countdown and vanished early, having been on screen for whatever was
+		left of it.
+	*/
+	window.clearTimeout(toastTimer);
+	toastTimer = window.setTimeout(() => {
 		animateRemove(element);
 	}, duration);
 	// log(`showToast`, 'end');
