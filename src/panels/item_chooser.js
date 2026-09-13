@@ -238,12 +238,30 @@ function addRangeOptionsToOptionChooser(optionChooser, editor = getCurrentProjec
 				// log(`OPTION.click - range: ${range.name}`);
 				editor.selectedCharacterRange = range;
 				editor.chooserPage.characters = 0;
-				let tileGrid = document.querySelector('.item-chooser__tile-grid');
-				// log(tileGrid);
-				tileGrid.remove();
-				let wrapper = document.querySelector('.item-chooser__wrapper');
-				// log(wrapper);
-				wrapper.appendChild(makeCharacterChooserTileGrid(editor));
+
+				/*
+					Replaced where it stood, not appended.
+
+					It used to remove the grid and append a fresh one to the end
+					of the wrapper - which was harmless while the wrapper held
+					nothing else, and put the grid below the footer the moment
+					one existed. The new grid also arrived without the compact
+					flag, so changing range in the breadcrumb's dropdown turned
+					every tile back into the full 52 by 75 one.
+				*/
+				const wrapper = document.querySelector('.item-chooser__wrapper');
+				const tileGrid = wrapper?.querySelector('.item-chooser__tile-grid');
+				if (!wrapper || !tileGrid) return;
+
+				const isCompact = wrapper.classList.contains('item-chooser__wrapper--compact');
+				tileGrid.replaceWith(makeCharacterChooserTileGrid(editor, isCompact));
+
+				// The count belongs to the range, so it changes with it.
+				const count = wrapper.querySelector('.item-chooser__count');
+				if (count) {
+					const total = editor.selectedCharacterRange?.getMemberIDs()?.length || 0;
+					count.textContent = `${total} character${total === 1 ? '' : 's'}`;
+				}
 			});
 
 			optionChooser.appendChild(option);

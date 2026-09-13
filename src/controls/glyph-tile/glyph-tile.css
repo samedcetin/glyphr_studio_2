@@ -182,11 +182,26 @@
 	margin: 2px auto;
 }
 
+/*
+	A space, drawn as an empty slot rather than labelled as one.
+
+	The full tile writes "white space" across the thumbnail, which is readable
+	at fifty pixels and is two illegible lines at forty. A dashed box says the
+	same thing at any size, and distinguishes a character that is meant to have
+	no outline from one that has not been drawn yet - which shows as the letter
+	itself, greyed, in the interface font.
+*/
 :host([compact]) .whitespace-char-thumbnail {
-	font-size: 9px;
-	line-height: 1.1;
-	padding-top: 13px;
-	height: 40px;
+	box-sizing: border-box;
+	width: 18px;
+	height: 18px;
+	margin: 11px auto;
+	padding: 0;
+	font-size: 0;
+	line-height: 0;
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
 }
 
 :host([compact]) .name {
