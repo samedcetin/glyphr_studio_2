@@ -619,3 +619,6 @@ lineIcons.menu_help = lineIcons.command_help;
 
 /* A plain magnifier. zoomIn carries a plus and means something else. */
 lineIcons.search = `<circle cx="10.5" cy="10.5" r="7"/><path d="M20.5 20.5l-5-5"/>`;
+
+/* An envelope, for the feedback row - command_info is the About row's mark. */
+lineIcons.mail = squirclePath(2.5, 5, 19, 14, 3) + `<path d="M3.5 7.5l8.5 6 8.5-6"/>`;

@@ -258,8 +258,20 @@ export function makeMenu(menuName) {
 		entryPoint.addEventListener('click', () => {
 			const rect = menuAnchor(entryPoint);
 			closeEveryTypeOfDialog();
+			/*
+				Two groups, both named. The previews used to open the menu with no
+				label at all, so two project thumbnails appeared above a list of
+				commands with nothing saying they were the slots you can work in.
+
+				The disabled row says why it is disabled. "Cross-project actions"
+				greyed out with no explanation is a dead end; the description turns
+				it into an instruction.
+			*/
+			const onlyOneProject = getGlyphrStudioApp().projectEditors.length === 1;
+
 			let menuRows = makeContextMenu(
 				[
+					{ type: 'heading', name: 'Open projects' },
 					{
 						child: makeProjectPreviewRow(0),
 						className: 'spanAll',
@@ -268,32 +280,43 @@ export function makeMenu(menuName) {
 						child: makeProjectPreviewRow(1),
 						className: 'spanAll',
 					},
+					{ name: 'hr' },
+					{ type: 'heading', name: 'Actions' },
 					{
 						name: 'Cross-project actions',
+						description: onlyOneProject
+							? 'Open a second project to use this'
+							: 'Copy glyphs, components and kerning between the two',
 						icon: 'command_crossProjectActions',
 						onClick: () => {
 							getGlyphrStudioApp().appPageNavigate(makePage_CrossProjectActions);
 						},
-						disabled: getGlyphrStudioApp().projectEditors.length === 1,
+						disabled: onlyOneProject,
 					},
 					{
-						name: 'Learn more about working with two projects',
+						/*
+							Not "Open another project" - the empty slot above already
+							says that, and it does something else: it loads a second
+							project into this window. This one starts a separate copy
+							of the app. Two rows with one label is how the rail ended
+							up with two Helps.
+						*/
+						name: 'Open a new window',
+						description: 'A separate copy of the app, with its own projects',
+						icon: 'command_newTab',
+						onClick: () => {
+							window.open('https://glyphrstudio.com/app/', '_blank');
+						},
+					},
+					{
+						name: 'Working with two projects',
+						description: 'glyphrstudio.com/help',
 						icon: 'command_newTab',
 						onClick: () => {
 							window.open(
 								'https://www.glyphrstudio.com/help/getting-started/working-with-multiple-projects.html',
 								'_blank'
 							);
-						},
-					},
-					{
-						name: 'hr',
-					},
-					{
-						name: 'Open a separate project in a new window',
-						icon: 'command_newTab',
-						onClick: () => {
-							window.open('https://glyphrstudio.com/app/', '_blank');
 						},
 					},
 				],
@@ -313,41 +336,27 @@ export function makeMenu(menuName) {
 			insertAfter(
 				entryPoint,
 				makeContextMenu(
+					/*
+						Five rows that went to five different places - a dialog, two
+						pages in this app, an external site and an email client - laid
+						out as one flat list. Nothing said which was which, and the
+						only thing distinguishing "In-app help" from "External Help &
+						Documentation site" was a long name doing a label's job.
+
+						Each row says where it goes on its second line, so the choice
+						is visible before the click rather than after it.
+					*/
 					[
+						{ type: 'heading', name: 'Help' },
 						{
 							name: 'Keyboard shortcuts',
 							icon: 'keyboard',
 							note: ['Ctrl', '/'],
 							onClick: showKeyboardShortcuts,
 						},
-						{ name: 'hr' },
-						/*
-							The feedback link used to be a standing "Found a bug? Have
-							some feedback?" blurb in the top bar. With the bar gone it
-							belongs here: it is a help action, and it was spending a
-							permanent slice of chrome on something used once.
-						*/
 						{
-							name: 'Send feedback',
-							icon: 'command_info',
-							onClick: () => {
-								const app = getGlyphrStudioApp();
-								window.open(
-									`mailto:mail@glyphrstudio.com?subject=[${app.version}] Feedback`,
-									'_blank'
-								);
-							},
-						},
-						{
-							name: 'External Help & Documentation site',
-							icon: 'command_newTab',
-							onClick: () => {
-								window.open('https://glyphrstudio.com/help/', '_blank');
-							},
-						},
-						{ name: 'hr' },
-						{
-							name: 'In-app help',
+							name: 'Help & documentation',
+							description: 'In this app',
 							icon: 'command_help',
 							onClick: () => {
 								let editor = getCurrentProjectEditor();
@@ -356,12 +365,41 @@ export function makeMenu(menuName) {
 							},
 						},
 						{
+							name: 'Documentation site',
+							description: 'glyphrstudio.com/help',
+							icon: 'command_newTab',
+							onClick: () => {
+								window.open('https://glyphrstudio.com/help/', '_blank');
+							},
+						},
+						{ name: 'hr' },
+						{ type: 'heading', name: 'About' },
+						{
 							name: 'About Glyphr Studio',
+							description: 'Version, credits and licence',
 							icon: 'command_info',
 							onClick: () => {
 								let editor = getCurrentProjectEditor();
 								editor.nav.page = 'About';
 								editor.navigate();
+							},
+						},
+						/*
+							The feedback link used to be a standing "Found a bug? Have
+							some feedback?" blurb in the top bar. With the bar gone it
+							belongs here: it is a help action, and it was spending a
+							permanent slice of chrome on something used once.
+						*/
+						{
+							name: 'Send feedback',
+							description: 'mail@glyphrstudio.com',
+							icon: 'mail',
+							onClick: () => {
+								const app = getGlyphrStudioApp();
+								window.open(
+									`mailto:mail@glyphrstudio.com?subject=[${app.version}] Feedback`,
+									'_blank'
+								);
 							},
 						},
 					],
