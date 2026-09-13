@@ -1042,6 +1042,13 @@ nav .item-chooser__wrapper {
 	right: 0;
 	height: 2px;
 	background-color: var(--accent);
+	/*
+		The one stacking value that is not a --z-* token, on purpose. Every step
+		of that scale names a layer of the window; this only lifts a 2px line
+		above the two layer rows it sits between. Giving it a scale token would
+		put a global name on a local decision, which is the shadow-alias mistake
+		in a different costume.
+	*/
 	z-index: 2;
 }
 

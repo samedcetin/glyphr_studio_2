@@ -43,7 +43,15 @@
 	padding: var(--sp-3) 0;
 	background-color: var(--bg-surface);
 	border-right: 1px solid var(--border-subtle);
-	z-index: var(--z-canvas-float);
+	/*
+		--z-shell, not --z-canvas-float. The rail opens menus, and a positioned
+		element with a z-index caps its descendants inside its own stacking
+		context - so the rail has to clear everything those menus must clear.
+		At --z-canvas-float it tied with the editor panels, and since the panels
+		come later in the DOM a tie means they win: the File menu painted behind
+		the left panel.
+	*/
+	z-index: var(--z-shell);
 	overflow-y: auto;
 	overflow-x: hidden;
 }

@@ -1,5 +1,4 @@
 import { addAsChildren, insertAfter, makeElement } from '../common/dom.js';
-import logoHorizontal from '../common/graphics/logo-wordmark-horizontal-small.svg?raw';
 import {
 	closeEveryTypeOfDialog,
 	makeContextMenu,
@@ -17,104 +16,11 @@ import { showAtlasExportDialog } from '../formats_io/atlas/atlas_export.js';
 import { showIconImportDialog, showIconMapDialog } from '../icon_font/icon_dialogs.js';
 import { ioSVG_exportSVGfont } from '../formats_io/svg_font/svg_font_export.js';
 import { makeFileName } from '../project_editor/file_io.js';
-import { emailLink } from './app.js';
-import { makeBreadcrumb } from '../project_editor/navigator.js';
 import { makePage_CrossProjectActions } from './cross_project_actions/cross_project_actions.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from './main.js';
 import { cycleThemePreference, getThemePreference, onThemeChange } from '../common/theme.js';
-import {
-	showCommandPalette,
-	showKeyboardShortcuts,
-} from '../controls/command-palette/command_palette.js';
+import { showKeyboardShortcuts } from '../controls/command-palette/command_palette.js';
 import { makePage_OpenProject } from './open_project.js';
-
-// --------------------------------------------------------------
-// Top bar for the App
-// --------------------------------------------------------------
-
-/**
- * Makes the Top Bar for the App
- * @returns {Element}
- */
-export function makeAppTopBar() {
-	let topBar = makeElement({ tag: 'div', id: 'app__top-bar' });
-
-	let logo = makeElement({ innerHTML: logoHorizontal, className: 'top-bar__logo' });
-
-	let menus = makeElement({ className: 'top-bar__menus' });
-	menus.appendChild(makeMenu('File'));
-	menus.appendChild(makeMenu('Projects'));
-	menus.appendChild(makeMenu('Help'));
-
-	let mailIcon = `
-<?xml version="1.0" encoding="UTF-8"?><svg id="Mail" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 9"><polygon points="8 1 0 1 0 2 8 2 8 1 8 1"/><polygon points="20 0 10 0 10 1 20 1 20 0 20 0"/><polygon points="20 8 10 8 10 9 20 9 20 8 20 8"/><polygon points="8 3 2 3 2 4 8 4 8 3 8 3"/><polygon points="8 7 6 7 6 8 8 8 8 7 8 7"/><polygon points="10 1 9 1 9 8 10 8 10 1 10 1"/><polygon points="21 1 20 1 20 8 21 8 21 1 21 1"/><polygon points="8 5 4 5 4 6 8 6 8 5 8 5"/><polygon points="12 2 10 2 10 3 12 3 12 2 12 2"/><polygon points="14 3 12 3 12 4 14 4 14 3 14 3"/><polygon points="16 4 14 4 14 5 16 5 16 4 16 4"/><polygon points="20 2 18 2 18 3 20 3 20 2 20 2"/><polygon points="18 3 16 3 16 4 18 4 18 3 18 3"/></svg>`;
-	let bugContact = makeElement({
-		className: 'top-bar__bug-contact',
-	});
-
-	bugContact.appendChild(
-		makeElement({
-			className: 'top-bar__bug-blurb',
-			innerHTML: 'Found a bug? Have some feedback?',
-		})
-	);
-
-	bugContact.appendChild(
-		makeElement({
-			className: 'top-bar__bug-icon',
-			innerHTML: emailLink(mailIcon),
-		})
-	);
-
-	bugContact.appendChild(
-		makeElement({
-			className: 'top-bar__bug-link',
-			innerHTML: emailLink(),
-		})
-	);
-
-	/*
-		Where you are lives in the top bar now, not in a stack of slabs above
-		the left panel. That is what frees the rest of the window to be canvas.
-	*/
-	const breadcrumb = makeBreadcrumb();
-	/** @type {Array<Element>} */
-	const children = [logo, menus];
-	if (breadcrumb) children.push(breadcrumb);
-	children.push(makeCommandSearch(), makeThemeToggle(), bugContact);
-
-	addAsChildren(topBar, children);
-
-	return topBar;
-}
-
-/**
- * The command search affordance in the top bar.
- *
- * It looks like a search field but opens the palette - the same pattern Figma
- * and Linear use. A palette nobody knows about is a palette nobody uses, and
- * a keyboard shortcut alone does not teach itself.
- *
- * @returns {Element}
- */
-function makeCommandSearch() {
-	const isMac = navigator.platform.toLowerCase().includes('mac');
-	const modifierKey = isMac ? '\u2318' : 'Ctrl';
-
-	const button = makeElement({
-		tag: 'button',
-		className: 'top-bar__command-search',
-		attributes: { type: 'button', title: 'Search commands, characters and pages' },
-		innerHTML: `
-			<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 2.5a4.5 4.5 0 1 1-2.9 7.94l-2.7 2.7a.5.5 0 0 1-.7-.7l2.7-2.7A4.5 4.5 0 0 1 7 2.5Zm0 1a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg>
-			<span class="top-bar__command-search-label">Search commands</span>
-			<span class="top-bar__command-search-keys"><code>${modifierKey}</code><code>K</code></span>
-		`,
-		onClick: showCommandPalette,
-	});
-
-	return button;
-}
 
 /**
  * Icons for each theme preference. Three states rather than two, because
@@ -168,7 +74,32 @@ export function makeThemeToggle() {
 // --------------------------------------------------------------
 
 /**
- * Makes one menu, with an entry point and a hidden dropdown
+ * Where a shell menu opens from its entry point.
+ *
+ * Beside the button and top-aligned, because the entry points live in a
+ * vertical rail. Below-and-left-aligned was right when they sat in a horizontal
+ * top bar; kept there, every menu opened on top of the rail it came from.
+ *
+ * Measured from the button rather than from event.target: the target is now the
+ * SVG inside the button, and an icon's box is not the control's box.
+ *
+ * @param {Element} entryPoint - the button the menu belongs to
+ * @returns {Object} - { x, y }
+ */
+function menuAnchor(entryPoint) {
+	const rect = entryPoint.getBoundingClientRect();
+	/*
+		From the rail's edge, not the button's. The buttons are 32px centred in a
+		56px column, so anchoring to the button left the menu sitting 6px over the
+		rail it belongs to.
+	*/
+	const rail = entryPoint.closest('#app__left-rail');
+	const from = rail ? rail.getBoundingClientRect().right : rect.right;
+	return { x: Math.round(from) + 6, y: Math.round(rect.top) };
+}
+
+/**
+ * Makes one menu, with an entry point and a hidden dropdown.
  * @param {String} menuName - Name for the menu entry point
  * @returns {Element}
  */
@@ -309,18 +240,16 @@ export function makeMenu(menuName) {
 				onClick: showIconMapDialog,
 			},
 		]);
-		entryPoint.addEventListener('click', (event) => {
-			// @ts-expect-error 'property does exist'
-			let rect = event.target.getBoundingClientRect();
+		entryPoint.addEventListener('click', () => {
+			const rect = menuAnchor(entryPoint);
 			closeEveryTypeOfDialog();
-			insertAfter(entryPoint, makeContextMenu(fileMenuData, rect.x, rect.y + rect.height));
+			insertAfter(entryPoint, makeContextMenu(fileMenuData, rect.x, rect.y));
 		});
 	}
 
 	if (menuName === 'Projects') {
-		entryPoint.addEventListener('click', (event) => {
-			// @ts-expect-error 'property does exist'
-			let rect = event.target.getBoundingClientRect();
+		entryPoint.addEventListener('click', () => {
+			const rect = menuAnchor(entryPoint);
 			closeEveryTypeOfDialog();
 			let menuRows = makeContextMenu(
 				[
@@ -362,7 +291,7 @@ export function makeMenu(menuName) {
 					},
 				],
 				rect.x,
-				rect.y + rect.height,
+				rect.y,
 				500
 			);
 
@@ -371,9 +300,8 @@ export function makeMenu(menuName) {
 	}
 
 	if (menuName === 'Help') {
-		entryPoint.addEventListener('click', (event) => {
-			// @ts-expect-error 'property does exist'
-			let rect = event.target.getBoundingClientRect();
+		entryPoint.addEventListener('click', () => {
+			const rect = menuAnchor(entryPoint);
 			closeEveryTypeOfDialog();
 			insertAfter(
 				entryPoint,
@@ -386,6 +314,23 @@ export function makeMenu(menuName) {
 							onClick: showKeyboardShortcuts,
 						},
 						{ name: 'hr' },
+						/*
+							The feedback link used to be a standing "Found a bug? Have
+							some feedback?" blurb in the top bar. With the bar gone it
+							belongs here: it is a help action, and it was spending a
+							permanent slice of chrome on something used once.
+						*/
+						{
+							name: 'Send feedback',
+							icon: 'command_info',
+							onClick: () => {
+								const app = getGlyphrStudioApp();
+								window.open(
+									`mailto:mail@glyphrstudio.com?subject=[${app.version}] Feedback`,
+									'_blank'
+								);
+							},
+						},
 						{
 							name: 'External Help & Documentation site',
 							icon: 'command_newTab',
@@ -414,7 +359,7 @@ export function makeMenu(menuName) {
 						},
 					],
 					rect.x,
-					rect.y + rect.height
+					rect.y
 				)
 			);
 		});

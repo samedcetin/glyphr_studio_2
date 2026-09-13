@@ -503,7 +503,7 @@ function addHideUIOverlay() {
 			style: `
 				display: block;
 				position: absolute;
-				z-index: 3000;
+				z-index: var(--z-full-screen);
 				background-color: white;
 				top: 0;
 				left: 0;

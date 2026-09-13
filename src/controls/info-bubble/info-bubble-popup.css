@@ -8,7 +8,7 @@
 }
 
 #bubble {
-	z-index: 2010;
+	z-index: var(--z-toast);
 	display: grid;
 	align-items: center;
 	grid-template-columns: 12px 1fr;

@@ -117,7 +117,7 @@ nav[id^='nav-dropdown'] {
 	max-height: calc(100% - 95px);
 	min-width: 240px;
 	padding: var(--sp-2);
-	z-index: 100;
+	z-index: var(--z-sticky);
 	overflow-x: hidden;
 	overflow-y: auto;
 	animation: var(--animate-fade-in-slide-down);

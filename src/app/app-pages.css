@@ -471,7 +471,7 @@
 	background-color: hsla(212, 92%, 40%, 0.55);
 	border: 2px dashed hsla(0, 0%, 100%, 0.5);
 	border-radius: var(--r-lg);
-	z-index: 100;
+	z-index: var(--z-sticky);
 	padding: 0;
 	margin: 0;
 }

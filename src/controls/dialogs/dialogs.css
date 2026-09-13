@@ -1,5 +1,5 @@
 dialog {
-	z-index: 1000;
+	z-index: var(--z-dropdown);
 }
 
 #toast,
@@ -15,7 +15,7 @@ dialog {
 	/* color: rgb(155, 221, 255); */
 	color: var(--green-l10);
 	padding: 4px 8px;
-	z-index: 2010;
+	z-index: var(--z-toast);
 	text-align: center;
 	border: 1px solid var(--green-l60);
 	border-radius: 4px;
@@ -45,7 +45,7 @@ dialog {
 	width: auto;
 	height: auto;
 	padding: 0;
-	z-index: 2020;
+	z-index: var(--z-alert);
 	background-color: rgb(229, 234, 239);
 	border: 5px solid rgb(229, 234, 239);
 	border-radius: 5px 5px 0px 5px;
@@ -121,7 +121,7 @@ dialog {
 	overflow-y: auto;
 	padding: var(--sp-2);
 	position: absolute;
-	z-index: 2030;
+	z-index: var(--z-menu);
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
 	border-radius: var(--r-md);
@@ -265,7 +265,7 @@ dialog {
 	top: 0px;
 	width: 100vw;
 	height: 100vh;
-	z-index: 2000;
+	z-index: var(--z-modal);
 	backdrop-filter: blur(2px);
 	background-color: rgba(255, 255, 255, 0.75);
 	animation: var(--animate-fade-in);

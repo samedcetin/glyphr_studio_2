@@ -247,11 +247,44 @@
 	--panel-label-col: 96px;
 
 	/*
-		Stacking. The first step of the z-scale, named for what already sits at
-		this value: chrome floating over the edit canvas. The rest of the scale
-		is still hand-picked at its call sites and migrates separately.
+		STACKING
+		--------
+		The whole scale, named for what sits at each value. Every z-index in the
+		app comes from here; a bare number is a decision made in isolation, and
+		fifteen of those is how the left rail's menu ended up painting behind a
+		panel that had picked the same number from a different file.
+
+		The order is deliberate and worth stating, because it is not obvious:
+
+			shell (2000) is above every page surface, so chrome and the menus it
+			opens are never covered by content.
+
+			modal (2005) sits one step above shell. That step is the whole
+			reason the old top bar carried `z-index: 2000 !important` - it was
+			fighting the modal for the same number. Nothing needs !important now.
+
+			toast, alert, menu (2010-2030) are above the modal on purpose: a
+			confirmation that cannot be read over the dialog it belongs to is
+			worse than one that covers it.
+
+		A positioned element with a z-index creates a stacking context, and its
+		children are then capped inside it. So a surface that opens a menu needs
+		a value at least as high as the things that menu must clear - which is
+		why the rail is --z-shell rather than --z-canvas-float.
 	*/
+	--z-base: 0;
+	--z-resizer: 5;
 	--z-canvas-float: 10;
+	--z-sticky: 100;
+	--z-dropdown: 1000;
+	--z-shell: 2000;
+	--z-modal: 2005;
+	--z-toast: 2010;
+	--z-alert: 2020;
+	--z-menu: 2030;
+	--z-command-palette: 3000;
+	/* The hide-UI preview covers the whole window, palette included. */
+	--z-full-screen: 3100;
 
 	/* Motion. Two durations, one easing. Resist adding more. */
 	--dur-fast: 90ms;
