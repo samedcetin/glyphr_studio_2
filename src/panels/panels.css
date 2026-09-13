@@ -253,16 +253,27 @@
 	height: var(--control-h-sm);
 	padding: 2px;
 	margin: 0px 0px 0px 2px;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 }
 
+/*
+	On tokens. It was --blue-l95 in every state, which is a fixed pale blue -
+	it did not follow the theme, and it did not change on hover either, so the
+	button had no way of saying it had been reached.
+*/
 .panel-card__action-button {
-	background-color: var(--blue-l95);
+	background-color: var(--bg-surface-sunken);
+	border-color: var(--border-subtle);
+	color: var(--icon-default);
 }
 
 .panel-card__action-button:hover,
 .panel-card__action-button:focus,
 .panel-card__action-button:active {
-	background-color: var(--blue-l95);
+	background-color: var(--bg-hover);
+	border-color: var(--border-strong);
+	color: var(--icon-strong);
 }
 
 /*
@@ -411,9 +422,16 @@
 	grid-column: 1 / -1;
 }
 
+/*
+	The same corner the toolbar's tools and the rail's buttons take. These are
+	the same object - a square that holds one icon - so they should not be
+	three different shapes depending on which side of the window they are on.
+*/
 .panel__actions-area button {
 	background-color: var(--bg-surface-sunken);
 	border-color: var(--border-subtle);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	color: var(--icon-default);
 	padding: 4px;
 	width: 100%;

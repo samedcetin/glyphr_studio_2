@@ -305,10 +305,15 @@ info-bubble {
 	One visible focus ring for everything, drawn outside the element so it is
 	never clipped. :focus-visible keeps it off mouse clicks but on for keyboard.
 */
+/*
+	No border-radius here. An outline already follows the shape of the element
+	it is drawn around, and setting a radius in this rule was changing the
+	element's own corners the moment it took focus - a 16px menu row squared
+	itself off to 3px while the keyboard was on it.
+*/
 :focus-visible {
 	outline: var(--focus-style);
 	outline-offset: var(--focus-offset);
-	border-radius: var(--r-xs);
 }
 
 input:focus-visible,
@@ -430,7 +435,15 @@ button {
 	min-height: var(--control-h-sm);
 	margin: 0px;
 	cursor: pointer;
-	border-radius: var(--r-xs);
+	/*
+		The default every button in the app falls back to, and most of them do.
+		--r-xs is an input's radius - 3px, meant for a field sitting in a row -
+		and on a 30px icon button it reads as a square with the corners filed
+		off. --r-md is the button radius the rest of the app was already using
+		where it said so explicitly.
+	*/
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	border: 1px solid var(--border-default);
 	background-color: var(--bg-surface);
 	color: var(--text-primary);
