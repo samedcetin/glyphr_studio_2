@@ -214,9 +214,8 @@
 	--r-xl: 16px;
 	/*
 		Floating surfaces only - popovers and menus. It is the one radius that
-		sits above the page rather than in it, so it is the one that has to hold
-		a --r-xl child at --sp-2 of padding without the two corners looking like
-		the same curve.
+		sits above the page rather than in it, and it is sized to hold a --r-xl
+		child concentrically at --sp-1 of padding: 18 - 2 = 16.
 	*/
 	--r-2xl: 18px;
 	--r-pill: 999px;

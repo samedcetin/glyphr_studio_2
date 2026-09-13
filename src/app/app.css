@@ -320,10 +320,8 @@
 	overflow: hidden;
 	border: 1px solid var(--border-subtle);
 	/*
-		One step inside the menu's --r-2xl. Strictly concentric would be 14 -
-		18 less the --sp-2 of menu padding - but --r-xl is the radius the rest
-		of the app's surfaces use and 2px of extra fullness at the corner is
-		not something the eye can find at this size.
+		Concentric with the menu around it: the menu is --r-2xl with --sp-1 of
+		padding, and 18 - 2 = 16, which is --r-xl.
 	*/
 	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
