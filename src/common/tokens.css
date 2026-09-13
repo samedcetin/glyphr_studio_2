@@ -234,7 +234,13 @@
 	--icon-size: 16px;
 	--icon-size-lg: 20px;
 	--tool-size: 32px;
-	--topbar-h: 44px;
+
+	/*
+		The shell's one dimension. It replaced --topbar-h, which nothing reads
+		since the top bar became a rail - and a declared-but-unread size is an
+		invitation to build against something that is not there any more.
+	*/
+	--rail-w: 56px;
 
 	/*
 		The single label track for every panel card, in both sidebars. Fixed, not

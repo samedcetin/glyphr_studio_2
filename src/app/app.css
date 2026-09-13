@@ -6,8 +6,6 @@
 	gives the row back to the canvas, which is the surface this app is about.
 */
 #app__wrapper {
-	--rail-w: 56px;
-
 	background-color: var(--bg-app);
 	height: 100%;
 	width: 100%;
@@ -28,6 +26,16 @@
 	min-width: 0;
 	background-color: var(--bg-app);
 	overflow: hidden;
+}
+
+/*
+	App pages - the project hub and cross-project actions - replace the whole
+	wrapper and bring their own sidebar, so no rail is built for them. Without
+	this the content stayed in column 2 and the rail's 56px column sat empty
+	down the left of the screen.
+*/
+#app__wrapper > #app__main-content:only-child {
+	grid-column: 1 / -1;
 }
 
 /* --------------------------------------------------------------

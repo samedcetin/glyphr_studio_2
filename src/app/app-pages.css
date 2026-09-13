@@ -9,14 +9,23 @@
 	the application, not a title card in front of it.
 -------------------------------------------------------- */
 
+/*
+	No negative offset, and 100% rather than 100vh.
+
+	This page used to cancel the app's top bar row by pulling itself up by the
+	bar's height and then claiming a full viewport height. With the bar replaced
+	by a rail there is no row to cancel: the offset simply hid the header, taking
+	the New font and Open file buttons off the top of the screen, and left an
+	equal gap at the bottom. 100% fills whatever its grid cell actually is,
+	which is the honest measure either way.
+*/
 #open-project__page {
 	display: grid;
 	grid-template-columns: 260px minmax(0, 1fr);
 	background-color: var(--bg-app);
 	position: relative;
-	top: calc(var(--topbar-h) * -1);
 	width: 100%;
-	height: 100vh;
+	height: 100%;
 	column-gap: 0;
 	overflow: hidden;
 }
@@ -609,9 +618,9 @@
 	row-gap: 10px;
 	padding: 20px;
 	position: relative;
-	top: -40px;
+	/* Same offset, same fix - and this one had guessed 40 against a 44px bar. */
 	width: 100%;
-	height: 100vh;
+	height: 100%;
 	column-gap: 0;
 	color: var(--gray-l90);
 }
