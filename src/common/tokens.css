@@ -211,7 +211,20 @@
 	--r-sm: 5px;
 	--r-md: 8px;
 	--r-lg: 12px;
+	--r-xl: 16px;
 	--r-pill: 999px;
+
+	/*
+		Corner smoothing, Apple style: the turn is spread along the edge and
+		eased into, so curvature never jumps the way a quarter circle's does.
+
+		Only Chromium ships `corner-shape` so far. Everywhere else the whole
+		declaration is invalid and dropped, leaving the plain circular radius -
+		which is why this is a separate property and not folded into --r-*.
+		Icons do not use this: they carry the geometry in their path data, so
+		they get the same corner in every browser. See common/icons.js.
+	*/
+	--corner-smooth: squircle;
 
 	/* Control sizing - dense by default, this is a pro tool */
 	--control-h: 28px;

@@ -53,7 +53,8 @@
 	z-index: 10;
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 }
 
@@ -114,11 +115,16 @@
 	strips meant the two halves of one job sat at opposite ends of the window,
 	and the eye had to cross the artwork to get from a tool to its zoom.
 
-	Radius is concentric, not decorative: the buttons inside are --r-md (8), the
-	padding around them is --sp-2 (4), so the strip is 8 + 4 = --r-lg (12). The
+	Radius is concentric, not decorative: the buttons inside are --r-lg (12), the
+	padding around them is --sp-2 (4), so the strip is 12 + 4 = --r-xl (16). The
 	strip used to be --r-pill, which put a 20px curve around 5px buttons - a
 	round shell holding square contents, with the mismatch widest exactly at the
 	corners where both are visible at once.
+
+	Both curves are squircles rather than quarter circles - see --corner-smooth
+	in tokens.css. Concentricity matters more once they are: a continuous corner
+	holds the eye longer than a circular one, so a mismatch between the shell and
+	its contents is more visible, not less.
 */
 .editor-page__tools-area {
 	bottom: var(--float-inset);
@@ -344,7 +350,8 @@ body.is-resizing-sidebar * {
 		on the --r-lg of the strip, so the button's corner and the strip's corner
 		are concentric rather than two unrelated curves.
 	*/
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	box-shadow: none;
 }
 
@@ -525,7 +532,8 @@ code.warning {
 	margin: 0;
 	border: 1px solid transparent;
 	/* Concentric with the strip, as .editor-page__tool is. */
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--icon-default);
 	box-shadow: none;
