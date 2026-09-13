@@ -4,8 +4,6 @@ import { makeIcon } from '../common/graphics.js';
 import { makeMetricKeyRow } from '../metrics/metric_keys_row.js';
 import { makeActionsArea_Glyph, makeActionsArea_Universal } from './actions.js';
 import {
-	dimSplit,
-	dimSplitElement,
 	makeInputs_position,
 	makeInputs_size,
 	makeLinkReferenceRow,
@@ -29,9 +27,17 @@ export function makeCard_glyphAttributes(glyph) {
 		innerHTML: `<h3>${glyph.displayType} ${glyph.ident || ''}</h3>`,
 	});
 
-	let advanceWidthLabel = makeSingleLabel('advance width');
-	let halfSizeAdvanceWidthInput = makeElement({ tag: 'div', className: 'doubleInput' });
+	/*
+		The mark is inside the field, so there is no row of label above it -
+		see the affix note in input-number.
+	*/
+	let halfSizeAdvanceWidthInput = makeElement({
+		tag: 'div',
+		className: 'doubleInput doubleInput--full',
+	});
 	let advanceWidthInput = makeSingleInput(glyph, 'advanceWidth', 'currentItem', 'input-number');
+	advanceWidthInput.setAttribute('prefix', 'advanceWidth');
+	advanceWidthInput.setAttribute('title', 'Advance width');
 	let autoFitAdvanceWidth = makeElement({
 		tag: 'button',
 		className: 'panel-card__action-button',
@@ -51,7 +57,7 @@ export function makeCard_glyphAttributes(glyph) {
 		tag: 'label',
 		className: 'info',
 		innerHTML: `
-			<span>bearings: left${dimSplit()}right</span>
+			<span>bearings</span>
 			<info-bubble>
 				<h1>Side Bearings</h1>
 				Side bearings are the blank space to the left and right
@@ -73,16 +79,22 @@ export function makeCard_glyphAttributes(glyph) {
 			</info-bubble>
 		`,
 	});
-	let doubleBearingInput = makeElement({ tag: 'div', className: 'doubleInput' });
+	let doubleBearingInput = makeElement({
+		tag: 'div',
+		className: 'doubleInput doubleInput--pair',
+	});
 	let lsbInput = makeSingleInput(glyph, 'leftSideBearing', 'currentItem', 'input-number');
 	let rsbInput = makeSingleInput(glyph, 'rightSideBearing', 'currentItem', 'input-number');
+	lsbInput.setAttribute('prefix', 'L');
+	lsbInput.setAttribute('title', 'Left side bearing');
+	rsbInput.setAttribute('prefix', 'R');
+	rsbInput.setAttribute('title', 'Right side bearing');
 	doubleBearingInput.appendChild(lsbInput);
-	doubleBearingInput.appendChild(dimSplitElement());
 	doubleBearingInput.appendChild(rsbInput);
 
 	// Put it all together
 	if (glyph.displayType !== 'Component') {
-		addAsChildren(glyphCard, [advanceWidthLabel, halfSizeAdvanceWidthInput]);
+		addAsChildren(glyphCard, halfSizeAdvanceWidthInput);
 		if (glyph?.shapes?.length) {
 			addAsChildren(glyphCard, [bearingLabel, doubleBearingInput]);
 			// Directly under the numbers they drive.

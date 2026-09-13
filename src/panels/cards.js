@@ -24,26 +24,33 @@ export function makeInputs_position(
 	}
 	let topics = [thisTopic].concat(additionalTopics);
 
-	if (labelPrefix) labelPrefix += ':&ensp;';
+	/*
+		X and Y are on the fields themselves now, the way every drawing tool
+		writes them. The label that used to say "x / y" above the pair said no
+		more than the two marks do, and cost a row of the panel to say it.
 
-	// Label + inputs
-	let label = makeElement({ tag: 'label', innerHTML: `${labelPrefix}x${dimSplit()}y` });
-	let doubleInput = makeElement({ tag: 'div', className: 'doubleInput' });
+		A labelPrefix still gets a label, because "point" or "h1" names which
+		point these are - something no mark inside the field can say.
+	*/
+	let doubleInput = makeElement({
+		tag: 'div',
+		className: `doubleInput doubleInput--pair${labelPrefix ? '' : ' doubleInput--full'}`,
+	});
 	let xInput = makeSingleInput(item, 'x', topics, 'input-number');
 	let yInput = makeSingleInput(item, 'y', topics, 'input-number');
+	xInput.setAttribute('prefix', 'X');
+	yInput.setAttribute('prefix', 'Y');
 
 	if (disabled) {
 		xInput.setAttribute('disabled', '');
 		yInput.setAttribute('disabled', '');
 	}
 
-	// Put double input together
 	doubleInput.appendChild(xInput);
-	doubleInput.appendChild(dimSplitElement());
 	doubleInput.appendChild(yInput);
 
 	// log(`makeInputs_position`, 'end');
-	return [label, doubleInput];
+	return labelPrefix ? [makeSingleLabel(labelPrefix), doubleInput] : [doubleInput];
 }
 
 export function makeInputs_size(item, disabled = false) {
@@ -52,10 +59,14 @@ export function makeInputs_size(item, disabled = false) {
 	let thisTopic = `current${item.objType}`;
 
 	// Width and Height
-	let dimensionLabel = makeSingleLabel(`width${dimSplit()}height`);
-	let dimensionInputs = makeElement({ tag: 'div', className: 'doubleInput' });
+	let dimensionInputs = makeElement({
+		tag: 'div',
+		className: 'doubleInput doubleInput--full',
+	});
 	let wInput = makeSingleInput(item, 'width', thisTopic, 'input-number');
 	let hInput = makeSingleInput(item, 'height', thisTopic, 'input-number');
+	wInput.setAttribute('prefix', 'W');
+	hInput.setAttribute('prefix', 'H');
 	if (disabled) {
 		wInput.setAttribute('disabled', '');
 		hInput.setAttribute('disabled', '');
@@ -71,12 +82,19 @@ export function makeInputs_size(item, disabled = false) {
 		slash was already using.
 	*/
 	dimensionInputs.appendChild(wInput);
+	/*
+		A spacer rather than a slash when there is no lock to show. The slash
+		used to separate "width" from "height"; W and H do that from inside the
+		fields now, and a slash between two disabled fields only said that this
+		row is different from the one above it.
+	*/
 	dimensionInputs.appendChild(
-		disabled ? dimSplitElement() : makeRatioLockToggle(item, thisTopic)
+		disabled
+			? makeElement({ tag: 'span', className: 'ratio-lock__gap' })
+			: makeRatioLockToggle(item, thisTopic)
 	);
 	dimensionInputs.appendChild(hInput);
 
-	returnControls.push(dimensionLabel);
 	returnControls.push(dimensionInputs);
 
 	// Only show this stuff if not disabled.

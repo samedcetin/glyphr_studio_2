@@ -489,6 +489,11 @@ lineIcons.round = `<path d="M4 20V10.5A6.5 6.5 0 0 1 10.5 4H20"/><path d="M4 20h
 	label above every field.
 */
 
+/* Advance width: the span between two walls. */
+lineIcons.advanceWidth =
+	`<path d="M4 4v16M20 4v16"/>` +
+	`<path d="M8 12h8"/><path d="M10.5 9.5L8 12l2.5 2.5M13.5 9.5L16 12l-2.5 2.5"/>`;
+
 /* An angle: two arms, and the arc that measures between them. */
 lineIcons.angle = `<path d="M4.5 19.5V4.5"/><path d="M4.5 19.5h15"/><path d="M11.5 19.5a7 7 0 0 0-7-7"/>`;
 

@@ -202,6 +202,25 @@
 	margin-right: 0;
 }
 
+/*
+	Two fields with nothing between them, because each one now says what it is
+	from the inside - X and Y, W and H, L and R. The 16px track in the middle
+	held a slash that repeated what the label above the pair already said; both
+	are gone. See the affix note in input-number.
+*/
+.panel__card .doubleInput--pair {
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	column-gap: var(--sp-2);
+}
+
+/*
+	And with no label beside it, the pair takes the whole card rather than
+	sitting indented past an empty label column.
+*/
+.panel__card .doubleInput--full {
+	grid-column: 1 / -1;
+}
+
 .panel__card input,
 .panel__card option-chooser,
 .panel__card option-toggle {
@@ -282,7 +301,8 @@
 	stood four pixels short of them, so the row read as a control with a
 	smaller thing wedged in the middle rather than as three parts of one row.
 */
-.panel__card .doubleInput:has(> .ratio-lock) {
+.panel__card .doubleInput:has(> .ratio-lock),
+.panel__card .doubleInput:has(> .ratio-lock__gap) {
 	grid-template-columns: minmax(0, 1fr) var(--control-h) minmax(0, 1fr);
 }
 
