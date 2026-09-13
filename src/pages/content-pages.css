@@ -148,69 +148,120 @@
 	margin-right: 4px;
 }
 
+/* --------------------------------------------------------
+	Keyboard shortcut reference
+
+	The old one. It predates the token system and the key cap: Courier New on
+	a dead grey, at 1.1em !important, in a 30px-wide box, with everything in
+	the row nudged into place by hand - `position: relative; top: 5px` on the
+	icons, `top: 7px` on the cursors, 4px of top padding standing in for
+	vertical centring. It is the same information the Ctrl+/ sheet shows, and
+	it should not be a second design for it.
+-------------------------------------------------------- */
+
 .keyboardShortcutTable {
 	display: grid;
-	grid-template-columns: max-content 1fr;
-	row-gap: 20px;
-	column-gap: 20px;
+	grid-template-columns: max-content minmax(0, 1fr);
+	align-items: center;
+	row-gap: var(--sp-3);
+	column-gap: var(--sp-7);
 }
 
+/* An eyebrow, the same one the sheet and the menus use. */
 .keyboardShortcutTable h3 {
 	grid-column: 1 / -1;
-	margin: 10px 0px 0px 0px;
+	margin: var(--sp-7) 0 var(--sp-1) 0;
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+
+.keyboardShortcutTable h3:first-child {
+	margin-top: 0;
+}
+
+/*
+	The keys cell. A flex row, so the caps, the separators and the tool icons
+	space themselves instead of being carried by the 2px margin every <code>
+	used to have.
+*/
+.keyboardShortcutTable > span {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sp-2);
+	min-height: var(--control-h);
 }
 
 .keyboardShortcutTable label {
-	margin: 5px 0px 6px 0px;
-	padding-top: 6px;
-	padding-bottom: 0px;
+	margin: 0;
+	padding: 0;
+	color: var(--text-secondary);
+	font-size: var(--fs-sm);
+	line-height: 1.4;
 }
 
 .keyboardShortcutTable svg {
-	position: relative;
-	top: 5px;
-}
-
-code,
-.keyboardShortcutTable code {
-	font-family: monospace;
-	padding: 2px 6px;
-	margin: 2px;
-	background-color: var(--gray-l95);
-	border: 1px solid var(--gray-l90);
-	border-radius: 4px;
-	display: inline-block;
-	font-size: 1.1em !important;
-	min-width: 30px;
-	text-align: center;
-}
-
-.keyboardShortcutTable code,
-.keyboardShortcutTable i {
-	height: 28px;
-	padding-top: 4px;
-	padding-bottom: 0px;
-}
-
-code.arrow-key {
-	font-weight: bold;
-	position: relative;
-	top: 1px;
-	line-height: 1.3em;
+	position: static;
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+	color: var(--icon-default);
+	flex: 0 0 auto;
 }
 
 .keyboardShortcutTable img {
 	display: inline-block;
-	height: 24px;
-	margin: 0px 8px 0px 5px;
-	position: relative;
-	top: 7px;
+	height: 20px;
+	margin: 0;
+	position: static;
+	flex: 0 0 auto;
 }
 
-span.spacer {
-	width: 30px;
+/* A word standing in for a gesture - "drag", "click" - not a key. */
+.keyboardShortcutTable i {
+	font-style: normal;
+	color: var(--text-secondary);
+	font-size: var(--fs-sm);
+}
+
+/*
+	The app's key cap, at the size that sits on a line of text. Menus and the
+	palette draw a taller one, because there they nest inside a row's corner -
+	see dialogs.css.
+*/
+code {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 var(--sp-3);
+	margin: 0;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	line-height: 1;
 	text-align: center;
+}
+
+/* Centred by the flex box it is in now, rather than by a 1px nudge. */
+code.arrow-key {
+	font-weight: var(--fw-semibold);
+	position: static;
+}
+
+/* The "+" between two keys. */
+span.spacer {
 	display: inline-block;
+	width: auto;
+	text-align: center;
+	color: var(--text-tertiary);
+	font-size: var(--fs-xs);
 }
 
 /* Settings page */

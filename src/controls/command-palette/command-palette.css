@@ -179,18 +179,26 @@
 }
 
 /*
-	Shared key-cap styling for the palette and the shortcut sheet, and the same
-	cap the menus draw - see dialogs.css. The heavy bottom border is gone: it
-	was a drawn bevel, a different idiom from every other cap in the app, and
-	it made the cap sit a pixel high in its own box.
+	Key caps. Two sizes, and which one you get depends on whether it is sitting
+	inside something.
+
+	In a result row it is --control-h-sm, because a row is 40px and that leaves
+	--sp-4 above, below and to the right - the equal insets that let the cap's
+	corner nest inside the row's. Everywhere else here - the hint strip along
+	the bottom, the reference sheet's columns - there is no row and no corner,
+	so the cap takes the size that sits on a line of text.
+
+	The heavy bottom border both used to carry is gone. It was a drawn bevel,
+	an idiom no other cap in the app uses, and it made the cap sit a pixel high
+	in its own box.
 */
 .command-palette code,
 .shortcut-sheet code {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: var(--control-h-sm);
-	height: var(--control-h-sm);
+	min-width: 20px;
+	height: 20px;
 	padding: 0 var(--sp-3);
 	margin: 0;
 	background-color: var(--bg-surface-sunken);
@@ -198,9 +206,15 @@
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	font-family: var(--font-mono);
-	font-size: var(--fs-xs);
+	font-size: var(--fs-2xs);
 	color: var(--text-secondary);
 	line-height: 1;
+}
+
+.command-palette__row-keys code {
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	font-size: var(--fs-xs);
 }
 
 /*
@@ -263,7 +277,7 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--sp-5);
-	min-height: 26px;
+	min-height: var(--control-h);
 }
 
 .shortcut-sheet__label {
