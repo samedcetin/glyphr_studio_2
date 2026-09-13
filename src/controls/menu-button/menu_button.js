@@ -157,12 +157,17 @@ export function makeMenuButton({
 					'aria-checked': String(item.id === currentID),
 					tabindex: '-1',
 				},
+				/*
+					No tick column. Every row in one of these menus carries an
+					icon already, and a 16px gutter held open on every row so
+					that one of them can show a tick sets the whole list in from
+					its own edge for the sake of a mark you could make with the
+					row itself. The selected row is marked instead - see
+					[aria-checked='true'] in the stylesheet. The role and the
+					attribute are unchanged, so a screen reader still hears
+					which one is chosen.
+				*/
 				innerHTML: `
-					<span class="menu-button__check" aria-hidden="true">${
-						item.id === currentID
-							? `<svg viewBox="0 0 12 12"><path fill="currentColor" d="M10.2 3.3a.75.75 0 0 1 .02 1.06l-4.4 4.6a.75.75 0 0 1-1.08 0L2.28 6.4a.75.75 0 1 1 1.08-1.04l1.92 2 3.86-4.04a.75.75 0 0 1 1.06-.02Z"/></svg>`
-							: ''
-					}</span>
 					<span class="menu-button__row-icon" aria-hidden="true">${item.icon || ''}</span>
 					<span class="menu-button__row-name">${item.name}</span>
 					<span class="menu-button__row-key">${item.shortcut || ''}</span>

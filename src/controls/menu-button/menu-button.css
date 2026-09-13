@@ -153,7 +153,7 @@
 
 .menu-button__row {
 	display: grid;
-	grid-template-columns: 16px var(--icon-size-lg) minmax(0, 1fr) max-content;
+	grid-template-columns: var(--icon-size-lg) minmax(0, 1fr) max-content;
 	align-items: center;
 	gap: var(--sp-4);
 	/*
@@ -170,7 +170,9 @@
 		and lands these rows near the 40px the rail's menus run at.
 	*/
 	min-height: calc(var(--row-h) + var(--sp-4));
-	padding: 0 var(--sp-4) 0 var(--sp-2);
+	/* The same inset the rail's menu rows use, now that the tick gutter is
+		not holding the icon away from the edge. */
+	padding: 0 var(--sp-4) 0 var(--sp-3);
 	border: none;
 	/* Same pairing as the rail's menus: --r-2xl surface, --r-xl rows. */
 	border-radius: var(--r-xl);
@@ -187,8 +189,27 @@
 	background-color: var(--bg-hover);
 }
 
-.menu-button__row[aria-checked='true'] {
+/*
+	The selected row, marked the way the rail marks the page you are on: the
+	accent held back to a tint. It is a statement, not an offer - so it keeps
+	the tint on hover as well, where a row you could choose gets --bg-hover.
+
+	Not the tint alone. The name takes semibold and the icon takes the accent,
+	so the row is still telling you which one is chosen with a screen in
+	greyscale or an eye that cannot separate this blue from that grey.
+*/
+.menu-button__row[aria-checked='true'],
+.menu-button__row[aria-checked='true']:hover {
+	background-color: var(--bg-selected);
 	color: var(--text-primary);
+}
+
+.menu-button__row[aria-checked='true'] .menu-button__row-name {
+	font-weight: var(--fw-semibold);
+}
+
+.menu-button__row[aria-checked='true'] .menu-button__row-icon {
+	color: var(--icon-accent);
 }
 
 .menu-button__row[disabled],
@@ -198,17 +219,11 @@
 	cursor: default;
 }
 
-.menu-button__check,
 .menu-button__row-icon {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: var(--icon-default);
-}
-
-.menu-button__check svg {
-	width: 12px;
-	height: 12px;
 }
 
 .menu-button__row-icon svg {
