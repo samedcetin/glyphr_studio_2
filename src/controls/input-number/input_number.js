@@ -114,20 +114,20 @@ export class InputNumber extends HTMLElement {
 		// log(`InputNumber.connectedCallback`, 'start');
 
 		/*
-			has-lock, so the stylesheet can square off the arrows' right corners
-			when the padlock becomes the control's right-hand end. It was being
-			done here, inline, and only on one of the two branches - so a locked
-			input had a rounded corner in the middle of itself with the padlock
-			butted up against it.
+			has-lock is the whole story: it shows the padlock and squares off the
+			arrows' right corners, the padlock being the control's right-hand end.
+			The corner used to be done here, inline, and only on one of the two
+			branches - so a locked input had a rounded corner in the middle of
+			itself with the padlock butted up against it. Showing the padlock was
+			an inline display: block, which fought the flex centring its icon
+			needs.
 		*/
 		if (this.getAttribute('is-locked') === 'true') {
-			this.padlock.style.display = 'block';
 			this.setAttribute('has-lock', '');
 			this.setToLocked(true);
 		}
 
 		if (this.getAttribute('is-locked') === 'false') {
-			this.padlock.style.display = 'block';
 			this.setAttribute('has-lock', '');
 			this.setToUnlocked(true);
 		}

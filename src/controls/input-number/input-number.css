@@ -195,18 +195,28 @@
 	outline: none;
 }
 
-/* Lock */
+/*
+	Lock
+
+	It is the control's right-hand end, so it is the height of the control and
+	it reaches the right edge. It used to be capped at 26 in a 28px box with a
+	1px margin on the right, which left it hanging off the top with two pixels
+	of the field showing underneath it and one down its right-hand side - a
+	segment of a control that did not line up with the rest of it.
+*/
 .lock {
 	grid-column: 3;
 	display: none;
-	max-height: 26px;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-h);
+	height: 100%;
 	border-width: 1px;
 	border-style: solid;
 	border-color: var(--border-strong);
 	border-left-color: transparent;
 	border-radius: 0 var(--r-md) var(--r-md) 0;
 	corner-shape: var(--corner-smooth);
-	margin-right: 1px;
 	box-sizing: border-box;
 	background-color: var(--bg-surface-sunken);
 }
@@ -215,7 +225,6 @@
 	fill: var(--icon-default);
 	width: 20px;
 	height: 20px;
-	margin: 2px;
 }
 
 .lock:hover,
@@ -276,8 +285,16 @@
 	When the padlock is showing it is the control's right-hand end, so the
 	arrows give up their right corners to it - otherwise there is a rounded
 	corner in the middle of the control with the lock butted against it.
+
+	has-lock is also what shows the padlock. It used to be an inline
+	display: block set from script, which fought the flex centring the icon
+	needs and meant two places had to agree on whether a lock existed.
 */
 :host([has-lock]) .upArrow,
 :host([has-lock]) .downArrow {
 	border-radius: 0;
+}
+
+:host([has-lock]) .lock {
+	display: flex;
 }
