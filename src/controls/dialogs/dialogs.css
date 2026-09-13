@@ -182,11 +182,15 @@ dialog {
 	cursor: default;
 }
 
-/* A row that carries its own content - a project preview - supplies its
-	own layout, so the grid stands down. */
+/*
+	A row that carries its own content - a project preview - supplies its own
+	layout, so the grid stands down. No side padding either: the card inside is
+	rounded to be concentric with the menu's own corner, which only works if it
+	sits at the menu's own padding. The vertical 4px keeps two cards apart.
+*/
 .context-menu-row--child {
 	display: block;
-	padding: var(--sp-2);
+	padding: var(--sp-2) 0;
 }
 
 .context-menu-row .row-icon {

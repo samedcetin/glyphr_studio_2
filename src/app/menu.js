@@ -475,19 +475,16 @@ function makeProjectPreviewRow(projectID = 0) {
 			: { type: 'button', title: `Switch to ${name}` },
 	});
 
-	const header = makeElement({ className: 'project-card__header' });
-	header.appendChild(makeElement({ className: 'project-card__name', content: name, title: name }));
-	header.appendChild(
-		makeElement({
-			className: 'project-card__state',
-			content: isCurrent ? 'Editing' : 'Switch to',
-		})
-	);
-	card.appendChild(header);
-
+	/*
+		Letterforms first, name under them. You are picking between two fonts, and
+		the fastest way to tell two fonts apart is to look at them - the same
+		reason the project hub leads with a specimen. The name strip below is
+		where the state lives, so the preview stays a clean sheet of paper.
+	*/
 	card.appendChild(
 		makeElement({
 			tag: 'display-canvas',
+			className: 'project-card__preview',
 			attributes: {
 				text: projectEditor.project.settings.app.previewText || 'Aa Bb Cc Xx Yy Zz',
 				'font-size': '24',
@@ -496,6 +493,21 @@ function makeProjectPreviewRow(projectID = 0) {
 			},
 		})
 	);
+
+	const bar = makeElement({ className: 'project-card__bar' });
+	bar.appendChild(makeElement({ className: 'project-card__name', content: name, title: name }));
+	/*
+		Two different things, so two different shapes. "Editing" is a status and is
+		written as one: plain text, no box. "Switch" is what happens if you press
+		this card, so it is drawn as a control. Giving both the same eyebrow
+		treatment made the offer read as one more label.
+	*/
+	bar.appendChild(
+		isCurrent
+			? makeElement({ className: 'project-card__state', content: 'Editing' })
+			: makeElement({ tag: 'span', className: 'project-card__action', content: 'Switch' })
+	);
+	card.appendChild(bar);
 
 	if (!isCurrent) {
 		card.addEventListener('click', () => {

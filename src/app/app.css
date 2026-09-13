@@ -291,24 +291,35 @@
 	the other is plainly a control.
 	------------------------------------------------------------ */
 
+/*
+	One rounded box, not three that have to agree.
+
+	The card used to be a padded container holding a separately rounded preview,
+	which meant two radii to keep concentric every time the padding moved. Now
+	the preview and the name strip run to the card's edges and the card clips
+	them, so the only radius in here is the card's own - and the corner shape
+	only has to be declared once.
+*/
 .project-card {
 	display: flex;
 	flex-direction: column;
 	/*
 		Explicit, because a <button> centres its flex children by user-agent rule
-		and the div card does not. Without it the two cards laid out differently:
-		the switchable one had its name and state bunched in the middle while the
-		current one spread them across the row.
+		and the div card does not. Without it the two cards laid out differently.
 	*/
 	align-items: stretch;
-	gap: var(--sp-3);
 	width: 100%;
-	padding: var(--sp-4);
+	padding: 0;
 	margin: 0;
+	overflow: hidden;
 	border: 1px solid var(--border-subtle);
+	/*
+		Concentric with the menu around it: the menu is --r-lg with --sp-2 of
+		padding, and 12 - 4 = 8, which is --r-md.
+	*/
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
-	background-color: var(--bg-surface-sunken);
+	background-color: var(--canvas-bg);
 	text-align: left;
 	box-shadow: none;
 	transition: var(--transition-color);
@@ -320,27 +331,52 @@ button.project-card {
 }
 
 button.project-card:hover {
-	background-color: var(--bg-hover);
 	border-color: var(--border-default);
 }
 
+button.project-card:hover .project-card__bar {
+	background-color: var(--bg-hover);
+}
+
 /*
-	The current project is tinted rather than filled. It is a statement, not an
-	offer - the same distinction the left rail draws between the page you are on
+	The current project is tinted rather than filled, and only along its name
+	strip - the preview is a specimen and stays on paper white in both cards, so
+	the two fonts are compared under the same light. It is a statement, not an
+	offer: the same distinction the left rail draws between the page you are on
 	and the tool you are holding.
 */
 .project-card--current {
-	background-color: var(--bg-selected);
 	border-color: var(--border-selected);
 	cursor: default;
 }
 
-.project-card__header {
+/*
+	The letterforms are the point of the card - it is how you tell two fonts
+	apart at a glance - so they lead, full width, on the ground the canvas uses.
+*/
+.project-card__preview {
+	display: block;
+	height: 52px;
+	background-color: var(--canvas-bg);
+	pointer-events: none;
+}
+
+.project-card__bar {
 	display: flex;
-	align-items: baseline;
+	align-items: center;
 	justify-content: space-between;
 	gap: var(--sp-4);
 	min-width: 0;
+	min-height: var(--row-h);
+	padding: 0 var(--sp-3) 0 var(--sp-4);
+	border-top: 1px solid var(--border-subtle);
+	background-color: var(--bg-surface);
+	transition: var(--transition-color);
+}
+
+.project-card--current .project-card__bar {
+	border-top-color: var(--border-selected);
+	background-color: var(--bg-selected);
 }
 
 .project-card__name {
@@ -353,30 +389,37 @@ button.project-card:hover {
 	min-width: 0;
 }
 
+/*
+	A status, written as one. No box, no uppercase eyebrow - both of those made
+	it read as a control sitting next to the one below.
+*/
 .project-card__state {
 	flex: 0 0 auto;
-	font-size: var(--fs-2xs);
-	font-weight: var(--fw-semibold);
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
-	color: var(--text-secondary);
-}
-
-.project-card--current .project-card__state {
+	padding-right: var(--sp-1);
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-medium);
 	color: var(--text-accent);
 }
 
-/*
-	The letterforms are the point of the card - it is how you tell two fonts
-	apart at a glance - so they get the paper-white ground the canvas uses
-	rather than the card's own.
-*/
-.project-card display-canvas {
-	display: block;
-	height: 44px;
-	overflow: hidden;
+/* What pressing the card does, drawn as the control it belongs to. */
+.project-card__action {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-4);
+	border: 1px solid var(--border-default);
 	border-radius: var(--r-sm);
 	corner-shape: var(--corner-smooth);
-	background-color: var(--canvas-bg);
-	pointer-events: none;
+	background-color: var(--bg-surface);
+	color: var(--text-secondary);
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-medium);
+	white-space: nowrap;
+	transition: var(--transition-color);
+}
+
+button.project-card:hover .project-card__action {
+	border-color: var(--border-strong);
+	color: var(--text-primary);
 }
