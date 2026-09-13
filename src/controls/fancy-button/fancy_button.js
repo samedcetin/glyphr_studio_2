@@ -122,17 +122,19 @@ export class FancyButton extends HTMLElement {
 
 	/**
 	 * Fake pressed state for keyboard event
+	 *
+	 * It used to restore a 2px black drop shadow afterwards - the one the
+	 * old rainbow button carried. The button has no shadow to go back to
+	 * now, so pressing one with the keyboard left it wearing a shadow
+	 * nothing else in the app has.
+	 *
 	 * @param {Object} elem - element that got pressed
 	 */
 	flashAsPressed(elem) {
-		elem.wrapper.style.top = '1px';
-		elem.wrapper.style.left = '1px';
-		elem.wrapper.style.boxShadow = 'none';
+		elem.wrapper.style.transform = 'translate(1px, 1px)';
 
 		setTimeout(function () {
-			elem.wrapper.style.top = '0px';
-			elem.wrapper.style.left = '0px';
-			elem.wrapper.style.boxShadow = '2px 2px 2px rgba(0, 0, 0, 0.3)';
+			elem.wrapper.style.transform = '';
 		}, 100);
 	}
 }

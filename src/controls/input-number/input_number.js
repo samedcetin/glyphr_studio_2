@@ -282,6 +282,22 @@ export class InputNumber extends HTMLElement {
 	}
 
 	/**
+	 * Push whatever is currently typed into the field through sanitize and
+	 * commit it, the way blurring the field does.
+	 *
+	 * A panel that acts on Enter needs this: the host attribute only catches
+	 * up on change, which fires on blur, so without it Enter would act on
+	 * the previous value rather than the one on screen.
+	 *
+	 * @returns {Number} the committed value
+	 */
+	commit() {
+		// @ts-expect-error 'value does exist on the internal input'
+		this.updateToNewValue(this.sanitizeValue(this.numberInput.value));
+		return Number(this.getAttribute('value'));
+	}
+
+	/**
 	 * Make sure new values are good
 	 * @param {Number | String} input - new value
 	 */
