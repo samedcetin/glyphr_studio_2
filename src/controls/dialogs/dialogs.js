@@ -2,6 +2,7 @@ import { getCurrentProjectEditor } from '../../app/main.js';
 import { addAsChildren, makeElement, textToNode } from '../../common/dom.js';
 import { round } from '../../common/functions.js';
 import { makeIcon } from '../../common/graphics.js';
+import { makeLineIcon } from '../../common/icons.js';
 import { sXcX, sYcY } from '../../edit_canvas/edit_canvas.js';
 import { closeAllNavMenus } from '../../project_editor/navigator.js';
 import { closeAllMenuButtons } from '../menu-button/menu_button.js';
@@ -590,7 +591,10 @@ export function makeModalDialog(contentNode, maxWidth, openProjectDialog = false
 		<div class="modal-dialog__content">
 			<div class="modal-dialog__header">
 				<span></span>
-				<button class="modal-dialog__close-button">&times;</button>
+				<button class="modal-dialog__close-button" type="button" title="Close" aria-label="Close">${makeLineIcon(
+					'close',
+					20
+				)}</button>
 			</div>
 			<div class="modal-dialog__body"></div>
 		</div>

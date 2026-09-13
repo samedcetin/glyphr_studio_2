@@ -211,7 +211,9 @@
 	min-height: var(--control-h-lg);
 	padding: 0 var(--sp-5);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-sm);
+	/* On the scale the rest of the app's controls sit on. --r-sm is for chips
+		inside a row, not for a 32px button. */
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	color: var(--text-primary);
@@ -245,9 +247,9 @@
 }
 
 .hub-button--large {
-	min-height: 38px;
+	min-height: calc(var(--row-h) + var(--sp-4));
 	padding: 0 var(--sp-6);
-	font-size: var(--fs-md);
+	font-size: var(--fs-sm);
 }
 
 /* --------------------------------------------------------
@@ -261,6 +263,12 @@
 	align-items: start;
 }
 
+/*
+	A project card. Same construction as the ones in the Projects menu -
+	specimen on top, name in a strip underneath, one radius on the outside and
+	the card clipping its own contents - because they are the same object in
+	two places and should not be two designs.
+*/
 .hub-card {
 	display: grid;
 	grid-template-rows: min-content min-content;
@@ -270,7 +278,7 @@
 	min-height: 0;
 	overflow: hidden;
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	text-align: left;
@@ -281,10 +289,15 @@
 }
 
 .hub-card:hover {
-	border-color: var(--accent);
+	border-color: var(--border-strong);
 	box-shadow: var(--shadow-2);
 	background-color: var(--bg-surface);
 	transform: translateY(-1px);
+}
+
+.hub-card:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
 }
 
 .hub-card__preview {
@@ -306,34 +319,27 @@
 
 .hub-card__preview-empty {
 	font-size: var(--fs-xs);
-	color: var(--text-tertiary);
-}
-
-.hub-card__badge {
-	position: absolute;
-	top: var(--sp-3);
-	left: var(--sp-3);
-	padding: 1px var(--sp-3);
-	border-radius: var(--r-pill);
-	background-color: var(--bg-surface);
-	border: 1px solid var(--border-default);
 	color: var(--text-secondary);
-	font-size: var(--fs-2xs);
-	font-weight: var(--fw-medium);
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
 }
 
+
+/*
+	Even padding on all four sides, at the card's radius less its border. The
+	strip had 8 on top and 12 everywhere else, which set the name a step
+	higher in its box than it sat from the sides - visible as soon as two
+	cards are side by side.
+*/
 .hub-card__info {
 	display: grid;
 	gap: 2px;
-	padding: var(--sp-4) var(--sp-5) var(--sp-5) var(--sp-5);
+	padding: var(--sp-5);
 	min-width: 0;
 }
 
 .hub-card__title {
-	font-size: var(--fs-md);
-	font-weight: var(--fw-medium);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	line-height: 1.4;
 	color: var(--text-primary);
 	white-space: nowrap;
 	overflow: hidden;
@@ -342,7 +348,8 @@
 
 .hub-card__meta {
 	font-size: var(--fs-xs);
-	color: var(--text-tertiary);
+	line-height: 1.4;
+	color: var(--text-secondary);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -396,11 +403,13 @@
 .hub-panel__input,
 #input__new-project-name {
 	width: 100%;
-	height: 38px;
+	/* The same 36px the menu rows and the tab strip's buttons run at, rather
+		than a 38 of its own. */
+	height: calc(var(--row-h) + var(--sp-4));
 	margin: 0;
 	padding: 0 var(--sp-4);
 	font-family: var(--font-ui);
-	font-size: var(--fs-lg);
+	font-size: var(--fs-md);
 	color: var(--text-primary);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-strong);
@@ -526,20 +535,39 @@
 	Modal header
 -------------------------------------------------------- */
 
+/*
+	Header and footer are the dialog's chrome and are drawn as one thing: the
+	same ground top and bottom, with the content between them on the app's own
+	background. Two shades of grey bracketing a third read as three unrelated
+	bands.
+*/
+.open-project__page--modal #open-project__header,
+.open-project__page--modal #open-project__footer {
+	background-color: var(--bg-surface);
+}
+
 .open-project__page--modal #open-project__header {
 	display: block;
 	padding: 0;
-	border-bottom: 1px solid var(--border-subtle);
+	/*
+		No rule under the tabs. The colour change between the header and the
+		content does that job, and a line as well is the same statement twice -
+		with the tab strip sitting on top of it, which reads as a mistake.
+	*/
+	border-bottom: none;
 }
 
 .hub-modal__header-inner {
 	display: grid;
 	gap: var(--sp-5);
 	/*
-		The extra right padding keeps the title clear of the close button, which
-		floats in the dialog's corner rather than taking a row of its own.
+		No bottom padding: the tab strip sits flush on the seam between the
+		header and the content, so the selected tab and the surface it selects
+		are one shape. The extra right padding keeps the title clear of the
+		close button, which floats in the dialog's corner rather than taking a
+		row of its own.
 	*/
-	padding: var(--sp-6) var(--sp-9) var(--sp-5) var(--sp-8);
+	padding: var(--sp-6) var(--sp-10) 0 var(--sp-8);
 }
 
 .hub-modal__heading {
@@ -666,15 +694,17 @@
 	height: 88px;
 }
 
-.open-project__page--modal .hub-panel,
-.open-project__page--modal .hub-panel--wide,
+/*
+	The empty state stretches, the form does not. A font name is a short
+	string, and a 700px field for it reads as though something longer is
+	expected - the panel keeps its 420px cap inside the dialog too.
+*/
 .open-project__page--modal .hub-empty {
 	max-width: 100%;
 }
 
 .open-project__page--modal #open-project__footer {
 	border-top: 1px solid var(--border-subtle);
-	background-color: var(--bg-surface-sunken);
 }
 
 /*
@@ -781,8 +811,9 @@
 
 .modal-dialog__open-new-project .modal-dialog__header {
 	position: absolute;
-	top: var(--sp-4);
-	right: var(--sp-4);
+	/* Optically level with the title, and at the dialog radius from the corner. */
+	top: var(--sp-5);
+	right: var(--sp-5);
 	z-index: 1;
 	display: block;
 	padding: 0;

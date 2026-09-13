@@ -622,3 +622,12 @@ lineIcons.search = `<circle cx="10.5" cy="10.5" r="7"/><path d="M20.5 20.5l-5-5"
 
 /* An envelope, for the feedback row - command_info is the About row's mark. */
 lineIcons.mail = squirclePath(2.5, 5, 19, 14, 3) + `<path d="M3.5 7.5l8.5 6 8.5-6"/>`;
+
+/*
+	Close. Dialogs were drawing this with the &times; entity, which is a
+	typographic multiplication sign - it inherits the UI font, sits on the text
+	baseline rather than in the middle of its button, and comes out a different
+	weight and size on every platform. Two strokes, on the same grid and with
+	the same cap as every other icon in the set.
+*/
+lineIcons.close = `<path d="M6.75 6.75l10.5 10.5M17.25 6.75l-10.5 10.5"/>`;

@@ -527,22 +527,25 @@ export function resetOpenProjectTabs() {
  * @param {String} args.title - project name
  * @param {String} args.meta - secondary line, e.g. a relative time
  * @param {String} args.previewHTML - inline SVG for the thumbnail
- * @param {String=} args.badge - optional corner label
  * @param {(event: Event) => void} args.onClick - what opening the card does
  * @returns {Element}
  */
-function makeProjectCard({ title, meta, previewHTML, badge = '', onClick }) {
+function makeProjectCard({ title, meta, previewHTML, onClick }) {
 	const card = makeElement({
 		tag: 'button',
 		className: 'hub-card',
 		attributes: { type: 'button', title: `Open ${title}` },
 	});
 
+	/*
+		No corner badge. Every card in the Examples view is an example, under a
+		tab that says so - and the pill sat on top of the letterforms, which are
+		the only thing on the card worth looking at.
+	*/
 	const preview = makeElement({
 		className: 'hub-card__preview',
 		innerHTML: previewHTML || `<span class="hub-card__preview-empty">No outlines yet</span>`,
 	});
-	if (badge) preview.appendChild(makeElement({ className: 'hub-card__badge', content: badge }));
 
 	const info = makeElement({
 		className: 'hub-card__info',
@@ -697,7 +700,6 @@ function makeExamplesView() {
 				title: example.name,
 				meta: example.meta,
 				previewHTML: previewHTML,
-				badge: 'Example',
 				onClick: () => handleLoadSample(example.id),
 			})
 		);

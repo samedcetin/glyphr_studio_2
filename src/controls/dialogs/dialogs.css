@@ -167,7 +167,7 @@ dialog {
 
 .error__header {
 	display: grid;
-	grid-template-columns: 1fr var(--control-h-sm);
+	grid-template-columns: 1fr var(--control-h-lg);
 	align-items: center;
 }
 
@@ -509,13 +509,18 @@ dialog {
 	A close button, not a blue chip. It was three hard-coded blues deep and
 	read as the most important control on the dialog; it is the one you press
 	when you are done.
+
+	32px, because this is the control someone reaches for in a hurry and often
+	without looking - it is the only way out of a dialog other than Escape.
+	24px cleared the WCAG minimum and nothing more; every desktop app of this
+	kind lands between 28 and 32, and 44 is the touch figure this is not.
 */
 .modal-dialog__close-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--control-h-sm);
-	height: var(--control-h-sm);
+	width: var(--control-h-lg);
+	height: var(--control-h-lg);
 	min-height: 0;
 	padding: 0;
 	margin: 0;
@@ -525,10 +530,14 @@ dialog {
 	background-color: transparent;
 	color: var(--icon-default);
 	box-shadow: none;
-	font-size: var(--fs-md);
 	line-height: 1;
 	cursor: pointer;
 	transition: var(--transition-color);
+}
+
+.modal-dialog__close-button svg {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
 }
 
 .modal-dialog__close-button:hover,
