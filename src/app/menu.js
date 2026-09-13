@@ -125,6 +125,19 @@ export function makeMenu(menuName) {
 		// Preferred font export format (the format that was imported, or 'otf'
 		// for new projects) drives the file name preview and the Ctrl+E note.
 		const preferredExportFormat = getPreferredExportFormat();
+		/*
+			Headings name the group; the file name sits on the row that writes it.
+
+			This menu used to head three of its four groups with a file name and
+			the fourth with a category, all in the same style - so the first line
+			a user read was "Oblegg - Glyphr Studio Project - 2026.9.13.gs2", and
+			nothing said what the group was for. Worse, the font group's heading
+			named one file while the four rows under it wrote four different ones.
+
+			A project file and a font file are also the distinction a new user
+			most needs and least has: one is the thing you keep editing, the other
+			is the thing you ship. The descriptions say so once, here.
+		*/
 		if (typeof editor.loadedFileHandle === 'object') {
 			let projectDisplayName = `${editor.project.settings.project.name} - Glyphr Studio Project.gs2`;
 
@@ -135,101 +148,86 @@ export function makeMenu(menuName) {
 			}
 
 			fileMenuData.push(
+				{ type: 'heading', name: 'Project' },
 				{
-					child: makeElement({
-						tag: 'h2',
-						content: projectDisplayName,
-					}),
-					className: 'spanAll',
-				},
-				{
-					name: 'Save this project file',
+					name: 'Save project',
+					description: projectDisplayName,
 					icon: 'command_save',
 					note: ['Ctrl', 's'],
 					onClick: () => editor.saveProjectFile(),
 				},
 				{
-					name: 'Save a copy of this project file',
+					name: 'Save a copy',
+					description: 'Keeps editing the original',
 					icon: 'command_save',
 					onClick: () => editor.saveProjectFile(true),
 				}
 			);
 		} else {
 			fileMenuData.push(
+				{ type: 'heading', name: 'Project' },
 				{
-					child: makeElement({
-						tag: 'h2',
-						content: makeFileName('gs2', true),
-					}),
-					className: 'spanAll',
-				},
-				{
-					name: 'Save project file (to downloads folder)',
+					/*
+						The destination is in the verb, not the description. As a
+						suffix on the file name it pushed the string past 80
+						characters, and the half that got ellipsised away was the
+						half that answered "where did it go?".
+					*/
+					name: 'Save project to downloads',
+					description: makeFileName('gs2', true),
 					icon: 'command_save',
 					note: ['Ctrl', 's'],
 					onClick: () => editor.saveProjectFile(),
 				}
 			);
 		}
+		/* Every export writes a different file, so every row names its own. */
+		const fontFileName = (extension) =>
+			`${editor.project.settings.font.family}-${editor.project.settings.font.style}.${extension}`.replaceAll(
+				' ',
+				''
+			);
+
 		fileMenuData = fileMenuData.concat([
 			{ name: 'hr' },
-			{
-				child: makeElement({
-					tag: 'h2',
-					content:
-						`${editor.project.settings.font.family}-${editor.project.settings.font.style}.${preferredExportFormat}`.replaceAll(
-							' ',
-							''
-						),
-				}),
-				className: 'spanAll',
-			},
+			{ type: 'heading', name: 'Font' },
 			{
 				name: 'Export OTF file',
+				description: fontFileName('otf'),
 				icon: 'command_export',
 				note: preferredExportFormat === 'otf' ? ['Ctrl', 'e'] : false,
 				onClick: ioFont_exportOTF,
 			},
 			{
 				name: 'Export TTF file',
+				description: fontFileName('ttf'),
 				icon: 'command_export',
 				note: preferredExportFormat === 'ttf' ? ['Ctrl', 'e'] : false,
 				onClick: ioFont_exportTTF,
 			},
 			{
 				name: 'Export WOFF file',
+				description: fontFileName('woff'),
 				icon: 'command_export',
 				note: preferredExportFormat === 'woff' ? ['Ctrl', 'e'] : false,
 				onClick: ioFont_exportWOFF,
 			},
 			{
 				name: 'Export WOFF2 file',
+				description: fontFileName('woff2'),
 				icon: 'command_export',
 				note: preferredExportFormat === 'woff2' ? ['Ctrl', 'e'] : false,
 				onClick: ioFont_exportWOFF2,
 			},
-			{ name: 'hr' },
-			{
-				child: makeElement({
-					tag: 'h2',
-					content: makeFileName('svg'),
-				}),
-				className: 'spanAll',
-			},
 			{
 				name: 'Export SVG font file',
+				description: makeFileName('svg'),
 				icon: 'command_export',
 				note: ['Ctrl', 'g'],
 				onClick: ioSVG_exportSVGfont,
 			},
 			{ name: 'hr' },
-			{
-				child: makeElement({
-					tag: 'h2',
-					content: 'For game engines',
-				}),
-				className: 'spanAll',
-			},
+			{ type: 'heading', name: 'For game engines' },
 			{
 				name: 'Export font atlas…',
 				icon: 'command_export',

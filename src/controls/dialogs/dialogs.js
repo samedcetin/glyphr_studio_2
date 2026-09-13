@@ -403,6 +403,26 @@ function makeOneContextMenuRow(data = {}) {
 		});
 	}
 
+	/*
+		A section heading names what the rows under it are for.
+
+		It used to be a file name in an <h2>, which is why a menu could open with
+		"Oblegg - Glyphr Studio Project - 2026.9.13.gs2" as its first line: the
+		label said what you would get rather than what the group was, and three
+		of the File menu's four headings were file names while the fourth was a
+		category. Same treatment, different meanings, so neither read.
+
+		File names are still shown - see `description` below - on the row that
+		actually produces them, where each one is true.
+	*/
+	if (data.type === 'heading') {
+		return makeElement({
+			className: 'context-menu-heading',
+			content: data.name,
+			attributes: { role: 'presentation' },
+		});
+	}
+
 	let row = makeElement({
 		tag: 'button',
 		className: data?.className || 'context-menu-row',
@@ -435,9 +455,22 @@ function makeOneContextMenuRow(data = {}) {
 		row.appendChild(makeElement({ className: 'row-icon' }));
 	}
 
-	// Command name
+	/*
+		Name, and under it an optional description - the file this row writes,
+		the thing it will do. One cell so the two lines share a left edge and the
+		row stays a three-column grid whether or not there is a second line.
+	*/
 	data.name = data.name || 'NAME';
-	row.appendChild(makeElement({ className: 'row-name', innerHTML: data.name }));
+	const textCell = makeElement({ className: 'row-text' });
+	textCell.appendChild(makeElement({ className: 'row-name', innerHTML: data.name }));
+	if (data.description) {
+		textCell.appendChild(
+			makeElement({ className: 'row-description', innerHTML: data.description })
+		);
+		/* A long file name ellipsises; the tooltip still carries all of it. */
+		row.setAttribute('title', `${data.name} — ${data.description}`);
+	}
+	row.appendChild(textCell);
 
 	// Note / Keyboard Shortcut
 	let noteWrapper = makeElement({ className: 'row-notes' });

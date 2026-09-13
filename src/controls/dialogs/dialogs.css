@@ -127,7 +127,7 @@ dialog {
 	gap: 1px;
 	min-width: 200px;
 	width: max-content;
-	max-width: 380px;
+	max-width: 420px;
 	max-height: min(520px, 80vh);
 	overflow-y: auto;
 	padding: var(--sp-2);
@@ -205,10 +205,41 @@ dialog {
 	color: var(--icon-disabled);
 }
 
+.context-menu-row .row-text {
+	display: grid;
+	gap: 1px;
+	min-width: 0;
+}
+
 .context-menu-row .row-name {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+/*
+	The file this row writes. Mono because it is a literal name you will go
+	looking for in a folder, and quiet because it is the answer to a question
+	the row's own label has already asked.
+*/
+.context-menu-row .row-description {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	color: var(--text-secondary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.context-menu-row[disabled] .row-description {
+	color: var(--text-disabled);
+}
+
+/* A row with two lines needs room for both. */
+.context-menu-row:has(.row-description) {
+	min-height: 40px;
+	padding-top: var(--sp-2);
+	padding-bottom: var(--sp-2);
 }
 
 /* --------------------------------------------------------------
@@ -259,24 +290,35 @@ dialog {
 	------------------------------------------------------------ */
 
 /*
-	A file name above the rows that act on it. An eyebrow, so it reads as a
-	label for the group rather than as another row you could click.
+	Section heading: what the rows under it are for. An eyebrow, so it reads as
+	a label rather than as another row you could click - the shape the rest of
+	the app uses for the same job, in panels and on the hub.
 */
-#context-menu .spanAll {
-	padding: var(--sp-4) var(--sp-3) var(--sp-1) var(--sp-3);
-}
-
-#context-menu .spanAll:first-child {
-	padding-top: var(--sp-2);
-}
-
-#context-menu .spanAll h2 {
-	margin: 0;
-	font-family: var(--font-mono);
+.context-menu-heading {
+	padding: var(--sp-4) var(--sp-3) var(--sp-2) var(--sp-3);
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
 	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
 	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+.context-menu-heading:first-child {
+	padding-top: var(--sp-2);
+}
+
+/* A heading already separates its group, so it absorbs the rule above it. */
+.context-menu-separator + .context-menu-heading {
+	padding-top: var(--sp-2);
+}
+
+/* Rows that bring their own markup - the project previews in Projects. */
+#context-menu .spanAll h2 {
+	margin: 0;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
