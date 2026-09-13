@@ -51,25 +51,21 @@ import { makeTransformOriginGrid, syncTransformOriginChoosers } from './transfor
  * The turns and flips that have a single obvious amount, so no field is
  * needed to name it.
  *
+ * Three, not five. A counterclockwise quarter turn and a half turn were each
+ * a second way to reach somewhere this row already reaches - press the
+ * clockwise turn again, or type the angle in the field below. Five buttons
+ * that resolve to three moves is a row you have to read rather than one you
+ * can aim at.
+ *
  * The two flips used to live in the Properties action grid, which is where
  * you looked for them if you already knew. They are transforms, and this is
  * the Transform panel.
  */
 const quickTransforms = [
 	{
-		iconName: 'rotateCounterclockwise',
-		title: 'Rotate 90° counterclockwise',
-		run: (editor) => rotateSelection(editor, -90),
-	},
-	{
 		iconName: 'rotateClockwise',
-		title: 'Rotate 90° clockwise',
+		title: 'Rotate 90° clockwise\nPress again for 180° and 270°.',
 		run: (editor) => rotateSelection(editor, 90),
-	},
-	{
-		iconName: 'rotate180',
-		title: 'Rotate 180°',
-		run: (editor) => rotateSelection(editor, 180),
 	},
 	{
 		iconName: 'flipHorizontal',

@@ -69,8 +69,6 @@ const plain = (name) => () => makeLineIcon(name, 20);
 	'flipHorizontal',
 	'flipVertical',
 	'rotateClockwise',
-	'rotateCounterclockwise',
-	'rotate180',
 	'transforms',
 	'exportGlyphSVG',
 	'importGlyphSVG',
