@@ -2,6 +2,7 @@ import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
 import { round, transformOrigins } from '../common/functions.js';
 import { makeTransformOriginIcon } from '../common/graphics.js';
+import { makeLineIcon } from '../common/icons.js';
 
 // --------------------------------------------------------------
 // Common attributes card stuff
@@ -58,8 +59,20 @@ export function makeInputs_size(item, disabled = false) {
 		wInput.setAttribute('disabled', '');
 		hInput.setAttribute('disabled', '');
 	}
+	/*
+		The aspect-ratio lock sits in the seam it governs.
+
+		It used to be a checkbox with the caption "lock aspect ratio" two rows
+		further down, under the transform origin - which is a long way from the
+		two fields it ties together, and needed four lines of help text to say
+		what a chain says by being drawn between them. Every drawing tool puts
+		it here, in the gap between width and height, and it takes the slot the
+		slash was already using.
+	*/
 	dimensionInputs.appendChild(wInput);
-	dimensionInputs.appendChild(dimSplitElement());
+	dimensionInputs.appendChild(
+		disabled ? dimSplitElement() : makeRatioLockToggle(item, thisTopic)
+	);
 	dimensionInputs.appendChild(hInput);
 
 	returnControls.push(dimensionLabel);
@@ -106,23 +119,8 @@ export function makeInputs_size(item, disabled = false) {
 			transformInput.appendChild(option);
 		});
 
-		// Ratio lock checkbox
-		let ratioLockLabel = makeSingleLabel(
-			'lock aspect ratio',
-			`
-			When either the width or height is adjusted,
-			the overall size will be kept proportional.
-			<br><br>
-			Maintaining aspect ratio will override value
-			locks if need be.
-		`
-		);
-		let ratioLockCheckbox = makeSingleCheckbox(item, 'ratioLock', thisTopic);
-
 		returnControls.push(transformLabel);
 		returnControls.push(transformInput);
-		returnControls.push(ratioLockLabel);
-		returnControls.push(ratioLockCheckbox);
 	}
 	// log(`makeInputs_size`, 'end');
 	return returnControls;
@@ -379,6 +377,49 @@ export function rowPad() {
 
 export function dimSplit() {
 	return `<span class="dimSplit">&#x2044;</span>`;
+}
+
+/**
+ * The chain between a width field and a height one.
+ *
+ * A two-state icon button rather than a checkbox with a caption: the two
+ * things it links are on either side of it, so being drawn between them is
+ * the whole explanation. It still says what it does on hover, for anyone who
+ * arrives by keyboard or by tooltip.
+ *
+ * @param {Object} item - the thing being sized
+ * @param {String} thisTopic - what to publish on when it changes
+ * @returns {Element}
+ */
+export function makeRatioLockToggle(item, thisTopic) {
+	const button = makeElement({
+		tag: 'button',
+		className: 'ratio-lock',
+		attributes: { type: 'button', role: 'switch' },
+	});
+
+	const render = () => {
+		const locked = !!item.ratioLock;
+		button.innerHTML = makeLineIcon(locked ? 'linked' : 'unlinked', 16);
+		button.setAttribute('aria-checked', locked ? 'true' : 'false');
+		button.toggleAttribute('selected', locked);
+		button.setAttribute(
+			'title',
+			locked
+				? 'Width and height are linked\nChanging one changes the other'
+				: 'Width and height are independent\nClick to keep them proportional'
+		);
+	};
+
+	render();
+
+	button.addEventListener('click', () => {
+		item.ratioLock = !item.ratioLock;
+		render();
+		if (thisTopic) getCurrentProjectEditor().publish(thisTopic, item);
+	});
+
+	return button;
 }
 
 export function dimSplitElement() {

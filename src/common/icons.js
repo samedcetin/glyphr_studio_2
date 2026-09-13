@@ -631,3 +631,12 @@ lineIcons.mail = squirclePath(2.5, 5, 19, 14, 3) + `<path d="M3.5 7.5l8.5 6 8.5-
 	the same cap as every other icon in the set.
 */
 lineIcons.close = `<path d="M6.75 6.75l10.5 10.5M17.25 6.75l-10.5 10.5"/>`;
+
+/*
+	Two halves of a chain, joined and parted. The control they belong to links
+	a width field to a height one, and a chain is what every drawing tool has
+	used for that since the first one - a padlock would say "this value cannot
+	change", which is a different thing.
+*/
+lineIcons.linked = `<path d="M9.5 14.5l5-5"/><path d="M12.5 6.5l1.5-1.5a3.5 3.5 0 0 1 5 5l-1.5 1.5"/><path d="M11.5 17.5l-1.5 1.5a3.5 3.5 0 0 1-5-5l1.5-1.5"/>`;
+lineIcons.unlinked = `<path d="M13.5 5.5l.5-.5a3.5 3.5 0 0 1 5 5l-.5.5"/><path d="M10.5 18.5l-.5.5a3.5 3.5 0 0 1-5-5l.5-.5"/><path d="M15 15l2.5 2.5M9 9L6.5 6.5"/>`;

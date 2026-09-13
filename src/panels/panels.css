@@ -253,6 +253,59 @@
 }
 
 /*
+	The aspect-ratio lock, in the gap between width and height.
+
+	It is the same 16px slot the slash uses in the other paired rows, widened
+	to a control - so the two fields lose eight pixels between them and gain a
+	button that says what ties them together. See makeRatioLockToggle.
+*/
+.panel__card .doubleInput:has(> .ratio-lock) {
+	grid-template-columns: minmax(0, 1fr) var(--control-h-sm) minmax(0, 1fr);
+}
+
+.ratio-lock {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--icon-default);
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.ratio-lock:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
+}
+
+/*
+	On. The accent tint the app uses for "this is the state you are in", and
+	the chain is drawn whole rather than broken - so the state is readable
+	without the colour as well as with it.
+*/
+.ratio-lock[selected],
+.ratio-lock[selected]:hover {
+	background-color: var(--bg-selected);
+	border-color: transparent;
+	color: var(--icon-accent);
+}
+
+.ratio-lock svg {
+	width: 16px;
+	height: 16px;
+}
+
+/*
 	The slash between two paired labels - "bearings: left / right".
 
 	It was --gray-l80, a fixed light grey from the old ramp, which in dark mode
