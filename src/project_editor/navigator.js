@@ -3,6 +3,7 @@ import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeLeftRail } from '../app/left_rail.js';
 import { accentColors } from '../common/colors.js';
 import { hexesToChars } from '../common/character_ids.js';
+import { getAdjacentItem } from '../panels/card_glyph.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
 import { makeIcon } from '../common/graphics.js';
@@ -255,6 +256,19 @@ export function makeBreadcrumb() {
 		const itemName = editor.project.getItemName(editor.selectedItemID, true);
 		wrapper.appendChild(makeElement({ className: 'breadcrumb__separator', content: '/' }));
 
+		/*
+			Step back and forward, either side of the thing being stepped
+			through.
+
+			These used to be a pair of wide buttons at the foot of the
+			Properties card - and again at the foot of Character info, so the
+			same two controls appeared twice in one column. Stepping to the next
+			character is not a property of this character; it belongs with the
+			name, which is what changes when you press it.
+		*/
+		const previousButton = makeStepButton(editor, -1);
+		wrapper.appendChild(previousButton);
+
 		const itemButton = makeElement({
 			tag: 'button',
 			id: 'nav-button-l2',
@@ -264,6 +278,9 @@ export function makeBreadcrumb() {
 		});
 		itemButton.addEventListener('click', () => toggleNavDropdown(itemButton));
 		wrapper.appendChild(itemButton);
+
+		const nextButton = makeStepButton(editor, 1);
+		wrapper.appendChild(nextButton);
 
 		/*
 			The breadcrumb is built once, when the page is, but the item it
@@ -278,6 +295,9 @@ export function makeBreadcrumb() {
 				const newName = editor.project.getItemName(editor.selectedItemID || '', true);
 				itemButton.innerHTML = makeItemLabel(editor, newName) + breadcrumbChevron;
 				itemButton.setAttribute('title', newName);
+				// The step buttons name where they go, so they change too.
+				refreshStepButton(previousButton, editor, -1);
+				refreshStepButton(nextButton, editor, 1);
 			},
 		});
 	}
@@ -286,6 +306,60 @@ export function makeBreadcrumb() {
 }
 
 const breadcrumbChevron = `<svg class="breadcrumb__chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const stepChevron = {
+	'-1': `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.75 4 6.25 8l3.5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+	'1': `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.25 4 9.75 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+};
+
+/**
+ * One step through the items on this page.
+ *
+ * @param {Object} editor - the project editor
+ * @param {Number} delta - -1 for the previous item, 1 for the next
+ * @returns {Element}
+ */
+function makeStepButton(editor, delta) {
+	const button = makeElement({
+		tag: 'button',
+		className: 'breadcrumb__step',
+		attributes: { type: 'button' },
+		innerHTML: stepChevron[String(delta)],
+	});
+
+	refreshStepButton(button, editor, delta);
+
+	button.addEventListener('click', () => {
+		const target = getAdjacentItem(editor.selectedItem, delta);
+		if (!target) return;
+		editor.selectedItemID = target.id;
+		editor.history.addState(`Navigated to ${editor.project.getItemName(target.id, true)}`);
+	});
+
+	return button;
+}
+
+/**
+ * A step button says where it goes, since where it goes changes every time
+ * one of them is pressed.
+ *
+ * @param {Element} button - the button to update
+ * @param {Object} editor - the project editor
+ * @param {Number} delta - -1 for the previous item, 1 for the next
+ */
+function refreshStepButton(button, editor, delta) {
+	if (!button) return;
+	let label = delta < 0 ? 'Previous item' : 'Next item';
+	try {
+		const target = getAdjacentItem(editor.selectedItem, delta);
+		if (target) label = `${delta < 0 ? 'Previous' : 'Next'}: ${editor.project.getItemName(target.id, true)}`;
+	} catch (error) {
+		// An item with no neighbours keeps the plain label.
+	}
+	const shortcut = delta < 0 ? 'Ctrl ,' : 'Ctrl .';
+	button.setAttribute('title', `${label}\n${shortcut}`);
+	button.setAttribute('aria-label', label);
+}
 
 /**
  * What the breadcrumb says about the thing being edited.

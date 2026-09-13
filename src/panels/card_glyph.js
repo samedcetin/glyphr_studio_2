@@ -1,5 +1,5 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
-import { addAsChildren, makeElement, textToNode } from '../common/dom.js';
+import { addAsChildren, makeElement } from '../common/dom.js';
 import { makeIcon } from '../common/graphics.js';
 import { makeMetricKeyRow } from '../metrics/metric_keys_row.js';
 import { makeActionsArea_Glyph, makeActionsArea_Universal } from './actions.js';
@@ -159,57 +159,14 @@ export function makeCard_glyphLinks(item) {
 	return linksCard;
 }
 
-export function makeCard_itemNavigation(item) {
-	const project = getCurrentProject();
-	const editor = getCurrentProjectEditor();
-	const isKern = item?.id?.startsWith('kern');
-
-	let wrapper = makeElement({
-		tag: 'div',
-		className: 'panel__card no-card',
-		style: 'grid-template-columns: max-content 1fr max-content;',
-	});
-
-	// previous Item
-	let previousItem = getAdjacentItem(item, -1);
-	let previousItemName = editor.project.getItemName(previousItem.id, true);
-	let previousButton = makeElement({
-		tag: 'fancy-button',
-		className: 'thumbnail-button button-left',
-		attributes: { minimal: '' },
-		title: `Navigate to:\n${previousItemName}\n${previousItem.id}`,
-	});
-
-	if (isKern) previousButton.innerHTML += '<div>&#x2b60;</div>';
-	else previousButton.innerHTML += project.makeItemThumbnail(previousItem, 24);
-	previousButton.innerHTML += '<span>Previous&nbsp;item</span>';
-	previousButton.addEventListener('click', () => {
-		editor.selectedItemID = previousItem.id;
-		editor.history.addState(`Navigated to ${previousItemName}`);
-	});
-
-	// next Item
-	let nextItem = getAdjacentItem(item, 1);
-	let nextItemName = editor.project.getItemName(nextItem.id, true);
-	let nextButton = makeElement({
-		tag: 'fancy-button',
-		className: 'thumbnail-button button-right',
-		attributes: { minimal: '' },
-		title: `Navigate to:\n${nextItemName}\n${nextItem.id}`,
-	});
-
-	nextButton.innerHTML += '<span>Next&nbsp;item</span>';
-	if (isKern) nextButton.innerHTML += '<div>&#x2b62;</div>';
-	else nextButton.innerHTML += project.makeItemThumbnail(nextItem, 24);
-	nextButton.addEventListener('click', () => {
-		editor.selectedItemID = nextItem.id;
-		editor.history.addState(`Navigated to ${nextItemName}`);
-	});
-
-	addAsChildren(wrapper, [previousButton, textToNode('<span></span>'), nextButton]);
-
-	return wrapper;
-}
+/*
+	makeCard_itemNavigation lived here: a pair of wide buttons with a thumbnail
+	of the adjacent glyph, appended to the bottom of three different panels -
+	so Properties and Character info both carried the same two controls in the
+	same column. Stepping to the next character is not an attribute of this
+	character; it is in the breadcrumb now, on either side of the name it
+	changes. See makeStepButton in project_editor/navigator.js.
+*/
 
 export function getAdjacentItem(item, delta) {
 	const project = getCurrentProject();

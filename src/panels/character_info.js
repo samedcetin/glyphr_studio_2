@@ -3,7 +3,6 @@ import { decToHex } from '../common/character_ids.js';
 import { makeElement } from '../common/dom.js';
 import { isStandardUnicodeRange } from '../lib/unicode/unicode_blocks.js';
 import { getItemNameWithFallback } from '../pages/characters.js';
-import { makeCard_itemNavigation } from './card_glyph.js';
 
 // --------------------------------------------------------------
 // Character info panel
@@ -90,5 +89,5 @@ export function makePanel_CharacterInfo() {
 	});
 
 	// log(`makePanel_CharacterInfo`, 'end');
-	return [charInfo, rangeInfo, makeCard_itemNavigation(editor.selectedItem)];
+	return [charInfo, rangeInfo];
 }

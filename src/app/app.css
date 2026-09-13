@@ -261,6 +261,48 @@
 }
 
 /*
+	Step back and forward, either side of the name they change.
+
+	Icon-only, because the label is the thing between them: with a name in the
+	middle saying which character you are on, a button on each side of it does
+	not need to spell out "previous item" to be read as one. Both name their
+	destination and their shortcut on hover, which the old pair could not -
+	they were at the foot of a panel, nowhere near the name they moved.
+*/
+.breadcrumb__step {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	/* Derived from the bar, like its siblings: --r-xl less the border, less
+		the --sp-2 the bar holds them off its edges by. */
+	border-radius: calc(var(--r-xl) - 1px - var(--sp-2));
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--icon-default);
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.breadcrumb__step:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
+}
+
+.breadcrumb__step svg {
+	width: 16px;
+	height: 16px;
+}
+
+/*
 	The character itself, in the app's UI face rather than the font being
 	edited - the breadcrumb is chrome, and a glyph you are halfway through
 	drawing is not a label you can read.

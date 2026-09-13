@@ -50,70 +50,11 @@
 	padding: var(--sp-5) 0px;
 }
 
-.thumbnail-button {
-	line-height: 24px;
-}
-
 /*
-	`color`, not `fill`, and the canvas tokens rather than a hard-coded white.
-
-	The path inside carries fill="currentColor", and a `fill` set on the <svg>
-	is inherited - which loses to a presentation attribute on the element
-	itself. So the declaration did nothing and currentColor resolved to what it
-	inherited from the button: white, on a white plate. The thumbnail has been
-	drawing itself invisibly.
+	The thumbnail buttons that used to sit at the foot of three panels - a
+	wide Previous item / Next item pair - are gone. Stepping through the items
+	belongs beside the name it changes: see .breadcrumb__step in app.css.
 */
-.thumbnail-button svg {
-	background-color: var(--canvas-bg);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-sm);
-	corner-shape: var(--corner-smooth);
-	color: var(--canvas-ink);
-	width: 24px;
-	height: 24px;
-	margin-bottom: -7px;
-}
-
-.thumbnail-button span {
-	display: inline-block;
-}
-
-.button-left svg {
-	margin-left: -4px;
-}
-
-.button-left span {
-	margin: 0px 0px 0px 10px;
-}
-
-.button-left div {
-	display: inline-block;
-	width: 18px;
-	text-align: left;
-	font-size: 1.2em;
-	font-weight: bold;
-}
-
-.button-right svg {
-	margin-right: -4px;
-}
-
-.button-right span {
-	margin: 0px 10px 0px 0px;
-}
-
-.button-right div {
-	display: inline-block;
-	width: 18px;
-	text-align: right;
-	font-size: 1.2em;
-	font-weight: bold;
-}
-
-.thumbnail-button:hover svg,
-.thumbnail-button:active svg {
-	border-color: var(--border-default);
-}
 
 .panel__card.full-width,
 .pre-checkbox {
