@@ -133,6 +133,13 @@
 	/* Status - semantic aliases */
 	--danger: var(--danger-60);
 	--danger-bg: var(--danger-tint-light);
+	/*
+		The ground of a destructive button, as opposed to --danger, which is the
+		colour destructive *text* is written in. They part company in dark mode:
+		text there has to lighten to stay legible on a dark ground, and a fill
+		that lightens with it leaves white text on pink at 2.5:1.
+	*/
+	--bg-danger: var(--danger-60);
 	--warn: var(--warn-60);
 	--warn-bg: var(--warn-tint-light);
 	--ok: var(--ok-60);
@@ -380,6 +387,7 @@
 
 	--danger: var(--danger-40);
 	--danger-bg: var(--danger-tint-dark);
+	--bg-danger: var(--danger-60);
 	--warn: var(--warn-40);
 	--warn-bg: var(--warn-tint-dark);
 	--ok: var(--ok-40);

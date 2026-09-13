@@ -3,28 +3,15 @@
 	margin: 0;
 	padding: 0;
 	border: 0;
-	transition: var(--global-transition);
+	transition: var(--transition-color);
 
-	--border-resting: var(--enabled-restingLight-border);
-	--border-focus: var(--enabled-focus-border);
-	--border-disabled: var(--disabled-background);
 
-	--background-resting: var(--enabled-restingLight-background);
-	--background-focus: white;
-	--background-disabled: var(--disabled-background);
-
-	--text-resting: var(--enabled-resting-text);
-	--text-focus: var(--enabled-focus-text);
-	--text-disabled: var(--enabled-restingLight-text);
-
-	--fill-resting: var(--enabled-restingLight-fill);
-	--fill-focus: var(--enabled-focus-fill);
-	--fill-disabled: var(--enabled-restingLight-fill);
-
-	--selected_border-resting: var(--accent-color);
-	--selected_fill-resting: var(--accent-color);
-	--selected_border-focus: var(--blue-l50);
-	--selected_fill-focus: var(--blue-l50);
+	/*
+		No local palette here any more. It defined nineteen names on top of the
+		token system, two of which - --text-disabled and --border-disabled - are
+		app tokens, so this component was quietly redefining them for everything
+		inside its own shadow root. Every use site now names the token it wants.
+	*/
 }
 
 /*
@@ -45,19 +32,19 @@
 .upArrow:focus,
 .downArrow:focus,
 .lock:focus {
-	outline: var(--global-focus-style);
+	outline: var(--focus-style);
 	outline-offset: -1px;
 }
 
 /* Number input */
 .numberInput {
-	background-color: var(--background-resting);
-	color: var(--text-resting);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-primary);
 	border-style: solid;
 	border-width: 1px;
-	border-color: var(--border-resting);
+	border-color: var(--border-strong);
 	border-right-color: transparent;
-	border-radius: 4px 0px 0px 4px;
+	border-radius: var(--r-xs) 0 0 var(--r-xs);corner-shape: var(--corner-smooth);
 	grid-column: 1;
 	min-width: var(--number-input-min-w, 50px);
 	padding: 4px 6px 4px 2px;
@@ -70,26 +57,25 @@
 .numberInput:hover,
 .numberInput:active,
 .numberInput:focus {
-	background-color: var(--background-focus);
-	border-color: var(--border-focus);
-	color: var(--text-focus);
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
+	color: var(--text-primary);
 }
 
 .numberInput[disabled],
 .numberInput[disabled]:hover,
 .numberInput[disabled]:focus,
 .numberInput[disabled]:active {
-	background-color: var(--background-disabled);
-	border-color: var(--border-disabled);
+	background-color: var(--bg-disabled);
+	border-color: var(--border-subtle);
 	color: var(--text-disabled);
-	text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
 }
 
 .numberInput[disabled] svg,
 .numberInput[disabled]:hover svg,
 .numberInput[disabled]:focus svg,
 .numberInput[disabled]:active svg {
-	fill: var(--fill-disabled);
+	fill: var(--icon-disabled);
 }
 
 /* Arrows */
@@ -108,14 +94,14 @@
 .arrowWrapper:focus,
 .arrowWrapper:active {
 	border-color: transparent;
-	border-left-color: var(--border-resting);
+	border-left-color: var(--border-strong);
 	border-width: 1px;
 }
 
 .arrowWrapper:hover .arrowSeparator,
 .arrowWrapper:focus .arrowSeparator,
 .arrowWrapper:active .arrowSeparator {
-	background-color: var(--border-focus);
+	background-color: var(--accent);
 }
 
 .arrow {
@@ -123,26 +109,26 @@
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
-	background-color: var(--background-resting);
+	background-color: var(--bg-surface-sunken);
 	border-width: 1px;
 	border-style: solid;
-	border-color: var(--border-resting);
+	border-color: var(--border-strong);
 	text-align: center;
 	cursor: pointer;
 	width: 24px;
 }
 
 .arrow svg {
-	fill: var(--fill-resting);
+	fill: var(--icon-default);
 }
 
 .arrowSeparator {
-	background-color: var(--border-resting);
+	background-color: var(--border-strong);
 }
 
 .upArrow {
 	border-width: 1px 1px 0px 1px;
-	border-radius: 0px 3px 0px 0px;
+	border-radius: 0 var(--r-xs) 0 0;
 	grid-row: 1;
 }
 
@@ -153,7 +139,7 @@
 
 .downArrow {
 	border-width: 0px 1px 1px 1px;
-	border-radius: 0px 0px 3px 0px;
+	border-radius: 0 0 var(--r-xs) 0;
 	padding-bottom: 1px;
 	grid-row: 3;
 }
@@ -166,14 +152,14 @@
 .arrow:hover,
 .arrow:focus,
 .arrow:active {
-	background-color: var(--background-focus);
-	border-color: var(--border-focus);
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
 }
 
 .arrow:hover svg,
 .arrow:focus svg,
 .arrow:active svg {
-	fill: var(--fill-focus);
+	fill: var(--icon-accent);
 }
 
 .arrowWrapper[disabled],
@@ -190,10 +176,10 @@
 .arrowWrapper[disabled] .upArrow:active,
 .arrowWrapper[disabled] .downArrow:active,
 .arrowWrapper[disabled] .arrow svg {
-	background-color: var(--background-disabled);
-	border-color: var(--border-disabled);
-	color: var(--fill-disabled);
-	fill: var(--fill-disabled);
+	background-color: var(--bg-disabled);
+	border-color: var(--border-subtle);
+	color: var(--icon-disabled);
+	fill: var(--icon-disabled);
 	cursor: default;
 	outline: none;
 }
@@ -205,16 +191,16 @@
 	max-height: 26px;
 	border-width: 1px;
 	border-style: solid;
-	border-color: var(--border-resting);
+	border-color: var(--border-strong);
 	border-left-color: transparent;
-	border-radius: 0px 4px 4px 0px;
+	border-radius: 0 var(--r-xs) var(--r-xs) 0;
 	margin-right: 1px;
 	box-sizing: border-box;
-	background-color: var(--background-resting);
+	background-color: var(--bg-surface-sunken);
 }
 
 .lock svg {
-	fill: var(--fill-resting);
+	fill: var(--icon-default);
 	width: 20px;
 	height: 20px;
 	margin: 2px;
@@ -224,37 +210,37 @@
 .lock:active,
 .lock:focus {
 	cursor: pointer;
-	border-color: var(--border-focus);
+	border-color: var(--accent);
 	/* border-left-color: transparent; */
-	background-color: var(--background-focus);
-	/* border-radius: 4px; */
+	background-color: var(--bg-surface);
+	/* border-radius: var(--r-xs); */
 }
 
 .lock:hover svg,
 .lock:active svg,
 .lock:focus svg {
-	fill: var(--fill-focus);
+	fill: var(--icon-accent);
 }
 
 .lock[selected] {
-	border-color: var(--selected_border-resting);
-	border-radius: 4px;
+	border-color: var(--accent);
+	border-radius: var(--r-xs);
 }
 
 .lock[selected] svg {
-	fill: var(--selected_fill-resting);
+	fill: var(--accent);
 }
 
 .lock[selected]:hover,
 .lock[selected]:active,
 .lock[selected]:focus {
-	border-color: var(--selected_border-focus);
+	border-color: var(--accent-hover);
 }
 
 .lock[selected]:hover svg,
 .lock[selected]:active svg,
 .lock[selected]:focus svg {
-	fill: var(--selected_fill-focus);
+	fill: var(--accent-hover);
 }
 
 .lock[disabled],
@@ -262,13 +248,13 @@
 .lock:focus[disabled],
 .lock:active[disabled] {
 	cursor: default;
-	border-color: var(--border-disabled);
-	background-color: var(--background-disabled);
+	border-color: var(--border-subtle);
+	background-color: var(--bg-disabled);
 }
 
 .lock[disabled] svg,
 .lock:hover[disabled] svg,
 .lock:focus[disabled] svg,
 .lock:active[disabled] svg {
-	fill: var(--fill-disabled);
+	fill: var(--icon-disabled);
 }

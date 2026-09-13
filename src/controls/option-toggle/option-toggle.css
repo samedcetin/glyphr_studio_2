@@ -1,90 +1,107 @@
+/*
+	The two-state toggle - the same shape as the option chooser next to it in
+	every panel, with a switch where the chooser has a chevron.
+
+	It was on the --enabled-restingLight-* names from before the token system,
+	which meant it did not follow the theme, and it carried a text-shadow on
+	its disabled state - an emboss from a era of buttons that is not this one.
+*/
+
 * {
 	box-sizing: border-box;
-	transition: var(--global-transition);
 }
 
 .wrapper {
-	margin: 0px;
-	padding: 0px;
 	display: grid;
-	grid-template-columns: 1fr 24px;
-	border-width: 1px;
-	border-style: solid;
-	border-color: var(--enabled-restingLight-border);
-	background-color: var(--enabled-restingLight-background);
-	border-radius: 4px;
-}
-
-.wrapper:focus {
-		outline: var(--global-focus-style);
-		outline-offset: -1px;
+	grid-template-columns: minmax(0, 1fr) 24px;
+	align-items: center;
+	margin: 0;
+	padding: 0;
+	height: var(--control-h-sm);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	transition: var(--transition-color);
 }
 
 .wrapper:hover,
 .wrapper:focus {
-	border-color: var(--enabled-focus-border);
+	border-color: var(--accent);
 	cursor: pointer;
+	outline: none;
 }
 
-.wrapper:hover .toggleIcon svg,
-.wrapper:focus .toggleIcon svg {
-	fill: var(--enabled-focus-fill);
+.wrapper:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
 }
 
 .wrapper[disabled],
 .wrapper:hover[disabled],
 .wrapper:focus[disabled],
 .wrapper:active[disabled] {
-	background-color: var(--disabled-background);
-	border-color: var(--disabled-border);
-		color: var(--disabled-text);
-			text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+	background-color: var(--bg-disabled);
+	border-color: var(--border-subtle);
+	color: var(--text-disabled);
+	cursor: default;
 }
 
 .selection-display {
+	grid-column: 1;
+	min-width: 0;
+	padding: 0 var(--sp-3);
 	background-color: transparent;
 	border: 0;
-	border-radius: 4px 0px 0px 4px;
-	margin: 0;
-	margin-right: 0px;
-	color: var(--enabled-resting-text);
-	grid-column: 1;
-	min-width: 50px;
-	height: 24px;
-	line-height: 24px;
-	padding: 1px 8px 0px 8px;
+	color: inherit;
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	line-height: 1;
 	text-align: left;
-	font-family: monospace;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .selection-display .prefix {
-	color: var(--disabled-text);
-	font-size: 0.9em;
+	color: var(--text-secondary);
 }
 
-.toggleIcon svg {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+.wrapper[disabled] .selection-display .prefix {
+	color: var(--text-disabled);
+}
+
+.toggleIcon {
+	grid-column: 2;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	padding: 0;
 	margin: 0;
-	border-width: 1px;
-	text-align: center;
-	height: 24px;
-	line-height: 24px;
-	border-radius: 4px;
-	grid-column: 2;
-	vertical-align: middle;
+	border: 0;
+	user-select: none;
+	-webkit-user-select: none;
 }
 
+/*
+	`fill` on purpose here, and only here. This one is not from the line set -
+	it is a switch: a drawn pill with a solid dot in it, where the dot's
+	position is the state. An outline of a dot would be a different thing.
+*/
 .toggleIcon svg {
-	height: 20px;
-	width: 20px;
-	margin: 2px;
-	fill: var(--enabled-restingLight-fill);
+	display: block;
+	height: 18px;
+	width: 18px;
+	fill: var(--icon-default);
+	transition: var(--transition-color);
 }
 
-.wrapper:hover .toggleIcon svg {
-	fill: var(--enabled-focus-fill);
+.wrapper:hover .toggleIcon svg,
+.wrapper:focus .toggleIcon svg {
+	fill: var(--icon-accent);
+}
+
+.wrapper[disabled] .toggleIcon svg {
+	fill: var(--icon-disabled);
 }
