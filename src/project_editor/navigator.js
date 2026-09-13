@@ -339,10 +339,22 @@ export function closeAllNavMenus(isChooserMenu = false) {
 
 export function showNavDropdown(parentElement) {
 	// log(`showNavDropdown`, 'start');
-	let size = '500px';
+	let size = '';
 	let navID;
 	let rect = parentElement.getBoundingClientRect();
-	let top = rect.top + rect.height - 3;
+
+	/*
+		Measured from the breadcrumb, not from the button inside it.
+
+		The button is 24px tall inside a 33px box with a border and its own
+		padding, so hanging the menu 3px below the button put it seven pixels
+		*inside* the breadcrumb's bottom edge - the menu grew up out of the
+		middle of the control that opened it. The 6px gap is the one the rail's
+		menus already stand off by.
+	*/
+	const anchor = parentElement.closest('.breadcrumb') || parentElement;
+	const anchorRect = anchor.getBoundingClientRect();
+	let top = anchorRect.bottom + 6;
 
 	let dropdownContent = makeElement({ tag: 'h3', content: 'Uninitialized' });
 	let dropdownType = parentElement.getAttribute('data-nav-type');
@@ -350,7 +362,12 @@ export function showNavDropdown(parentElement) {
 
 	if (dropdownType === 'PAGE') {
 		dropdownContent = makePageChooserContent();
-		size = `${parentElement.parentElement.getBoundingClientRect().width - 2}px`;
+		/*
+			Sized by its own longest row. It used to be told to match the width
+			of the whole breadcrumb - which is as wide as a project name plus a
+			page name plus a character name - for a list of eleven short words.
+			Two thirds of it was empty.
+		*/
 		navID = 'nav-dropdown-page';
 	}
 
@@ -392,11 +409,16 @@ export function showNavDropdown(parentElement) {
 			buttons became surface-colored. Its surface now comes from nav.css
 			so it stays opaque and themed.
 		*/
+		/*
+			Width is only set here for the two dropdowns that have to match
+			something else - the character chooser's grid and the panel
+			chooser's button. The page chooser takes the width of its own
+			longest row, which nav.css bounds.
+		*/
 		style: `
-			left: ${rect.left + 1}px;
-			top: ${top}px;
-			min-width: ${size};
-			max-width: 60%;
+			left: ${Math.round(rect.left)}px;
+			top: ${Math.round(top)}px;
+			${size ? `min-width: ${size}; max-width: 80%;` : ''}
 		`,
 	});
 

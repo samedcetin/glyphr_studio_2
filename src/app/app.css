@@ -190,10 +190,18 @@
 	max-width: calc(100% - var(--sp-8));
 	min-width: 0;
 	overflow: hidden;
-	padding: var(--sp-2) var(--sp-4);
+	/*
+		Even padding, so the control at each end is the same distance from the
+		bar's edge as from its top and bottom - which is what lets their corners
+		nest inside the bar's. It was 8px at the sides against 4 top and bottom,
+		on controls that already carry their own 4px: three different insets
+		between the bar's edge and a word.
+	*/
+	padding: var(--sp-2);
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	/* The same radius as the toolbar strip - the app's other floating bar. */
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-2);
 }
@@ -230,7 +238,12 @@
 	padding: 0 var(--sp-2);
 	margin: 0;
 	border: 1px solid transparent;
-	border-radius: var(--r-xs);
+	/*
+		Derived from the bar it sits in: the breadcrumb's radius, less its
+		border, less the --sp-2 it holds this off its edges by.
+	*/
+	border-radius: calc(var(--r-xl) - 1px - var(--sp-2));
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--text-primary);
 	font-size: var(--fs-sm);
