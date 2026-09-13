@@ -135,7 +135,7 @@
 	padding: var(--sp-2);
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	border-radius: var(--r-2xl);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 }
@@ -164,7 +164,8 @@
 	min-height: var(--row-h);
 	padding: 0 var(--sp-4) 0 var(--sp-2);
 	border: none;
-	border-radius: var(--r-md);
+	/* Same pairing as the rail's menus: --r-2xl surface, --r-xl rows. */
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--text-primary);

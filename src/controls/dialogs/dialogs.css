@@ -133,7 +133,7 @@ dialog {
 	padding: var(--sp-2);
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-xl);
+	border-radius: var(--r-2xl);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in-slide-down);
@@ -160,13 +160,12 @@ dialog {
 	padding: 0 var(--sp-4) 0 var(--sp-3);
 	border: none;
 	/*
-		Deliberately not concentric with the menu's --r-xl. A row highlight is a
-		wash that appears under the pointer, not an object with a standing edge,
-		and 12px of radius on a 28px row leaves the corners nearly meeting - it
-		reads as a pill. The cards below are the things that need to agree with
-		the menu's corner, and they do.
+		Reads against the menu's --r-2xl, one step down. On the 40px rows that
+		carry a description - which is most of them - this is a soft rectangle;
+		on a bare 28px row the browser clamps it to half the height and it comes
+		out a lozenge. That is the shape asked for.
 	*/
-	border-radius: var(--r-md);
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--text-primary);

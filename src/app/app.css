@@ -320,10 +320,12 @@
 	overflow: hidden;
 	border: 1px solid var(--border-subtle);
 	/*
-		Concentric with the menu around it: the menu is --r-xl with --sp-2 of
-		padding, and 16 - 4 = 12, which is --r-lg.
+		One step inside the menu's --r-2xl. Strictly concentric would be 14 -
+		18 less the --sp-2 of menu padding - but --r-xl is the radius the rest
+		of the app's surfaces use and 2px of extra fullness at the corner is
+		not something the eye can find at this size.
 	*/
-	border-radius: var(--r-lg);
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--canvas-bg);
 	text-align: left;
@@ -451,9 +453,9 @@ button.project-card:hover .project-card__bar {
 	/*
 		Concentric with the card's bottom-right corner: the card's radius less
 		its own border, less the 4px the strip holds the chip off its edges.
-		A token would have to be 7px to land here, and 8 was visibly loose.
+		Derived rather than picked, so it follows the card if the card moves.
 	*/
-	border-radius: calc(var(--r-lg) - 1px - var(--sp-2));
+	border-radius: calc(var(--r-xl) - 1px - var(--sp-2));
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	color: var(--text-secondary);
