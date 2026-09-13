@@ -308,21 +308,27 @@
 		and the div card does not. Without it the two cards laid out differently.
 	*/
 	align-items: stretch;
+	/*
+		Buttons carry a 4px gap from the app's base stylesheet. Here it opened a
+		seam between the preview and the name strip - and only on the switchable
+		card, which is the button, so the two cards came out 4px apart in height.
+	*/
+	gap: 0;
 	width: 100%;
 	padding: 0;
 	margin: 0;
 	overflow: hidden;
 	border: 1px solid var(--border-subtle);
 	/*
-		Concentric with the menu around it: the menu is --r-lg with --sp-2 of
-		padding, and 12 - 4 = 8, which is --r-md.
+		Concentric with the menu around it: the menu is --r-xl with --sp-2 of
+		padding, and 16 - 4 = 12, which is --r-lg.
 	*/
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--canvas-bg);
 	text-align: left;
 	box-shadow: none;
-	transition: var(--transition-color);
+	transition: var(--transition-color), box-shadow var(--dur-fast) var(--ease);
 }
 
 /* Only the one you can act on behaves like a control. */
@@ -330,8 +336,16 @@ button.project-card {
 	cursor: pointer;
 }
 
+/*
+	The card lifts as a whole. Tinting alone was not enough to see: the only
+	part of the card that can take a tint is the name strip - the preview has
+	to stay on canvas white or the two fonts stop being comparable - and a
+	32px strip lighting up at the bottom of a 90px card reads as nothing. A
+	shadow and a stronger edge are the whole object answering.
+*/
 button.project-card:hover {
-	border-color: var(--border-default);
+	border-color: var(--border-strong);
+	box-shadow: var(--shadow-2);
 }
 
 button.project-card:hover .project-card__bar {
@@ -361,6 +375,12 @@ button.project-card:hover .project-card__bar {
 	pointer-events: none;
 }
 
+/*
+	Side padding equal to the card's radius, which is what keeps the name and
+	the Switch chip clear of the corner as it curves away. The vertical padding
+	is what actually sets the height: a 24px chip plus 4px top and bottom, so
+	the strip grows out of the control it holds rather than out of a number.
+*/
 .project-card__bar {
 	display: flex;
 	align-items: center;
@@ -368,7 +388,7 @@ button.project-card:hover .project-card__bar {
 	gap: var(--sp-4);
 	min-width: 0;
 	min-height: var(--row-h);
-	padding: 0 var(--sp-3) 0 var(--sp-4);
+	padding: var(--sp-2) var(--sp-5);
 	border-top: 1px solid var(--border-subtle);
 	background-color: var(--bg-surface);
 	transition: var(--transition-color);
@@ -394,8 +414,15 @@ button.project-card:hover .project-card__bar {
 	it read as a control sitting next to the one below.
 */
 .project-card__state {
+	display: inline-flex;
+	align-items: center;
 	flex: 0 0 auto;
-	padding-right: var(--sp-1);
+	/*
+		Same height as the Switch chip opposite it, so the two cards come out the
+		same height. Without it the card with the chip stood 8px taller than the
+		one with the word, and two cards in a stack are read against each other.
+	*/
+	height: var(--control-h-sm);
 	font-size: var(--fs-xs);
 	font-weight: var(--fw-medium);
 	color: var(--text-accent);
@@ -407,9 +434,9 @@ button.project-card:hover .project-card__bar {
 	align-items: center;
 	flex: 0 0 auto;
 	height: var(--control-h-sm);
-	padding: 0 var(--sp-4);
+	padding: 0 var(--sp-5);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-sm);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	color: var(--text-secondary);

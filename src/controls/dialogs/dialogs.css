@@ -133,7 +133,7 @@ dialog {
 	padding: var(--sp-2);
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in-slide-down);
@@ -159,6 +159,13 @@ dialog {
 	min-height: var(--row-h);
 	padding: 0 var(--sp-4) 0 var(--sp-3);
 	border: none;
+	/*
+		Deliberately not concentric with the menu's --r-xl. A row highlight is a
+		wash that appears under the pointer, not an object with a standing edge,
+		and 12px of radius on a 28px row leaves the corners nearly meeting - it
+		reads as a pill. The cards below are the things that need to agree with
+		the menu's corner, and they do.
+	*/
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
@@ -171,7 +178,12 @@ dialog {
 	transition: var(--transition-color);
 }
 
-.context-menu-row:hover {
+/*
+	Not on a row that carries a card. The card does its own hover, and a wash
+	behind it showed up as a second, larger rectangle lighting up around the
+	one you were actually pointing at.
+*/
+.context-menu-row:not(.context-menu-row--child):hover {
 	background-color: var(--bg-hover);
 }
 
@@ -187,6 +199,8 @@ dialog {
 	layout, so the grid stands down. No side padding either: the card inside is
 	rounded to be concentric with the menu's own corner, which only works if it
 	sits at the menu's own padding. The vertical 4px keeps two cards apart.
+
+	No hover wash here either - see .context-menu-row:hover.
 */
 .context-menu-row--child {
 	display: block;
