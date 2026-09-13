@@ -1,6 +1,6 @@
 import { showAppErrorPage } from '../app/app.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
-import { makeAppTopBar } from '../app/menu.js';
+import { makeLeftRail } from '../app/left_rail.js';
 import { accentColors } from '../common/colors.js';
 import { addAsChildren, insertAfter, makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
@@ -111,7 +111,7 @@ export class Navigator {
 			try {
 				const pageContent = this.makePageContent();
 				wrapper.innerHTML = '';
-				wrapper.appendChild(makeAppTopBar());
+				wrapper.appendChild(makeLeftRail());
 				wrapper.appendChild(pageContent);
 			} catch (e) {
 				console.warn(`Navigation failed:`, e);
@@ -158,6 +158,28 @@ export class Navigator {
 			// rather than each one building its own copy.
 			if (this.isOnEditCanvasPage) installEditorSidebars(pageContent);
 		}
+		/*
+			Where you are, floating over the top of the canvas. It used to sit in
+			the top bar; with the bar gone it goes here rather than into the rail,
+			because a 56px column cannot hold a path of three names and the path
+			is the point.
+
+			Edit pages only. A content page already states its name in its own
+			heading, and the rail already marks which page is current, so a third
+			copy floating over the text would be clutter rather than orientation.
+		*/
+		if (this.isOnEditCanvasPage) {
+			const breadcrumb = makeBreadcrumb();
+			/*
+				Into .editor__page itself, not the animation wrapper around it.
+				That element is what carries --left-sidebar-w, and the breadcrumb
+				is placed from that variable so it clears a panel whatever width
+				the user has dragged it to.
+			*/
+			const editorPage = pageContent.querySelector('.editor__page') || pageContent;
+			if (breadcrumb) editorPage.appendChild(breadcrumb);
+		}
+
 		// Append results
 		editorContent.appendChild(pageContent);
 
@@ -421,37 +443,49 @@ function makeNavButton_Page(pageName, iconName) {
 	});
 	button.innerHTML += makeIcon({ name: iconName, color: accentColors.blue.l90 });
 	button.appendChild(makeElement({ content: pageName }));
-	button.addEventListener('click', () => {
-		let editor = getCurrentProjectEditor();
-		if (editor.nav.page !== pageName) {
-			editor.multiSelect.shapes.clear();
-			editor.multiSelect.points.clear();
-		}
-
-		// Ensure the selected Panel is availabe for the new page, otherwise default to Attributes
-		editor.nav.page = pageName;
-		if (panelsPerPage?.[pageName]) {
-			if (!panelsPerPage[pageName].includes(editor.nav.panel)) editor.nav.panel = 'Attributes';
-		}
-
-		editor.navigate();
-		if (editor.selectedItemID) {
-			let lastChange = editor.history.queue[0] || false;
-
-			// Only add a nav item to the history queue if the previous undo item:
-			//  - matches the current selected item
-			//  - is not a whole project save
-			if (
-				lastChange &&
-				!(lastChange.wholeProjectSave || lastChange.itemID === editor.selectedItemID)
-			) {
-				editor.history.addState(
-					`Navigated to ${editor.project.getItemName(editor.selectedItemID, true)}`
-				);
-			}
-		}
-	});
+	button.addEventListener('click', () => navigateToPage(pageName));
 	return button;
+}
+
+/**
+ * Goes to a page.
+ *
+ * Exported because two things navigate now - this dropdown and the left rail -
+ * and the steps around the navigate() call are not optional: a stale selection
+ * carried into another page, or a panel that page does not have, both end in a
+ * broken sidebar.
+ *
+ * @param {String} pageName - a key of nav.tableOfContents
+ */
+export function navigateToPage(pageName) {
+	let editor = getCurrentProjectEditor();
+	if (editor.nav.page !== pageName) {
+		editor.multiSelect.shapes.clear();
+		editor.multiSelect.points.clear();
+	}
+
+	// Ensure the selected Panel is availabe for the new page, otherwise default to Attributes
+	editor.nav.page = pageName;
+	if (panelsPerPage?.[pageName]) {
+		if (!panelsPerPage[pageName].includes(editor.nav.panel)) editor.nav.panel = 'Attributes';
+	}
+
+	editor.navigate();
+	if (editor.selectedItemID) {
+		let lastChange = editor.history.queue[0] || false;
+
+		// Only add a nav item to the history queue if the previous undo item:
+		//  - matches the current selected item
+		//  - is not a whole project save
+		if (
+			lastChange &&
+			!(lastChange.wholeProjectSave || lastChange.itemID === editor.selectedItemID)
+		) {
+			editor.history.addState(
+				`Navigated to ${editor.project.getItemName(editor.selectedItemID, true)}`
+			);
+		}
+	}
 }
 
 const panelsPerPage = {

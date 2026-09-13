@@ -45,12 +45,58 @@
 	box-shadow: none;
 }
 
-/* Floating surfaces share one treatment. */
+/*
+	The panels are fixed to the window edges, not floating cards.
+
+	They used to sit inset with a 16px radius and a drop shadow, which reads as
+	"this could be moved" - and they cannot be. It also spent a 12px gutter of
+	canvas on all four sides of each one. Flush to the edge, square, separated by
+	a hairline: the panel is part of the window, and the canvas gets the space.
+
+	The toolbar keeps floating. It is the one surface that genuinely hovers over
+	the artwork rather than framing it.
+*/
 .editor-page__left-area,
-.editor-page__right-area,
+.editor-page__right-area {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: var(--z-canvas-float);
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	overflow: hidden;
+	background-color: var(--bg-surface);
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.editor-page__left-area {
+	left: 0;
+	width: var(--left-sidebar-w);
+	border-right: 1px solid var(--border-subtle);
+}
+
+.editor-page__right-area {
+	right: 0;
+	width: var(--right-sidebar-w);
+	border-left: 1px solid var(--border-subtle);
+}
+
+/*
+	On an edit page the breadcrumb clears the left panel, which the user can
+	drag. calc from the same variable the panel is sized by, so the two cannot
+	drift apart.
+*/
+.editor__page > .breadcrumb {
+	left: calc(var(--left-sidebar-w) + var(--float-inset));
+	max-width: calc(100% - var(--left-sidebar-w) - var(--right-sidebar-w) - var(--float-inset) * 2);
+}
+
+/* The toolbar is the only floating surface left. */
 .editor-page__tools-area {
 	position: absolute;
-	z-index: 10;
+	z-index: var(--z-canvas-float);
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-default);
 	border-radius: var(--r-xl);
@@ -58,26 +104,11 @@
 	box-shadow: var(--shadow-3);
 }
 
-.editor-page__left-area,
-.editor-page__right-area {
-	top: var(--float-inset);
-	bottom: var(--float-inset);
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
-	overflow: hidden;
-}
-
-.editor-page__left-area {
-	left: var(--float-inset);
-	width: var(--left-sidebar-w);
-}
-
-.editor-page__right-area {
-	right: var(--float-inset);
-	width: var(--right-sidebar-w);
-}
-
+/*
+	The panels are flush to the window edge now, so the breathing room that used
+	to come from the float inset has to come from here instead - otherwise the
+	first section header sits against the top of the screen.
+*/
 #editor-page__panel,
 .editor-page__right-area > .sidebar__sections {
 	flex: 1 1 auto;
@@ -85,7 +116,7 @@
 	overflow-y: auto;
 	overflow-x: hidden;
 	width: 100%;
-	padding: 0;
+	padding: var(--sp-4) 0 var(--sp-6) 0;
 }
 
 /*

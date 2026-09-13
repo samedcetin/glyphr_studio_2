@@ -136,7 +136,7 @@ const themeLabels = {
  * The theme control in the top bar. Cycles system -> light -> dark.
  * @returns {Element}
  */
-function makeThemeToggle() {
+export function makeThemeToggle() {
 	const button = makeElement({
 		tag: 'button',
 		className: 'top-bar__theme-toggle',
@@ -172,7 +172,7 @@ function makeThemeToggle() {
  * @param {String} menuName - Name for the menu entry point
  * @returns {Element}
  */
-function makeMenu(menuName) {
+export function makeMenu(menuName) {
 	let entryPoint = makeElement({
 		tag: 'button',
 		innerHTML: menuName,

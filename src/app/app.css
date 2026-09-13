@@ -1,4 +1,13 @@
+/*
+	The shell is a rail and everything else.
+
+	It was a full-width top bar above the content. A bar spends an entire row of
+	the window on nine items and their labels; the rail spends a 56px column and
+	gives the row back to the canvas, which is the surface this app is about.
+*/
 #app__wrapper {
+	--rail-w: 56px;
+
 	background-color: var(--bg-app);
 	height: 100%;
 	width: 100%;
@@ -9,29 +18,111 @@
 	left: 0px;
 	overflow: hidden;
 	display: grid;
-	grid-template-rows: var(--topbar-h) calc(100vh - var(--topbar-h));
-}
-
-/*
-	A flex row rather than fixed 150px columns, so items can be added to the bar
-	without re-counting grid tracks, and so the right-hand cluster stays pinned.
-*/
-#app__top-bar {
-	grid-row: 1;
-	display: flex;
-	align-items: center;
-	gap: var(--sp-5);
-	padding: 0px var(--sp-4) 0px var(--sp-5);
-	background-color: var(--bg-surface);
-	border-bottom: 1px solid var(--border-subtle);
-	z-index: 2000 !important;
+	grid-template-columns: var(--rail-w) minmax(0, 1fr);
 }
 
 #app__main-content {
-	grid-row: 2;
+	grid-column: 2;
+	position: relative;
 	width: 100%;
-	min-width: 720px;
+	min-width: 0;
 	background-color: var(--bg-app);
+	overflow: hidden;
+}
+
+/* --------------------------------------------------------------
+	Left rail
+	------------------------------------------------------------ */
+
+#app__left-rail {
+	grid-column: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--sp-2);
+	padding: var(--sp-3) 0;
+	background-color: var(--bg-surface);
+	border-right: 1px solid var(--border-subtle);
+	z-index: var(--z-canvas-float);
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.left-rail__mark {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tool-size);
+	height: var(--tool-size);
+	margin-bottom: var(--sp-2);
+	color: var(--text-primary);
+	flex: 0 0 auto;
+}
+
+.left-rail__group {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	flex: 0 0 auto;
+}
+
+.left-rail__divider {
+	width: 20px;
+	height: 1px;
+	margin: var(--sp-2) 0;
+	background-color: var(--border-subtle);
+	flex: 0 0 auto;
+}
+
+/* Pushes whatever follows it to the bottom of the column. */
+.left-rail__spacer {
+	flex: 1 1 auto;
+	min-height: var(--sp-4);
+}
+
+.left-rail__button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tool-size);
+	height: var(--tool-size);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	box-shadow: none;
+	color: var(--icon-default);
+	cursor: pointer;
+	transition: var(--transition-color);
+	flex: 0 0 auto;
+}
+
+.left-rail__button:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
+}
+
+/*
+	The current page is marked with the accent, held back from the solid fill the
+	toolbar's selected tool carries. Both say "this one", but the toolbar is
+	answering "what am I drawing with right now" while the rail answers "where am
+	I", and the second is a quieter question. A full-strength fill in a column of
+	twelve would also pull the eye off the canvas every time it passed.
+*/
+.left-rail__button--current,
+.left-rail__button--current:hover {
+	background-color: var(--bg-selected);
+	color: var(--icon-accent);
+}
+
+.left-rail__button svg {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
 }
 
 #app__page {
@@ -360,13 +451,28 @@
 	what you are actually looking at. Without explicit flex values the item
 	label was the one that collapsed to nothing.
 */
+/*
+	The breadcrumb floats over the top left of the content now that there is no
+	top bar to sit in. It is placed clear of the left panel by the editor page,
+	which knows how wide that panel has been dragged - see editor-pages.css.
+*/
 .breadcrumb {
+	position: absolute;
+	top: var(--sp-4);
+	left: var(--sp-4);
+	z-index: var(--z-canvas-float);
 	display: flex;
 	align-items: center;
 	gap: var(--sp-1);
+	max-width: calc(100% - var(--sp-8));
 	min-width: 0;
-	flex: 1 1 auto;
 	overflow: hidden;
+	padding: var(--sp-2) var(--sp-4);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-2);
 }
 
 .breadcrumb__project {

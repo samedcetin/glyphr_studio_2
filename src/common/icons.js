@@ -594,3 +594,28 @@ lineIcons.system = squirclePath(3, 4, 18, 13, 3) + `<path d="M9 20.5h6"/>`;
 lineIcons.light = `<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>`;
 
 lineIcons.dark = `<path d="M20.5 14.3A8.7 8.7 0 0 1 9.7 3.5a8.5 8.5 0 1 0 10.8 10.8z"/>`;
+
+// --------------------------------------------------------------
+// App shell
+// --------------------------------------------------------------
+
+/*
+	The app mark, for the top of the left rail.
+
+	A glyph in its em box: the box with a baseline, and an aperture cut through
+	it. It replaces the horizontal wordmark, which needed 140px of a 56px rail.
+
+	Deliberately generic. The published mark is a brand decision and the Blue
+	Rain wordmark lives in the other repo - see the skill's section 7.
+*/
+lineIcons.appMark = squirclePath(3, 3, 18, 18, 5) + `<path d="M8.5 16.5L12 7.5l3.5 9M9.9 13.6h4.2"/>`;
+
+/* The three shell menus, as icons for the rail. */
+lineIcons.menu_file = `<path d="M13.5 3.5H7A2.5 2.5 0 0 0 4.5 6v12A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5V9.5z"/><path d="M13.5 3.5v6h6"/>`;
+
+lineIcons.menu_projects = `<path d="M3.5 8.5V6A2.5 2.5 0 0 1 6 3.5h3.2a2 2 0 0 1 1.6.8l1.2 1.6a2 2 0 0 0 1.6.8H18A2.5 2.5 0 0 1 20.5 9.3"/><path d="M3.5 8.5h17A1.5 1.5 0 0 1 22 10.2l-1.3 8A2.5 2.5 0 0 1 18.2 20.5H5.8a2.5 2.5 0 0 1-2.5-2.3l-1.3-8A1.5 1.5 0 0 1 3.5 8.5z"/>`;
+
+lineIcons.menu_help = lineIcons.command_help;
+
+/* A plain magnifier. zoomIn carries a plus and means something else. */
+lineIcons.search = `<circle cx="10.5" cy="10.5" r="7"/><path d="M20.5 20.5l-5-5"/>`;
