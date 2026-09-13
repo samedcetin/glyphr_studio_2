@@ -172,6 +172,13 @@ export function getActionData(name) {
 	}
 
 	// GLYPH
+	/*
+		flipEW mirrors x - left to right - and flipNS mirrors y. The two entries
+		below used to have them the other way round, so the button whose icon is a
+		vertical mirror line with arrows either side, titled Flip Horizontal,
+		flipped the glyph top to bottom.
+	*/
+
 	if (name === 'glyphActions') {
 		actionData = [
 			{
@@ -179,7 +186,7 @@ export function getActionData(name) {
 				title: `Flip Horizontal\nReflects the glyph horizontally.`,
 				onClick: () => {
 					const editor = getCurrentProjectEditor();
-					editor.selectedItem.flipNS();
+					editor.selectedItem.flipEW();
 					editor.history.addState(`Flipped all shapes in this glyph horizontally`);
 					editor.publish('currentItem', editor.selectedItem);
 				},
@@ -189,7 +196,7 @@ export function getActionData(name) {
 				title: `Flip Vertical\nReflects the glyph vertically.`,
 				onClick: () => {
 					const editor = getCurrentProjectEditor();
-					editor.selectedItem.flipEW();
+					editor.selectedItem.flipNS();
 					editor.history.addState(`Flipped all shapes in this glyph vertically`);
 					editor.publish('currentItem', editor.selectedItem);
 				},
@@ -362,7 +369,7 @@ export function getActionData(name) {
 				onClick: () => {
 					const editor = getCurrentProjectEditor();
 					let shape = editor.multiSelect.shapes.virtualGlyph;
-					shape.flipNS();
+					shape.flipEW();
 					editor.history.addState(`Flipped shape ${shape.name} horizontally`);
 					editor.publish('currentItem', editor.selectedItem);
 				},
@@ -373,7 +380,7 @@ export function getActionData(name) {
 				onClick: () => {
 					const editor = getCurrentProjectEditor();
 					let shape = editor.multiSelect.shapes.virtualGlyph;
-					shape.flipEW();
+					shape.flipNS();
 					editor.history.addState(`Flipped shape ${shape.name} vertically`);
 					editor.publish('currentItem', editor.selectedItem);
 				},

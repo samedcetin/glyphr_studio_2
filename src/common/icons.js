@@ -483,6 +483,22 @@ lineIcons.linkToGlyph =
 /* Rounding: a square corner becoming a curve. */
 lineIcons.round = `<path d="M4 20V10.5A6.5 6.5 0 0 1 10.5 4H20"/><path d="M4 20h1M8 20h1M12 20h1M16 20h1M20 20h.01M20 16v1M20 12v1M20 8v1"/>`;
 
+/*
+	Turns. An arc most of the way round a circle, with the gap and the
+	arrowhead at the top: the head points the way the shape travels, so the
+	direction is read from the head rather than from which way the arc is
+	drawn. Half a turn gets a head at each end instead, because there is no
+	one direction to point.
+*/
+lineIcons.rotateClockwise = `<path d="M12 5a7.5 7.5 0 1 0 7.5 7.5"/><path d="M9 8L12 5 9 2"/>`;
+
+lineIcons.rotateCounterclockwise = `<path d="M12 5a7.5 7.5 0 1 1-7.5 7.5"/><path d="M15 8L12 5 15 2"/>`;
+
+lineIcons.rotate180 =
+	`<path d="M4.5 14.5a7.5 7.5 0 0 1 15 0"/>` +
+	`<path d="M7.5 11.5L4.5 14.5 1.5 11.5"/>` +
+	`<path d="M22.5 11.5L19.5 14.5 16.5 11.5"/>`;
+
 lineIcons.flipHorizontal = `<path d="M12 3v18"/><path d="M9 7.5L4.5 12 9 16.5zM15 7.5L19.5 12 15 16.5z"/>`;
 
 lineIcons.flipVertical = `<path d="M3 12h18"/><path d="M7.5 9L12 4.5 16.5 9zM7.5 15L12 19.5 16.5 15z"/>`;

@@ -1,6 +1,7 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { clone, deg, rad, round } from '../common/functions.js';
+import { makeActionButton } from './action_buttons.js';
 import { makeSingleLabel } from './cards.js';
 
 // --------------------------------------------------------------
@@ -36,6 +37,42 @@ import { makeSingleLabel } from './cards.js';
 */
 
 /**
+ * The turns and flips that have a single obvious amount, so no field is
+ * needed to name it.
+ *
+ * The two flips used to live in the Properties action grid, which is where
+ * you looked for them if you already knew. They are transforms, and this is
+ * the Transform panel.
+ */
+const quickTransforms = [
+	{
+		iconName: 'rotateCounterclockwise',
+		title: 'Rotate 90° counterclockwise',
+		run: (editor) => rotateSelection(editor, -90),
+	},
+	{
+		iconName: 'rotateClockwise',
+		title: 'Rotate 90° clockwise',
+		run: (editor) => rotateSelection(editor, 90),
+	},
+	{
+		iconName: 'rotate180',
+		title: 'Rotate 180°',
+		run: (editor) => rotateSelection(editor, 180),
+	},
+	{
+		iconName: 'flipHorizontal',
+		title: 'Flip horizontally\nMirrors the selection about a vertical line.',
+		run: (editor) => flipSelection(editor, 'flipEW', 'horizontally'),
+	},
+	{
+		iconName: 'flipVertical',
+		title: 'Flip vertically\nMirrors the selection about a horizontal line.',
+		run: (editor) => flipSelection(editor, 'flipNS', 'vertically'),
+	},
+];
+
+/**
  * The four transforms, in the order they get used: rotation first, then the
  * skew pair, then offset. Each one knows how to apply itself and what to call
  * the history state it leaves behind.
@@ -48,12 +85,7 @@ const transformOperations = [
 			<br><br>
 			A positive value rotates clockwise, a negative value counterclockwise.
 			Rotation is about the centre of the selection.`,
-		apply: (editor, value) => {
-			const msShapes = editor.multiSelect.shapes;
-			const count = msShapes.length;
-			msShapes.rotate(rad(value * -1), clone(msShapes.maxes.center));
-			return `Rotated ${count} ${count === 1 ? 'shape' : 'shapes'} by ${value}°`;
-		},
+		apply: (editor, value) => rotateSelection(editor, value),
 	},
 	{
 		id: 'skewAngle',
@@ -95,6 +127,8 @@ export function makePanel_Transforms() {
 	const editor = getCurrentProjectEditor();
 	const card = makeElement({ className: 'panel__card' });
 
+	card.appendChild(makeQuickTransformsArea());
+
 	transformOperations.forEach((operation) => {
 		addAsChildren(card, makeTransformRow(operation));
 	});
@@ -112,6 +146,34 @@ export function makePanel_Transforms() {
 	window.setTimeout(refreshTransformControls, 0);
 
 	return [card];
+}
+
+/**
+ * The row of one-click turns and flips at the top of the card.
+ * @returns {HTMLElement}
+ */
+function makeQuickTransformsArea() {
+	const area = makeElement({ className: 'panel__actions-area' });
+
+	quickTransforms.forEach((quickTransform) => {
+		const button = makeActionButton({
+			iconName: quickTransform.iconName,
+			title: quickTransform.title,
+			disabled: true,
+			id: `quickTransform_${quickTransform.iconName}`,
+			onClick: () => {
+				const editor = getCurrentProjectEditor();
+				if (!editor.multiSelect.shapes.length) return;
+
+				editor.history.addState(quickTransform.run(editor));
+				editor.publish('currentItem', editor.selectedItem);
+			},
+		});
+
+		area.appendChild(button);
+	});
+
+	return area;
 }
 
 /**
@@ -181,6 +243,39 @@ function applyTransform(operation, value) {
 	editor.history.addState(operation.apply(editor, value));
 	editor.publish('currentItem', editor.selectedItem);
 	refreshTransformControls();
+}
+
+/**
+ * Rotate the selection about its own centre.
+ *
+ * The one origin every rotation here uses - the field and all three
+ * turns - so they cannot disagree. It is not the Properties panel's
+ * transform origin, which applies to resizing only.
+ *
+ * @param {Object} editor - the current project editor
+ * @param {Number} degreesClockwise - positive turns clockwise
+ * @returns {String} the history state title
+ */
+function rotateSelection(editor, degreesClockwise) {
+	const msShapes = editor.multiSelect.shapes;
+	const count = msShapes.length;
+
+	msShapes.rotate(rad(degreesClockwise * -1), clone(msShapes.maxes.center));
+	return `Rotated ${count} ${count === 1 ? 'shape' : 'shapes'} by ${degreesClockwise}°`;
+}
+
+/**
+ * Mirror the selection about its own centre line.
+ * @param {Object} editor - the current project editor
+ * @param {String} method - 'flipEW' mirrors left to right, 'flipNS' top to bottom
+ * @param {String} direction - for the history state
+ * @returns {String} the history state title
+ */
+function flipSelection(editor, method, direction) {
+	const count = editor.multiSelect.shapes.length;
+
+	editor.multiSelect.shapes.virtualGlyph[method]();
+	return `Flipped ${count} ${count === 1 ? 'shape' : 'shapes'} ${direction}`;
 }
 
 /**
@@ -259,6 +354,13 @@ function offsetSelectedPaths(editor, distance) {
 function refreshTransformControls() {
 	const editor = getCurrentProjectEditor();
 	const hasSelection = editor.multiSelect.shapes.length > 0;
+
+	quickTransforms.forEach((quickTransform) => {
+		const button = document.getElementById(`quickTransform_${quickTransform.iconName}`);
+		if (!button) return;
+		if (hasSelection) button.removeAttribute('disabled');
+		else button.setAttribute('disabled', 'disabled');
+	});
 
 	transformOperations.forEach((operation) => {
 		const input = document.getElementById(`${operation.id}_input`);
