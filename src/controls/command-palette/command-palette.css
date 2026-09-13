@@ -28,7 +28,14 @@
 	overflow: hidden;
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	/*
+		The same floating surface the menus use: --r-2xl over --sp-2 of padding
+		in the results list, so a row at --r-xl is concentric with the corner
+		holding it. The palette keeps --shadow-4 rather than the menus' -3 - it
+		is the only surface that comes with its own scrim.
+	*/
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-4);
 }
 
@@ -84,9 +91,15 @@
 	grid-template-columns: 18px minmax(0, 1fr) min-content min-content;
 	align-items: center;
 	gap: var(--sp-4);
-	height: var(--control-h-lg);
+	/*
+		36px and --r-xl, the pairing every menu row in the app now uses. At the
+		32px this was, a browser clamps the radius to half the height and the
+		active row comes out a lozenge.
+	*/
+	height: calc(var(--row-h) + var(--sp-4));
 	padding: 0 var(--sp-4);
-	border-radius: var(--r-sm);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
 	cursor: pointer;
 	color: var(--text-primary);
 }

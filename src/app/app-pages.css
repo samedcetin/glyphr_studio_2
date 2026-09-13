@@ -590,7 +590,8 @@
 	background-color: var(--bg-surface);
 	height: min-content;
 	overflow: hidden;
-	border-radius: var(--r-lg);
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
 }
 
 .modal-dialog__open-new-project .modal-dialog__body {

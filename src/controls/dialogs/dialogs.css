@@ -2,6 +2,12 @@ dialog {
 	z-index: var(--z-dropdown);
 }
 
+/*
+	Notices, not menus. They float, so they take the same border, shadow and
+	corner smoothing as the menus - but --r-lg rather than --r-2xl: 20 on a
+	single line of text clamps to half the height and the notice arrives as a
+	lozenge. Radius follows how much surface there is to turn.
+*/
 #toast,
 #error {
 	display: none;
@@ -10,16 +16,15 @@ dialog {
 	left: 520px;
 	top: 0px;
 	margin: 5px 0px 5px 0px;
-	/* background-color: rgb(0, 63, 95); */
 	background-color: var(--green-l90);
-	/* color: rgb(155, 221, 255); */
 	color: var(--green-l10);
-	padding: 4px 8px;
+	padding: var(--sp-3) var(--sp-5);
 	z-index: var(--z-toast);
 	text-align: center;
 	border: 1px solid var(--green-l60);
-	border-radius: 4px;
-	box-shadow: var(--l3-shadow-down);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in-slide-down);
 }
 
@@ -46,10 +51,11 @@ dialog {
 	height: auto;
 	padding: 0;
 	z-index: var(--z-alert);
-	background-color: rgb(229, 234, 239);
-	border: 5px solid rgb(229, 234, 239);
-	border-radius: 5px 5px 0px 5px;
-	box-shadow: var(--l2-shadow-upper-left);
+	background-color: var(--bg-surface-raised);
+	border: 5px solid var(--bg-surface-raised);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in);
 }
 
@@ -70,9 +76,9 @@ dialog {
 
 #error {
 	margin-top: 10px;
-	border-color: var(--red);
-	color: var(--darkRed);
-	background-color: var(--lightRed);
+	border-color: var(--danger);
+	color: var(--text-danger);
+	background-color: var(--danger-bg);
 	display: grid;
 	grid-template-rows: 20px 1fr;
 	padding: 10px 12px 12px 12px;
@@ -81,33 +87,43 @@ dialog {
 }
 
 #error hr {
-	border-color: var(--red);
+	border-color: var(--danger);
 	margin: 10px 0px;
 }
 
 .error__header {
 	display: grid;
-	grid-template-columns: 1fr 20px;
+	grid-template-columns: 1fr var(--control-h-sm);
+	align-items: center;
 }
 
 .error__header h3 {
-	color: var(--darkRed);
+	color: var(--text-danger);
 }
 
 .error__header button {
-	background-color: var(--darkRed);
-	border-color: var(--darkRed);
-	color: var(--lightRed);
-	width: 20px;
-	height: 20px;
-	line-height: 20px;
-	padding: 0px;
-	margin: 0px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--text-danger);
+	box-shadow: none;
+	line-height: 1;
+	transition: var(--transition-color);
 }
 
 .error__header button:hover {
-	color: white;
-	border-color: var(--red);
+	background-color: var(--danger);
+	border-color: transparent;
+	color: var(--danger-bg);
 }
 
 /* --------------------------------------------------------------
@@ -368,30 +384,40 @@ dialog {
 	height: 100vh;
 	z-index: var(--z-modal);
 	backdrop-filter: blur(2px);
-	background-color: rgba(255, 255, 255, 0.75);
+	/*
+		The scrim was a hard-coded white wash, which in dark mode lit the whole
+		window up behind the dialog. A dark scrim at low opacity reads as depth
+		in both themes, which is what a scrim is for.
+	*/
+	background-color: hsla(220, 25%, 6%, 0.45);
 	animation: var(--animate-fade-in);
 }
 
 .modal-dialog__content {
 	display: grid;
-	grid-template-rows: 30px 1fr;
+	grid-template-rows: min-content 1fr;
 	width: clamp(500px, 66vw, 1000px);
 	max-height: calc(100vh - 80px);
 	overflow-y: hidden;
 	margin: 40px auto;
 	text-align: left;
-	background-color: var(--enabled-focus-background);
-	border: 1px solid var(--blue-l60);
-	border-radius: 8px;
-	box-shadow: var(--l3-shadow-down);
+	/* The same floating surface as the menus and the palette. */
+	background-color: var(--bg-surface-raised);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-4);
 	animation: var(--animate-fade-in-slide-down);
 }
 
+/*
+	The close button sits --sp-2 in from the dialog's corner, which is what
+	makes its --r-md corner concentric with the dialog's --r-2xl at this size.
+*/
 .modal-dialog__header {
-	margin: 4px;
-	height: 20px;
 	display: grid;
-	grid-template-columns: 1fr 20px;
+	grid-template-columns: 1fr var(--control-h-sm);
+	padding: var(--sp-2);
 }
 
 .modal-dialog__body {
@@ -405,33 +431,39 @@ dialog {
 	margin-bottom: 10px;
 }
 
+/*
+	A close button, not a blue chip. It was three hard-coded blues deep and
+	read as the most important control on the dialog; it is the one you press
+	when you are done.
+*/
 .modal-dialog__close-button {
-	background-color: var(--blue-l95);
-	border-color: var(--blue-l85);
-	color: var(--blue-l50);
-	text-align: center;
-	width: 20px;
-	height: 20px;
-	line-height: 14px;
-	font-size: 1.2em;
-	padding: 0px 0px 2px 0px;
-	margin: 0px;
-}
-
-.modal-dialog__close-button:hover {
-	background-color: var(--blue-l90);
-	color: var(--blue-l30);
-	border-color: var(--blue-l70);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--icon-default);
+	box-shadow: none;
+	font-size: var(--fs-md);
+	line-height: 1;
 	cursor: pointer;
-	padding: 0px 0px 2px 0px;
-	margin: 0px;
+	transition: var(--transition-color);
 }
 
+.modal-dialog__close-button:hover,
 .modal-dialog__close-button:active,
 .modal-dialog__close-button:focus {
-	background-color: var(--blue-l90);
-	color: var(--blue-l50);
+	padding: 0;
+	margin: 0;
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
 	cursor: pointer;
-	padding: 0px;
-	margin: 0px;
 }

@@ -32,7 +32,9 @@
 
 .content {
 	padding: 20px 24px 20px 20px;
-	border-radius: 10px;
+	/* On the scale, and with the corner smoothing the rest of the app uses. */
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	width: clamp(300px, 400px, 600px);
 	min-width: 300px;
 	color: var(--textColor);
