@@ -1,0 +1,250 @@
+/*
+	COMMAND PALETTE
+	---------------
+	Centered overlay, near the top of the viewport rather than the middle -
+	the list grows downwards and a vertically centered box would jump around
+	as results come and go.
+*/
+
+.command-palette__overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 3000;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 12vh var(--sp-6) var(--sp-6) var(--sp-6);
+	background-color: hsla(220, 25%, 6%, 0.45);
+	backdrop-filter: blur(2px);
+	animation: var(--animate-fade-in);
+}
+
+.command-palette {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 620px;
+	max-height: 70vh;
+	overflow: hidden;
+	background-color: var(--bg-surface-raised);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	box-shadow: var(--shadow-4);
+}
+
+.command-palette__input {
+	flex: 0 0 auto;
+	width: 100%;
+	height: 52px;
+	margin: 0;
+	padding: 0 var(--sp-6);
+	border: none;
+	border-bottom: 1px solid var(--border-subtle);
+	border-radius: 0;
+	background-color: transparent;
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-lg);
+}
+
+.command-palette__input:focus,
+.command-palette__input:hover {
+	background-color: transparent;
+	border-color: transparent;
+	border-bottom: 1px solid var(--border-subtle);
+	outline: none;
+}
+
+.command-palette__input::placeholder {
+	color: var(--text-tertiary);
+}
+
+.command-palette__results {
+	flex: 1 1 auto;
+	overflow-y: auto;
+	padding: var(--sp-2);
+	min-height: 0;
+}
+
+.command-palette__group {
+	padding: var(--sp-4) var(--sp-4) var(--sp-2) var(--sp-4);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+}
+
+.command-palette__group:first-child {
+	padding-top: var(--sp-2);
+}
+
+.command-palette__row {
+	display: grid;
+	grid-template-columns: 18px minmax(0, 1fr) min-content min-content;
+	align-items: center;
+	gap: var(--sp-4);
+	height: var(--control-h-lg);
+	padding: 0 var(--sp-4);
+	border-radius: var(--r-sm);
+	cursor: pointer;
+	color: var(--text-primary);
+}
+
+.command-palette__row[active] {
+	background-color: var(--bg-selected);
+}
+
+.command-palette__row[disabled] {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.command-palette__row-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	color: var(--icon-default);
+}
+
+.command-palette__row-icon svg {
+	width: 15px;
+	height: 15px;
+}
+
+.command-palette__row-name {
+	font-size: var(--fs-md);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.command-palette__row-detail {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+.command-palette__row-keys {
+	display: flex;
+	gap: 2px;
+}
+
+.command-palette__empty {
+	padding: var(--sp-7) var(--sp-4);
+	text-align: center;
+	color: var(--text-tertiary);
+	font-size: var(--fs-sm);
+}
+
+.command-palette__hint {
+	flex: 0 0 auto;
+	display: flex;
+	gap: var(--sp-5);
+	padding: var(--sp-3) var(--sp-6);
+	border-top: 1px solid var(--border-subtle);
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+}
+
+.command-palette__hint span {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+}
+
+/* Shared key-cap styling for the palette and the shortcut sheet. */
+.command-palette code,
+.shortcut-sheet code {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 var(--sp-2);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-default);
+	border-bottom-width: 2px;
+	border-radius: var(--r-xs);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	color: var(--text-secondary);
+	line-height: 1;
+}
+
+/*
+	SHORTCUT SHEET
+	--------------
+	Same shell as the palette, laid out as reference columns.
+*/
+
+.shortcut-sheet {
+	max-width: 860px;
+}
+
+.shortcut-sheet:focus,
+.shortcut-sheet:focus-visible {
+	outline: none;
+}
+
+.shortcut-sheet__header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--sp-5);
+	padding: var(--sp-6) var(--sp-7);
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.shortcut-sheet__header h2 {
+	margin: 0;
+	font-size: var(--fs-xl);
+}
+
+.shortcut-sheet__note {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.shortcut-sheet__columns {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: var(--sp-5) var(--sp-9);
+	padding: var(--sp-6) var(--sp-7) var(--sp-8) var(--sp-7);
+	overflow-y: auto;
+	align-content: start;
+}
+
+.shortcut-sheet__group h3 {
+	margin-bottom: var(--sp-3);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+}
+
+.shortcut-sheet__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-5);
+	min-height: 26px;
+}
+
+.shortcut-sheet__label {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.shortcut-sheet__keys {
+	display: flex;
+	gap: 2px;
+	flex: 0 0 auto;
+}

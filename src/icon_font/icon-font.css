@@ -1,0 +1,131 @@
+/*
+	ICON FONT DIALOGS
+	The import table is the important part: one row per file, showing the name
+	it will get and the code point it will land on, before anything is written.
+*/
+
+.icon-import {
+	display: grid;
+	gap: var(--sp-6);
+	padding: var(--sp-7);
+	max-height: 78vh;
+	overflow-y: auto;
+}
+
+.icon-import__header h2 {
+	margin-bottom: var(--sp-3);
+}
+
+.icon-import__header p {
+	max-width: 62ch;
+	margin: 0;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+.icon-import__header code {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	padding: 0 var(--sp-1);
+}
+
+.icon-import__form {
+	display: grid;
+	gap: var(--sp-5);
+}
+
+.icon-import__summary {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.icon-import__summary:empty {
+	display: none;
+}
+
+.icon-import__table {
+	display: grid;
+	gap: 1px;
+	/*
+		A long set would otherwise push the Import button off the bottom of the
+		dialog, which is the one control that has to stay reachable.
+	*/
+	max-height: 260px;
+	overflow-y: auto;
+	background-color: var(--border-subtle);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-sm);
+}
+
+.icon-import__table:empty {
+	display: none;
+}
+
+.icon-import__row {
+	display: grid;
+	grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 80px minmax(0, 1.4fr);
+	align-items: center;
+	gap: var(--sp-4);
+	padding: var(--sp-2) var(--sp-4);
+	background-color: var(--bg-surface);
+	font-size: var(--fs-xs);
+}
+
+.icon-import__file {
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.icon-import__name {
+	width: 100%;
+	height: var(--control-h);
+	padding: 0 var(--sp-2);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+}
+
+.icon-import__code {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-primary);
+}
+
+.icon-import__code--none {
+	color: var(--text-tertiary);
+}
+
+.icon-import__status {
+	color: var(--text-tertiary);
+	line-height: var(--lh-normal);
+}
+
+.icon-import__warning {
+	color: var(--warn);
+}
+
+.icon-import__preview {
+	margin: 0;
+	padding: var(--sp-5);
+	max-height: 300px;
+	overflow: auto;
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	line-height: 1.6;
+	color: var(--text-secondary);
+}
+
+.icon-import__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--sp-3);
+}

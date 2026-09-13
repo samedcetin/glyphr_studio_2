@@ -1,0 +1,913 @@
+/* --------------------------------------------------------
+	Open Project hub
+
+	The first screen, laid out as a file browser: a left rail of
+	views, a header carrying the create/open actions, and a grid of
+	project cards that show their own letterforms.
+
+	Unlike the old splash, this follows the app theme. It is part of
+	the application, not a title card in front of it.
+-------------------------------------------------------- */
+
+#open-project__page {
+	display: grid;
+	grid-template-columns: 260px minmax(0, 1fr);
+	background-color: var(--bg-app);
+	position: relative;
+	top: calc(var(--topbar-h) * -1);
+	width: 100%;
+	height: 100vh;
+	column-gap: 0;
+	overflow: hidden;
+}
+
+/* --------------------------------------------------------
+	Sidebar
+-------------------------------------------------------- */
+
+#open-project__sidebar {
+	min-width: 0;
+	border-right: 1px solid var(--border-subtle);
+	background-color: var(--bg-surface);
+	overflow-y: auto;
+}
+
+.hub-sidebar {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
+	height: 100%;
+	padding: var(--sp-5);
+	gap: var(--sp-6);
+}
+
+.hub-sidebar__brand {
+	display: flex;
+	align-items: center;
+	padding: var(--sp-2) var(--sp-3);
+}
+
+.hub-sidebar__brand svg {
+	height: 20px;
+	width: auto;
+	fill: var(--text-primary);
+}
+
+.hub-sidebar__nav {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	align-content: start;
+}
+
+.hub-sidebar__nav-item {
+	display: grid;
+	grid-template-columns: var(--icon-size) minmax(0, 1fr) min-content;
+	align-items: center;
+	gap: var(--sp-4);
+	width: 100%;
+	min-height: var(--control-h-lg);
+	padding: 0 var(--sp-3);
+	border: 1px solid transparent;
+	border-radius: var(--r-sm);
+	background-color: transparent;
+	color: var(--text-secondary);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-medium);
+	text-align: left;
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.hub-sidebar__nav-item svg {
+	width: var(--icon-size);
+	height: var(--icon-size);
+	fill: currentColor;
+	color: var(--icon-default);
+}
+
+.hub-sidebar__nav-item:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--text-primary);
+}
+
+.hub-sidebar__nav-item[selected] {
+	background-color: var(--bg-selected);
+	color: var(--text-accent);
+}
+
+.hub-sidebar__nav-item[selected] svg {
+	color: var(--icon-accent);
+}
+
+.hub-sidebar__nav-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.hub-sidebar__nav-count {
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+	background-color: var(--bg-surface-sunken);
+	border-radius: var(--r-pill);
+	padding: 1px var(--sp-3);
+}
+
+.hub-sidebar__footer {
+	display: grid;
+	gap: var(--sp-3);
+	padding: var(--sp-3);
+	border-top: 1px solid var(--border-subtle);
+}
+
+.hub-sidebar__version {
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+	font-weight: var(--fw-medium);
+}
+
+.hub-sidebar__legal {
+	font-size: var(--fs-2xs);
+	line-height: 1.5;
+	color: var(--text-tertiary);
+}
+
+.hub-sidebar__footer a {
+	color: var(--text-secondary);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.hub-sidebar__footer a:hover {
+	color: var(--text-accent);
+}
+
+/* --------------------------------------------------------
+	Main area
+-------------------------------------------------------- */
+
+#open-project__main {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr);
+	min-width: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+#open-project__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-5);
+	padding: var(--sp-7) var(--sp-9) var(--sp-5) var(--sp-9);
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.hub-header__title {
+	font-size: var(--fs-xl);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.hub-header__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+}
+
+#open-project__body {
+	padding: var(--sp-7) var(--sp-9) var(--sp-9) var(--sp-9);
+	overflow-y: auto;
+	min-width: 0;
+}
+
+/* --------------------------------------------------------
+	Buttons
+-------------------------------------------------------- */
+
+.hub-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--sp-2);
+	min-height: var(--control-h-lg);
+	padding: 0 var(--sp-5);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-sm);
+	background-color: var(--bg-surface);
+	color: var(--text-primary);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	cursor: pointer;
+	box-shadow: none;
+}
+
+.hub-button svg {
+	width: var(--icon-size);
+	height: var(--icon-size);
+	fill: currentColor;
+}
+
+.hub-button:hover {
+	background-color: var(--bg-hover);
+	border-color: var(--border-strong);
+}
+
+.hub-button--primary,
+.hub-button--primary:focus {
+	background-color: var(--accent);
+	border-color: var(--accent);
+	color: var(--text-on-accent);
+}
+
+.hub-button--primary:hover {
+	background-color: var(--accent-hover);
+	border-color: var(--accent-hover);
+	color: var(--text-on-accent);
+}
+
+.hub-button--large {
+	min-height: 38px;
+	padding: 0 var(--sp-6);
+	font-size: var(--fs-md);
+}
+
+/* --------------------------------------------------------
+	Project cards
+-------------------------------------------------------- */
+
+.hub-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: var(--sp-6);
+	align-items: start;
+}
+
+.hub-card {
+	display: grid;
+	grid-template-rows: min-content min-content;
+	gap: 0;
+	padding: 0;
+	margin: 0;
+	min-height: 0;
+	overflow: hidden;
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	background-color: var(--bg-surface);
+	text-align: left;
+	cursor: pointer;
+	box-shadow: none;
+	transition: border-color var(--dur-fast) var(--ease),
+		box-shadow var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+.hub-card:hover {
+	border-color: var(--accent);
+	box-shadow: var(--shadow-2);
+	background-color: var(--bg-surface);
+	transform: translateY(-1px);
+}
+
+.hub-card__preview {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 132px;
+	background-color: var(--canvas-bg);
+	color: var(--canvas-ink);
+	border-bottom: 1px solid var(--border-subtle);
+	overflow: hidden;
+}
+
+.hub-card__preview svg {
+	width: 100%;
+	height: 100%;
+}
+
+.hub-card__preview-empty {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.hub-card__badge {
+	position: absolute;
+	top: var(--sp-3);
+	left: var(--sp-3);
+	padding: 1px var(--sp-3);
+	border-radius: var(--r-pill);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	color: var(--text-secondary);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+}
+
+.hub-card__info {
+	display: grid;
+	gap: 2px;
+	padding: var(--sp-4) var(--sp-5) var(--sp-5) var(--sp-5);
+	min-width: 0;
+}
+
+.hub-card__title {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.hub-card__meta {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.hub-note {
+	margin-top: var(--sp-7);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------
+	Empty state and forms
+-------------------------------------------------------- */
+
+.hub-empty {
+	display: grid;
+	justify-items: start;
+	gap: var(--sp-6);
+	max-width: 440px;
+	padding: var(--sp-9);
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--r-lg);
+}
+
+.hub-empty__message {
+	font-size: var(--fs-md);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+.hub-panel {
+	display: grid;
+	justify-items: start;
+	gap: var(--sp-4);
+	max-width: 420px;
+}
+
+.hub-panel--wide {
+	max-width: 560px;
+	gap: var(--sp-6);
+}
+
+.hub-panel__label {
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-secondary);
+}
+
+.hub-panel__input,
+#input__new-project-name {
+	width: 100%;
+	height: 38px;
+	margin: 0;
+	padding: 0 var(--sp-4);
+	font-family: var(--font-ui);
+	font-size: var(--fs-lg);
+	color: var(--text-primary);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-sm);
+	display: block;
+}
+
+.hub-panel__input:focus {
+	border-color: var(--accent);
+	background-color: var(--bg-surface);
+}
+
+.hub-panel__hint {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+	max-width: 44ch;
+}
+
+/* --------------------------------------------------------
+	Drop target and drop overlay
+-------------------------------------------------------- */
+
+#open-project__drop-target {
+	display: grid;
+	justify-items: center;
+	gap: var(--sp-4);
+	width: 100%;
+	margin: 0;
+	background-color: var(--bg-surface);
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--r-lg);
+	color: var(--text-secondary);
+	padding: var(--sp-9);
+	text-align: center;
+	line-height: var(--lh-normal);
+}
+
+.hub-drop__icon svg {
+	width: 28px;
+	height: 28px;
+	fill: var(--icon-default);
+}
+
+.hub-drop__title {
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+}
+
+.hub-drop__formats {
+	font-size: var(--fs-sm);
+	color: var(--text-tertiary);
+	line-height: 2;
+}
+
+.hub-drop__formats code {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	padding: 1px var(--sp-2);
+	margin-right: 2px;
+}
+
+#open-project__drop-note {
+	display: none;
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	font-size: var(--fs-2xl);
+	font-weight: var(--fw-semibold);
+	color: var(--text-on-accent);
+	animation: var(--animate-fade-in);
+	backdrop-filter: blur(3px);
+	background-color: hsla(212, 92%, 40%, 0.55);
+	border: 2px dashed hsla(0, 0%, 100%, 0.5);
+	border-radius: var(--r-lg);
+	z-index: 100;
+	padding: 0;
+	margin: 0;
+}
+
+/* --------------------------------------------------------
+	Compact variant, used when opening a second project
+	inside a modal dialog
+-------------------------------------------------------- */
+
+.open-project__page--compact {
+	grid-template-columns: 190px minmax(0, 1fr);
+	height: auto;
+	min-height: 360px;
+	top: 0;
+}
+
+.open-project__page--compact #open-project__header {
+	padding: var(--sp-5) var(--sp-6) var(--sp-4) var(--sp-6);
+}
+
+/*
+	Inside the dialog the sidebar already carries New font / Open a file, so
+	repeating them in the header only costs width the dialog does not have.
+*/
+.open-project__page--compact .hub-header__actions {
+	display: none;
+}
+
+.open-project__page--compact .hub-header__title {
+	font-size: var(--fs-lg);
+	white-space: nowrap;
+}
+
+.open-project__page--compact .hub-panel,
+.open-project__page--compact .hub-panel--wide,
+.open-project__page--compact .hub-empty {
+	max-width: 100%;
+}
+
+.open-project__page--compact #open-project__drop-target {
+	padding: var(--sp-6);
+}
+
+.open-project__page--compact #open-project__body {
+	padding: var(--sp-5) var(--sp-6) var(--sp-6) var(--sp-6);
+}
+
+.open-project__page--compact .hub-sidebar {
+	padding: var(--sp-4);
+	gap: var(--sp-4);
+}
+
+.open-project__page--compact .hub-grid {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.open-project__page--compact .hub-card__preview {
+	height: 96px;
+}
+
+/* --------------------------------------------------------
+	Narrow windows
+-------------------------------------------------------- */
+
+@media (max-width: 820px) {
+	#open-project__page {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: min-content minmax(0, 1fr);
+	}
+
+	#open-project__sidebar {
+		border-right: none;
+		border-bottom: 1px solid var(--border-subtle);
+	}
+
+	.hub-sidebar {
+		grid-template-rows: min-content min-content;
+		gap: var(--sp-4);
+	}
+
+	.hub-sidebar__nav {
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: var(--sp-2);
+	}
+
+	.hub-sidebar__footer {
+		display: none;
+	}
+
+	#open-project__header,
+	#open-project__body {
+		padding-left: var(--sp-6);
+		padding-right: var(--sp-6);
+	}
+}
+
+/* --------------------------------------------------------
+	Open Project Dialog
+-------------------------------------------------------- */
+/*
+	The hub also runs inside a dialog when you open a second project alongside
+	the current one. It shares the same markup and its own compact variant -
+	see .open-project__page--compact - so only the dialog frame is set here.
+*/
+.modal-dialog__open-new-project {
+	background-color: var(--bg-surface);
+	height: min-content;
+	overflow: hidden;
+	border-radius: var(--r-lg);
+}
+
+.modal-dialog__open-new-project .modal-dialog__body {
+	padding: 0px;
+}
+
+.modal-dialog__open-new-project #open-project__page {
+	height: auto;
+	max-height: 70vh;
+	top: 0;
+}
+
+.modal-dialog__open-new-project #open-project__drop-note {
+	border-radius: var(--r-lg);
+}
+
+/* --------------------------------------------------------
+	Cross Project Actions page
+-------------------------------------------------------- */
+#cross-project-actions__page {
+	background: linear-gradient(140deg, var(--n-90), var(--n-96));
+	color-scheme: dark;
+	display: grid;
+	grid-template-rows: max-content 1fr max-content;
+	row-gap: 10px;
+	padding: 20px;
+	position: relative;
+	top: -40px;
+	width: 100%;
+	height: 100vh;
+	column-gap: 0;
+	color: var(--gray-l90);
+}
+
+.cross-project-actions__page-header {
+	grid-row: 1;
+	display: grid;
+	grid-template-columns: 400px 1fr 50px;
+}
+
+#cross-project-actions__page-content {
+	grid-row: 2;
+	overflow-x: auto;
+}
+
+#cross-project-actions__page-footer {
+	grid-row: 3;
+	border-width: 1px 0px 0px 0px;
+	border-style: solid;
+	border-color: var(--blue-l15);
+	padding: 20px 0px 0px 0px;
+}
+
+.cross-project-actions__welcome-content {
+	max-width: 600px;
+	margin-top: 20px;
+}
+
+#cross-project-actions__welcome-flipper {
+	padding: 2px 15px 0px 15px;
+	margin: 10px 0px 0px -1px;
+	display: inline-block;
+	border-radius: 8px;
+	background-color: hsla(285, 100%, 17%, 0.2); /* purple l15 */
+	border: 1px solid var(--blue-l15);
+}
+
+.cross-project-actions__page-header option-chooser {
+	max-width: 400px;
+	font-size: 1.2em;
+	margin-top: 10px;
+	margin-bottom: 20px;
+}
+
+#cross-project-actions__project-flipper {
+	font-size: 1.2em;
+	display: block;
+	padding: 10px 0px;
+}
+
+#cross-project-actions__project-flipper code,
+.cross-project-actions__welcome-content code {
+	background-color: hsla(285, 100%, 17%, 0.1); /* purple l15 */
+	border-color: var(--blue-l15);
+	color: white;
+}
+
+#cross-project-actions__project-flipper .flip-button {
+	display: inline-block;
+	color: var(--purple-l80);
+	background-color: hsla(285, 100%, 17%, 0.2); /* purple l15 */
+	padding: 1px 6px;
+	position: relative;
+	top: 2px;
+	border: 1px solid hsla(285, 100%, 17%, 0.2);
+	border-radius: 4px;
+	text-align: center;
+}
+
+#cross-project-actions__project-flipper .flip-button:hover {
+	cursor: pointer;
+	color: white;
+	border-color: var(--purple-l80);
+}
+
+.cross-project-actions__scale-warning {
+	margin: 0px 0px 10px 0px;
+	background-color: hsla(285, 100%, 17%, 0.3); /* purple l15 */
+	padding: 10px;
+	border-radius: 4px;
+	display: inline-block;
+	max-width: 800px;
+	width: auto;
+}
+
+.cross-project-actions__page-header h1 {
+	color: var(--purple-l90);
+	display: inline;
+}
+
+#cross-project-actions__page-content p {
+	max-width: 800px;
+}
+
+#cross-project-actions__page-content h2,
+.cross-project-actions__column-layout h2 {
+	color: var(--gray-l80);
+	border-width: 0px 0px 1px 0px;
+	border-style: solid;
+	border-color: var(--blue-l15);
+}
+
+#cross-project-actions__page-content h3,
+.cross-project-actions__column-layout h3 {
+	color: var(--gray-l90);
+}
+
+#cross-project-actions__close-button {
+	display: block;
+	height: 30px;
+	width: 30px;
+	margin: 5px 0px 0px 10px;
+	padding: 5px 5px 5px 5px;
+	color: var(--purple-l80);
+	background-color: var(--purple-l15);
+	border: 1px solid var(--purple-l05);
+	border-radius: 4px;
+	text-align: center;
+}
+
+#cross-project-actions__close-button:hover,
+#cross-project-actions__close-button:active {
+	cursor: pointer;
+	background-color: var(--purple-l20);
+	border-color: var(--purple-l15);
+	color: white;
+}
+
+.copy-shapes-options__checkbox,
+#cross-project-actions__page-content > input {
+	width: 14px;
+	height: 14px;
+}
+
+.copy-shapes-options__label,
+#cross-project-actions__page-content > label {
+	display: inline-block;
+	padding: 0px 0px 0px 10px;
+	line-height: 20px;
+	position: relative;
+	top: -2px;
+}
+
+.cross-project-actions__range-chooser {
+	display: inline-block;
+	width: 400px;
+}
+
+.cross-project-actions__column-layout {
+	width: 100%;
+	display: grid;
+	grid-template-columns: 20px max-content max-content 70px min-content 70px;
+	row-gap: 10px;
+	margin-top: 20px;
+}
+
+.cross-project-actions__column-header {
+	font-size: 0.8em;
+	border-bottom: 1px solid var(--blue-l20);
+	padding-left: 20px;
+	padding-bottom: 2px;
+	font-style: italic;
+	color: var(--gray-l60);
+}
+
+#cross-project-actions__item-count {
+	font-size: 1.2em;
+	margin: 14px 0px 0px 20px;
+}
+
+.cross-project-actions__column-layout .text-value {
+	font-family: monospace;
+	color: var(--gray-l60);
+	padding-left: 20px;
+}
+
+.cross-project-actions__column-layout .glyph-id {
+	grid-column: 3;
+	font-family: monospace;
+	color: var(--gray-l60);
+	padding-left: 20px;
+}
+
+.cross-project-actions__column-layout .glyph-name {
+	grid-column: 2;
+	font-size: 1.4em;
+	padding-left: 20px;
+	font-variant-ligatures: none;
+}
+
+.cross-project-actions__column-layout .connector {
+	grid-column: 5;
+	font-size: 1.4em;
+	padding-left: 20px;
+	color: var(--gray-l60);
+}
+
+.cross-project-actions__column-layout .checkbox-wrapper {
+	height: 100%;
+	width: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	grid-column: 1;
+}
+.cross-project-actions__column-layout .checkbox-wrapper input {
+	height: 20px;
+	width: 20px;
+	accent-color: var(--purple-l60);
+}
+
+.cross-project-actions__column-layout .kern-chip-wrapper {
+	width: min-content;
+	padding-left: 10px;
+}
+.cross-project-actions__column-layout .kern-chip-wrapper code {
+	background-color: transparent;
+	background-color: hsla(285, 100%, 17%, 0.2); /* purple l15 */
+	border: 1px solid var(--blue-l20);
+}
+.cross-project-actions__column-layout .kern-chip-wrapper .kern-group-chooser__members-divider {
+	color: var(--blue-l40);
+}
+
+.cross-project-actions__column-layout label,
+.cross-project-actions__column-layout span {
+	height: 100%;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: left;
+}
+
+#cross-project-actions__page label:hover {
+	color: white;
+}
+
+.cross-project-actions__column-layout .thumbnail {
+	background-color: white;
+	width: 50px;
+	height: 50px;
+	overflow: hidden;
+	border-radius: 4px;
+	margin-left: 20px;
+}
+
+/*
+.item-preview__row {
+	border: 1px solid var(--blue-l20);
+	padding: 2px 3px;
+	background-color: hsla(285, 100%, 17%, 0.1); /* purple l15
+	border-radius: 4px;
+	width: 100%;
+	max-width: 430px;
+	height: 58px;
+	overflow: hidden;
+	display: grid;
+	column-gap: 10px;
+	row-gap: 4px;
+	grid-template-columns: min-content max-content;
+	grid-template-rows: 2fr 1fr;
+	align-items: center;
+	grid-column: -1 / 1;
+}
+
+.item-preview__thumbnail {
+	background-color: white;
+	grid-column: 1;
+	grid-row: -1 / 1;
+	width: 50px;
+	height: 50px;
+	overflow: hidden;
+}
+
+.item-preview__title {
+	display: block;
+	height: min-content;
+	grid-column: 2;
+	font-size: 1.2em;
+	margin-top: 10px;
+}
+
+.item-preview__subtitle {
+	font-size: 0.8em;
+	margin-bottom: 4px;
+	color: var(--gray-l50);
+}
+*/
+
+/* Icon-only variant, used for the hub's theme control. */
+.hub-button--icon {
+	width: var(--control-h-lg);
+	padding: 0;
+	border-color: transparent;
+	background-color: transparent;
+	color: var(--icon-default);
+}
+
+.hub-button--icon:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
+}

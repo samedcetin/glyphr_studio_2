@@ -1,0 +1,40 @@
+/*
+	METRIC KEYS
+	Two small text fields under the sidebearings, laid out on the same split
+	as the numbers above them so the pairing reads at a glance.
+*/
+
+.metric-key__input {
+	width: 100%;
+	height: var(--control-h);
+	padding: 0 var(--sp-2);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+}
+
+.metric-key__input::placeholder {
+	color: var(--text-tertiary);
+	opacity: 0.7;
+}
+
+/* Matches the gap `dimSplitElement` leaves between the two number inputs. */
+.metric-key__split {
+	width: 10px;
+}
+
+.metric-key__message {
+	grid-column: 1 / -1;
+	font-size: var(--fs-2xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+	font-variant-numeric: tabular-nums;
+	padding-bottom: var(--sp-2);
+}
+
+.metric-key__message:empty {
+	display: none;
+}
+
+.metric-key__message--bad {
+	color: var(--warn);
+}

@@ -1,0 +1,131 @@
+* {
+	box-sizing: border-box;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
+:host {
+	display: inline-block;
+	box-sizing: border-box;
+	width: 52px;
+	height: 75px;
+	background-color: transparent;
+	overflow-y: hidden;
+	overflow-x: hidden;
+	margin: 0px;
+	padding: 0px;
+	box-shadow: none;
+	border-radius: var(--r-sm);
+	transition: opacity 500ms ease-in;
+}
+
+.wrapper {
+	display: inline-block;
+	background-color: transparent;
+	margin: 0px;
+	padding: 1px;
+	border-radius: var(--r-sm);
+	height: 100%;
+	width: 52px;
+	height: 75px;
+	text-align: center;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	background-repeat: no-repeat;
+	/* background-size: auto ${overallSize}px; */
+}
+
+.wrapper:hover,
+.wrapper:focus {
+	background: var(--bg-hover);
+	cursor: pointer;
+}
+
+.wrapper[selected] {
+	background: var(--bg-selected);
+	box-shadow: inset 0 0 0 1px var(--border-selected);
+}
+
+/*
+	The tile thumbnail is a miniature of the canvas, so it uses the same
+	canvas tokens - white paper in light, dark ground in dark.
+*/
+.thumbnail {
+	display: block;
+	background-color: var(--canvas-bg);
+	opacity: 0.85;
+	font-size: 36px;
+	padding-top: 2px;
+	color: var(--text-disabled);
+	margin: auto;
+	width: 50px;
+	height: 50px;
+	box-shadow: none;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+}
+
+.wrapper:hover .thumbnail,
+.wrapper:focus .thumbnail,
+.wrapper[selected] .thumbnail {
+	opacity: 1;
+	background-color: var(--canvas-bg);
+	border-color: var(--border-default);
+	color: var(--text-tertiary);
+}
+
+/* The outline itself follows the canvas ink token; the placeholder text
+	below keeps its own quieter color. */
+.thumbnail svg {
+	color: var(--canvas-ink);
+}
+
+.whitespace-char-thumbnail {
+	font-size: 12px;
+	line-height: 10px;
+	padding-top: 14px;
+	height: 50px;
+}
+
+.name {
+	display: block;
+	text-align: left;
+	font-variant-ligatures: none;
+	width: 300px;
+	height: 28px;
+	padding: 2px 0px 0px 4px;
+	position: relative;
+	left: -1px;
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+	border-radius: var(--r-xs);
+}
+
+.wrapper[selected] .name,
+.wrapper[selected][session-state='notCreated'] .name,
+.wrapper[selected][session-state='new'] .name,
+.wrapper[selected][session-state='changed'] .name,
+.wrapper:hover .name {
+	color: var(--text-accent);
+	background-color: transparent;
+	font-weight: var(--fw-medium);
+}
+
+/* Metadata styles - state is signalled quietly, not with saturated color */
+.wrapper[session-state='notCreated'] .name {
+	color: var(--text-disabled);
+}
+
+.wrapper[session-state='new'] .name {
+	color: var(--ok);
+}
+
+.wrapper[session-state='changed'] .name {
+	color: var(--text-secondary);
+}
+/*
+.wrapper[has-changed = "false"] .thumbnail {
+	background-color: var(--gray-l99) !important;
+} */

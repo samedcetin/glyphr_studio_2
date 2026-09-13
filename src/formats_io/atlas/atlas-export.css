@@ -1,0 +1,258 @@
+/*
+	BITMAP FONT EXPORT DIALOG
+	Settings on the left of each row, the live atlas preview underneath. The
+	preview is built by the same code that writes the files, so what you see
+	is what gets exported.
+*/
+
+.atlas-export {
+	display: grid;
+	gap: var(--sp-6);
+	padding: var(--sp-7);
+	max-height: 78vh;
+	overflow-y: auto;
+}
+
+.atlas-export__header h2 {
+	margin-bottom: var(--sp-3);
+}
+
+.atlas-export__header p {
+	max-width: 62ch;
+	margin: 0;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+.atlas-export__header code {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	padding: 0 var(--sp-1);
+}
+
+.atlas-export__form {
+	display: grid;
+	gap: var(--sp-5);
+}
+
+.atlas-export__row {
+	display: grid;
+	grid-template-columns: 132px minmax(0, 1fr);
+	align-items: start;
+	gap: var(--sp-5);
+}
+
+.atlas-export__label {
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-secondary);
+	padding-top: 7px;
+}
+
+.atlas-export__control {
+	display: grid;
+	gap: var(--sp-2);
+	min-width: 0;
+}
+
+.atlas-export__hint {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}
+
+.atlas-export__stack {
+	display: grid;
+	gap: var(--sp-3);
+	min-width: 0;
+}
+
+.atlas-export__number {
+	width: 110px;
+	height: var(--control-h-lg);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+.atlas-export__select {
+	height: var(--control-h-lg);
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-primary);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-sm);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+}
+
+.atlas-export__characters {
+	width: 100%;
+	min-height: 62px;
+	padding: var(--sp-3);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	line-height: 1.6;
+	resize: vertical;
+}
+
+.atlas-export__checkbox {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+/* --------------------------------------------------------
+	Preview
+-------------------------------------------------------- */
+
+.atlas-export__preview {
+	display: grid;
+	gap: var(--sp-4);
+	padding: var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+}
+
+.atlas-export__preview-canvas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-5);
+}
+
+.atlas-export__page {
+	display: grid;
+	gap: var(--sp-2);
+	justify-items: center;
+}
+
+/*
+	The atlas is white-on-transparent, so it is shown on a checkerboard - the
+	same way any image editor shows an alpha channel - rather than on a flat
+	color that would hide coverage problems.
+*/
+.atlas-export__page-canvas {
+	width: 200px;
+	height: 200px;
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-xs);
+	image-rendering: pixelated;
+	background-color: hsl(220, 10%, 22%);
+	background-image: linear-gradient(45deg, hsla(0, 0%, 100%, 0.06) 25%, transparent 25%),
+		linear-gradient(-45deg, hsla(0, 0%, 100%, 0.06) 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, hsla(0, 0%, 100%, 0.06) 75%),
+		linear-gradient(-45deg, transparent 75%, hsla(0, 0%, 100%, 0.06) 75%);
+	background-size: 12px 12px;
+	background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
+}
+
+.atlas-export__page-label {
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+}
+
+.atlas-export__stats {
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+	font-variant-numeric: tabular-nums;
+}
+
+.atlas-export__warning {
+	color: var(--warn);
+}
+
+.atlas-export__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--sp-3);
+}
+
+/*
+	The `hidden` attribute only carries `display: none` from the user agent
+	stylesheet, which any explicit display - `grid` on the row above - beats.
+	Rows toggled from script need this to actually disappear.
+*/
+.atlas-export__row[hidden] {
+	display: none;
+}
+
+/* --------------------------------------------------------
+	Subsetting from the game's own text
+-------------------------------------------------------- */
+
+.atlas-export__subset {
+	display: grid;
+	gap: var(--sp-3);
+	min-width: 0;
+}
+
+.atlas-export__subset-actions {
+	display: flex;
+	gap: var(--sp-3);
+}
+
+.atlas-export__subset-report {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+.atlas-export__subset-report:empty {
+	display: none;
+}
+
+.atlas-export__ok {
+	color: var(--ok);
+}
+
+.atlas-export__blocks {
+	display: grid;
+	gap: var(--sp-2);
+	margin: var(--sp-3) 0;
+	padding: 0;
+	list-style: none;
+	/*
+		A text with a lot of missing characters would otherwise push the export
+		button off the bottom of the dialog.
+	*/
+	max-height: 180px;
+	overflow-y: auto;
+}
+
+.atlas-export__blocks li {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
+}
+
+.atlas-export__block-name {
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+	min-width: 140px;
+}
+
+/*
+	Each missing character is shown as itself, drawn by the system font - this
+	font does not have it, which is the whole point.
+*/
+.atlas-export__missing-char {
+	display: inline-grid;
+	place-items: center;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 var(--sp-1);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-xs);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-primary);
+}

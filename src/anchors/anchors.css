@@ -1,0 +1,192 @@
+/*
+	ANCHORS PANEL AND COMPOSE DIALOG
+	The panel is a list of named points with their coordinates; the dialog is
+	the same plan-then-do shape as the icon import and the atlas export.
+*/
+
+.anchors-card {
+	display: grid;
+	gap: var(--sp-3);
+}
+
+.anchors__intro {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}
+
+.anchors__intro code {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	background-color: var(--bg-surface-sunken);
+	border-radius: var(--r-xs);
+	padding: 0 var(--sp-1);
+}
+
+.anchors__list {
+	display: grid;
+	gap: var(--sp-2);
+}
+
+.anchors__row {
+	display: grid;
+	/* Name, x, y, delete - the delete button sized to itself so the three
+	   editable fields share whatever is left. */
+	grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+	gap: var(--sp-2);
+	align-items: center;
+}
+
+.anchors__name,
+.anchors__number {
+	width: 100%;
+	height: var(--control-h);
+	padding: 0 var(--sp-2);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+}
+
+.anchors__number {
+	font-variant-numeric: tabular-nums;
+}
+
+.anchors__delete {
+	width: 22px;
+	height: 22px;
+	padding: 3px;
+	background: none;
+	border: none;
+	border-radius: var(--r-xs);
+	cursor: pointer;
+}
+
+.anchors__delete:hover {
+	background-color: var(--bg-surface-sunken);
+}
+
+.anchors__empty {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+	padding: var(--sp-2) 0;
+}
+
+.anchors__add {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
+}
+
+.anchors__add-button {
+	height: var(--control-h);
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-primary);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-sm);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	cursor: pointer;
+}
+
+.anchors__add-button:hover:not([disabled]) {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.anchors__add-button[disabled] {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.anchors__compose {
+	height: var(--control-h-lg);
+	margin-top: var(--sp-2);
+	background-color: var(--accent);
+	color: var(--text-on-accent);
+	border: none;
+	border-radius: var(--r-sm);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+	cursor: pointer;
+}
+
+.anchors__compose:hover {
+	background-color: var(--accent-hover);
+}
+
+/* --------------------------------------------------------
+	Compose dialog
+-------------------------------------------------------- */
+
+.compose {
+	display: grid;
+	gap: var(--sp-6);
+	padding: var(--sp-7);
+	max-height: 78vh;
+	overflow-y: auto;
+}
+
+.compose__header h2 {
+	margin-bottom: var(--sp-3);
+}
+
+.compose__header p {
+	max-width: 62ch;
+	margin: 0;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+.compose__header code {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	padding: 0 var(--sp-1);
+}
+
+.compose__summary {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.compose__table {
+	display: grid;
+	gap: 1px;
+	max-height: 240px;
+	overflow-y: auto;
+	background-color: var(--border-subtle);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-sm);
+}
+
+.compose__table:empty {
+	display: none;
+}
+
+.compose__row {
+	display: grid;
+	grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+	gap: var(--sp-4);
+	padding: var(--sp-3) var(--sp-4);
+	background-color: var(--bg-surface);
+	font-size: var(--fs-xs);
+}
+
+.compose__characters {
+	font-family: var(--font-mono);
+	line-height: 1.6;
+	color: var(--text-primary);
+	word-break: break-all;
+}
+
+.compose__reason {
+	color: var(--text-tertiary);
+	line-height: var(--lh-normal);
+}
+
+.compose__warning {
+	color: var(--warn);
+}

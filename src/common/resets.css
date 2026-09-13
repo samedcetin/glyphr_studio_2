@@ -1,0 +1,476 @@
+:root {
+	--dark-gradient-background: linear-gradient(150deg, var(--n-93), var(--n-96));
+	--global-focus-style: var(--focus-style);
+	--global-transition: var(--transition-color);
+	--animate-fade-duration: var(--dur-base);
+	--animate-fade-in-slide-down: var(--animate-fade-duration) ease-in fade-slide-in;
+	--animate-fade-in: var(--animate-fade-duration) ease-in fade-in;
+	--animate-fade-out: var(--animate-fade-duration) ease-out fade-out;
+	--animate-fade-update: var(--animate-fade-duration) ease-in fade-in-update;
+
+	--l1-shadow: var(--shadow-1);
+	--l1-shadow-down: var(--shadow-1);
+	--l2-shadow: var(--shadow-2);
+	--l2-shadow-upper-left: var(--shadow-2);
+	--l2-shadow-down: var(--shadow-2);
+	--l3-shadow: var(--shadow-3);
+	--l3-shadow-down: var(--shadow-3);
+}
+
+@font-face {
+	font-family: 'FiraGo';
+	font-style: normal;
+	font-weight: 400;
+	src: url('./FiraGO-Regular.woff2');
+}
+
+/*
+	The universal font-size reset stays. It looks heavy-handed, but it is
+	load-bearing: several rules in this codebase set a large font-size on a
+	container and rely on their children being
+	reset rather than inheriting. Without it those sizes cascade and the page
+	renders at three times its intended scale.
+
+	Element and class selectors both out-specify `*`, so headings, inputs and
+	anything with its own size are unaffected.
+
+	What was removed here is `transition: all 80ms` - every element animating
+	every property on every change, including during canvas drags and panel
+	rebuilds. Transitions are now opt-in, per component.
+*/
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	text-align: left;
+	font-size: var(--fs-md);
+	font-weight: var(--fw-normal);
+	font-family: var(--font-ui);
+}
+
+html {
+	font-family: var(--font-ui);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-normal);
+	line-height: var(--lh-normal);
+	letter-spacing: var(--tracking-tight);
+	color: var(--text-primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}
+
+body {
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+}
+
+html,
+body {
+	background-color: var(--bg-app);
+	height: 100%;
+	width: 100%;
+	min-height: 100%;
+	min-width: 100%;
+	overflow: hidden;
+}
+
+html[lang='en'],
+html[lang='en'] body {
+	overflow: auto;
+}
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+	background-color: transparent;
+}
+::-webkit-scrollbar-button {
+	height: 0px;
+	background-color: transparent;
+}
+::-webkit-scrollbar-track {
+	width: 8px;
+}
+::-webkit-scrollbar-track-piece {
+	background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background-color: var(--border-strong);
+	border-radius: var(--r-pill);
+	border: 3px solid transparent;
+	background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: var(--text-tertiary);
+	background-clip: content-box;
+}
+
+/* Firefox */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--border-strong) transparent;
+}
+::-webkit-scrollbar-corner {
+	display: none;
+}
+::-webkit-resizer {
+	display: block;
+	border: 2px outset var(--enabled-restingLight-background);
+}
+
+div,
+p,
+h1,
+h2,
+h3,
+table,
+td,
+label,
+button {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+b,
+strong {
+	font-weight: bold;
+}
+
+a,
+a:visited {
+	background-color: transparent;
+	border-radius: 4px;
+	color: var(--blue-l55);
+	text-decoration: none;
+}
+
+a:active {
+	color: var(--blue-l40);
+	background-color: hsla(200, 100%, 45%, 0.1);
+}
+
+a:focus,
+a:hover {
+	color: var(--blue-l65);
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+a[danger],
+a[danger]:visited {
+	color: var(--darkRed);
+}
+
+a[danger]:hover,
+a[danger]:focus {
+	color: var(--red);
+}
+
+p {
+	display: block;
+	margin-top: 4px;
+}
+
+p, li {
+	line-height: 1.3em;
+}
+
+p code {
+	height: 1.3em;
+	margin-top: 0;
+	margin-bottom: 0;
+	padding-top: 0;
+}
+
+span:disabled,
+span[disabled='disabled'] {
+	color: var(--disabled-text);
+}
+
+hr {
+	border: none;
+	border-top: 1px solid var(--border-subtle);
+}
+
+h1,
+h2,
+h3,
+h4 {
+	color: var(--text-primary);
+	font-weight: var(--fw-semibold);
+	line-height: var(--lh-tight);
+	letter-spacing: var(--tracking-tight);
+}
+
+h1 {
+	margin-left: 0px;
+	font-size: var(--fs-2xl);
+	margin-bottom: var(--sp-4);
+	clear: right;
+}
+
+h2 {
+	font-size: var(--fs-xl);
+	margin-bottom: var(--sp-3);
+}
+
+h3 {
+	font-size: var(--fs-lg);
+	margin-bottom: var(--sp-2);
+}
+
+h4 {
+	font-size: var(--fs-md);
+	color: var(--text-secondary);
+	margin-bottom: var(--sp-2);
+}
+
+table {
+	border-collapse: collapse;
+}
+
+td {
+	vertical-align: top;
+}
+
+svg {
+	overflow: visible;
+}
+
+.number {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-sm);
+}
+
+label,
+label:focus,
+label:active {
+	display: inline;
+}
+
+label:hover {
+	color: var(--text-primary);
+}
+
+input,
+textarea {
+	padding: 0px var(--sp-3);
+	height: var(--control-h-sm);
+	text-align: left;
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-primary);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-xs);
+	transition: var(--transition-color);
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
+	user-select: text;
+}
+
+input:hover,
+textarea:hover {
+	background-color: var(--enabled-focus-background);
+	color: var(--enabled-focus-text);
+	border-color: var(--enabled-focus-border);
+}
+
+input:focus,
+textarea:focus {
+	background-color: var(--bg-surface);
+	color: var(--text-primary);
+	border-color: var(--accent);
+}
+
+textarea:hover::-webkit-resizer,
+textarea:focus::-webkit-resizer {
+	display: block;
+	border: 2px outset var(--enabled-focus-background);
+}
+
+info-bubble {
+	width: 12px;
+}
+
+/*
+	One visible focus ring for everything, drawn outside the element so it is
+	never clipped. :focus-visible keeps it off mouse clicks but on for keyboard.
+*/
+:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+	border-radius: var(--r-xs);
+}
+
+input:focus-visible,
+button:focus-visible,
+textarea:focus-visible,
+info-bubble:focus-visible,
+glyph-tile:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+input[type='image'] {
+	height: auto;
+	width: auto;
+	background-color: transparent;
+	border-width: 0px;
+}
+
+input[type='number'] {
+	text-align: right;
+	width: 70px;
+	border: 1px solid var(--border-strong);
+	cursor: default;
+}
+
+input[type='text'][disabled='disabled'],
+input[type='number'][disabled='disabled'] {
+	background-color: var(--bg-disabled);
+	border: 1px solid var(--border-disabled);
+	color: var(--text-disabled);
+}
+
+input[type='checkbox'] {
+	accent-color: var(--accent);
+	width: 14px;
+	height: 14px;
+	cursor: pointer;
+}
+
+ul li {
+	margin-left: 20px;
+	margin-top: 10px;
+}
+
+canvas:focus,
+canvas:focus-visible,
+edit-canvas:focus,
+edit-canvas:focus-visible {
+	border: 0;
+	border-image: none;
+	outline: 0;
+}
+
+/* --------------------------------------------------------------
+// Common variables
+// ------------------------------------------------------------*/
+
+@keyframes fade-slide-in {
+	from {
+		opacity: 0;
+		transform: translateY(-3px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0px);
+	}
+}
+
+@keyframes fade-in-update {
+	from {
+		opacity: 0.8;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+		transform: scale(1.006, 1.006);
+	}
+
+	to {
+		opacity: 1;
+		transform: scale(1, 1);
+	}
+}
+
+@keyframes fade-out {
+	from {
+		opacity: 1;
+		transform: scale(1, 1);
+	}
+
+	to {
+		opacity: 0;
+		transform: scale(0.994, 0.994);
+	}
+}
+
+.span-all-columns {
+	grid-column: -1 / 1 !important;
+}
+
+/* --------------------------------------------------------------
+// Button
+// ------------------------------------------------------------*/
+
+button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--sp-2);
+	text-align: center;
+	padding: 0px var(--sp-4);
+	min-height: var(--control-h-sm);
+	margin: 0px;
+	cursor: pointer;
+	border-radius: var(--r-xs);
+	border: 1px solid var(--border-default);
+	background-color: var(--bg-surface);
+	color: var(--text-primary);
+	font-family: inherit;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	box-shadow: none;
+	transition: var(--transition-color);
+}
+
+button:hover {
+	background-color: var(--bg-hover);
+	border-color: var(--border-strong);
+	color: var(--text-primary);
+}
+
+button:active {
+	background-color: var(--bg-active);
+}
+
+button[disabled],
+button[disabled]:active,
+button[disabled]:hover,
+button[disabled]:focus {
+	background-color: var(--bg-disabled);
+	border-color: var(--border-disabled);
+	color: var(--text-disabled);
+	cursor: default;
+}
+
+.button__call-to-action,
+.button__call-to-action:active,
+.button__call-to-action:focus {
+	background-color: var(--accent);
+	border-color: var(--accent);
+	color: var(--text-on-accent);
+}
+
+.button__call-to-action:hover {
+	background-color: var(--accent-hover);
+	border-color: var(--accent-hover);
+	color: var(--text-on-accent);
+}

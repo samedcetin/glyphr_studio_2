@@ -1,0 +1,297 @@
+/*
+	SIDEBAR SECTIONS
+	----------------
+	Collapsible stacks used by both the left and right sidebars.
+
+	The visual model: the sidebar column is the surface, and sections are
+	divided by hairlines rather than each being its own floating card. That is
+	what lets four panels sit in a 280px column and still read clearly - the old
+	one-card-per-panel treatment spent most of its width on borders and padding.
+*/
+
+.sidebar__sections {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-md);
+	overflow: hidden;
+}
+
+.sidebar__section {
+	display: flex;
+	flex-direction: column;
+	border-bottom: 1px solid var(--border-subtle);
+	min-width: 0;
+}
+
+.sidebar__section:last-child {
+	border-bottom: none;
+}
+
+/* --------------------------------------------------------------
+	Header
+	------------------------------------------------------------ */
+
+.sidebar__section-header {
+	display: grid;
+	grid-template-columns: 14px var(--icon-size) minmax(0, 1fr);
+	align-items: center;
+	gap: var(--sp-3);
+	width: 100%;
+	height: var(--control-h-lg);
+	min-height: var(--control-h-lg);
+	padding: 0 var(--sp-4);
+	margin: 0;
+	border: none;
+	border-radius: 0;
+	background-color: transparent;
+	color: var(--text-secondary);
+	cursor: pointer;
+	box-shadow: none;
+	text-align: left;
+}
+
+.sidebar__section-header:hover {
+	background-color: var(--bg-hover);
+	border: none;
+	color: var(--text-primary);
+}
+
+.sidebar__section--open > .sidebar__section-header {
+	color: var(--text-primary);
+}
+
+.sidebar__section-title {
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sidebar__chevron {
+	width: 14px;
+	height: 14px;
+	color: var(--icon-default);
+	transform: rotate(0deg);
+	transition: transform var(--dur-fast) var(--ease);
+}
+
+.sidebar__section--open > .sidebar__section-header .sidebar__chevron {
+	transform: rotate(90deg);
+}
+
+/* Panel icons are generated with fill="currentColor" from graphics.js */
+.sidebar__section-header > svg:not(.sidebar__chevron) {
+	width: var(--icon-size);
+	height: var(--icon-size);
+	color: var(--icon-default);
+}
+
+.sidebar__section--open > .sidebar__section-header > svg:not(.sidebar__chevron) {
+	color: var(--icon-accent);
+}
+
+/* --------------------------------------------------------------
+	Body
+	------------------------------------------------------------ */
+
+.sidebar__section-body {
+	display: none;
+	padding: var(--sp-2) var(--sp-4) var(--sp-5) var(--sp-4);
+	min-width: 0;
+}
+
+.sidebar__section--open > .sidebar__section-body {
+	display: block;
+}
+
+.sidebar__section-error {
+	display: block;
+	color: var(--text-danger);
+	font-size: var(--fs-sm);
+	padding: var(--sp-2) 0;
+}
+
+/*
+	Cards inside a section lose their own frame - the section already provides
+	one. Their headings survive because in the Properties panel they are what
+	tells you whether you are looking at a point, a path, or the glyph.
+*/
+.sidebar__section-body .panel__card {
+	width: 100%;
+	max-width: none;
+	border: none;
+	border-radius: 0;
+	background-color: transparent;
+	box-shadow: none;
+	padding: 0;
+	margin-bottom: 0;
+	row-gap: var(--sp-3);
+	column-gap: var(--sp-3);
+	grid-template-columns: minmax(64px, 38%) minmax(0, 1fr);
+}
+
+/* Hairline between stacked cards within one section. */
+.sidebar__section-body .panel__card + .panel__card {
+	margin-top: var(--sp-5);
+	padding-top: var(--sp-5);
+	border-top: 1px solid var(--border-subtle);
+}
+
+.sidebar__section-body .panel__card h3 {
+	grid-column: 1 / -1;
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+	margin-bottom: var(--sp-1);
+}
+
+.sidebar__section-body .panel__card label {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/* The Layers list is a full-bleed list, not a form, so it opts out of the
+	card grid and the body's horizontal padding. */
+.sidebar__section-body .item-links__rows-area {
+	display: block;
+	margin: 0 calc(var(--sp-4) * -1);
+	width: auto;
+}
+
+.sidebar__section-body .item-links__rows-area + .panel__card {
+	margin-top: var(--sp-5);
+	padding-top: var(--sp-5);
+	border-top: 1px solid var(--border-subtle);
+}
+
+.sidebar__section-body .item-link__row {
+	padding-left: var(--sp-4);
+	padding-right: var(--sp-4);
+	border-radius: 0;
+}
+
+/* Action icon grids sit tighter inside a section than they did in a card. */
+.sidebar__section-body .panel__actions-area {
+	grid-column: 1 / -1;
+}
+
+/*
+	input-number carries a 50px min-width for its text field plus stepper and
+	lock buttons. Inside a sidebar that floor is what pushes paired inputs past
+	the panel edge, so it is relaxed here only.
+*/
+.sidebar__section-body {
+	--number-input-min-w: 0px;
+}
+
+.sidebar__section-body input-number {
+	min-width: 0;
+}
+
+.sidebar__section-body .doubleInput input-number,
+.sidebar__section-body .doubleInput input {
+	min-width: 0;
+}
+
+/* --------------------------------------------------------------
+	Narrow sidebars
+	A two-column label/input card needs roughly 400px to hold a pair of number
+	inputs side by side - each one carries a stepper and a lock button on top
+	of its text field. Below that the label moves above its control, which is
+	the only way the values stay readable; the alternative is inputs so narrow
+	that "1211" renders as "12".
+
+	Container query rather than a media query: what matters is how wide this
+	sidebar is, which the user sets by dragging, not how wide the window is.
+	------------------------------------------------------------ */
+
+.sidebar__section-body {
+	container-type: inline-size;
+	container-name: sidebar-body;
+}
+
+@container sidebar-body (max-width: 320px) {
+	/*
+		These selectors carry the .sidebar__section-body prefix on purpose.
+		A container query adds no specificity of its own, so a bare
+		`.panel__card` here would lose to the two-column rule above and the
+		controls would end up crammed into the label column.
+	*/
+	.sidebar__section-body .panel__card {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: var(--sp-2);
+	}
+
+	/* Everything that was pinned to the second column now flows in the first. */
+	.sidebar__section-body .panel__card .doubleInput,
+	.sidebar__section-body .panel__card > input,
+	.sidebar__section-body .panel__card > input-number,
+	.sidebar__section-body .panel__card > option-chooser,
+	.sidebar__section-body .panel__card > option-toggle {
+		grid-column: 1;
+		width: 100%;
+	}
+
+	.sidebar__section-body .panel__card label {
+		padding-top: var(--sp-3);
+		font-size: var(--fs-xs);
+		color: var(--text-tertiary);
+	}
+
+	.sidebar__section-body .panel__card h3 + label {
+		padding-top: 0;
+	}
+
+	/* Checkbox captions keep sitting next to their checkbox rather than
+		dropping onto their own row. */
+	.sidebar__section-body .panel__card .panel__card-label--wide {
+		grid-column: 1;
+		padding-top: 0;
+		margin-top: calc(var(--sp-5) * -1);
+		padding-left: var(--sp-7);
+	}
+}
+
+/* --------------------------------------------------------------
+	Inside a floating panel
+
+	The panel supplies the frame, so the first section header sits
+	flush with its top edge and the content gets its breathing room
+	from the section padding rather than from a nested card.
+	------------------------------------------------------------ */
+
+.editor-page__left-area .sidebar__section:first-child > .sidebar__section-header,
+.editor-page__right-area .sidebar__section:first-child > .sidebar__section-header {
+	border-top-left-radius: var(--r-lg);
+	border-top-right-radius: var(--r-lg);
+}
+
+.editor-page__left-area .sidebar__section-header,
+.editor-page__right-area .sidebar__section-header {
+	padding-left: var(--sp-5);
+	padding-right: var(--sp-5);
+}
+
+.editor-page__left-area .sidebar__section-body,
+.editor-page__right-area .sidebar__section-body {
+	padding-left: var(--sp-5);
+	padding-right: var(--sp-5);
+}
+
+.editor-page__left-area .sidebar__section-body .item-links__rows-area,
+.editor-page__right-area .sidebar__section-body .item-links__rows-area {
+	margin-left: calc(var(--sp-5) * -1);
+	margin-right: calc(var(--sp-5) * -1);
+}
+
+.editor-page__left-area .sidebar__section-body .item-link__row,
+.editor-page__right-area .sidebar__section-body .item-link__row {
+	padding-left: var(--sp-5);
+	padding-right: var(--sp-5);
+}

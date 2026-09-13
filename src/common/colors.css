@@ -1,0 +1,273 @@
+/*
+	LEGACY COLOR RAMPS - theme-aware compatibility layer
+	----------------------------------------------------
+	The app has ~20 stylesheets that reference lightness-named ramps
+	(--gray-l90, --blue-l15, --purple-l50 ...). Rewriting every call site
+	would be a large, risky diff, so instead the ramps themselves are made
+	theme-aware here and every existing call site keeps working.
+
+	How it works:
+		Every ramp is hsl(<hue>, var(--sat-*), var(--l**)).
+		The lightness steps --l99 ... --l05 are INVERTED in dark mode.
+
+	That inversion is what makes the whole app flip at once, and it is
+	correct because the codebase uses the ramp consistently: high numbers
+	(l90, l95) are backgrounds, low numbers (l15, l20) are text. Invert the
+	scale and backgrounds go dark while text goes light, everywhere.
+
+	New code should use the semantic tokens in tokens.css instead of these
+	ramps. This file is a bridge, not a destination.
+*/
+
+:root {
+	/* Lightness steps - light theme */
+	--l99: 98%;
+	--l97: 96%;
+	--l95: 94%;
+	--l90: 88%;
+	--l85: 82%;
+	--l80: 77%;
+	--l75: 71%;
+	--l70: 65%;
+	--l65: 59%;
+	--l60: 53%;
+	--l55: 48%;
+	--l50: 43%;
+	--l45: 38%;
+	--l40: 34%;
+	--l35: 30%;
+	--l30: 26%;
+	--l25: 21%;
+	--l20: 17%;
+	--l15: 14%;
+	--l10: 10%;
+	--l05: 6%;
+
+	/* Per-ramp saturation */
+	--sat-gray: 14%;
+	--sat-blue: 88%;
+	--sat-royal: 90%;
+	--sat-purple: 80%;
+	--sat-orange: 92%;
+	--sat-green: 62%;
+}
+
+/*
+	Only the real dark theme inverts the ramp.
+
+	The always-dark surfaces (welcome screen, cross project page) deliberately
+	do NOT appear here: they were authored against light-mode ramp values -
+	`--gray-l70` meaning "light gray on a dark ground" - so inverting the ramp
+	underneath them would flip their text to dark-on-dark. They pick up dark
+	*semantic* tokens from tokens.css instead, which is what their inputs and
+	buttons actually need.
+*/
+:root[data-theme='dark'] {
+	/* Lightness steps INVERTED and compressed away from pure black/white.
+		l99 (lightest surface in light mode) becomes the darkest surface. */
+	--l99: 9%;
+	--l97: 11%;
+	--l95: 13%;
+	--l90: 16%;
+	--l85: 19%;
+	--l80: 22%;
+	--l75: 26%;
+	--l70: 30%;
+	--l65: 35%;
+	--l60: 40%;
+	--l55: 45%;
+	--l50: 50%;
+	--l45: 55%;
+	--l40: 60%;
+	--l35: 65%;
+	--l30: 70%;
+	--l25: 75%;
+	--l20: 80%;
+	--l15: 85%;
+	--l10: 89%;
+	--l05: 93%;
+
+	/* Dark surfaces must be close to neutral or the whole UI reads tinted. */
+	--sat-gray: 11%;
+	--sat-blue: 26%;
+	--sat-royal: 40%;
+	--sat-purple: 45%;
+	--sat-orange: 55%;
+	--sat-green: 40%;
+}
+
+:root {
+	/* ---- Ramps, generated from the steps above ---- */
+	--gray-l99: hsl(220, var(--sat-gray), var(--l99));
+	--gray-l97: hsl(220, var(--sat-gray), var(--l97));
+	--gray-l95: hsl(220, var(--sat-gray), var(--l95));
+	--gray-l90: hsl(220, var(--sat-gray), var(--l90));
+	--gray-l85: hsl(220, var(--sat-gray), var(--l85));
+	--gray-l80: hsl(220, var(--sat-gray), var(--l80));
+	--gray-l75: hsl(220, var(--sat-gray), var(--l75));
+	--gray-l70: hsl(220, var(--sat-gray), var(--l70));
+	--gray-l65: hsl(220, var(--sat-gray), var(--l65));
+	--gray-l60: hsl(220, var(--sat-gray), var(--l60));
+	--gray-l55: hsl(220, var(--sat-gray), var(--l55));
+	--gray-l50: hsl(220, var(--sat-gray), var(--l50));
+	--gray-l45: hsl(220, var(--sat-gray), var(--l45));
+	--gray-l40: hsl(220, var(--sat-gray), var(--l40));
+	--gray-l35: hsl(220, var(--sat-gray), var(--l35));
+	--gray-l30: hsl(220, var(--sat-gray), var(--l30));
+	--gray-l25: hsl(220, var(--sat-gray), var(--l25));
+	--gray-l20: hsl(220, var(--sat-gray), var(--l20));
+	--gray-l15: hsl(220, var(--sat-gray), var(--l15));
+	--gray-l10: hsl(220, var(--sat-gray), var(--l10));
+	--gray-l05: hsl(220, var(--sat-gray), var(--l05));
+
+	--blue-l99: hsl(212, var(--sat-blue), var(--l99));
+	--blue-l97: hsl(212, var(--sat-blue), var(--l97));
+	--blue-l95: hsl(212, var(--sat-blue), var(--l95));
+	--blue-l90: hsl(212, var(--sat-blue), var(--l90));
+	--blue-l85: hsl(212, var(--sat-blue), var(--l85));
+	--blue-l80: hsl(212, var(--sat-blue), var(--l80));
+	--blue-l75: hsl(212, var(--sat-blue), var(--l75));
+	--blue-l70: hsl(212, var(--sat-blue), var(--l70));
+	--blue-l65: hsl(212, var(--sat-blue), var(--l65));
+	--blue-l60: hsl(212, var(--sat-blue), var(--l60));
+	--blue-l55: hsl(212, var(--sat-blue), var(--l55));
+	--blue-l50: hsl(212, var(--sat-blue), var(--l50));
+	--blue-l45: hsl(212, var(--sat-blue), var(--l45));
+	--blue-l40: hsl(212, var(--sat-blue), var(--l40));
+	--blue-l35: hsl(212, var(--sat-blue), var(--l35));
+	--blue-l30: hsl(212, var(--sat-blue), var(--l30));
+	--blue-l25: hsl(212, var(--sat-blue), var(--l25));
+	--blue-l20: hsl(212, var(--sat-blue), var(--l20));
+	--blue-l15: hsl(212, var(--sat-blue), var(--l15));
+	--blue-l10: hsl(212, var(--sat-blue), var(--l10));
+	--blue-l05: hsl(212, var(--sat-blue), var(--l05));
+
+	--royal-l95: hsl(226, var(--sat-royal), var(--l95));
+	--royal-l90: hsl(226, var(--sat-royal), var(--l90));
+	--royal-l85: hsl(226, var(--sat-royal), var(--l85));
+	--royal-l80: hsl(226, var(--sat-royal), var(--l80));
+	--royal-l75: hsl(226, var(--sat-royal), var(--l75));
+	--royal-l70: hsl(226, var(--sat-royal), var(--l70));
+	--royal-l65: hsl(226, var(--sat-royal), var(--l65));
+	--royal-l60: hsl(226, var(--sat-royal), var(--l60));
+	--royal-l55: hsl(226, var(--sat-royal), var(--l55));
+	--royal-l50: hsl(226, var(--sat-royal), var(--l50));
+	--royal-l45: hsl(226, var(--sat-royal), var(--l45));
+	--royal-l40: hsl(226, var(--sat-royal), var(--l40));
+	--royal-l35: hsl(226, var(--sat-royal), var(--l35));
+	--royal-l30: hsl(226, var(--sat-royal), var(--l30));
+	--royal-l25: hsl(226, var(--sat-royal), var(--l25));
+	--royal-l20: hsl(226, var(--sat-royal), var(--l20));
+	--royal-l15: hsl(226, var(--sat-royal), var(--l15));
+	--royal-l10: hsl(226, var(--sat-royal), var(--l10));
+	--royal-l05: hsl(226, var(--sat-royal), var(--l05));
+
+	--purple-l95: hsl(268, var(--sat-purple), var(--l95));
+	--purple-l90: hsl(268, var(--sat-purple), var(--l90));
+	--purple-l85: hsl(268, var(--sat-purple), var(--l85));
+	--purple-l80: hsl(268, var(--sat-purple), var(--l80));
+	--purple-l75: hsl(268, var(--sat-purple), var(--l75));
+	--purple-l70: hsl(268, var(--sat-purple), var(--l70));
+	--purple-l65: hsl(268, var(--sat-purple), var(--l65));
+	--purple-l60: hsl(268, var(--sat-purple), var(--l60));
+	--purple-l55: hsl(268, var(--sat-purple), var(--l55));
+	--purple-l50: hsl(268, var(--sat-purple), var(--l50));
+	--purple-l45: hsl(268, var(--sat-purple), var(--l45));
+	--purple-l40: hsl(268, var(--sat-purple), var(--l40));
+	--purple-l35: hsl(268, var(--sat-purple), var(--l35));
+	--purple-l30: hsl(268, var(--sat-purple), var(--l30));
+	--purple-l25: hsl(268, var(--sat-purple), var(--l25));
+	--purple-l20: hsl(268, var(--sat-purple), var(--l20));
+	--purple-l15: hsl(268, var(--sat-purple), var(--l15));
+	--purple-l10: hsl(268, var(--sat-purple), var(--l10));
+	--purple-l05: hsl(268, var(--sat-purple), var(--l05));
+
+	--orange-l97: hsl(24, var(--sat-orange), var(--l97));
+	--orange-l95: hsl(24, var(--sat-orange), var(--l95));
+	--orange-l90: hsl(24, var(--sat-orange), var(--l90));
+	--orange-l85: hsl(24, var(--sat-orange), var(--l85));
+	--orange-l80: hsl(24, var(--sat-orange), var(--l80));
+	--orange-l75: hsl(24, var(--sat-orange), var(--l75));
+	--orange-l70: hsl(24, var(--sat-orange), var(--l70));
+	--orange-l65: hsl(24, var(--sat-orange), var(--l65));
+	--orange-l60: hsl(24, var(--sat-orange), var(--l60));
+	--orange-l55: hsl(24, var(--sat-orange), var(--l55));
+	--orange-l50: hsl(24, var(--sat-orange), var(--l50));
+	--orange-l45: hsl(24, var(--sat-orange), var(--l45));
+	--orange-l40: hsl(24, var(--sat-orange), var(--l40));
+	--orange-l35: hsl(24, var(--sat-orange), var(--l35));
+	--orange-l30: hsl(24, var(--sat-orange), var(--l30));
+	--orange-l25: hsl(24, var(--sat-orange), var(--l25));
+	--orange-l20: hsl(24, var(--sat-orange), var(--l20));
+	--orange-l15: hsl(24, var(--sat-orange), var(--l15));
+	--orange-l10: hsl(24, var(--sat-orange), var(--l10));
+	--orange-l05: hsl(24, var(--sat-orange), var(--l05));
+
+	--green-l95: hsl(152, var(--sat-green), var(--l95));
+	--green-l90: hsl(152, var(--sat-green), var(--l90));
+	--green-l85: hsl(152, var(--sat-green), var(--l85));
+	--green-l80: hsl(152, var(--sat-green), var(--l80));
+	--green-l75: hsl(152, var(--sat-green), var(--l75));
+	--green-l70: hsl(152, var(--sat-green), var(--l70));
+	--green-l65: hsl(152, var(--sat-green), var(--l65));
+	--green-l60: hsl(152, var(--sat-green), var(--l60));
+	--green-l55: hsl(152, var(--sat-green), var(--l55));
+	--green-l50: hsl(152, var(--sat-green), var(--l50));
+	--green-l45: hsl(152, var(--sat-green), var(--l45));
+	--green-l40: hsl(152, var(--sat-green), var(--l40));
+	--green-l35: hsl(152, var(--sat-green), var(--l35));
+	--green-l30: hsl(152, var(--sat-green), var(--l30));
+	--green-l25: hsl(152, var(--sat-green), var(--l25));
+	--green-l20: hsl(152, var(--sat-green), var(--l20));
+	--green-l15: hsl(152, var(--sat-green), var(--l15));
+	--green-l10: hsl(152, var(--sat-green), var(--l10));
+	--green-l05: hsl(152, var(--sat-green), var(--l05));
+
+	/* ---- Semantic legacy names ----
+		These are pinned to the token layer rather than to the ramps, because
+		an inverted ramp would give, for example, a muddy dark accent color.
+		Anything meaning "interaction" or "state" belongs here. */
+	--accent-color: var(--accent);
+	--accent-color-dark: var(--accent-press);
+	--selected: var(--bg-selected);
+
+	--offWhite: var(--bg-surface);
+	--darkRed: var(--danger);
+	--red: var(--danger);
+	--lightRed: var(--danger-bg);
+
+	--enabled-resting-text: var(--text-primary);
+	--enabled-resting-lightText: var(--text-secondary);
+	--enabled-resting-border: var(--border-strong);
+	--enabled-resting-fill: var(--icon-default);
+	--enabled-resting-background: var(--bg-surface);
+
+	--enabled-restingLight-text: var(--text-primary);
+	--enabled-restingLight-lightText: var(--text-secondary);
+	--enabled-restingLight-border: var(--border-default);
+	--enabled-restingLight-fill: var(--icon-default);
+	--enabled-restingLight-background: var(--bg-surface);
+
+	--enabled-focus-text: var(--text-primary);
+	--enabled-focus-lightText: var(--text-secondary);
+	--enabled-focus-border: var(--border-selected);
+	--enabled-focus-fill: var(--icon-strong);
+	--enabled-focus-background: var(--bg-surface-raised);
+
+	--enabled-active-text: var(--text-primary);
+	--enabled-active-lightText: var(--text-secondary);
+	--enabled-active-border: var(--border-selected);
+	--enabled-active-fill: var(--icon-accent);
+	--enabled-active-background: var(--bg-surface-raised);
+
+	--disabled-text: var(--text-disabled);
+	--disabled-text-light: var(--text-disabled);
+	--disabled-text-dark: var(--text-tertiary);
+	--disabled-border: var(--border-disabled);
+	--disabled-fill: var(--icon-disabled);
+	--disabled-background: var(--bg-disabled);
+
+	--border-resting: var(--border-default);
+	--border-focus: var(--border-selected);
+	--fill-disabled: var(--icon-disabled);
+}
