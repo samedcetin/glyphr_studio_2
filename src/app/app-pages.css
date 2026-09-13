@@ -603,14 +603,20 @@
 	title above it.
 -------------------------------------------------------- */
 
+/*
+	--r-xl over --sp-2 of padding, so a tab at --r-lg is concentric with the
+	strip holding it: 16 - 4 = 12, the same arithmetic the popovers run on. At
+	--r-md over 2px the strip was a tight little box with tighter boxes inside
+	it, and the corners were too small to read as corners at all.
+*/
 .hub-tabs {
 	display: inline-flex;
 	justify-self: start;
 	gap: var(--sp-1);
-	padding: var(--sp-1);
+	padding: var(--sp-2);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 }
 
@@ -618,13 +624,12 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--sp-2);
-	height: var(--control-h);
+	height: var(--control-h-lg);
 	min-height: 0;
 	margin: 0;
-	padding: 0 var(--sp-5);
+	padding: 0 var(--sp-6);
 	border: 1px solid transparent;
-	/* Concentric with the strip: its --r-md less the --sp-1 it holds them in by. */
-	border-radius: calc(var(--r-md) - var(--sp-1));
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--text-secondary);
@@ -713,12 +718,26 @@
 	zone and a button - when the dialog already accepts a dropped file
 	anywhere on it.
 */
+/*
+	The right padding matches the vertical, and only the left keeps the 24px
+	everything else in the dialog lines up on. That is what lets the button's
+	corner nest inside the dialog's: a corner can only sit inside another if it
+	is the same distance from both edges, and the distance from the bottom is
+	the footer's own padding. At 24px on the right the button was floating in
+	from the corner with nothing to be concentric with.
+*/
 .hub-modal__footer-inner {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--sp-6);
-	padding: var(--sp-4) var(--sp-8);
+	padding: var(--sp-5) var(--sp-5) var(--sp-5) var(--sp-8);
+}
+
+/* Derived, not picked: the dialog's radius less its border, less the 12px the
+	footer holds the button off its edges. */
+.hub-modal__footer-inner .hub-button {
+	border-radius: calc(var(--r-2xl) - 1px - var(--sp-5));
 }
 
 .hub-modal__drop-hint {
