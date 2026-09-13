@@ -1,8 +1,19 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
-import { clone, deg, rad, round } from '../common/functions.js';
+import {
+	deg,
+	rad,
+	resolveTransformOrigin,
+	round,
+	transformOrigins,
+} from '../common/functions.js';
+import { makeTransformOriginIcon } from '../common/graphics.js';
 import { makeActionButton } from './action_buttons.js';
-import { makeSingleLabel } from './cards.js';
+import {
+	makeSingleLabel,
+	syncTransformOriginChoosers,
+	transformOriginName,
+} from './cards.js';
 
 // --------------------------------------------------------------
 // Transforms panel
@@ -127,6 +138,7 @@ export function makePanel_Transforms() {
 	const editor = getCurrentProjectEditor();
 	const card = makeElement({ className: 'panel__card' });
 
+	addAsChildren(card, makeTransformOriginRow());
 	card.appendChild(makeQuickTransformsArea());
 
 	transformOperations.forEach((operation) => {
@@ -146,6 +158,57 @@ export function makePanel_Transforms() {
 	window.setTimeout(refreshTransformControls, 0);
 
 	return [card];
+}
+
+/**
+ * The origin chooser.
+ *
+ * The same setting the Properties panel shows beside width and height, on the
+ * same object - so the two are one control in two places rather than two
+ * controls that disagree. It is here because this is where the other three
+ * transforms are, and an origin nobody can see from where they are
+ * transforming is an origin nobody knows they chose.
+ *
+ * @returns {Array} the label and the chooser
+ */
+function makeTransformOriginRow() {
+	const owner = transformOriginOwner(getCurrentProjectEditor());
+
+	const label = makeSingleLabel(
+		'Origin',
+		`The point every transform here holds still: rotation pivots about it,
+			skew leans away from it, and resizing in Properties grows from it.
+			<br><br>
+			Baseline means y = 0, rather than the bottom of the shape.`
+	);
+
+	const chooser = makeElement({
+		tag: 'option-chooser',
+		className: 'transform-origin-chooser',
+		attributes: {
+			'selected-id': owner.transformOrigin,
+			'selected-name': transformOriginName(owner.transformOrigin),
+		},
+	});
+
+	transformOrigins.forEach((origin) => {
+		const option = makeElement({
+			tag: 'option',
+			attributes: { 'selection-id': origin },
+			innerHTML: `${makeTransformOriginIcon(origin)}${transformOriginName(origin)}`,
+		});
+
+		option.addEventListener('click', () => {
+			const editor = getCurrentProjectEditor();
+			transformOriginOwner(editor).transformOrigin = origin;
+			syncTransformOriginChoosers(origin);
+			editor.publish('editCanvasView', editor.selectedItem);
+		});
+
+		chooser.appendChild(option);
+	});
+
+	return [label, chooser];
 }
 
 /**
@@ -246,11 +309,11 @@ function applyTransform(operation, value) {
 }
 
 /**
- * Rotate the selection about its own centre.
+ * Rotate the selection about the chosen origin.
  *
- * The one origin every rotation here uses - the field and all three
- * turns - so they cannot disagree. It is not the Properties panel's
- * transform origin, which applies to resizing only.
+ * The one place rotation happens - the field and all three turns - so they
+ * cannot disagree about where the pivot is. It used to be the centre of the
+ * selection, always, whatever the origin said.
  *
  * @param {Object} editor - the current project editor
  * @param {Number} degreesClockwise - positive turns clockwise
@@ -260,7 +323,7 @@ function rotateSelection(editor, degreesClockwise) {
 	const msShapes = editor.multiSelect.shapes;
 	const count = msShapes.length;
 
-	msShapes.rotate(rad(degreesClockwise * -1), clone(msShapes.maxes.center));
+	msShapes.rotate(rad(degreesClockwise * -1), selectionOrigin(editor));
 	return `Rotated ${count} ${count === 1 ? 'shape' : 'shapes'} by ${degreesClockwise}°`;
 }
 
@@ -286,6 +349,8 @@ function flipSelection(editor, method, direction) {
  * stack. Skew a path that sits behind another and it jumped in front of it,
  * and undo did not put it back. Path.skewAngle and Path.skewDistance both
  * mutate the path they are called on, so there was never anything to replace.
+ * They also take the point to skew away from, which used to be left at its
+ * default of y = 0 whatever the origin said.
  *
  * @param {Object} editor - the current project editor
  * @param {String} method - 'skewAngle' or 'skewDistance'
@@ -293,12 +358,13 @@ function flipSelection(editor, method, direction) {
  * @returns {Number} how many paths were skewed
  */
 function skewSelectedPaths(editor, method, amount) {
+	const origin = selectionOrigin(editor);
 	let count = 0;
 
 	editor.multiSelect.shapes.members.forEach((shape) => {
 		/* A component instance has no outline of its own to skew. */
 		if (shape.objType !== 'Path') return;
-		shape[method](amount);
+		shape[method](amount, origin);
 		count++;
 	});
 
@@ -349,11 +415,48 @@ function offsetSelectedPaths(editor, distance) {
 // --------------------------------------------------------------
 
 /**
- * Enable or disable every Apply button for what is currently selected.
+ * Whose transform origin applies.
+ *
+ * Exactly the object the Properties panel is showing: the one selected shape,
+ * the virtual glyph standing in for several, or the glyph itself when nothing
+ * is selected. Anything else and the origin on screen would belong to
+ * something other than what is about to be transformed.
+ *
+ * @param {Object} editor - the current project editor
+ * @returns {Object} the item carrying the transformOrigin
+ */
+function transformOriginOwner(editor) {
+	const msShapes = editor.multiSelect.shapes;
+	if (msShapes.length === 1) return msShapes.singleton;
+	if (msShapes.length > 1) return msShapes.virtualGlyph;
+	return editor.selectedItem;
+}
+
+/**
+ * The chosen origin as a point, against the selection being transformed.
+ * @param {Object} editor - the current project editor
+ * @returns {Object} x and y of the point that stays put
+ */
+function selectionOrigin(editor) {
+	return resolveTransformOrigin(
+		editor.multiSelect.shapes.maxes,
+		transformOriginOwner(editor).transformOrigin
+	);
+}
+
+/**
+ * Enable or disable every Apply button for what is currently selected, and
+ * keep the origin chooser showing whose origin is in play.
  */
 function refreshTransformControls() {
 	const editor = getCurrentProjectEditor();
 	const hasSelection = editor.multiSelect.shapes.length > 0;
+
+	/*
+		The owner changes with the selection, so the chooser follows rather than
+		holding the value it was built with.
+	*/
+	syncTransformOriginChoosers(transformOriginOwner(editor).transformOrigin);
 
 	quickTransforms.forEach((quickTransform) => {
 		const button = document.getElementById(`quickTransform_${quickTransform.iconName}`);

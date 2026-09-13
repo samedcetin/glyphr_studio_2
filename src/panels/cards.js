@@ -96,24 +96,27 @@ export function makeInputs_size(item, disabled = false) {
 			`With increases or decreases to width or height,
 		the transform origin is the point that stays fixed.
 		<br><br>
-		This only takes effect when directly entering values
-		into the width or height inputs.`
+		Every transform holds it still: rotation pivots about it, skew leans
+		away from it, and resizing grows from it. The Transform panel carries
+		the same setting.`
 		);
 		let transformInput = makeElement({
 			tag: 'option-chooser',
+			className: 'transform-origin-chooser',
 			attributes: {
 				'selected-id': item.transformOrigin,
-				'selected-name': item.transformOrigin.replace('-', ' '),
+				'selected-name': transformOriginName(item.transformOrigin),
 			},
 		});
 		displayOrigins.forEach((origin) => {
 			let option = makeElement({
 				tag: 'option',
 				attributes: { 'selection-id': origin },
-				innerHTML: `${makeTransformOriginIcon(origin)}${origin.replace('-', ' ')}`,
+				innerHTML: `${makeTransformOriginIcon(origin)}${transformOriginName(origin)}`,
 			});
 			option.addEventListener('click', () => {
 				item.transformOrigin = origin;
+				syncTransformOriginChoosers(origin);
 				getCurrentProjectEditor().publish('editCanvasView', item);
 			});
 			transformInput.appendChild(option);
@@ -335,6 +338,34 @@ function toggleHandleInputs(handle, show) {
 	// log(group);
 	if (group) group.style.display = show ? 'grid' : 'none';
 	// log(`toggleHandleInputs`, 'end');
+}
+
+/**
+ * "baseline-left" as "baseline left".
+ * @param {String} origin - a transformOrigins name
+ * @returns {String}
+ */
+export function transformOriginName(origin) {
+	return `${origin}`.replace(/-/g, ' ');
+}
+
+/**
+ * Show the same origin in every chooser on screen.
+ *
+ * The setting appears twice - beside width and height here, and at the top of
+ * the Transform panel, which is where rotation and skew read it. Two views of
+ * one property, and neither panel is rebuilt on the other's account, so
+ * changing either has to move both.
+ *
+ * @param {String} origin - a transformOrigins name
+ */
+export function syncTransformOriginChoosers(origin) {
+	const name = transformOriginName(origin);
+
+	document.querySelectorAll('.transform-origin-chooser').forEach((chooser) => {
+		/* selected-name only - writing selected-id fires a change event back out. */
+		chooser.setAttribute('selected-name', name);
+	});
 }
 
 /**
