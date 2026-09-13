@@ -38,8 +38,19 @@ import { makeFontPreviewSVG, projectFromSavedData } from './project_preview.js';
 	underneath; what changed is what you land on.
  */
 
-/** True when opening a second project alongside the current one (modal mode). */
+/** True when opening a second project alongside the current one. */
 let isSecondProject = false;
+
+/**
+ * True when the hub is running inside a modal dialog rather than as the page.
+ *
+ * This used to be inferred from isSecondProject, which was wrong in both
+ * directions: the hub is a modal when you replace the project in this window
+ * too, and it is the whole page at startup, where isSecondProject is also
+ * false. The two questions are separate - what am I opening into, and where
+ * am I being shown - and the second one is what decides the layout.
+ */
+let isModal = false;
 
 /** Which view the hub is showing: 'recents' | 'examples' | 'new' | 'open'. */
 let currentView = 'recents';
@@ -115,10 +126,12 @@ function makeHubThemeToggle() {
 /**
  * Page Maker for the Open Project page
  * @param {Boolean} secondProjectFlag - true if it's not the currently selected project
+ * @param {Boolean =} modalFlag - true when shown in a dialog rather than as the page
  * @returns {Element}
  */
-export function makePage_OpenProject(secondProjectFlag = false) {
+export function makePage_OpenProject(secondProjectFlag = false, modalFlag = false) {
 	isSecondProject = secondProjectFlag;
+	isModal = modalFlag;
 
 	// Land on whatever is most useful: your own work if you have any, the
 	// new-font form on a genuinely first run.
@@ -126,12 +139,40 @@ export function makePage_OpenProject(secondProjectFlag = false) {
 	// Restoring an auto-save into a second editor is not supported, so that
 	// view is not offered there.
 	if (isSecondProject) currentView = 'new';
+	/*
+		The dialog never opens on the new-font form. It is titled "Open a
+		project", and landing on a box asking you to name a new one contradicts
+		the thing you just clicked. With nothing auto-saved there is still
+		something to open - the examples - and the file route is in the footer
+		of every tab, so creating a font is the one click it should be.
+	*/
+	if (isModal && !modalViewNames().includes(currentView)) currentView = modalViewNames()[0];
+	if (isModal && currentView === 'new') currentView = 'examples';
 
+	/*
+		Two shells, because a dialog is not a page.
+
+		The page gets the file-browser layout: a rail of destinations down the
+		left, a heading and the app's own identity. Inside a dialog all of that
+		is furniture you already have - you are three feet from the app's left
+		rail and its theme toggle, and you know which app you are in. What a
+		dialog needs is a title that says what pressing something here will do,
+		one row of places to look, and the thing you came for.
+	*/
 	const content = makeElement({
 		tag: 'div',
 		id: 'app__page',
-		innerHTML: `
-			<div id="open-project__page" class="${isSecondProject ? 'open-project__page--compact' : ''}">
+		innerHTML: isModal
+			? `
+			<div id="open-project__page" class="open-project__page--modal">
+				<header id="open-project__header"></header>
+				<div id="open-project__body"></div>
+				<footer id="open-project__footer"></footer>
+				<div id="open-project__drop-note"></div>
+			</div>
+		`
+			: `
+			<div id="open-project__page">
 				<div id="open-project__sidebar"></div>
 				<div id="open-project__main">
 					<header id="open-project__header"></header>
@@ -142,7 +183,12 @@ export function makePage_OpenProject(secondProjectFlag = false) {
 		`,
 	});
 
-	content.querySelector('#open-project__sidebar').appendChild(makeHubSidebar());
+	if (isModal) {
+		content.querySelector('#open-project__header').appendChild(makeModalHeading());
+		content.querySelector('#open-project__footer').appendChild(makeModalFooter());
+	} else {
+		content.querySelector('#open-project__sidebar').appendChild(makeHubSidebar());
+	}
 	renderHubView(content);
 
 	// Drag over handlers
@@ -157,6 +203,25 @@ export function makePage_OpenProject(secondProjectFlag = false) {
 		handleOpenProjectPageFileInput(event?.dataTransfer?.items || []);
 	});
 	dropNote.addEventListener('dragleave', handleDragLeave);
+
+	/*
+		Put the keyboard somewhere useful. A dialog that opens with focus still
+		out on the page behind it means the first Tab goes to whatever was next
+		in the editor, and Escape is the only key that does anything.
+
+		Queued, because the caller has not inserted this into the document yet
+		and focus() on a detached node does nothing at all.
+	*/
+	if (isModal) {
+		queueMicrotask(() => {
+			if (!content.isConnected) return;
+			/** @type {HTMLElement} */
+			const target =
+				content.querySelector('#input__new-project-name') ||
+				content.querySelector('.hub-tabs__tab[selected]');
+			target?.focus();
+		});
+	}
 
 	return content;
 }
@@ -243,8 +308,132 @@ function makeHubSidebar() {
 	return wrapper;
 }
 
+// --------------------------------------------------------------
+// Modal shell
+// --------------------------------------------------------------
+
 /**
- * Switches which view is showing, without rebuilding the sidebar.
+ * Which views the dialog offers.
+ *
+ * No "Open a file". In the page it earns a destination of its own, because a
+ * file browser has a place for everything. In a dialog it is not a place: it
+ * opens the operating system's picker and the dialog is gone. It lives in the
+ * footer instead, where it is visible from every tab rather than hidden behind
+ * one - and the whole dialog already takes a dropped file.
+ *
+ * @returns {Array<String>}
+ */
+function modalViewNames() {
+	// An auto-save cannot be restored into a second editor, so it is not offered.
+	return isSecondProject ? ['examples', 'new'] : ['recents', 'examples', 'new'];
+}
+
+/**
+ * The dialog's title, and what it will do.
+ *
+ * The dialog used to open on "Start a new font" with no statement of
+ * consequence anywhere in it - which is the one thing it owes you here, since
+ * opening a project replaces one you may have been editing for an hour.
+ *
+ * @returns {Element}
+ */
+function makeModalHeading() {
+	const currentName = getCurrentProjectEditor()?.project?.settings?.project?.name || 'this project';
+
+	const wrapper = makeElement({ className: 'hub-modal__heading' });
+	wrapper.appendChild(
+		makeElement({
+			tag: 'h1',
+			className: 'hub-modal__title',
+			content: isSecondProject ? 'Open a second project' : 'Open a project',
+		})
+	);
+	wrapper.appendChild(
+		makeElement({
+			className: 'hub-modal__subtitle',
+			content: isSecondProject
+				? `Opens alongside ${currentName}. Switch between the two from Projects.`
+				: `Replaces ${currentName} in this window.`,
+		})
+	);
+
+	const heading = makeElement({ className: 'hub-modal__header-inner' });
+	addAsChildren(heading, [wrapper, makeModalTabs()]);
+	return heading;
+}
+
+/**
+ * The row of views, as a segmented control.
+ * @returns {Element}
+ */
+function makeModalTabs() {
+	const tabs = makeElement({ className: 'hub-tabs', attributes: { role: 'tablist' } });
+
+	modalViewNames().forEach((viewName) => {
+		const view = hubViews[viewName];
+		const count = viewName === 'recents' ? countAutoSaves() : 0;
+		const tab = makeElement({
+			tag: 'button',
+			className: 'hub-tabs__tab',
+			attributes: {
+				type: 'button',
+				role: 'tab',
+				'data-view': viewName,
+				'aria-selected': viewName === currentView ? 'true' : 'false',
+			},
+			innerHTML: `<span>${view.label}</span>${
+				count ? `<span class="hub-tabs__count">${count}</span>` : ''
+			}`,
+		});
+		if (viewName === currentView) tab.setAttribute('selected', '');
+		tab.addEventListener('click', () => switchHubView(viewName));
+		tabs.appendChild(tab);
+	});
+
+	/*
+		Left and right move between tabs, which is what a tablist owes a
+		keyboard - without it Tab is the only way across, and Tab has to walk
+		every card in the view it lands on before it reaches the next tab.
+	*/
+	tabs.addEventListener('keydown', (/** @type {KeyboardEvent} */ event) => {
+		const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+		if (!step) return;
+		event.preventDefault();
+		const all = [...tabs.querySelectorAll('.hub-tabs__tab')];
+		const here = all.indexOf(document.activeElement);
+		/** @type {HTMLElement} */
+		const next = all[(here + step + all.length) % all.length];
+		next.focus();
+		next.click();
+	});
+
+	return tabs;
+}
+
+/**
+ * The footer: what else you can do, from wherever you are.
+ * @returns {Element}
+ */
+function makeModalFooter() {
+	const footer = makeElement({ className: 'hub-modal__footer-inner' });
+	addAsChildren(footer, [
+		makeElement({
+			className: 'hub-modal__drop-hint',
+			innerHTML: `Or drop a font file anywhere here — <code>.gs2</code> <code>.otf</code> <code>.ttf</code> <code>.woff</code> <code>.svg</code>`,
+		}),
+		makeElement({
+			tag: 'button',
+			className: 'hub-button',
+			attributes: { type: 'button' },
+			innerHTML: `${hubIcons.upload}<span>Open a file…</span>`,
+			onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
+		}),
+	]);
+	return footer;
+}
+
+/**
+ * Switches which view is showing, without rebuilding the shell around it.
  * @param {String} viewName - key into hubViews
  */
 function switchHubView(viewName) {
@@ -253,6 +442,12 @@ function switchHubView(viewName) {
 
 	document.querySelectorAll('.hub-sidebar__nav-item').forEach((item) => {
 		item.toggleAttribute('selected', item.getAttribute('data-view') === viewName);
+	});
+
+	document.querySelectorAll('.hub-tabs__tab').forEach((tab) => {
+		const isCurrent = tab.getAttribute('data-view') === viewName;
+		tab.toggleAttribute('selected', isCurrent);
+		tab.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
 	});
 
 	renderHubView(document);
@@ -267,34 +462,45 @@ function renderHubView(root) {
 	const body = root.querySelector('#open-project__body');
 	if (!header || !body) return;
 
-	header.innerHTML = '';
 	body.innerHTML = '';
 
-	header.appendChild(
-		makeElement({ tag: 'h1', className: 'hub-header__title', content: hubViews[currentView].title })
-	);
+	/*
+		The dialog's header is built once and stays: its title does not change
+		with the tab, because the title is about what the dialog does, not about
+		which list you are looking at.
+	*/
+	if (!isModal) {
+		header.innerHTML = '';
+		header.appendChild(
+			makeElement({
+				tag: 'h1',
+				className: 'hub-header__title',
+				content: hubViews[currentView].title,
+			})
+		);
 
-	// Create and open stay reachable from every view, the way a file browser
-	// keeps its "new" button in the corner regardless of which folder you are in.
-	const actions = makeElement({ className: 'hub-header__actions' });
-	addAsChildren(actions, [
-		makeHubThemeToggle(),
-		makeElement({
-			tag: 'button',
-			className: 'hub-button hub-button--primary',
-			attributes: { type: 'button' },
-			innerHTML: `${hubIcons.plus}<span>New font</span>`,
-			onClick: () => switchHubView('new'),
-		}),
-		makeElement({
-			tag: 'button',
-			className: 'hub-button',
-			attributes: { type: 'button' },
-			innerHTML: `${hubIcons.upload}<span>Open file</span>`,
-			onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
-		}),
-	]);
-	header.appendChild(actions);
+		// Create and open stay reachable from every view, the way a file browser
+		// keeps its "new" button in the corner regardless of which folder you are in.
+		const actions = makeElement({ className: 'hub-header__actions' });
+		addAsChildren(actions, [
+			makeHubThemeToggle(),
+			makeElement({
+				tag: 'button',
+				className: 'hub-button hub-button--primary',
+				attributes: { type: 'button' },
+				innerHTML: `${hubIcons.plus}<span>New font</span>`,
+				onClick: () => switchHubView('new'),
+			}),
+			makeElement({
+				tag: 'button',
+				className: 'hub-button',
+				attributes: { type: 'button' },
+				innerHTML: `${hubIcons.upload}<span>Open file</span>`,
+				onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
+			}),
+		]);
+		header.appendChild(actions);
+	}
 
 	if (currentView === 'recents') body.appendChild(makeRecentsView());
 	else if (currentView === 'examples') body.appendChild(makeExamplesView());
@@ -417,7 +623,9 @@ function makeRecentsView() {
 	if (!ids.length) {
 		return makeEmptyState(
 			`Nothing saved yet. Projects you work on are auto-saved in this browser and show up here.`,
-			'Create your first font',
+			// "Your first font" is only true on the page, where this is a first
+			// run. In the dialog you are looking at this with a project open.
+			isModal ? 'Start a new font' : 'Create your first font',
 			() => switchHubView('new')
 		);
 	}

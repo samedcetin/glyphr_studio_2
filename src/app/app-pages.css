@@ -78,6 +78,7 @@
 	padding: 0 var(--sp-3);
 	border: 1px solid transparent;
 	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--text-secondary);
 	font-size: var(--fs-md);
@@ -211,6 +212,7 @@
 	padding: 0 var(--sp-5);
 	border: 1px solid var(--border-default);
 	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	color: var(--text-primary);
 	font-size: var(--fs-sm);
@@ -269,6 +271,7 @@
 	overflow: hidden;
 	border: 1px solid var(--border-default);
 	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	background-color: var(--bg-surface);
 	text-align: left;
 	cursor: pointer;
@@ -363,6 +366,7 @@
 	padding: var(--sp-9);
 	border: 1px dashed var(--border-strong);
 	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 }
 
 .hub-empty__message {
@@ -401,6 +405,7 @@
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	display: block;
 }
 
@@ -429,6 +434,7 @@
 	background-color: var(--bg-surface);
 	border: 1px dashed var(--border-strong);
 	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	color: var(--text-secondary);
 	padding: var(--sp-9);
 	text-align: center;
@@ -459,6 +465,7 @@
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
 	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
 	padding: 1px var(--sp-2);
 	margin-right: 2px;
 }
@@ -480,65 +487,236 @@
 	background-color: hsla(212, 92%, 40%, 0.55);
 	border: 2px dashed hsla(0, 0%, 100%, 0.5);
 	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	z-index: var(--z-sticky);
 	padding: 0;
 	margin: 0;
 }
 
 /* --------------------------------------------------------
-	Compact variant, used when opening a second project
-	inside a modal dialog
+	Modal variant
+
+	The hub inside a dialog. Not the page scaled down - a different shell, on
+	the grounds that a dialog is not a place you browse, it is a question you
+	answer. See makePage_OpenProject for what is dropped and why.
+
+	Everything below lines up on one 24px margin: the heading, the tab strip,
+	the card grid and the footer all start at the same x, and the dialog's own
+	close button sits in the top right corner at 16px, where a dialog's close
+	button goes.
 -------------------------------------------------------- */
 
-.open-project__page--compact {
-	grid-template-columns: 190px minmax(0, 1fr);
+/* The id is repeated deliberately: #open-project__page sets the page's two
+	columns, and a class on its own cannot outrank an id. */
+#open-project__page.open-project__page--modal {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
 	height: auto;
-	min-height: 360px;
+	/*
+		Tall enough that two rows of cards do not make the dialog jump when you
+		change tabs, short enough to leave the window visible around it.
+	*/
+	min-height: 380px;
+	max-height: min(70vh, 620px);
 	top: 0;
 }
 
-.open-project__page--compact #open-project__header {
-	padding: var(--sp-5) var(--sp-6) var(--sp-4) var(--sp-6);
+/* --------------------------------------------------------
+	Modal header
+-------------------------------------------------------- */
+
+.open-project__page--modal #open-project__header {
+	display: block;
+	padding: 0;
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.hub-modal__header-inner {
+	display: grid;
+	gap: var(--sp-5);
+	/*
+		The extra right padding keeps the title clear of the close button, which
+		floats in the dialog's corner rather than taking a row of its own.
+	*/
+	padding: var(--sp-6) var(--sp-9) var(--sp-5) var(--sp-8);
+}
+
+.hub-modal__heading {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+.hub-modal__title {
+	margin: 0;
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
 }
 
 /*
-	Inside the dialog the sidebar already carries New font / Open a file, so
-	repeating them in the header only costs width the dialog does not have.
+	What this dialog will do, named. Opening a project replaces one you may
+	have spent an hour in, and the dialog used to say nothing about it.
 */
-.open-project__page--compact .hub-header__actions {
-	display: none;
-}
-
-.open-project__page--compact .hub-header__title {
-	font-size: var(--fs-lg);
+.hub-modal__subtitle {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	overflow: hidden;
+	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.open-project__page--compact .hub-panel,
-.open-project__page--compact .hub-panel--wide,
-.open-project__page--compact .hub-empty {
+/* --------------------------------------------------------
+	Tabs
+
+	A segmented control rather than a rail: three destinations in a 780px
+	dialog do not earn a column, and a row reads in the same direction as the
+	title above it.
+-------------------------------------------------------- */
+
+.hub-tabs {
+	display: inline-flex;
+	justify-self: start;
+	gap: var(--sp-1);
+	padding: var(--sp-1);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+}
+
+.hub-tabs__tab {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sp-2);
+	height: var(--control-h);
+	min-height: 0;
+	margin: 0;
+	padding: 0 var(--sp-5);
+	border: 1px solid transparent;
+	/* Concentric with the strip: its --r-md less the --sp-1 it holds them in by. */
+	border-radius: calc(var(--r-md) - var(--sp-1));
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--text-secondary);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	white-space: nowrap;
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.hub-tabs__tab:hover {
+	background-color: var(--bg-hover);
+	color: var(--text-primary);
+}
+
+/*
+	The selected tab is lifted onto the surface the strip is sunk into - the
+	same figure-and-ground move a physical segmented control makes. It carries
+	weight and full-strength text as well, so it is not the tint alone saying
+	which one you are on.
+*/
+.hub-tabs__tab[selected],
+.hub-tabs__tab[selected]:hover {
+	background-color: var(--bg-surface);
+	border-color: var(--border-default);
+	color: var(--text-primary);
+	font-weight: var(--fw-semibold);
+	box-shadow: var(--shadow-1);
+}
+
+.hub-tabs__count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 var(--sp-2);
+	border-radius: var(--r-pill);
+	background-color: var(--bg-surface-raised);
+	color: var(--text-secondary);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	font-variant-numeric: tabular-nums;
+}
+
+.hub-tabs__tab[selected] .hub-tabs__count {
+	background-color: var(--bg-selected);
+	color: var(--text-accent);
+}
+
+/* --------------------------------------------------------
+	Modal body and footer
+-------------------------------------------------------- */
+
+.open-project__page--modal #open-project__body {
+	padding: var(--sp-6) var(--sp-8);
+	overflow-y: auto;
+}
+
+.open-project__page--modal .hub-grid {
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: var(--sp-5);
+}
+
+.open-project__page--modal .hub-card__preview {
+	height: 88px;
+}
+
+.open-project__page--modal .hub-panel,
+.open-project__page--modal .hub-panel--wide,
+.open-project__page--modal .hub-empty {
 	max-width: 100%;
 }
 
-.open-project__page--compact #open-project__drop-target {
-	padding: var(--sp-6);
+.open-project__page--modal #open-project__footer {
+	border-top: 1px solid var(--border-subtle);
+	background-color: var(--bg-surface-sunken);
 }
 
-.open-project__page--compact #open-project__body {
-	padding: var(--sp-5) var(--sp-6) var(--sp-6) var(--sp-6);
+/*
+	The file route, in the one place it is visible from every tab. It was a
+	destination of its own in the rail, which is a whole view spent on a drop
+	zone and a button - when the dialog already accepts a dropped file
+	anywhere on it.
+*/
+.hub-modal__footer-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-6);
+	padding: var(--sp-4) var(--sp-8);
 }
 
-.open-project__page--compact .hub-sidebar {
-	padding: var(--sp-4);
-	gap: var(--sp-4);
+.hub-modal__drop-hint {
+	min-width: 0;
+	color: var(--text-secondary);
+	font-size: var(--fs-xs);
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-.open-project__page--compact .hub-grid {
-	grid-template-columns: minmax(0, 1fr);
+.hub-modal__drop-hint code {
+	display: inline-flex;
+	align-items: center;
+	height: 16px;
+	padding: 0 var(--sp-2);
+	margin-left: 2px;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface);
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	line-height: 1;
 }
 
-.open-project__page--compact .hub-card__preview {
-	height: 96px;
+.hub-modal__footer-inner .hub-button {
+	flex: 0 0 auto;
 }
 
 /* --------------------------------------------------------
@@ -587,15 +765,40 @@
 	see .open-project__page--compact - so only the dialog frame is set here.
 */
 .modal-dialog__open-new-project {
+	position: relative;
 	background-color: var(--bg-surface);
 	height: min-content;
 	overflow: hidden;
 	border-radius: var(--r-2xl);
 	corner-shape: var(--corner-smooth);
+	/*
+		One row. The dialog's header is a bar holding nothing but a close button,
+		and giving it a row of its own left an empty band above a dialog that
+		writes its own title. It floats in the corner below instead.
+	*/
+	grid-template-rows: minmax(0, 1fr);
+}
+
+.modal-dialog__open-new-project .modal-dialog__header {
+	position: absolute;
+	top: var(--sp-4);
+	right: var(--sp-4);
+	z-index: 1;
+	display: block;
+	padding: 0;
+	margin: 0;
+	width: auto;
+	height: auto;
+}
+
+.modal-dialog__open-new-project .modal-dialog__header > span {
+	display: none;
 }
 
 .modal-dialog__open-new-project .modal-dialog__body {
 	padding: 0px;
+	max-height: none;
+	overflow: hidden;
 }
 
 .modal-dialog__open-new-project #open-project__page {

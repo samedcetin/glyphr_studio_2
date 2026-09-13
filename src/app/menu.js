@@ -307,7 +307,7 @@ export function makeMenu(menuName) {
 						onClick: () => {
 							const liveApp = getGlyphrStudioApp();
 							liveApp.editorImportTarget = liveApp.selectedProjectEditor;
-							showModalDialog(makePage_OpenProject(false), 760, true);
+							showModalDialog(makePage_OpenProject(false, true), 780, true);
 						},
 					},
 					...(onlyOneProject
@@ -317,7 +317,7 @@ export function makeMenu(menuName) {
 									description: 'Work on two fonts in one window',
 									icon: 'command_newTab',
 									onClick: () => {
-										showModalDialog(makePage_OpenProject(true), 760, true);
+										showModalDialog(makePage_OpenProject(true, true), 780, true);
 									},
 								},
 						  ]
