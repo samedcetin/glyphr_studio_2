@@ -1,4 +1,4 @@
-import { addAsChildren, insertAfter, makeElement } from '../common/dom.js';
+import { insertAfter, makeElement } from '../common/dom.js';
 import {
 	closeEveryTypeOfDialog,
 	makeContextMenu,
@@ -269,19 +269,35 @@ export function makeMenu(menuName) {
 			*/
 			const onlyOneProject = getGlyphrStudioApp().projectEditors.length === 1;
 
+			/*
+				The group lists what is open. It used to list what is open plus a
+				dashed placeholder card reading "Open another project" - a button
+				wearing the same box as a status display, which is what made the
+				two unrelatable. Filling a free slot is an action, so it sits with
+				the actions, as a row like every other row in this menu.
+			*/
+			const openProjects = [makeProjectPreviewRow(0), makeProjectPreviewRow(1)]
+				.filter(Boolean)
+				.map((card) => ({ child: card, className: 'spanAll' }));
+
 			let menuRows = makeContextMenu(
 				[
 					{ type: 'heading', name: 'Open projects' },
-					{
-						child: makeProjectPreviewRow(0),
-						className: 'spanAll',
-					},
-					{
-						child: makeProjectPreviewRow(1),
-						className: 'spanAll',
-					},
+					...openProjects,
 					{ name: 'hr' },
 					{ type: 'heading', name: 'Actions' },
+					...(onlyOneProject
+						? [
+								{
+									name: 'Open a second project',
+									description: 'Work on two fonts in one window',
+									icon: 'command_newTab',
+									onClick: () => {
+										showModalDialog(makePage_OpenProject(true), 760, true);
+									},
+								},
+						  ]
+						: []),
 					{
 						name: 'Cross-project actions',
 						description: onlyOneProject
@@ -420,56 +436,51 @@ export function makeMenu(menuName) {
  * @returns {Element}
  */
 function makeProjectPreviewRow(projectID = 0) {
-	// log(`makeProjectPreviewRow`, 'start');
-	// log(`projectID: ${projectID}`);
 	const app = getGlyphrStudioApp();
 	const projectEditor = app.projectEditors[projectID];
-	// log(`\n⮟projectEditor⮟`);
-	// log(projectEditor);
+	if (!projectEditor) return false;
 
-	let rowWrapper = makeElement({ tag: 'div', className: 'project-preview__row-wrapper' });
-	let superTitle;
-	let title = makeElement({ tag: 'h3' });
-	let thumbnail;
+	const isCurrent = getCurrentProjectEditor() === projectEditor;
+	const name = projectEditor.project.settings.project.name;
 
-	if (projectEditor) {
-		superTitle = makeElement({ className: 'project-preview__super-title' });
-		if (getCurrentProjectEditor() === projectEditor) {
-			superTitle.innerHTML = 'Editing';
-			rowWrapper.classList.add('project-preview__primary');
-		} else {
-			superTitle.innerHTML = 'Switch to';
-			rowWrapper.classList.add('project-preview__secondary');
-			rowWrapper.addEventListener('click', () => {
-				const app = getGlyphrStudioApp();
-				app.selectedProjectEditor = projectEditor;
-				app.selectedProjectEditor.navigate();
-				showToast(`Switched to<br>${projectEditor.project.settings.project.name}`, 2000, true);
-			});
-		}
-		title.innerHTML = projectEditor.project.settings.project.name;
-		let previewText = projectEditor.project.settings.app.previewText || 'Aa Bb Cc Xx Yy Zz';
-		thumbnail = makeElement({
+	const card = makeElement({
+		tag: isCurrent ? 'div' : 'button',
+		className: `project-card${isCurrent ? ' project-card--current' : ''}`,
+		attributes: isCurrent
+			? { 'aria-current': 'true' }
+			: { type: 'button', title: `Switch to ${name}` },
+	});
+
+	const header = makeElement({ className: 'project-card__header' });
+	header.appendChild(makeElement({ className: 'project-card__name', content: name, title: name }));
+	header.appendChild(
+		makeElement({
+			className: 'project-card__state',
+			content: isCurrent ? 'Editing' : 'Switch to',
+		})
+	);
+	card.appendChild(header);
+
+	card.appendChild(
+		makeElement({
 			tag: 'display-canvas',
 			attributes: {
-				text: previewText,
+				text: projectEditor.project.settings.app.previewText || 'Aa Bb Cc Xx Yy Zz',
 				'font-size': '24',
-				'project-editor': projectID,
+				'project-editor': `${projectID}`,
 				'show-placeholder-message': 'true',
 			},
-		});
-	} else {
-		title.innerHTML = 'Open another project';
-		rowWrapper.classList.add('project-preview__no-project');
-		rowWrapper.addEventListener('click', () => {
-			showModalDialog(makePage_OpenProject(true), 760, true);
+		})
+	);
+
+	if (!isCurrent) {
+		card.addEventListener('click', () => {
+			const liveApp = getGlyphrStudioApp();
+			liveApp.selectedProjectEditor = projectEditor;
+			liveApp.selectedProjectEditor.navigate();
+			showToast(`Switched to<br>${name}`, 2000, true);
 		});
 	}
 
-	if (superTitle) addAsChildren(rowWrapper, superTitle);
-	addAsChildren(rowWrapper, title);
-	if (thumbnail) addAsChildren(rowWrapper, thumbnail);
-
-	// log(`makeProjectPreviewRow`, 'end');
-	return rowWrapper;
+	return card;
 }
