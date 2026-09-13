@@ -1,9 +1,9 @@
 import { getCurrentProjectEditor } from '../app/main.js';
-import { addAsChildren, makeElement } from '../common/dom.js';
+import { makeElement } from '../common/dom.js';
 import { closeAllInfoBubbles } from '../controls/dialogs/dialogs.js';
 import { EditCanvas } from '../edit_canvas/edit_canvas.js';
 import { removeStopCreatingNewPathButton } from '../edit_canvas/tools/new_path.js';
-import { makeEditToolsButtons, makeViewToolsButtons } from '../edit_canvas/tools/tools.js';
+import { fillEditorToolBar, makeEditToolsButtons } from '../edit_canvas/tools/tools.js';
 import { makePanel, refreshPanel } from '../panels/panels.js';
 import { ProjectEditor } from '../project_editor/project_editor.js';
 
@@ -37,7 +37,6 @@ export function makePage_Characters() {
 					editor.selectedGlyphID
 				}"></edit-canvas>
 			</div>
-			<div class="editor-page__zoom-area"></div>
 		</div>
 	`,
 	});
@@ -70,15 +69,7 @@ export function makePage_Characters() {
 
 	// Tools
 	if (editor.selectedTool === 'kern') editor.selectedTool = 'resize';
-	let toolsArea = content.querySelector('.editor-page__tools-area');
-	toolsArea.innerHTML = '';
-	let toolsButtons = makeEditToolsButtons();
-	if (toolsButtons) addAsChildren(toolsArea, toolsButtons);
-
-	let zoomArea = content.querySelector('.editor-page__zoom-area');
-	zoomArea.innerHTML = '';
-	let viewButtons = makeViewToolsButtons();
-	if (viewButtons) addAsChildren(zoomArea, viewButtons);
+	fillEditorToolBar(content, makeEditToolsButtons());
 
 	// Canvas
 	editor.subscribe({

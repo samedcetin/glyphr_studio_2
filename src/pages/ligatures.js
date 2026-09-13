@@ -13,7 +13,7 @@ import {
 	showModalDialog,
 } from '../controls/dialogs/dialogs.js';
 import { removeStopCreatingNewPathButton } from '../edit_canvas/tools/new_path.js';
-import { makeEditToolsButtons, makeViewToolsButtons } from '../edit_canvas/tools/tools.js';
+import { fillEditorToolBar, makeEditToolsButtons } from '../edit_canvas/tools/tools.js';
 import { makePanel, refreshPanel } from '../panels/panels.js';
 import { Glyph } from '../project_data/glyph.js';
 
@@ -37,7 +37,6 @@ export function makePage_Ligatures() {
 	const editingContent = `
 		<div class="editor-page__tools-area"></div>
 		<div class="editor-page__edit-canvas-wrapper"></div>
-		<div class="editor-page__zoom-area"></div>
 	`;
 
 	const firstRunContent = `<div class="editor-page__edit-canvas-wrapper" style="grid-column: span 2; overflow-y: scroll;"></div>`;
@@ -108,15 +107,7 @@ export function makePage_Ligatures() {
 
 	// Tools
 	if (editor.selectedTool === 'kern') editor.selectedTool = 'resize';
-	let toolsArea = content.querySelector('.editor-page__tools-area');
-	toolsArea.innerHTML = '';
-	let toolsButtons = makeEditToolsButtons();
-	if (toolsButtons) addAsChildren(toolsArea, toolsButtons);
-
-	let zoomArea = content.querySelector('.editor-page__zoom-area');
-	zoomArea.innerHTML = '';
-	let viewButtons = makeViewToolsButtons();
-	if (viewButtons) addAsChildren(zoomArea, viewButtons);
+	fillEditorToolBar(content, makeEditToolsButtons());
 
 	// Canvas
 	editor.subscribe({

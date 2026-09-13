@@ -8,7 +8,7 @@ import {
 	showError,
 	showModalDialog,
 } from '../controls/dialogs/dialogs.js';
-import { makeKernToolButton, makeViewToolsButtons } from '../edit_canvas/tools/tools.js';
+import { fillEditorToolBar, makeKernToolButton } from '../edit_canvas/tools/tools.js';
 import { getUnicodeName } from '../lib/unicode/unicode_names.js';
 import { makeOneKernGroupRow } from '../panels/item_chooser.js';
 import { makePanel, refreshPanel } from '../panels/panels.js';
@@ -34,7 +34,6 @@ export function makePage_Kerning() {
 	const editingContent = `
 		<div class="editor-page__tools-area"></div>
 		<div class="editor-page__edit-canvas-wrapper"></div>
-		<div class="editor-page__zoom-area"></div>
 	`;
 
 	const firstRunContent = `<div class="editor-page__edit-canvas-wrapper" style="grid-column: span 2; overflow-y: scroll;"></div>`;
@@ -105,15 +104,8 @@ export function makePage_Kerning() {
 
 	// Tools
 	editor.selectedTool = 'kern';
-	let toolsArea = content.querySelector('.editor-page__tools-area');
-	toolsArea.innerHTML = '';
 	let toolsButtons = makeKernToolButton();
-	if (toolsButtons) addAsChildren(toolsArea, toolsButtons);
-
-	let zoomArea = content.querySelector('.editor-page__zoom-area');
-	zoomArea.innerHTML = '';
-	let viewButtons = makeViewToolsButtons();
-	if (viewButtons) addAsChildren(zoomArea, viewButtons);
+	fillEditorToolBar(content, toolsButtons);
 
 	// Canvas
 	editor.subscribe({

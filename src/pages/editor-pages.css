@@ -48,8 +48,7 @@
 /* Floating surfaces share one treatment. */
 .editor-page__left-area,
 .editor-page__right-area,
-.editor-page__tools-area,
-.editor-page__zoom-area {
+.editor-page__tools-area {
 	position: absolute;
 	z-index: 10;
 	background-color: var(--bg-surface);
@@ -107,8 +106,22 @@
 	panel and the canvas had no equivalent anywhere.
 	------------------------------------------------------------ */
 
+/*
+	One strip, centred along the bottom edge.
+
+	It was two: tools centred at the top, and a zoom pill pinned to the bottom
+	right corner, offset by however wide the right panel had been dragged. Two
+	strips meant the two halves of one job sat at opposite ends of the window,
+	and the eye had to cross the artwork to get from a tool to its zoom.
+
+	Radius is concentric, not decorative: the buttons inside are --r-md (8), the
+	padding around them is --sp-2 (4), so the strip is 8 + 4 = --r-lg (12). The
+	strip used to be --r-pill, which put a 20px curve around 5px buttons - a
+	round shell holding square contents, with the mismatch widest exactly at the
+	corners where both are visible at once.
+*/
 .editor-page__tools-area {
-	top: var(--float-inset);
+	bottom: var(--float-inset);
 	left: 50%;
 	transform: translateX(-50%);
 	display: flex;
@@ -117,7 +130,7 @@
 	gap: var(--sp-1);
 	padding: var(--sp-2);
 	height: min-content;
-	border-radius: var(--r-pill);
+	max-width: calc(100% - var(--float-inset) * 2);
 }
 
 /*
@@ -209,21 +222,7 @@ body.is-resizing-sidebar * {
 #editor-page__panel span {
 	animation: var(--animate-slide-in);
 }
-/*
-	Zoom pill. Sits in the canvas corner, tucked clear of the right panel so
-	the two never overlap however wide that panel is dragged.
-*/
-.editor-page__zoom-area {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-1);
-	right: calc(var(--float-inset) * 2 + var(--right-sidebar-w));
-	bottom: var(--float-inset);
-	padding: var(--sp-1);
-	border-radius: var(--r-pill);
-	box-shadow: var(--shadow-2);
-}
-
+/* The zoom stepper and its field, as one unit inside the toolbar. */
 .editor-page__responsive-group {
 	display: flex;
 	align-items: center;
@@ -340,7 +339,12 @@ body.is-resizing-sidebar * {
 	justify-content: center;
 	background-color: transparent;
 	border: 1px solid transparent;
-	border-radius: var(--r-sm);
+	/*
+		--r-md, not --r-sm: with --sp-2 of padding around it, 8 + 4 lands exactly
+		on the --r-lg of the strip, so the button's corner and the strip's corner
+		are concentric rather than two unrelated curves.
+	*/
+	border-radius: var(--r-md);
 	box-shadow: none;
 }
 
@@ -483,46 +487,14 @@ code.warning {
 		display: none;
 	}
 
-	/* With the right panel gone, the zoom pill takes the corner. */
-	.editor-page__zoom-area {
-		right: var(--float-inset);
-	}
 }
 
 /*
-	View buttons inside the floating zoom pill.
-
-	Direct children only. As a descendant selector this also caught every button
-	inside the zoom menu and overrode the menu row's own `display: grid`, so each
-	row collapsed to a 24px square with its name clipped away to nothing.
+	The view buttons used to be shrunk to 24px here, because they lived in their
+	own small pill. In the one bar they stand beside the drawing tools, so they
+	take the same --tool-size box from .editor-page__tool as everything else -
+	two button sizes in one strip reads as two strips that happen to touch.
 */
-.editor-page__zoom-area > button,
-.editor-page__responsive-group > button {
-	width: var(--control-h-sm);
-	height: var(--control-h-sm);
-	min-height: var(--control-h-sm);
-	padding: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background-color: transparent;
-	border-color: transparent;
-	color: var(--icon-default);
-	box-shadow: none;
-}
-
-.editor-page__zoom-area > button:hover,
-.editor-page__responsive-group > button:hover {
-	background-color: var(--bg-hover);
-	border-color: transparent;
-	color: var(--icon-strong);
-}
-
-.editor-page__zoom-area > button svg,
-.editor-page__responsive-group > button svg {
-	width: var(--icon-size);
-	height: var(--icon-size);
-}
 
 /* --------------------------------------------------------------
 	Panels hidden
@@ -536,11 +508,6 @@ code.warning {
 .editor__page--panels-hidden .editor-page__right-area,
 .editor__page--panels-hidden .editor-page__resizer {
 	display: none;
-}
-
-/* With no right panel to avoid, the zoom pill takes the corner. */
-.editor__page--panels-hidden .editor-page__zoom-area {
-	right: var(--float-inset);
 }
 
 /* --------------------------------------------------------------
@@ -557,7 +524,8 @@ code.warning {
 	padding: 0;
 	margin: 0;
 	border: 1px solid transparent;
-	border-radius: var(--r-sm);
+	/* Concentric with the strip, as .editor-page__tool is. */
+	border-radius: var(--r-md);
 	background-color: transparent;
 	color: var(--icon-default);
 	box-shadow: none;

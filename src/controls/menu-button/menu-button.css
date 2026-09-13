@@ -24,7 +24,7 @@
 	height: var(--tool-size);
 	padding: 0;
 	border: none;
-	border-radius: var(--r-sm);
+	border-radius: var(--r-md);
 	background-color: transparent;
 	color: var(--icon-default);
 	cursor: pointer;
@@ -71,7 +71,7 @@
 	height: var(--tool-size);
 	padding: 0;
 	border: none;
-	border-radius: var(--r-sm);
+	border-radius: var(--r-md);
 	background-color: transparent;
 	color: var(--icon-default);
 	cursor: pointer;
@@ -138,14 +138,13 @@
 }
 
 /*
-	The zoom menu lives in the strip at the bottom right of the canvas, so it
-	opens upward, and anchors to its right edge so it cannot hang off the window.
+	The toolbar sits at the bottom of the canvas, so its menus open upward. They
+	stay anchored to the left edge of their button: the bar is centred, with
+	canvas on both sides, so there is nothing for a menu to overflow.
 */
 .menu-button__menu--up {
 	top: auto;
 	bottom: calc(100% + var(--sp-3));
-	left: auto;
-	right: 0;
 }
 
 .menu-button__row {

@@ -132,8 +132,6 @@ export function makeEditToolsButtons() {
 		content.push(makeToolGroup(group, members, toolButtonData));
 	});
 
-	if (content.length) content.push(makePanelToggleButton());
-
 	// log('makeEditToolsButtons', 'end');
 	return content;
 }
@@ -178,6 +176,8 @@ function makeToolGroup(group, members, toolButtonData) {
 		activeID: selected,
 		groupName: group.name,
 		className: `editor-page__tool-group editor-page__tool-group--${group.id}`,
+		/* The bar sits at the bottom of the canvas, so every menu opens upward. */
+		openUp: true,
 		isFacePressed: () => members.includes(getCurrentProjectEditor().selectedTool),
 		onSelect: (toolName) => selectTool(toolName),
 	});
@@ -199,6 +199,37 @@ function makeToolGroup(group, members, toolButtonData) {
 }
 
 /**
+ * Fills the editor's single toolbar: drawing tools on the left, then the view
+ * controls, in one strip centred at the bottom of the canvas.
+ *
+ * There used to be two floating strips - tools centred at the top, zoom pinned
+ * to the bottom right corner - which put the two halves of one job at opposite
+ * ends of the window, and made the zoom strip's position depend on how wide the
+ * right panel had been dragged.
+ *
+ * @param {Element} content - the page, holding .editor-page__tools-area
+ * @param {Array} toolButtons - page-specific tools; kerning supplies its own
+ * @returns {Boolean} - whether the bar was found and filled
+ */
+export function fillEditorToolBar(content, toolButtons = []) {
+	const bar = content.querySelector('.editor-page__tools-area');
+	if (!bar) return false;
+
+	bar.innerHTML = '';
+	/* Kerning hands over a single element rather than an array. */
+	const tools = [].concat(toolButtons || []).filter(Boolean);
+
+	let children = [];
+	if (tools.length) {
+		children = children.concat(tools);
+		children.push(makeElement({ className: 'editor-page__strip-divider' }));
+	}
+	children = children.concat(makeViewToolsButtons());
+	addAsChildren(bar, children);
+	return true;
+}
+
+/**
  * Rebuilds the toolbar in place.
  *
  * The buttons are made once when the page is built, and after that only their
@@ -214,10 +245,11 @@ export function refreshEditToolsArea() {
 	const toolsArea = document.querySelector('.editor-page__tools-area');
 	if (!toolsArea) return false;
 
-	const buttons = makeEditToolsButtons();
-	toolsArea.innerHTML = '';
-	if (buttons) addAsChildren(toolsArea, buttons);
-	return true;
+	/*
+		The whole bar, not just the tool half: the view controls share it now, and
+		rebuilding only the tools would drop them.
+	*/
+	return fillEditorToolBar(toolsArea.parentElement || document, makeEditToolsButtons());
 }
 
 const panelIcons = {
@@ -470,8 +502,6 @@ export function makeViewToolsButtons() {
 		The dividers were two &emsp; text nodes, which is a space character doing
 		a border's job; they are elements with a rule now, as in the top strip.
 	*/
-	const makeDivider = () => makeElement({ className: 'editor-page__strip-divider' });
-
 	let responsiveGroup = makeElement({ className: 'editor-page__responsive-group' });
 	addAsChildren(responsiveGroup, [
 		viewButtonElements.zoomOut,
@@ -479,14 +509,21 @@ export function makeViewToolsButtons() {
 		viewButtonElements.zoomIn,
 	]);
 
+	/*
+		Two groups, one divider: everything about zoom, then everything about what
+		the workspace shows. The panel toggle ends the bar because it is the one
+		control that changes the window rather than the drawing - it used to sit
+		among the drawing tools, which put a workspace switch where a hand reaching
+		for the pen would land.
+	*/
 	// log(`makeViewToolsButtons`, 'end');
 	return [
 		responsiveGroup,
-		makeDivider(),
 		zoomMenu.element,
-		makeDivider(),
+		makeElement({ className: 'editor-page__strip-divider' }),
 		viewButtonElements.displayMode,
 		livePreviewPopOut,
+		makePanelToggleButton(),
 	];
 }
 
