@@ -96,11 +96,18 @@ function makeRailMenuButton({ name, icon }) {
 }
 
 /**
+	Pages the Help menu already reaches, so the rail does not show them twice.
+
+	Both of these are rows in the Help dropdown - "In-app help" and "About
+	Glyphr Studio" - and both drew the same question-mark and info icons the
+	menu's own entry point uses. Two identical icons in one column, one opening
+	a menu and one navigating, is a column that has to be read rather than
+	scanned.
+ */
+const PAGES_IN_HELP_MENU = ['Help', 'About'];
+
+/**
  * The pages, in table-of-contents order.
- *
- * Subtitle entries carry no pageMaker; they become a divider rather than a
- * heading, because a heading in a 56px column is a word broken across four
- * lines.
  *
  * @returns {Array<Element>}
  */
@@ -116,11 +123,20 @@ function makeRailPageButtons() {
 	Object.keys(toc).forEach((pageName) => {
 		const entry = toc[pageName];
 
-		if (!entry.pageMaker) {
+		/*
+			A subtitle is a group heading and becomes a divider - a heading in a
+			56px column is one word broken over four lines. A page with no maker
+			is not a subtitle, it is a page that is not built yet: it gets no
+			button and no divider. Treating the two the same put a group break
+			between Settings and Help, where the tree has no group break.
+		*/
+		if (entry.type === 'subtitle') {
 			/* Only between groups, never leading or trailing. */
 			if (buttons.length) pendingDivider = true;
 			return;
 		}
+
+		if (!entry.pageMaker || PAGES_IN_HELP_MENU.includes(pageName)) return;
 
 		if (pendingDivider) {
 			buttons.push(makeElement({ className: 'left-rail__divider' }));
