@@ -110,148 +110,183 @@ dialog {
 	border-color: var(--red);
 }
 
-/* Context Menu */
+/* --------------------------------------------------------------
+	Context menu
+
+	One surface for all three kinds: the rail's shell menus, the canvas
+	right-click menu, and the nav dropdowns. A column of rows, each row a
+	button carrying its own box - see makeOneContextMenuRow for why that
+	matters more than it sounds.
+	------------------------------------------------------------ */
+
 #context-menu {
-	display: grid;
-	grid-template-columns: 20px minmax(0, 1fr) min-content min-content;
-	column-gap: 0px;
-	row-gap: 1px;
-	width: fit-content;
-	height: min-content;
-	overflow-y: auto;
-	padding: var(--sp-2);
 	position: absolute;
 	z-index: var(--z-menu);
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 200px;
+	width: max-content;
+	max-width: 380px;
+	max-height: min(520px, 80vh);
+	overflow-y: auto;
+	padding: var(--sp-2);
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in-slide-down);
 }
 
-/* .context-menu__dropdown {} */
-.context-menu__top-menu {
-	max-height: 400px;
+/*
+	The box is a container, not a stop. Focus goes to a row, so removing the
+	outline here removes nothing a keyboard can reach.
+*/
+#context-menu:focus {
+	outline: none;
 }
 
-#context-menu:focus {
-	outline: 0;
-}
+/* --------------------------------------------------------------
+	Rows
+	------------------------------------------------------------ */
 
 .context-menu-row {
-	display: contents;
-	padding: 5px 10px 5px 5px;
-	height: fit-content;
-	border-radius: 4px;
-}
-
-.context-menu-row:hover > span,
-.context-menu-row:hover > .row-notes,
-.context-menu-row:hover > .row-notes span,
-.context-menu-row:hover > .row-notes code {
-	background-color: var(--bg-hover);
-	color: var(--text-primary);
-	cursor: pointer;
-}
-
-/* The icon cell needs the hover background too, or the highlight has a
-	notch cut out of its left edge. */
-.context-menu-row:hover > .row-icon {
-	background-color: var(--bg-hover);
-}
-
-.context-menu-row:focus {
-	outline: var(--global-focus-style);
-}
-
-.context-menu-row[disabled] {
-	opacity: 0.5;
-	color: var(--disabled-text-light);
-}
-
-.context-menu-row[disabled]:hover > span,
-.context-menu-row[disabled]:hover > .row-notes,
-.context-menu-row[disabled]:hover > .row-notes span,
-.context-menu-row[disabled]:hover > .row-notes code {
-	color: var(--disabled-text-light);
-	cursor: default;
+	display: grid;
+	grid-template-columns: var(--icon-size-lg) minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-4);
+	min-height: var(--row-h);
+	padding: 0 var(--sp-4) 0 var(--sp-3);
+	border: none;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
+	color: var(--text-primary);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-normal);
+	text-align: left;
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--transition-color);
 }
 
-.context-menu-row[disabled] svg g {
-	fill: var(--disabled-text-light) !important;
+.context-menu-row:hover {
+	background-color: var(--bg-hover);
 }
 
-#context-menu .spanAll h2 {
-	font-size: 0.8em;
-	color: var(--enabled-restingLight-lightText);
-	font-family: monospace;
-	padding: 0px 20px 0px 0px;
+.context-menu-row[disabled],
+.context-menu-row[disabled]:hover {
+	background-color: transparent;
+	color: var(--text-disabled);
+	cursor: default;
 }
 
-.context-menu-row hr,
-.context-menu-row hr:hover,
-.context-menu-row hr:active,
-.context-menu-row hr:focus {
-	margin: var(--sp-2) 0px;
-	grid-column: 1 / -1;
-	border-width: 0px 0px 1px 0px;
-	border-color: var(--border-subtle);
+/* A row that carries its own content - a project preview - supplies its
+	own layout, so the grid stands down. */
+.context-menu-row--child {
+	display: block;
+	padding: var(--sp-2);
 }
 
 .context-menu-row .row-icon {
-	height: var(--row-h);
-	width: 20px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: var(--icon-default);
-	border-radius: var(--r-xs) 0 0 var(--r-xs);
 }
 
 .context-menu-row .row-icon svg {
-	height: 15px;
-	width: 15px;
-	margin: 0;
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+}
+
+.context-menu-row[disabled] .row-icon {
+	color: var(--icon-disabled);
 }
 
 .context-menu-row .row-name {
-	line-height: 1.3;
-	min-height: var(--row-h);
-	padding: var(--sp-2) var(--sp-5) var(--sp-2) var(--sp-3);
-	display: flex;
-	align-items: center;
-	font-size: var(--fs-sm);
-	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
-.context-menu-row .row-name svg {
-	margin-right: 10px;
-}
+
+/* --------------------------------------------------------------
+	Shortcut keys and notes
+	------------------------------------------------------------ */
 
 .context-menu-row .row-notes {
-	background-color: transparent;
-	width: max-content;
-	height: 24px;
-	opacity: 0.8;
-	display: contents;
-	margin-left: 20px;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	color: var(--text-secondary);
+	font-size: var(--fs-xs);
+	white-space: nowrap;
 }
 
+.context-menu-row[disabled] .row-notes {
+	color: var(--text-disabled);
+}
+
+/*
+	Key caps, drawn as caps. They used to inherit whatever a bare <code> looked
+	like, which meant Courier New on Windows - the one place bare `monospace`
+	always lands, and where most of this audience is.
+*/
 .context-menu-row .row-notes code {
-	line-height: 18px;
-	margin: 0px 2px;
-	font-size: 0.8em !important;
-	min-height: 24px;
-	min-width: 24px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 var(--sp-2);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	line-height: 1;
 }
 
-.context-menu-row .row-notes span {
-	grid-column: span 2;
-	font-size: 0.8em;
-	line-height: 24px;
-	padding: 0px 0px 0px 4px;
-	height: 24px;
+.context-menu-row[disabled] .row-notes code {
+	color: var(--text-disabled);
+	border-color: var(--border-subtle);
+}
+
+/* --------------------------------------------------------------
+	Section headings and separators
+	------------------------------------------------------------ */
+
+/*
+	A file name above the rows that act on it. An eyebrow, so it reads as a
+	label for the group rather than as another row you could click.
+*/
+#context-menu .spanAll {
+	padding: var(--sp-4) var(--sp-3) var(--sp-1) var(--sp-3);
+}
+
+#context-menu .spanAll:first-child {
+	padding-top: var(--sp-2);
+}
+
+#context-menu .spanAll h2 {
 	margin: 0;
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-caps);
+	color: var(--text-secondary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.context-menu-separator {
+	height: 1px;
+	margin: var(--sp-2) var(--sp-3);
+	background-color: var(--border-subtle);
+	flex: 0 0 auto;
 }
 
 /* Modal dialog */

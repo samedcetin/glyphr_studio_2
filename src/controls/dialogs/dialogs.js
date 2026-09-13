@@ -279,33 +279,78 @@ export function makeContextMenu(rows = [], x, y, width, height, isDropdown = fal
 		element.appendChild(makeOneContextMenuRow(item));
 	});
 
-	// Move it and show it
+	/*
+		Position only. The radius used to be set here too - square on the edge
+		that met the bar, rounded on the other three - so the menu read as an
+		extension of the control that opened it. That was a top-bar idea; the
+		entry points are in a left rail now and the menu sits beside them with
+		air on every side, so it is rounded all round, from the stylesheet.
+	*/
 	if (isFinite(x) && isFinite(y)) {
-		element.style.position = 'absolute';
 		element.style.left = `${x}px`;
 		element.style.top = `${y}px`;
-		element.style.display = 'grid';
-		if (isDropdown) {
-			element.style.borderRadius = '0px 0px 4px 4px';
-			element.style.borderTopWidth = '0px';
-		} else {
-			element.style.borderRadius = '0px 4px 4px 4px';
-			element.style.borderTopWidth = '1px';
-		}
-		if (width) {
-			element.style.width = `${width}px`;
-		}
-		if (height) {
-			if (isDropdown) element.style.maxHeight = `${height}px`;
-			else element.style.height = `${height}px`;
-		}
-		element.focus();
+		if (width) element.style.width = `${width}px`;
+		if (height) element.style.maxHeight = `${height}px`;
 	} else {
 		console.warn(`Context menu not supplied with a screen position.`);
 	}
 
+	addContextMenuKeyboardNav(element);
+
+	/*
+		Focus the first actionable row rather than the menu box, so the arrow keys
+		have somewhere to move from and the menu is usable the moment it opens.
+
+		In a microtask, because this element is not in the document yet - every
+		caller inserts what this function returns - and focus() on a detached node
+		does nothing. The old code called element.focus() here and silently failed
+		for the same reason. A microtask runs after the caller's synchronous
+		insertion, which is the first moment focus can land.
+	*/
+	queueMicrotask(() => {
+		if (!element.isConnected) return;
+		const firstRow = element.querySelector('button.context-menu-row:not([disabled])');
+		if (firstRow) /** @type {HTMLElement} */ (firstRow).focus();
+	});
+
 	// log(`makeContextMenu`, 'end');
 	return element;
+}
+
+/**
+ * Arrow-key movement inside a context menu.
+ *
+ * Rows are buttons, so Enter and Space already activate them and Escape is
+ * handled globally. This adds what a menu still owes the keyboard: Up and Down
+ * to move, Home and End to jump, and both wrapping, so holding an arrow key
+ * cannot strand focus at one end.
+ *
+ * @param {Element} menu
+ */
+function addContextMenuKeyboardNav(menu) {
+	menu.addEventListener('keydown', (event) => {
+		const key = /** @type {KeyboardEvent} */ (event).key;
+		const rows = /** @type {Array<HTMLElement>} */ ([
+			...menu.querySelectorAll('button.context-menu-row:not([disabled])'),
+		]);
+		if (!rows.length) return;
+
+		const index = rows.indexOf(/** @type {HTMLElement} */ (document.activeElement));
+
+		if (key === 'ArrowDown') {
+			event.preventDefault();
+			rows[(index + 1) % rows.length].focus();
+		} else if (key === 'ArrowUp') {
+			event.preventDefault();
+			rows[(index - 1 + rows.length) % rows.length].focus();
+		} else if (key === 'Home') {
+			event.preventDefault();
+			rows[0].focus();
+		} else if (key === 'End') {
+			event.preventDefault();
+			rows[rows.length - 1].focus();
+		}
+	});
 }
 
 /**
@@ -318,28 +363,52 @@ function makeOneContextMenuRow(data = {}) {
 	// log(data);
 	let isDisabled = data.disabled || false;
 
-	let row = makeElement({
-		tag: 'div',
-		className: data?.className || 'context-menu-row',
-		attributes: { tabindex: '0' },
-	});
-	if (isDisabled) row.setAttribute('disabled', '');
+	/*
+		A real <button>, not a div with tabindex.
 
+		The row used to be a div with `display: contents`, which means it has no
+		box of its own: its cells were laid out directly by the menu's grid. Three
+		things followed from that, all of them bugs. Hover had to be painted onto
+		each cell separately, and the CSS carried a note about the notch that left
+		in the highlight's left edge. A focus ring could not render at all, since
+		there was no box to draw it around. And the div had tabindex="0" with only
+		a click listener, so it took focus and then did nothing on Enter or Space.
+
+		A button fixes all three by existing: one box to highlight, one outline to
+		draw, and Enter and Space activate it natively.
+	*/
 	if (data.child) {
-		row.appendChild(data.child);
-		if (!isDisabled) {
-			row.addEventListener('click', () => {
+		const childRow = makeElement({
+			tag: data.onClick ? 'button' : 'div',
+			className: `context-menu-row context-menu-row--child${
+				data.className ? ` ${data.className}` : ''
+			}`,
+			attributes: data.onClick ? { type: 'button' } : {},
+		});
+		if (isDisabled) childRow.setAttribute('disabled', '');
+		childRow.appendChild(data.child);
+		if (!isDisabled && data.onClick) {
+			childRow.addEventListener('click', () => {
 				closeAllOptionChoosers();
-				if (data.onClick) data.onClick();
+				data.onClick();
 			});
 		}
-		return row;
+		return childRow;
 	}
 
 	if (data.name === 'hr') {
-		row.appendChild(makeElement({ tag: 'hr' }));
-		return row;
+		return makeElement({
+			className: 'context-menu-separator',
+			attributes: { role: 'separator' },
+		});
 	}
+
+	let row = makeElement({
+		tag: 'button',
+		className: data?.className || 'context-menu-row',
+		attributes: { type: 'button', role: 'menuitem' },
+	});
+	if (isDisabled) row.setAttribute('disabled', '');
 
 	/*
 		Icon. Either `icon` (a name from common/graphics.js) or `iconMarkup`
