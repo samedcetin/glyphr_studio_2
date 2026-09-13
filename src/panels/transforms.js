@@ -1,7 +1,6 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
 import { deg, rad, resolveTransformOrigin, round } from '../common/functions.js';
-import { makeLineIcon } from '../common/icons.js';
 import { makeActionButton } from './action_buttons.js';
 import { makeTransformOriginGrid, syncTransformOriginChoosers } from './transform_origin.js';
 
@@ -17,8 +16,12 @@ import { makeTransformOriginGrid, syncTransformOriginChoosers } from './transfor
 	number fields. Then one card with a twelve-name dropdown for the origin,
 	which came to 316.
 
-	It is 180 now, and the saving is not compression for its own sake. It is
-	Figma's transform idiom, which most designers arrive already fluent in:
+	It is Figma's transform idiom, which most designers arrive already fluent
+	in, down to the shape of the block:
+
+		- Fields stacked in a column on the left, the origin grid and the
+		  one-click transforms stacked on the right, the icons under the grid
+		  they pivot about.
 
 		- Each field says what it is from the inside. A mark on the left for
 		  the transform, the unit on the right. A label above every field cost
@@ -29,22 +32,21 @@ import { makeTransformOriginGrid, syncTransformOriginChoosers } from './transfor
 		  both put a reference point on a grid, and you can hit the corner you
 		  want without reading anything.
 
-		- Skew angle and skew distance share a row, because they are one
-		  operation in two units and always show the same skew.
+		- No Apply. A field takes effect as you leave it, the way every other
+		  field in this app does, and the number in it is how much of that
+		  transform the selection is currently carrying - so it reads as a
+		  state rather than as a pending instruction.
 
-		- Apply is a 28px square at the end of its row rather than a word.
-		  Enter does the same thing from the field, the way Enter commits
-		  every other field in the app - it used to do nothing at all, so the
-		  only way to act on a value was to notice a button that had appeared
-		  while you were typing.
+	That last one is what makes the rest of it work, and it is worth being
+	precise about: these are relative operations, so applying a value twice
+	would compound it. Each field remembers what it has already applied and
+	acts on the difference. Nudge rotation from 15 to 16 and the shape turns
+	one more degree, not sixteen more. The amounts reset when the selection
+	changes, because a new selection is carrying none of them.
 
 	What is not borrowed: Figma's alignment row aligns to a frame, and nothing
 	here aligns shapes in the em box yet; its constraint dropdowns belong to
 	auto-layout.
-
-	The value stays in the field after applying, so pressing Enter twice
-	rotates twice. Clearing it would read more like a verb and would cost the
-	most common use of these controls.
 */
 
 /**
@@ -89,16 +91,24 @@ const transformOperations = [
 		id: 'rotation',
 		prefix: 'angle',
 		suffix: '°',
-		hint: 'Rotation angle\nPositive turns clockwise, negative counterclockwise, about the origin.\nEnter applies.',
-		apply: (editor, value) => rotateSelection(editor, value),
+		hint: 'Rotation\nHow far the selection is turned from where it started.\nPositive is clockwise, about the origin.',
+		/* Rotations compose, so the difference is the difference. */
+		apply: (editor, value, applied) => rotateSelection(editor, value - applied, value),
 	},
 	{
 		id: 'skewAngle',
 		prefix: 'skew',
 		suffix: '°',
-		hint: 'Skew angle\nPositive leans right, negative leans left. The italicising transform.\nEnter applies.',
-		apply: (editor, value) => {
-			const count = skewSelectedPaths(editor, 'skewAngle', value);
+		hint: 'Skew angle\nHow far the selection is leaning. Positive leans right.\nThe italicising transform.',
+		/*
+			Shears compose by their tangents rather than their angles, so the
+			step that takes a lean of `applied` to a lean of `value` is the
+			angle whose tangent is the difference of the two tangents. Taking
+			value - applied would drift: tan 12 + tan 1 is not tan 13.
+		*/
+		apply: (editor, value, applied) => {
+			const step = deg(Math.atan(Math.tan(rad(value)) - Math.tan(rad(applied))));
+			const count = skewSelectedPaths(editor, 'skewAngle', step);
 			return `Skew ${count} ${count === 1 ? 'shape' : 'shapes'} by ${value}°`;
 		},
 	},
@@ -106,9 +116,10 @@ const transformOperations = [
 		id: 'skewDistance',
 		prefix: 'skewDistance',
 		suffix: 'em',
-		hint: 'Skew distance\nThe same skew, as how far the top of the path travels.\nTracks the angle beside it while one path is selected.\nEnter applies.',
-		apply: (editor, value) => {
-			const count = skewSelectedPaths(editor, 'skewDistance', value);
+		hint: 'Skew distance\nThe same lean, as how far the top of the path has travelled.\nTracks the angle above it while one path is selected.',
+		/* This one is a linear shift, so it does take the plain difference. */
+		apply: (editor, value, applied) => {
+			const count = skewSelectedPaths(editor, 'skewDistance', value - applied);
 			return `Skew ${count} ${count === 1 ? 'shape' : 'shapes'} by ${value}em`;
 		},
 	},
@@ -116,43 +127,77 @@ const transformOperations = [
 		id: 'offsetPath',
 		prefix: 'offsetPath',
 		suffix: 'em',
-		hint: 'Offset distance\nPositive expands the path, negative contracts it.\nEnter applies.',
-		apply: (editor, value) => offsetSelectedPaths(editor, value),
+		hint: 'Offset\nHow far the outline has been pushed out. Negative pulls it in.\nEach step rebuilds the outline, so many small steps are not the same as one big one.',
+		/*
+			The one that does not compose cleanly: offsetting by 20 and then by
+			1 rebuilds the outline twice and does not land exactly where a
+			single offset of 21 would. There is no closed form for that, short
+			of keeping the original path aside for the length of an edit.
+		*/
+		apply: (editor, value, applied) => offsetSelectedPaths(editor, value - applied, value),
 	},
 ];
 
-/** Lookup by id, for the row builders below. */
-const operationsById = Object.fromEntries(transformOperations.map((op) => [op.id, op]));
+/**
+ * How much of each transform the current selection is carrying.
+ *
+ * These fields are relative operations shown as absolute state, so a field
+ * has to know what it has already done to work out what is left to do.
+ */
+let appliedAmounts = {};
 
-/** The rows, and which fields share each row's Apply. */
-const transformRows = [['rotation'], ['skewAngle', 'skewDistance'], ['offsetPath']];
+/**
+ * The point this run of transforms is pivoting about.
+ *
+ * Resolving the origin afresh on every step would move the pivot as the
+ * shape moves - a bounding box's centre is not where it was once the shape
+ * inside it has turned 45 degrees. Two steps of 45 then landed somewhere a
+ * single step of 90 does not, and coming back to 0 did not come back.
+ *
+ * So the pivot is fixed the moment a field leaves zero, and released when
+ * every field is back at zero, when the selection changes, or when the
+ * origin itself is changed.
+ */
+let pinnedOrigin = null;
 
 export function makePanel_Transforms() {
 	const editor = getCurrentProjectEditor();
 	const card = makeElement({ className: 'panel__card transform-card' });
 
 	/*
-		The header: the turns and flips that need no amount, and the origin
-		every one of them pivots about, side by side.
+		Fields down the left, the origin grid and the one-click transforms down
+		the right - the icons under the grid they pivot about.
 	*/
-	const header = makeElement({ className: 'transform-card__header' });
-	header.appendChild(makeQuickTransformsArea());
-	header.appendChild(
+	const body = makeElement({ className: 'transform-card__body' });
+
+	const fields = makeElement({ className: 'transform-card__fields' });
+	transformOperations.forEach((operation) => fields.appendChild(makeTransformField(operation)));
+
+	const aside = makeElement({ className: 'transform-card__aside' });
+	aside.appendChild(
 		makeTransformOriginGrid((origin) => {
 			const current = getCurrentProjectEditor();
 			transformOriginOwner(current).transformOrigin = origin;
+			/* A new pivot is a new run: what is already applied was not about it. */
+			clearAppliedAmounts();
 			syncTransformOriginChoosers(origin);
 			current.publish('editCanvasView', current.selectedItem);
 		})
 	);
-	card.appendChild(header);
+	aside.appendChild(makeQuickTransformsArea());
 
-	transformRows.forEach((ids) => card.appendChild(makeTransformFieldRow(ids)));
+	body.appendChild(fields);
+	body.appendChild(aside);
+	card.appendChild(body);
 
 	editor.subscribe({
 		topic: 'whichShapeIsSelected',
-		subscriberID: `transformsPanel.applyButtons`,
-		callback: () => refreshTransformControls(),
+		subscriberID: `transformsPanel.fields`,
+		callback: () => {
+			/* A new selection is carrying none of these transforms yet. */
+			clearAppliedAmounts();
+			refreshTransformControls();
+		},
 	});
 
 	/*
@@ -193,72 +238,6 @@ function makeQuickTransformsArea() {
 }
 
 /**
- * A row of one or two fields and the Apply that commits them.
- *
- * Two fields share an Apply when they share an operation - skew angle and
- * skew distance are the same skew, so two buttons would have done the same
- * thing twice.
- *
- * @param {Array} ids - operation ids, left to right
- * @returns {HTMLElement}
- */
-function makeTransformFieldRow(ids) {
-	const row = makeElement({
-		className: ids.length > 1 ? 'transform-card__row transform-card__row--pair' : 'transform-card__row',
-	});
-
-	const inputs = ids.map((id) => makeTransformField(operationsById[id]));
-	inputs.forEach((input) => row.appendChild(input));
-
-	/*
-		Which field the button acts on: the one holding a value. With a pair
-		they are the same skew in two units, so either will do - the angle is
-		the one that reads as the transform, and it is preferred.
-	*/
-	const run = () => {
-		if (applyButton.hasAttribute('disabled')) return;
-		const active =
-			inputs.find((input) => Number(input.getAttribute('value')) !== 0) || inputs[0];
-		applyTransform(operationsById[active.dataset.operation], Number(active.getAttribute('value')));
-	};
-
-	const applyButton = makeElement({
-		tag: 'button',
-		className: 'transform-card__apply',
-		title: 'Apply\nOr press Enter in the field.',
-		content: makeLineIcon('check', 18),
-		attributes: { id: `${ids[0]}_applyButton`, disabled: 'disabled' },
-	});
-
-	applyButton.addEventListener('click', run);
-
-	inputs.forEach((input) => {
-		input.addEventListener('change', () => {
-			mirrorSkewUnits(operationsById[input.dataset.operation], input);
-			refreshTransformControls();
-		});
-
-		/*
-			input-number commits on blur, so on Enter the host attribute still
-			holds the last committed value rather than what is on screen.
-			commit() pushes the typed text through first, and this acts on the
-			result.
-		*/
-		input.addEventListener('keydown', (event) => {
-			if (event.key !== 'Enter') return;
-			event.preventDefault();
-			// @ts-expect-error 'method does exist on input-number'
-			input.commit();
-			if (applyButton.hasAttribute('disabled')) return;
-			applyTransform(operationsById[input.dataset.operation], Number(input.getAttribute('value')));
-		});
-	});
-
-	row.appendChild(applyButton);
-	return row;
-}
-
-/**
  * One number field, wearing its own name and unit.
  * @param {Object} operation - an entry from transformOperations
  * @returns {HTMLElement}
@@ -272,8 +251,27 @@ function makeTransformField(operation) {
 			value: '0',
 			prefix: operation.prefix,
 			suffix: operation.suffix,
-			'data-operation': operation.id,
 		},
+	});
+
+	/* Leaving the field is what applies it. There is no button to press. */
+	input.addEventListener('change', () => {
+		const value = Number(input.getAttribute('value'));
+		applyTransform(operation, value);
+		mirrorSkewUnits(operation, value);
+		refreshTransformControls();
+	});
+
+	/*
+		input-number commits on blur, so on Enter the host attribute still
+		holds the last committed value rather than what is on screen.
+		commit() pushes the typed text through, which fires the change above.
+	*/
+	input.addEventListener('keydown', (event) => {
+		if (event.key !== 'Enter') return;
+		event.preventDefault();
+		// @ts-expect-error 'method does exist on input-number'
+		input.commit();
 	});
 
 	return input;
@@ -284,17 +282,44 @@ function makeTransformField(operation) {
 // --------------------------------------------------------------
 
 /**
- * Run one transform over the selection and record it.
+ * Move the selection to the amount the field now shows.
+ *
+ * The field is a state, not an instruction, so this applies the difference
+ * between what is already on the shapes and what is being asked for. Setting
+ * 16 on a field that says 15 turns one more degree.
+ *
  * @param {Object} operation - an entry from transformOperations
- * @param {Number} value - the amount, in that transform's own units
+ * @param {Number} value - the amount the field now shows
  */
 function applyTransform(operation, value) {
 	const editor = getCurrentProjectEditor();
-	if (!editor.multiSelect.shapes.length || !value) return;
+	const applied = appliedAmounts[operation.id] || 0;
+	if (!editor.multiSelect.shapes.length || value === applied) return;
 
-	editor.history.addState(operation.apply(editor, value));
+	/* First step of a run fixes the pivot for the rest of it. */
+	if (!pinnedOrigin) pinnedOrigin = selectionOrigin(editor);
+
+	const title = operation.apply(editor, value, applied);
+	appliedAmounts[operation.id] = value;
+
+	/* Back to nothing applied, so the next run picks its pivot fresh. */
+	if (transformOperations.every((each) => !appliedAmounts[each.id])) pinnedOrigin = null;
+
+	editor.history.addState(title);
 	editor.publish('currentItem', editor.selectedItem);
-	refreshTransformControls();
+}
+
+/**
+ * Put every field back to nothing applied.
+ */
+function clearAppliedAmounts() {
+	appliedAmounts = {};
+	pinnedOrigin = null;
+
+	transformOperations.forEach((operation) => {
+		const input = document.getElementById(`${operation.id}_input`);
+		if (input) input.setAttribute('value', '0');
+	});
 }
 
 /**
@@ -305,15 +330,17 @@ function applyTransform(operation, value) {
  * selection, always, whatever the origin said.
  *
  * @param {Object} editor - the current project editor
- * @param {Number} degreesClockwise - positive turns clockwise
+ * @param {Number} degreesClockwise - how far to turn now; positive is clockwise
+ * @param {Number =} reportAs - the total to name in history, if it differs
  * @returns {String} the history state title
  */
-function rotateSelection(editor, degreesClockwise) {
+function rotateSelection(editor, degreesClockwise, reportAs) {
 	const msShapes = editor.multiSelect.shapes;
 	const count = msShapes.length;
+	const total = reportAs === undefined ? degreesClockwise : reportAs;
 
 	msShapes.rotate(rad(degreesClockwise * -1), selectionOrigin(editor));
-	return `Rotated ${count} ${count === 1 ? 'shape' : 'shapes'} by ${degreesClockwise}°`;
+	return `Rotated ${count} ${count === 1 ? 'shape' : 'shapes'} by ${total}°`;
 }
 
 /**
@@ -376,10 +403,11 @@ function skewSelectedPaths(editor, method, amount) {
  * rewritten to point at it. Deleting and appending reordered the layers.
  *
  * @param {Object} editor - the current project editor
- * @param {Number} distance - em units; positive expands
+ * @param {Number} distance - em units to push out now; positive expands
+ * @param {Number =} reportAs - the total to name in history, if it differs
  * @returns {String} the history state title
  */
-function offsetSelectedPaths(editor, distance) {
+function offsetSelectedPaths(editor, distance, reportAs) {
 	const item = editor.selectedItem;
 	/* A copy - the loop rewrites the selection as it goes. */
 	const selShapes = editor.multiSelect.shapes.members.slice();
@@ -403,7 +431,8 @@ function offsetSelectedPaths(editor, distance) {
 
 	item.changed();
 	editor.multiSelect.shapes.members = newSelection;
-	return `Offset path for ${count} ${count === 1 ? 'shape' : 'shapes'}`;
+	const total = reportAs === undefined ? distance : reportAs;
+	return `Offset ${count} ${count === 1 ? 'shape' : 'shapes'} by ${total}em`;
 }
 
 // --------------------------------------------------------------
@@ -434,6 +463,8 @@ function transformOriginOwner(editor) {
  * @returns {Object} x and y of the point that stays put
  */
 function selectionOrigin(editor) {
+	if (pinnedOrigin) return pinnedOrigin;
+
 	return resolveTransformOrigin(
 		editor.multiSelect.shapes.maxes,
 		transformOriginOwner(editor).transformOrigin
@@ -441,8 +472,8 @@ function selectionOrigin(editor) {
 }
 
 /**
- * Enable or disable every Apply button for what is currently selected, and
- * keep the origin chooser showing whose origin is in play.
+ * Wake or kill the controls for what is currently selected, and keep the
+ * origin chooser showing whose origin is in play.
  */
 function refreshTransformControls() {
 	const editor = getCurrentProjectEditor();
@@ -472,20 +503,6 @@ function refreshTransformControls() {
 		if (hasSelection) input.removeAttribute('disabled');
 		else input.setAttribute('disabled', '');
 	});
-
-	/* One Apply per row, enabled when any field in that row holds a value. */
-	transformRows.forEach((ids) => {
-		const applyButton = document.getElementById(`${ids[0]}_applyButton`);
-		if (!applyButton) return;
-
-		const hasValue = ids.some((id) => {
-			const input = document.getElementById(`${id}_input`);
-			return input && Number(input.getAttribute('value')) !== 0;
-		});
-
-		if (hasSelection && hasValue) applyButton.removeAttribute('disabled');
-		else applyButton.setAttribute('disabled', 'disabled');
-	});
 }
 
 /**
@@ -500,10 +517,14 @@ function refreshTransformControls() {
  * selected, the other field is left alone rather than shown a number that is
  * true of none of them.
  *
+ * The mirrored field is showing a skew that has just been applied, so its
+ * applied amount moves with its display. Otherwise touching it next would
+ * apply the difference from zero and skew the shape a second time.
+ *
  * @param {Object} operation - the operation whose field just changed
- * @param {HTMLElement} input - that field
+ * @param {Number} value - what that field now shows
  */
-function mirrorSkewUnits(operation, input) {
+function mirrorSkewUnits(operation, value) {
 	if (operation.id !== 'skewAngle' && operation.id !== 'skewDistance') return;
 
 	const selected = getCurrentProjectEditor().multiSelect.shapes.members;
@@ -512,17 +533,15 @@ function mirrorSkewUnits(operation, input) {
 	const yMax = selected[0].maxes.yMax;
 	if (!yMax) return;
 
-	const value = Number(input.getAttribute('value'));
+	const mirrored =
+		operation.id === 'skewAngle'
+			? { id: 'skewDistance', amount: round(yMax * Math.tan(rad(value)), 2) }
+			: { id: 'skewAngle', amount: round(deg(Math.atan(value / yMax)), 2) };
 
-	if (operation.id === 'skewAngle') {
-		const distanceInput = document.getElementById('skewDistance_input');
-		if (distanceInput) {
-			distanceInput.setAttribute('value', `${round(yMax * Math.tan(rad(value)), 2)}`);
-		}
-	} else {
-		const angleInput = document.getElementById('skewAngle_input');
-		if (angleInput) {
-			angleInput.setAttribute('value', `${round(deg(Math.atan(value / yMax)), 2)}`);
-		}
-	}
+	const input = document.getElementById(`${mirrored.id}_input`);
+	if (!input) return;
+
+	/* setAttribute does not fire change, so this display move applies nothing. */
+	input.setAttribute('value', `${mirrored.amount}`);
+	appliedAmounts[mirrored.id] = mirrored.amount;
 }
