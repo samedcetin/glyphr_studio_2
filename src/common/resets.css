@@ -265,8 +265,18 @@ label:hover {
 	color: var(--text-primary);
 }
 
+/*
+	One radius for every control of this height.
+
+	Inputs were --r-xs and buttons --r-md, so a text field and the button next
+	to it - both 24px, both in the same row - were drawn with different
+	corners. 8px is what the app gives a 24px control everywhere else: the key
+	caps in the menus, the Switch chip on a project card. `select` is in here
+	too, so a native one matches the option chooser beside it.
+*/
 input,
-textarea {
+textarea,
+select {
 	padding: 0px var(--sp-3);
 	height: var(--control-h-sm);
 	text-align: left;
@@ -276,7 +286,8 @@ textarea {
 	background-color: var(--bg-surface-sunken);
 	color: var(--text-primary);
 	border: 1px solid var(--border-strong);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	transition: var(--transition-color);
 	-webkit-user-select: text;
 	-moz-user-select: text;
@@ -285,14 +296,16 @@ textarea {
 }
 
 input:hover,
-textarea:hover {
+textarea:hover,
+select:hover {
 	background-color: var(--enabled-focus-background);
 	color: var(--enabled-focus-text);
 	border-color: var(--enabled-focus-border);
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
 	background-color: var(--bg-surface);
 	color: var(--text-primary);
 	border-color: var(--accent);

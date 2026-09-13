@@ -695,7 +695,8 @@ nav .item-chooser__wrapper--compact {
 	border: 1px solid transparent;
 	padding: var(--sp-1) var(--sp-2);
 	background-color: transparent;
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	width: 100%;
 	max-width: none;
 	height: 40px;
@@ -1081,7 +1082,8 @@ nav .item-chooser__wrapper--compact {
 	padding: 0;
 	margin: 0;
 	border: 1px solid transparent;
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--icon-default);
 	box-shadow: none;
@@ -1129,7 +1131,8 @@ nav .item-chooser__wrapper--compact {
 	color: var(--text-primary);
 	background-color: var(--bg-surface);
 	border: 1px solid var(--accent);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 }
 
 /* --------------------------------------------------------------

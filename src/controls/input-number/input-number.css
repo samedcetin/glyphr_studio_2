@@ -44,7 +44,8 @@
 	border-width: 1px;
 	border-color: var(--border-strong);
 	border-right-color: transparent;
-	border-radius: var(--r-xs) 0 0 var(--r-xs);corner-shape: var(--corner-smooth);
+	border-radius: var(--r-md) 0 0 var(--r-md);
+	corner-shape: var(--corner-smooth);
 	grid-column: 1;
 	min-width: var(--number-input-min-w, 50px);
 	padding: 4px 6px 4px 2px;
@@ -128,7 +129,8 @@
 
 .upArrow {
 	border-width: 1px 1px 0px 1px;
-	border-radius: 0 var(--r-xs) 0 0;
+	border-radius: 0 var(--r-md) 0 0;
+	corner-shape: var(--corner-smooth);
 	grid-row: 1;
 }
 
@@ -139,7 +141,8 @@
 
 .downArrow {
 	border-width: 0px 1px 1px 1px;
-	border-radius: 0 0 var(--r-xs) 0;
+	border-radius: 0 0 var(--r-md) 0;
+	corner-shape: var(--corner-smooth);
 	padding-bottom: 1px;
 	grid-row: 3;
 }
@@ -193,7 +196,8 @@
 	border-style: solid;
 	border-color: var(--border-strong);
 	border-left-color: transparent;
-	border-radius: 0 var(--r-xs) var(--r-xs) 0;
+	border-radius: 0 var(--r-md) var(--r-md) 0;
+	corner-shape: var(--corner-smooth);
 	margin-right: 1px;
 	box-sizing: border-box;
 	background-color: var(--bg-surface-sunken);
@@ -213,7 +217,8 @@
 	border-color: var(--accent);
 	/* border-left-color: transparent; */
 	background-color: var(--bg-surface);
-	/* border-radius: var(--r-xs); */
+	/* border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth); */
 }
 
 .lock:hover svg,
@@ -224,7 +229,8 @@
 
 .lock[selected] {
 	border-color: var(--accent);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 }
 
 .lock[selected] svg {
@@ -257,4 +263,13 @@
 .lock:focus[disabled] svg,
 .lock:active[disabled] svg {
 	fill: var(--icon-disabled);
+}
+/*
+	When the padlock is showing it is the control's right-hand end, so the
+	arrows give up their right corners to it - otherwise there is a rounded
+	corner in the middle of the control with the lock butted against it.
+*/
+:host([has-lock]) .upArrow,
+:host([has-lock]) .downArrow {
+	border-radius: 0;
 }

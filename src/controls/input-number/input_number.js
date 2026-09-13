@@ -113,15 +113,22 @@ export class InputNumber extends HTMLElement {
 	connectedCallback() {
 		// log(`InputNumber.connectedCallback`, 'start');
 
+		/*
+			has-lock, so the stylesheet can square off the arrows' right corners
+			when the padlock becomes the control's right-hand end. It was being
+			done here, inline, and only on one of the two branches - so a locked
+			input had a rounded corner in the middle of itself with the padlock
+			butted up against it.
+		*/
 		if (this.getAttribute('is-locked') === 'true') {
 			this.padlock.style.display = 'block';
+			this.setAttribute('has-lock', '');
 			this.setToLocked(true);
 		}
 
 		if (this.getAttribute('is-locked') === 'false') {
 			this.padlock.style.display = 'block';
-			this.upArrow.style.borderRadius = '0px';
-			this.downArrow.style.borderRadius = '0px';
+			this.setAttribute('has-lock', '');
 			this.setToUnlocked(true);
 		}
 

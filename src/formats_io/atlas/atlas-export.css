@@ -30,7 +30,7 @@
 	font-size: var(--fs-xs);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
 	padding: 0 var(--sp-1);
 }
 
@@ -84,7 +84,8 @@
 	background-color: var(--bg-surface-sunken);
 	color: var(--text-primary);
 	border: 1px solid var(--border-strong);
-	border-radius: var(--r-sm);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	font-family: var(--font-ui);
 	font-size: var(--fs-sm);
 }
@@ -142,7 +143,7 @@
 	width: 200px;
 	height: 200px;
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
 	image-rendering: pixelated;
 	background-color: hsl(220, 10%, 22%);
 	background-image: linear-gradient(45deg, hsla(0, 0%, 100%, 0.06) 25%, transparent 25%),
@@ -251,7 +252,7 @@
 	padding: 0 var(--sp-1);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
 	color: var(--text-primary);

@@ -26,7 +26,7 @@
 	height: var(--control-h-sm);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-strong);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	color: var(--text-primary);
 	transition: var(--transition-color);

@@ -22,7 +22,8 @@
 	text-align: left;
 	justify-content: start;
 	align-content: center;
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	border: 1px solid var(--border-default);
 	background-color: var(--bg-surface);
 	box-shadow: none;

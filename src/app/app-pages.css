@@ -413,7 +413,8 @@
 	color: var(--text-primary);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-strong);
-	border-radius: var(--r-sm);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	corner-shape: var(--corner-smooth);
 	display: block;
 }
@@ -473,7 +474,7 @@
 	font-size: var(--fs-xs);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	padding: 1px var(--sp-2);
 	margin-right: 2px;
