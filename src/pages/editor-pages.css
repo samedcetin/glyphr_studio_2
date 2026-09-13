@@ -56,6 +56,15 @@
 	The toolbar keeps floating. It is the one surface that genuinely hovers over
 	the artwork rather than framing it.
 */
+/*
+	These scroll. They did not.
+
+	`overflow: hidden` on a fixed-height column whose contents are taller than
+	it just deletes the difference - on a 1085px window the right panel held
+	1506px of sections, so the last 421 of it could not be reached by any
+	means. Programmatic scrollTop still worked, which is why it looked fine
+	from the console and not from the mouse.
+*/
 .editor-page__left-area,
 .editor-page__right-area {
 	position: absolute;
@@ -65,7 +74,13 @@
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
-	overflow: hidden;
+	overflow-y: auto;
+	overflow-x: hidden;
+	/*
+		Room for the scrollbar whether or not it is there, so the controls do
+		not shift sideways the moment a section is expanded.
+	*/
+	scrollbar-gutter: stable;
 	background-color: var(--bg-surface);
 	border-radius: 0;
 	box-shadow: none;

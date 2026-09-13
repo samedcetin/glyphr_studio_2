@@ -33,7 +33,18 @@
 	Header
 	------------------------------------------------------------ */
 
+/*
+	The header stays while its own section scrolls past. In a column of five
+	accordions the thing you most need on screen is which one you are looking
+	at - and it is the first thing to leave when you scroll into a long one.
+
+	It needs an opaque ground for that: transparent was fine while nothing ever
+	passed underneath it.
+*/
 .sidebar__section-header {
+	position: sticky;
+	top: 0;
+	z-index: 1;
 	display: grid;
 	grid-template-columns: 14px var(--icon-size) minmax(0, 1fr);
 	align-items: center;
@@ -45,7 +56,7 @@
 	margin: 0;
 	border: none;
 	border-radius: 0;
-	background-color: transparent;
+	background-color: var(--bg-surface);
 	color: var(--text-secondary);
 	cursor: pointer;
 	box-shadow: none;
