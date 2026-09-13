@@ -162,7 +162,14 @@
 		the track collapsed and every row rendered as a 24px stub with its name
 		clipped away. The column flex container stretches the rows instead.
 	*/
-	min-height: var(--row-h);
+	/*
+		Taller than --row-h on purpose. The row highlight is --r-xl, and a
+		browser clamps a radius to half the box - so at 28px the 16 became 14
+		and the highlight came out a lozenge with corners rounder than the menu
+		holding it. 36 gives the corner room to be the corner it was asked for,
+		and lands these rows near the 40px the rail's menus run at.
+	*/
+	min-height: calc(var(--row-h) + var(--sp-4));
 	padding: 0 var(--sp-4) 0 var(--sp-2);
 	border: none;
 	/* Same pairing as the rail's menus: --r-2xl surface, --r-xl rows. */
@@ -220,17 +227,35 @@
 }
 
 /*
-	Shortcut letters are numerals-and-caps in a proportional face, which sets
-	them at ragged widths down the column. Mono with tabular figures lines the
-	column up the way a key cap column should read.
+	A key cap, drawn as one - the same cap the rail's menus use. It was bare
+	mono text here and a bordered cap over there, which made a keyboard
+	shortcut look like two different kinds of thing depending on which popover
+	you happened to open.
 */
 .menu-button__row-key {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 var(--sp-2);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-secondary);
 	font-family: var(--font-mono);
 	font-variant-numeric: tabular-nums;
-	font-size: var(--fs-xs);
-	color: var(--text-secondary);
+	font-size: var(--fs-2xs);
+	line-height: 1;
+}
+
+/* Rows without a shortcut still build the span. An empty cap is a stray box. */
+.menu-button__row-key:empty {
+	display: none;
 }
 
 .menu-button__row[disabled] .menu-button__row-key {
 	color: var(--text-disabled);
+	border-color: var(--border-subtle);
 }
