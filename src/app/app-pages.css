@@ -550,31 +550,22 @@
 	display: block;
 	padding: 0;
 	/*
-		No rule under the tabs. The colour change between the header and the
-		content does that job, and a line as well is the same statement twice -
-		with the tab strip sitting on top of it, which reads as a mistake.
+		No rule. The colour change between the header and the content does that
+		job already, and a line as well is the same statement twice.
 	*/
 	border-bottom: none;
 }
 
 .hub-modal__header-inner {
 	display: grid;
-	gap: var(--sp-5);
+	gap: var(--sp-1);
 	/*
-		No bottom padding: the tab strip sits flush on the seam between the
-		header and the content, so the selected tab and the surface it selects
-		are one shape. The extra right padding keeps the title clear of the
-		close button, which floats in the dialog's corner rather than taking a
-		row of its own.
+		The extra right padding keeps the title clear of the close button, which
+		floats in the dialog's corner rather than taking a row of its own.
 	*/
-	padding: var(--sp-6) var(--sp-10) 0 var(--sp-8);
+	padding: var(--sp-6) var(--sp-10) var(--sp-6) var(--sp-8);
 }
 
-.hub-modal__heading {
-	display: grid;
-	gap: var(--sp-1);
-	min-width: 0;
-}
 
 .hub-modal__title {
 	margin: 0;
@@ -596,89 +587,71 @@
 }
 
 /* --------------------------------------------------------
-	Tabs
+	Sections
 
-	A segmented control rather than a rail: three destinations in a 780px
-	dialog do not earn a column, and a row reads in the same direction as the
-	title above it.
+	The dialog shows one list, not one view per tab. Headings group it, the
+	way the Projects menu groups its rows - see makeModalListView.
 -------------------------------------------------------- */
 
-/*
-	--r-xl over --sp-2 of padding, so a tab at --r-lg is concentric with the
-	strip holding it: 16 - 4 = 12, the same arithmetic the popovers run on. At
-	--r-md over 2px the strip was a tight little box with tighter boxes inside
-	it, and the corners were too small to read as corners at all.
-*/
-.hub-tabs {
-	display: inline-flex;
-	justify-self: start;
-	gap: var(--sp-1);
-	padding: var(--sp-2);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xl);
-	corner-shape: var(--corner-smooth);
+.hub-sections {
+	display: grid;
+	gap: var(--sp-7);
 }
 
-.hub-tabs__tab {
+.hub-section {
+	display: grid;
+	gap: var(--sp-4);
+}
+
+/*
+	An eyebrow, the same one the panels and the menus use. A heading here is
+	naming a group, not introducing a page, so it does not take a heading size.
+*/
+.hub-section__label {
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+
+.hub-section__empty {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/*
+	The way out of the new-font form, which is the only place the dialog goes
+	other than its list.
+*/
+.hub-back {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--sp-2);
-	height: var(--control-h-lg);
+	height: var(--control-h);
 	min-height: 0;
-	margin: 0;
-	padding: 0 var(--sp-6);
+	margin: 0 0 var(--sp-6) calc(var(--sp-3) * -1);
+	padding: 0 var(--sp-3);
 	border: 1px solid transparent;
-	border-radius: var(--r-lg);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--text-secondary);
 	font-size: var(--fs-sm);
 	font-weight: var(--fw-medium);
-	white-space: nowrap;
 	box-shadow: none;
 	cursor: pointer;
 	transition: var(--transition-color);
 }
 
-.hub-tabs__tab:hover {
+.hub-back:hover {
 	background-color: var(--bg-hover);
 	color: var(--text-primary);
 }
 
-/*
-	The selected tab is lifted onto the surface the strip is sunk into - the
-	same figure-and-ground move a physical segmented control makes. It carries
-	weight and full-strength text as well, so it is not the tint alone saying
-	which one you are on.
-*/
-.hub-tabs__tab[selected],
-.hub-tabs__tab[selected]:hover {
-	background-color: var(--bg-surface);
-	border-color: var(--border-default);
-	color: var(--text-primary);
-	font-weight: var(--fw-semibold);
-	box-shadow: var(--shadow-1);
-}
-
-.hub-tabs__count {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 18px;
-	height: 18px;
-	padding: 0 var(--sp-2);
-	border-radius: var(--r-pill);
-	background-color: var(--bg-surface-raised);
-	color: var(--text-secondary);
-	font-size: var(--fs-2xs);
-	font-weight: var(--fw-semibold);
-	font-variant-numeric: tabular-nums;
-}
-
-.hub-tabs__tab[selected] .hub-tabs__count {
-	background-color: var(--bg-selected);
-	color: var(--text-accent);
+.hub-back svg {
+	width: 16px;
+	height: 16px;
 }
 
 /* --------------------------------------------------------
@@ -713,10 +686,10 @@
 }
 
 /*
-	The file route, in the one place it is visible from every tab. It was a
-	destination of its own in the rail, which is a whole view spent on a drop
-	zone and a button - when the dialog already accepts a dropped file
-	anywhere on it.
+	The two things that are not in the list. They were tabs, which made a form
+	and a file picker into places you could be - and a place you go to find a
+	text box instead of projects is not a place. They are actions here, next to
+	the reminder that the dialog takes a dropped file anywhere on it.
 */
 /*
 	The right padding matches the vertical, and only the left keeps the 24px
@@ -734,9 +707,13 @@
 	padding: var(--sp-5) var(--sp-5) var(--sp-5) var(--sp-8);
 }
 
-/* Derived, not picked: the dialog's radius less its border, less the 12px the
-	footer holds the button off its edges. */
-.hub-modal__footer-inner .hub-button {
+/*
+	Only the last one. It is the button sitting in the dialog's bottom right
+	corner, so its radius is derived from the corner it nests in - the dialog's
+	radius less its border, less the 12px the footer holds it off by. The one
+	beside it is not in a corner and keeps the button radius.
+*/
+.hub-modal__footer-actions .hub-button:last-child {
 	border-radius: calc(var(--r-2xl) - 1px - var(--sp-5));
 }
 
@@ -762,6 +739,25 @@
 	font-family: var(--font-mono);
 	font-size: var(--fs-2xs);
 	line-height: 1;
+}
+
+.hub-modal__footer-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	flex: 0 0 auto;
+}
+
+/*
+	Marked while the form it opens is what the body is showing. Same accent
+	tint the rail uses for the page you are on: it is a statement, not still an
+	offer.
+*/
+.hub-modal__footer-actions .hub-button[selected],
+.hub-modal__footer-actions .hub-button[selected]:hover {
+	background-color: var(--bg-selected);
+	border-color: var(--border-selected);
+	color: var(--text-accent);
 }
 
 .hub-modal__footer-inner .hub-button {
