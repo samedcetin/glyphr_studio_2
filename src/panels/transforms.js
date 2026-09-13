@@ -321,7 +321,13 @@ function rotateSelection(editor, degreesClockwise) {
 }
 
 /**
- * Mirror the selection about its own centre line.
+ * Mirror the selection about the chosen origin.
+ *
+ * The flips were the last transform still using an origin of their own - the
+ * centre of the selection, whatever the origin said - which is the thing the
+ * grid above them was put there to stop. flipEW mirrors about a vertical line,
+ * so it takes the origin's x; flipNS about a horizontal one, so it takes the y.
+ *
  * @param {Object} editor - the current project editor
  * @param {String} method - 'flipEW' mirrors left to right, 'flipNS' top to bottom
  * @param {String} direction - for the history state
@@ -329,8 +335,9 @@ function rotateSelection(editor, degreesClockwise) {
  */
 function flipSelection(editor, method, direction) {
 	const count = editor.multiSelect.shapes.length;
+	const origin = selectionOrigin(editor);
 
-	editor.multiSelect.shapes.virtualGlyph[method]();
+	editor.multiSelect.shapes.virtualGlyph[method](method === 'flipEW' ? origin.x : origin.y);
 	return `Flipped ${count} ${count === 1 ? 'shape' : 'shapes'} ${direction}`;
 }
 
