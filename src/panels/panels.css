@@ -169,6 +169,13 @@
 	min-width: 0;
 	grid-column: 2;
 	display: grid;
+	/*
+		Whatever sits between two fields - the slash, the ratio-lock chain, the
+		empty spacer - is centred on them. Grid cells stretch by default, so the
+		separator was a full-height box with its glyph sitting at the top of it,
+		one line above the numbers it separates.
+	*/
+	align-items: center;
 	grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr);
 }
 
@@ -181,6 +188,18 @@
 .panel__card .doubleInput:has(> button),
 .panel__card .doubleInput:has(> fancy-button) {
 	grid-template-columns: minmax(0, 1fr) var(--sp-2) max-content;
+
+	/*
+		And it is the height of that field. A fancy-button is 32 on its own,
+		which is right for a dialog footer and wrong inline beside a 28px
+		input - the two read as misaligned rather than as one row.
+	*/
+	--fancy-button-h: var(--control-h);
+}
+
+/* The component reserves room for a neighbour it does not have here. */
+.panel__card .doubleInput > fancy-button {
+	margin-right: 0;
 }
 
 .panel__card input,
@@ -318,11 +337,13 @@
 	wraps.
 */
 .dimSplit {
-	color: var(--text-tertiary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	width: 16px;
-	text-align: center;
-	display: inline-block;
+	color: var(--text-tertiary);
 	font-size: var(--fs-xs);
+	line-height: 1;
 }
 
 /*
