@@ -107,17 +107,26 @@
 	project hub's sidebar included - and positioned it absolutely as a
 	floating menu.
 */
+/*
+	Same surface as the rail's menus and the toolbar's: --r-2xl with --sp-2 of
+	padding, so whatever sits inside at --r-xl is concentric with it. A popover
+	is a popover wherever it opens from.
+
+	--z-menu, not --z-sticky. It is a sibling of the left rail now, and the rail
+	sits at --z-shell.
+*/
 nav[id^='nav-dropdown'] {
 	display: block;
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
 	box-shadow: var(--shadow-3);
 	position: absolute;
-	border-radius: var(--r-md);
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
 	max-height: calc(100% - 95px);
 	min-width: 240px;
 	padding: var(--sp-2);
-	z-index: var(--z-sticky);
+	z-index: var(--z-menu);
 	overflow-x: hidden;
 	overflow-y: auto;
 	animation: var(--animate-fade-in-slide-down);
@@ -153,9 +162,15 @@ nav[id^='nav-dropdown']:focus {
 	justify-items: start;
 	margin: 1px 0px;
 	padding: 0px var(--sp-3);
-	height: var(--row-h);
-	min-height: var(--row-h);
-	border-radius: var(--r-xs);
+	/*
+		36px and --r-xl, the same pairing the rail's and the toolbar's menu rows
+		use. At --row-h the browser would clamp the radius to half the height and
+		the highlight would come out a lozenge.
+	*/
+	height: calc(var(--row-h) + var(--sp-4));
+	min-height: calc(var(--row-h) + var(--sp-4));
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
 	border: 1px solid transparent;
 	color: var(--text-primary);
 	text-align: left;

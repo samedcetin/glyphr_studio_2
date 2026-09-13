@@ -2,7 +2,7 @@ import { showAppErrorPage } from '../app/app.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeLeftRail } from '../app/left_rail.js';
 import { accentColors } from '../common/colors.js';
-import { addAsChildren, insertAfter, makeElement } from '../common/dom.js';
+import { addAsChildren, makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
 import { makeIcon } from '../common/graphics.js';
 import { animateRemove, closeEveryTypeOfDialog } from '../controls/dialogs/dialogs.js';
@@ -408,7 +408,20 @@ export function showNavDropdown(parentElement) {
 
 	// let appWrapper = document.querySelector('#app__wrapper');
 	// appWrapper.appendChild(dropDown).focus();
-	insertAfter(parentElement, dropDown);
+	/*
+		Appended to the shell, not next to the button that opened it.
+
+		It used to be inserted as a sibling of its button, which was fine while
+		those buttons lived in a full-width top bar. The breadcrumb replaced that
+		bar: it is a floating 33px-tall box with `overflow: hidden`, so the
+		dropdown was being clipped to nine pixels of its own first row - and the
+		viewport coordinates above were being resolved against the breadcrumb's
+		own corner, which put what survived off the right of the screen.
+
+		#app__wrapper starts at the window's top left and does not scroll, so
+		the coordinates measured above land where they were measured.
+	*/
+	document.querySelector('#app__wrapper')?.appendChild(dropDown);
 
 	// log(`showNavDropdown`, 'end');
 }
