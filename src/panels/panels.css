@@ -311,13 +311,24 @@
 	grid-column: 1 / -1;
 }
 
+/*
+	The slash between two paired labels - "bearings: left / right".
+
+	It was --gray-l80, a fixed light grey from the old ramp, which in dark mode
+	is rgb(50,54,62): one shade off the panel it is written on, so the pair read
+	as "bearings: left right". --text-tertiary is the role it wants and it moves
+	with the theme.
+
+	The padding-top was nudging it onto the label's baseline; it is aligned by
+	its own line box now, which also stops it from shifting when the label
+	wraps.
+*/
 .dimSplit {
-	color: var(--gray-l80);
+	color: var(--text-tertiary);
 	width: 16px;
 	text-align: center;
 	display: inline-block;
-	font-size: 0.8em;
-	padding-top: 6px;
+	font-size: var(--fs-xs);
 }
 
 /*

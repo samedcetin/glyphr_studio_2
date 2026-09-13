@@ -23,6 +23,14 @@
 	display: grid;
 	background-color: transparent;
 	grid-template-columns: minmax(0, 1fr) 24px min-content;
+	/*
+		One row, and a definite one. The host had a height but no row, so the
+		implicit row sized itself to its tallest content - two arrow SVGs at 20px
+		each - and came out 42 inside a 28px box, with the field and the arrows
+		hanging out the bottom of it. A definite row also gives the arrows a
+		height for their own 100% to resolve against.
+	*/
+	grid-template-rows: var(--control-h);
 	height: var(--control-h);
 	min-width: 0;
 }
@@ -48,7 +56,7 @@
 	corner-shape: var(--corner-smooth);
 	grid-column: 1;
 	min-width: var(--number-input-min-w, 50px);
-	padding: 4px 6px 4px 2px;
+	padding: 0 var(--sp-3);
 	text-align: right;
 	font-family: var(--font-mono);
 	font-variant-numeric: tabular-nums;
@@ -112,6 +120,12 @@
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+	/* A box that centres one small mark, rather than a text box with the mark
+		nudged into place by position: relative. */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
 	background-color: var(--bg-surface-sunken);
 	border-width: 1px;
 	border-style: solid;
@@ -122,6 +136,9 @@
 }
 
 .arrow svg {
+	display: block;
+	width: 14px;
+	height: 7px;
 	fill: var(--icon-default);
 }
 
@@ -136,22 +153,11 @@
 	grid-row: 1;
 }
 
-.upArrow svg {
-	position: relative;
-	top: -2px;
-}
-
 .downArrow {
 	border-width: 0px 1px 1px 1px;
 	border-radius: 0 0 var(--r-md) 0;
 	corner-shape: var(--corner-smooth);
-	padding-bottom: 1px;
 	grid-row: 3;
-}
-
-.downArrow svg {
-	position: relative;
-	top: -1px;
 }
 
 .arrow:hover,

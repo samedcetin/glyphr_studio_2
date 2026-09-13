@@ -373,13 +373,77 @@ input[type='number'][disabled='disabled'] {
 }
 
 /*
-	A checkbox draws itself. The rule above gives every input a sunken ground,
-	a border and a radius - which a text field wants and a native checkbox does
-	not: the browser paints its own box, and a background behind it turned an
-	unchecked one into a flat pale square with no edge and no tick to come.
-	accent-color is the one thing it takes from us.
+	The checkbox, drawn rather than borrowed.
+
+	The native one only looks right at the size the platform drew it for. The
+	panels ask for 24px, and a stretched native control at that size is a
+	blurry slab with no edge you can find - and accent-color only reaches the
+	checked state anyway, so the unchecked one never followed the theme at all.
+
+	Everything here is a proportion of the box, so it is the same checkbox at
+	14, 20 or 24 - which is what lets the panels set their own size without
+	the mark inside falling out of register.
 */
-input[type='checkbox'],
+input[type='checkbox'] {
+	appearance: none;
+	-webkit-appearance: none;
+	/*
+		The tick is positioned, not laid out. A grid item's percentage width
+		resolves against a track that is itself sized by that item, so 30% came
+		out as whatever auto happened to be - a dot. Against a padding box it is
+		definite, and the mark holds its proportions at any size.
+	*/
+	position: relative;
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	padding: 0;
+	margin: 0;
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+input[type='checkbox']:hover {
+	border-color: var(--accent);
+}
+
+input[type='checkbox']:checked {
+	background-color: var(--accent);
+	border-color: var(--accent);
+}
+
+/* The tick: two sides of a box, turned. Sized in percentages so it holds its
+	proportions whatever height the box is given. */
+input[type='checkbox']::before {
+	content: '';
+	position: absolute;
+	left: 34%;
+	top: 16%;
+	width: 26%;
+	height: 52%;
+	border: solid var(--text-on-accent);
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg) scale(0.4);
+	opacity: 0;
+	transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+
+input[type='checkbox']:checked::before {
+	transform: rotate(45deg) scale(1);
+	opacity: 1;
+}
+
+input[type='checkbox'][disabled],
+input[type='checkbox'][disabled]:hover {
+	background-color: var(--bg-disabled);
+	border-color: var(--border-subtle);
+	cursor: default;
+}
+
 input[type='radio'] {
 	accent-color: var(--accent);
 	width: 14px;
