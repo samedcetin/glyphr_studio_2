@@ -3,6 +3,7 @@ import colorStyle from '../common/colors.css?inline';
 import { addAsChildren, makeElement } from '../common/dom';
 import logo from '../common/graphics/logo-icon.svg?raw';
 import resetStyle from '../common/resets.css?inline';
+import tokenStyle from '../common/tokens.css?inline';
 import { closeEveryTypeOfDialog, makeModalDialog, showToast } from '../controls/dialogs/dialogs';
 import dialogStyle from '../controls/dialogs/dialogs.css?inline';
 import { FontPreview } from '../controls/font-preview/font_preview';
@@ -48,6 +49,19 @@ export function openPopOutWindow() {
 
 	popDoc.head.appendChild(makeElement({ tag: 'title', content: 'Live Preview - Glyphr Studio' }));
 
+	/*
+		tokens.css comes first, and the theme attribute comes with it. Every sheet
+		below this line reads the token layer - resets.css, panels.css and
+		dialogs.css all do - and without it each var() resolves to nothing and the
+		declaration holding it is dropped. That is why this window used to render
+		in browser-default type and always in the light palette.
+	*/
+	popDoc.documentElement.setAttribute(
+		'data-theme',
+		document.documentElement.getAttribute('data-theme') || 'light'
+	);
+	const tokens = makeElement({ tag: 'style', innerHTML: tokenStyle });
+	popDoc.head.appendChild(tokens);
 	const resets = makeElement({ tag: 'style', innerHTML: resetStyle });
 	popDoc.head.appendChild(resets);
 	const colors = makeElement({ tag: 'style', innerHTML: colorStyle });

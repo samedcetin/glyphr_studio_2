@@ -223,6 +223,16 @@
 	--tool-size: 32px;
 	--topbar-h: 44px;
 
+	/*
+		The single label track for every panel card, in both sidebars. Fixed, not
+		proportional: a percentage made the label column a different width in each
+		sidebar and moved it while the user dragged the resizer, so fields never
+		lined up across two open sections. Below the sidebar container breakpoint
+		the card collapses to one column and this track stops applying - see the
+		@container block in panels/sidebar.css.
+	*/
+	--panel-label-col: 96px;
+
 	/* Motion. Two durations, one easing. Resist adding more. */
 	--dur-fast: 90ms;
 	--dur-base: 140ms;

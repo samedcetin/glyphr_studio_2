@@ -1,16 +1,29 @@
 /*
 	Cards fill the panel rather than being pinned to 450px, so the panel width
 	is now a single variable in editor-pages.css instead of a constant repeated
-	across files. The label column shrinks with the panel instead of pushing
-	the inputs out of view.
+	across files.
+
+	Two rules make every card in the app line up with every other one:
+
+		- the label track is --panel-label-col, a fixed width. It used to be
+		  minmax(96px, 40%) here and minmax(64px, 38%) in the sidebar, so a
+		  label ended at a different x in each sidebar and slid while the user
+		  dragged the resizer.
+
+		- rows are grid-auto-rows, not the height of whatever landed in them.
+		  A 24px input, a 20px checkbox and a 26px button used to produce three
+		  different row heights inside one card.
+
+	Below the sidebar container breakpoint the card collapses to a single
+	column and both rules stand down - see the @container block in sidebar.css.
 */
 .panel__card {
 	display: grid;
-	/* align with buttons at the bottom of cards */
-	grid-template-columns: minmax(96px, 40%) minmax(0, 1fr);
+	grid-template-columns: var(--panel-label-col) minmax(0, 1fr);
+	grid-auto-rows: minmax(var(--row-h), auto);
 	align-items: center;
 	justify-items: left;
-	row-gap: var(--sp-3);
+	row-gap: var(--sp-1);
 	column-gap: var(--sp-4);
 	margin-bottom: var(--sp-2);
 	margin-right: 0px;
@@ -21,7 +34,6 @@
 	background-color: var(--bg-surface);
 	border-radius: var(--r-md);
 	box-shadow: none;
-	animation: var(--animate-fade-update);
 }
 
 .more-padding {
@@ -110,21 +122,6 @@
 	display: inline-block !important;
 }
 
-#h1InputGroup,
-#h2InputGroup {
-	grid-column: 1 / -1;
-	display: grid;
-	width: 100%;
-	/* align with buttons at the bottom of cards */
-	grid-template-columns: clamp(110px, 150px, 190px) 1fr;
-	align-items: center;
-	justify-items: left;
-	row-gap: 5px;
-	column-gap: 11px;
-	margin-bottom: 5px;
-	margin-right: 5px;
-}
-
 .panel__card h1,
 .panel__card h2,
 .panel__card h3,
@@ -140,27 +137,42 @@
 	grid-column: 1 / -1;
 }
 
+/*
+	min-width: 0 because a grid item defaults to min-width: auto and so refuses
+	to shrink below its own text. Without it the three longest labels - bearings,
+	transform origin, lock aspect ratio - pushed 7-38px past the label track and
+	sat on top of their own fields.
+*/
 .panel__card label {
 	grid-column: 1;
-	line-height: 20px;
+	line-height: var(--lh-tight);
+	min-width: 0;
 }
 
 .panel__card label[disabled] {
 	color: var(--disabled-text);
 }
 
+/*
+	A full-width label spans both columns, so it has no field to sit beside and
+	only needs the row's own height. The previous rule fixed it at 20px and then
+	pulled it up 5px with position:relative to fake vertical centring; the row
+	grid centres it now.
+*/
 .panel__card.full-width label {
-	height: 20px;
-	line-height: 20px;
-	padding: 0px 0px 10px 10px;
-	position: relative;
-	top: -5px;
+	line-height: var(--lh-tight);
+	padding-left: var(--sp-4);
 }
 
+/*
+	A label carrying an info-bubble is itself a grid. minmax(0, max-content) on
+	the text cell rather than max-content: the bare keyword is a floor as well as
+	a ceiling, so the text could not wrap and the label overflowed its track.
+*/
 .panel__card .info {
 	display: grid !important;
 	gap: 8px;
-	grid-template-columns: max-content min-content;
+	grid-template-columns: minmax(0, max-content) min-content;
 	grid-template-rows: max-content;
 	align-items: center;
 }
@@ -185,10 +197,14 @@
 	border-radius: 4px;
 }
 
+/*
+	24px, not 20px: a checkbox is a pointer target and 20 is under the floor.
+	The margin-bottom was nudging it towards the centre of a row whose height
+	depended on its neighbour; grid-auto-rows plus align-items does that now.
+*/
 .panel__card input[type='checkbox'] {
-	width: 20px;
-	height: 20px;
-	margin-bottom: 4px;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
 	cursor: pointer;
 }
 
@@ -224,7 +240,7 @@
 .panel-card__action-button:focus,
 .panel-card__action-button:active {
 	width: min-content;
-	height: 26px;
+	height: var(--control-h-sm);
 	padding: 2px;
 	margin: 0px 0px 0px 2px;
 }
@@ -239,16 +255,15 @@
 	background-color: var(--blue-l95);
 }
 
-.panel__card.char-info {
-	grid-template-columns: max-content 1fr !important;
-	column-gap: 20px;
-	row-gap: 10px;
-}
-
+/*
+	Character info used to override the card grid with `max-content 1fr
+	!important`, which is why its labels ended at a different x from every other
+	card in the same sidebar. It uses the shared track now and overrides nothing.
+*/
 .char-info input {
-	font-family: monospace;
+	font-family: var(--font-mono);
 	padding: 4px 8px;
-	height: 32px;
+	height: var(--control-h-lg);
 }
 
 .rowPad {
@@ -277,8 +292,8 @@
 .pointTypeButton:hover,
 .pointTypeButton:focus {
 	display: inline-block;
-	width: 28px;
-	height: 28px;
+	width: var(--control-h);
+	height: var(--control-h);
 	background-color: var(--enabled-restingLight-background);
 	color: var(--gray-l60);
 	padding: 3px 5px 5px 3px;
@@ -328,7 +343,7 @@
 .renderFlavorButton:hover,
 .renderFlavorButton:focus {
 	display: inline-block;
-	height: 28px;
+	height: var(--control-h);
 	padding: 0px 10px;
 	background-color: var(--enabled-restingLight-background);
 	color: var(--blue-l15);

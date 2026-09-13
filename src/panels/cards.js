@@ -348,12 +348,18 @@ function toggleHandleInputs(handle, show) {
  * @returns {HTMLElement}
  */
 export function makeSingleLabel(text, infoContent = false, forID = false, className = false) {
-	let newText = makeElement({ content: text });
+	/*
+		The text goes on the <label> itself. It used to be wrapped in a <span>,
+		and because resets.css sets font-size on the universal selector, that
+		span took --fs-md directly and beat the --fs-sm the sidebar sets on the
+		label it inherits from. Every panel label was one step too large, and no
+		stylesheet targeted `label span` to say so.
+	*/
 	let newLabel = makeElement({
 		tag: 'label',
+		content: text,
 	});
 	if (forID) newLabel.setAttribute('for', forID);
-	newLabel.appendChild(newText);
 	if (infoContent) {
 		let newInfo = makeElement({
 			tag: 'info-bubble',
@@ -362,7 +368,8 @@ export function makeSingleLabel(text, infoContent = false, forID = false, classN
 		newLabel.appendChild(newInfo);
 		newLabel.classList.add('info');
 	}
-	if (className) newLabel.setAttribute('class', className);
+	/* add, not setAttribute: setting `class` wiped the `info` class above. */
+	if (className) newLabel.classList.add(...className.split(' '));
 	return newLabel;
 }
 
