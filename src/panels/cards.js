@@ -2,6 +2,8 @@ import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
 import { round, transformOrigins } from '../common/functions.js';
 import { makeTransformOriginIcon } from '../common/graphics.js';
+import { makeLineIcon } from '../common/icons.js';
+import { syncTransformOriginChoosers, transformOriginName } from './transform_origin.js';
 
 // --------------------------------------------------------------
 // Common attributes card stuff
@@ -22,26 +24,33 @@ export function makeInputs_position(
 	}
 	let topics = [thisTopic].concat(additionalTopics);
 
-	if (labelPrefix) labelPrefix += ':&ensp;';
+	/*
+		X and Y are on the fields themselves now, the way every drawing tool
+		writes them. The label that used to say "x / y" above the pair said no
+		more than the two marks do, and cost a row of the panel to say it.
 
-	// Label + inputs
-	let label = makeElement({ tag: 'label', innerHTML: `${labelPrefix}x${dimSplit()}y` });
-	let doubleInput = makeElement({ tag: 'div', className: 'doubleInput' });
+		A labelPrefix still gets a label, because "point" or "h1" names which
+		point these are - something no mark inside the field can say.
+	*/
+	let doubleInput = makeElement({
+		tag: 'div',
+		className: `doubleInput doubleInput--pair${labelPrefix ? '' : ' doubleInput--full'}`,
+	});
 	let xInput = makeSingleInput(item, 'x', topics, 'input-number');
 	let yInput = makeSingleInput(item, 'y', topics, 'input-number');
+	xInput.setAttribute('prefix', 'X');
+	yInput.setAttribute('prefix', 'Y');
 
 	if (disabled) {
 		xInput.setAttribute('disabled', '');
 		yInput.setAttribute('disabled', '');
 	}
 
-	// Put double input together
 	doubleInput.appendChild(xInput);
-	doubleInput.appendChild(dimSplitElement());
 	doubleInput.appendChild(yInput);
 
 	// log(`makeInputs_position`, 'end');
-	return [label, doubleInput];
+	return labelPrefix ? [makeSingleLabel(labelPrefix), doubleInput] : [doubleInput];
 }
 
 export function makeInputs_size(item, disabled = false) {
@@ -50,19 +59,42 @@ export function makeInputs_size(item, disabled = false) {
 	let thisTopic = `current${item.objType}`;
 
 	// Width and Height
-	let dimensionLabel = makeSingleLabel(`width${dimSplit()}height`);
-	let dimensionInputs = makeElement({ tag: 'div', className: 'doubleInput' });
+	let dimensionInputs = makeElement({
+		tag: 'div',
+		className: 'doubleInput doubleInput--full',
+	});
 	let wInput = makeSingleInput(item, 'width', thisTopic, 'input-number');
 	let hInput = makeSingleInput(item, 'height', thisTopic, 'input-number');
+	wInput.setAttribute('prefix', 'W');
+	hInput.setAttribute('prefix', 'H');
 	if (disabled) {
 		wInput.setAttribute('disabled', '');
 		hInput.setAttribute('disabled', '');
 	}
+	/*
+		The aspect-ratio lock sits in the seam it governs.
+
+		It used to be a checkbox with the caption "lock aspect ratio" two rows
+		further down, under the transform origin - which is a long way from the
+		two fields it ties together, and needed four lines of help text to say
+		what a chain says by being drawn between them. Every drawing tool puts
+		it here, in the gap between width and height, and it takes the slot the
+		slash was already using.
+	*/
 	dimensionInputs.appendChild(wInput);
-	dimensionInputs.appendChild(dimSplitElement());
+	/*
+		A spacer rather than a slash when there is no lock to show. The slash
+		used to separate "width" from "height"; W and H do that from inside the
+		fields now, and a slash between two disabled fields only said that this
+		row is different from the one above it.
+	*/
+	dimensionInputs.appendChild(
+		disabled
+			? makeElement({ tag: 'span', className: 'ratio-lock__gap' })
+			: makeRatioLockToggle(item, thisTopic)
+	);
 	dimensionInputs.appendChild(hInput);
 
-	returnControls.push(dimensionLabel);
 	returnControls.push(dimensionInputs);
 
 	// Only show this stuff if not disabled.
@@ -83,46 +115,34 @@ export function makeInputs_size(item, disabled = false) {
 			`With increases or decreases to width or height,
 		the transform origin is the point that stays fixed.
 		<br><br>
-		This only takes effect when directly entering values
-		into the width or height inputs.`
+		Every transform holds it still: rotation pivots about it, skew leans
+		away from it, and resizing grows from it. The Transform panel carries
+		the same setting.`
 		);
 		let transformInput = makeElement({
 			tag: 'option-chooser',
+			className: 'transform-origin-chooser',
 			attributes: {
 				'selected-id': item.transformOrigin,
-				'selected-name': item.transformOrigin.replace('-', ' '),
+				'selected-name': transformOriginName(item.transformOrigin),
 			},
 		});
 		displayOrigins.forEach((origin) => {
 			let option = makeElement({
 				tag: 'option',
 				attributes: { 'selection-id': origin },
-				innerHTML: `${makeTransformOriginIcon(origin)}${origin.replace('-', ' ')}`,
+				innerHTML: `${makeTransformOriginIcon(origin)}${transformOriginName(origin)}`,
 			});
 			option.addEventListener('click', () => {
 				item.transformOrigin = origin;
+				syncTransformOriginChoosers(origin);
 				getCurrentProjectEditor().publish('editCanvasView', item);
 			});
 			transformInput.appendChild(option);
 		});
 
-		// Ratio lock checkbox
-		let ratioLockLabel = makeSingleLabel(
-			'lock aspect ratio',
-			`
-			When either the width or height is adjusted,
-			the overall size will be kept proportional.
-			<br><br>
-			Maintaining aspect ratio will override value
-			locks if need be.
-		`
-		);
-		let ratioLockCheckbox = makeSingleCheckbox(item, 'ratioLock', thisTopic);
-
 		returnControls.push(transformLabel);
 		returnControls.push(transformInput);
-		returnControls.push(ratioLockLabel);
-		returnControls.push(ratioLockCheckbox);
 	}
 	// log(`makeInputs_size`, 'end');
 	return returnControls;
@@ -348,12 +368,18 @@ function toggleHandleInputs(handle, show) {
  * @returns {HTMLElement}
  */
 export function makeSingleLabel(text, infoContent = false, forID = false, className = false) {
-	let newText = makeElement({ content: text });
+	/*
+		The text goes on the <label> itself. It used to be wrapped in a <span>,
+		and because resets.css sets font-size on the universal selector, that
+		span took --fs-md directly and beat the --fs-sm the sidebar sets on the
+		label it inherits from. Every panel label was one step too large, and no
+		stylesheet targeted `label span` to say so.
+	*/
 	let newLabel = makeElement({
 		tag: 'label',
+		content: text,
 	});
 	if (forID) newLabel.setAttribute('for', forID);
-	newLabel.appendChild(newText);
 	if (infoContent) {
 		let newInfo = makeElement({
 			tag: 'info-bubble',
@@ -362,7 +388,8 @@ export function makeSingleLabel(text, infoContent = false, forID = false, classN
 		newLabel.appendChild(newInfo);
 		newLabel.classList.add('info');
 	}
-	if (className) newLabel.setAttribute('class', className);
+	/* add, not setAttribute: setting `class` wiped the `info` class above. */
+	if (className) newLabel.classList.add(...className.split(' '));
 	return newLabel;
 }
 
@@ -372,6 +399,49 @@ export function rowPad() {
 
 export function dimSplit() {
 	return `<span class="dimSplit">&#x2044;</span>`;
+}
+
+/**
+ * The chain between a width field and a height one.
+ *
+ * A two-state icon button rather than a checkbox with a caption: the two
+ * things it links are on either side of it, so being drawn between them is
+ * the whole explanation. It still says what it does on hover, for anyone who
+ * arrives by keyboard or by tooltip.
+ *
+ * @param {Object} item - the thing being sized
+ * @param {String} thisTopic - what to publish on when it changes
+ * @returns {Element}
+ */
+export function makeRatioLockToggle(item, thisTopic) {
+	const button = makeElement({
+		tag: 'button',
+		className: 'ratio-lock',
+		attributes: { type: 'button', role: 'switch' },
+	});
+
+	const render = () => {
+		const locked = !!item.ratioLock;
+		button.innerHTML = makeLineIcon(locked ? 'linked' : 'unlinked', 16);
+		button.setAttribute('aria-checked', locked ? 'true' : 'false');
+		button.toggleAttribute('selected', locked);
+		button.setAttribute(
+			'title',
+			locked
+				? 'Width and height are linked\nChanging one changes the other'
+				: 'Width and height are independent\nClick to keep them proportional'
+		);
+	};
+
+	render();
+
+	button.addEventListener('click', () => {
+		item.ratioLock = !item.ratioLock;
+		render();
+		if (thisTopic) getCurrentProjectEditor().publish(thisTopic, item);
+	});
+
+	return button;
 }
 
 export function dimSplitElement() {

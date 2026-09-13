@@ -45,39 +45,85 @@
 	box-shadow: none;
 }
 
-/* Floating surfaces share one treatment. */
-.editor-page__left-area,
-.editor-page__right-area,
-.editor-page__tools-area,
-.editor-page__zoom-area {
-	position: absolute;
-	z-index: 10;
-	background-color: var(--bg-surface);
-	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
-	box-shadow: var(--shadow-3);
-}
+/*
+	The panels are fixed to the window edges, not floating cards.
 
+	They used to sit inset with a 16px radius and a drop shadow, which reads as
+	"this could be moved" - and they cannot be. It also spent a 12px gutter of
+	canvas on all four sides of each one. Flush to the edge, square, separated by
+	a hairline: the panel is part of the window, and the canvas gets the space.
+
+	The toolbar keeps floating. It is the one surface that genuinely hovers over
+	the artwork rather than framing it.
+*/
+/*
+	These scroll. They did not.
+
+	`overflow: hidden` on a fixed-height column whose contents are taller than
+	it just deletes the difference - on a 1085px window the right panel held
+	1506px of sections, so the last 421 of it could not be reached by any
+	means. Programmatic scrollTop still worked, which is why it looked fine
+	from the console and not from the mouse.
+*/
 .editor-page__left-area,
 .editor-page__right-area {
-	top: var(--float-inset);
-	bottom: var(--float-inset);
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: var(--z-canvas-float);
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
-	overflow: hidden;
+	overflow-y: auto;
+	overflow-x: hidden;
+	/*
+		Room for the scrollbar whether or not it is there, so the controls do
+		not shift sideways the moment a section is expanded.
+	*/
+	scrollbar-gutter: stable;
+	background-color: var(--bg-surface);
+	border-radius: 0;
+	box-shadow: none;
 }
 
 .editor-page__left-area {
-	left: var(--float-inset);
+	left: 0;
 	width: var(--left-sidebar-w);
+	border-right: 1px solid var(--border-subtle);
 }
 
 .editor-page__right-area {
-	right: var(--float-inset);
+	right: 0;
 	width: var(--right-sidebar-w);
+	border-left: 1px solid var(--border-subtle);
 }
 
+/*
+	On an edit page the breadcrumb clears the left panel, which the user can
+	drag. calc from the same variable the panel is sized by, so the two cannot
+	drift apart.
+*/
+.editor__page > .breadcrumb {
+	left: calc(var(--left-sidebar-w) + var(--float-inset));
+	max-width: calc(100% - var(--left-sidebar-w) - var(--right-sidebar-w) - var(--float-inset) * 2);
+}
+
+/* The toolbar is the only floating surface left. */
+.editor-page__tools-area {
+	position: absolute;
+	z-index: var(--z-canvas-float);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
+}
+
+/*
+	The panels are flush to the window edge now, so the breathing room that used
+	to come from the float inset has to come from here instead - otherwise the
+	first section header sits against the top of the screen.
+*/
 #editor-page__panel,
 .editor-page__right-area > .sidebar__sections {
 	flex: 1 1 auto;
@@ -85,7 +131,7 @@
 	overflow-y: auto;
 	overflow-x: hidden;
 	width: 100%;
-	padding: 0;
+	padding: var(--sp-4) 0 var(--sp-6) 0;
 }
 
 /*
@@ -107,8 +153,27 @@
 	panel and the canvas had no equivalent anywhere.
 	------------------------------------------------------------ */
 
+/*
+	One strip, centred along the bottom edge.
+
+	It was two: tools centred at the top, and a zoom pill pinned to the bottom
+	right corner, offset by however wide the right panel had been dragged. Two
+	strips meant the two halves of one job sat at opposite ends of the window,
+	and the eye had to cross the artwork to get from a tool to its zoom.
+
+	Radius is concentric, not decorative: the buttons inside are --r-lg (12), the
+	padding around them is --sp-2 (4), so the strip is 12 + 4 = --r-xl (16). The
+	strip used to be --r-pill, which put a 20px curve around 5px buttons - a
+	round shell holding square contents, with the mismatch widest exactly at the
+	corners where both are visible at once.
+
+	Both curves are squircles rather than quarter circles - see --corner-smooth
+	in tokens.css. Concentricity matters more once they are: a continuous corner
+	holds the eye longer than a circular one, so a mismatch between the shell and
+	its contents is more visible, not less.
+*/
 .editor-page__tools-area {
-	top: var(--float-inset);
+	bottom: var(--float-inset);
 	left: 50%;
 	transform: translateX(-50%);
 	display: flex;
@@ -117,15 +182,31 @@
 	gap: var(--sp-1);
 	padding: var(--sp-2);
 	height: min-content;
-	border-radius: var(--r-pill);
+	max-width: calc(100% - var(--float-inset) * 2);
 }
 
-/* The spacer the tool list inserts between create and edit tools. */
-.editor-page__tools-area > div:empty {
+/*
+	Divider between groups in either floating strip.
+
+	It used to be `> div:empty` with an !important height, which meant any empty
+	div the tool list happened to produce turned into a divider, and the strip's
+	layout depended on an element being childless. It is a named class now.
+*/
+.editor-page__strip-divider {
+	flex: 0 0 auto;
 	width: 1px;
-	height: 20px !important;
+	height: var(--icon-size-lg);
 	margin: 0 var(--sp-2);
 	background-color: var(--border-default);
+}
+
+/*
+	The panel toggle is the last thing in the top strip and is not a drawing
+	tool, so a divider separates it - drawn on the button rather than as an
+	element, because it is the only such case in that strip.
+*/
+.editor-page__tools-area .menu-button + .editor-page__panel-toggle {
+	margin-left: var(--sp-3);
 }
 
 /* --------------------------------------------------------------
@@ -144,7 +225,7 @@
 	border: none;
 	background-color: transparent;
 	cursor: col-resize;
-	z-index: 5;
+	z-index: var(--z-resizer);
 	touch-action: none;
 }
 
@@ -193,37 +274,36 @@ body.is-resizing-sidebar * {
 #editor-page__panel span {
 	animation: var(--animate-slide-in);
 }
-/*
-	Zoom pill. Sits in the canvas corner, tucked clear of the right panel so
-	the two never overlap however wide that panel is dragged.
-*/
-.editor-page__zoom-area {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-1);
-	right: calc(var(--float-inset) * 2 + var(--right-sidebar-w));
-	bottom: var(--float-inset);
-	padding: var(--sp-1);
-	border-radius: var(--r-pill);
-	box-shadow: var(--shadow-2);
-}
-
+/* The zoom stepper and its field, as one unit inside the toolbar. */
 .editor-page__responsive-group {
 	display: flex;
 	align-items: center;
 	gap: var(--sp-1);
 }
 
+/*
+	The zoom field. Mono with tabular figures so the strip does not change width
+	as the number does - at 34.9% against 100% a proportional face moves every
+	control to its right on each wheel tick.
+*/
 .editor-page__zoom-readout {
-	width: 4.5em;
+	width: 5.5em;
 	height: var(--control-h-sm);
-	text-align: right;
-	padding-right: var(--sp-2);
+	text-align: center;
+	padding: 0 var(--sp-2);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-xs);
+	color: var(--text-primary);
 	background-color: transparent;
 	border-color: transparent;
+	cursor: text;
 }
 
-.editor-page__zoom-readout:hover,
+.editor-page__zoom-readout:hover {
+	background-color: var(--bg-hover);
+}
+
 .editor-page__zoom-readout:focus {
 	background-color: var(--bg-surface-sunken);
 	border-color: var(--border-strong);
@@ -289,7 +369,7 @@ body.is-resizing-sidebar * {
 	top: 107px;
 	height: 32px;
 	padding: 5px 8px;
-	z-index: 10;
+	z-index: var(--z-canvas-float);
 }
 
 #done-creating-path-button:hover,
@@ -311,7 +391,13 @@ body.is-resizing-sidebar * {
 	justify-content: center;
 	background-color: transparent;
 	border: 1px solid transparent;
-	border-radius: var(--r-sm);
+	/*
+		--r-md, not --r-sm: with --sp-2 of padding around it, 8 + 4 lands exactly
+		on the --r-lg of the strip, so the button's corner and the strip's corner
+		are concentric rather than two unrelated curves.
+	*/
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	box-shadow: none;
 }
 
@@ -454,40 +540,14 @@ code.warning {
 		display: none;
 	}
 
-	/* With the right panel gone, the zoom pill takes the corner. */
-	.editor-page__zoom-area {
-		right: var(--float-inset);
-	}
 }
 
-/* View buttons inside the floating zoom pill */
-.editor-page__zoom-area button,
-.editor-page__responsive-group button {
-	width: var(--control-h-sm);
-	height: var(--control-h-sm);
-	min-height: var(--control-h-sm);
-	padding: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background-color: transparent;
-	border-color: transparent;
-	color: var(--icon-default);
-	box-shadow: none;
-}
-
-.editor-page__zoom-area button:hover,
-.editor-page__responsive-group button:hover {
-	background-color: var(--bg-hover);
-	border-color: transparent;
-	color: var(--icon-strong);
-}
-
-.editor-page__zoom-area button svg,
-.editor-page__responsive-group button svg {
-	width: var(--icon-size);
-	height: var(--icon-size);
-}
+/*
+	The view buttons used to be shrunk to 24px here, because they lived in their
+	own small pill. In the one bar they stand beside the drawing tools, so they
+	take the same --tool-size box from .editor-page__tool as everything else -
+	two button sizes in one strip reads as two strips that happen to touch.
+*/
 
 /* --------------------------------------------------------------
 	Panels hidden
@@ -501,11 +561,6 @@ code.warning {
 .editor__page--panels-hidden .editor-page__right-area,
 .editor__page--panels-hidden .editor-page__resizer {
 	display: none;
-}
-
-/* With no right panel to avoid, the zoom pill takes the corner. */
-.editor__page--panels-hidden .editor-page__zoom-area {
-	right: var(--float-inset);
 }
 
 /* --------------------------------------------------------------
@@ -522,7 +577,9 @@ code.warning {
 	padding: 0;
 	margin: 0;
 	border: 1px solid transparent;
-	border-radius: var(--r-sm);
+	/* Concentric with the strip, as .editor-page__tool is. */
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--icon-default);
 	box-shadow: none;

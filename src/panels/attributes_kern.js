@@ -2,7 +2,6 @@ import { getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
 import { showAddEditKernGroupDialog } from '../pages/kerning.js';
-import { makeCard_itemNavigation } from './card_glyph.js';
 import { makeCard_kernGroup, makeCard_otherKernGroupActions } from './card_kern_group.js';
 
 // --------------------------------------------------------------
@@ -25,7 +24,6 @@ export function makePanel_KernGroupAttributes() {
 	return [
 		makeCard_kernGroup(editor.selectedKernGroup),
 		makeCard_otherKernGroupActions(),
-		makeCard_itemNavigation(editor.selectedItem),
 		createButton,
 	];
 }

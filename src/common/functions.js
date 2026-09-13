@@ -494,6 +494,40 @@ export const transformOrigins = [
 ];
 
 /**
+ * The absolute point a transform holds still.
+ *
+ * Same names and the same meanings as calculateDeltasFromTransform below,
+ * which answers this question for resizing by working in deltas instead:
+ * 'left' is the item's own left edge, 'center' its horizontal middle, and
+ * 'baseline' is y = 0 - the em baseline, rather than anything belonging to
+ * the item.
+ *
+ * Resizing used to be the only transform that asked. Rotation pivoted about
+ * the centre of the selection and skew about the baseline, both hard-coded,
+ * so the origin a designer had chosen governed one transform out of three.
+ *
+ * @param {Object} maxes - the bounding box being transformed
+ * @param {String | Boolean} transformOrigin - name of the origin position
+ * @returns {Object} x and y of the point that stays put
+ */
+export function resolveTransformOrigin(maxes, transformOrigin = 'baseline-left') {
+	if (transformOrigins.indexOf('' + transformOrigin) < 0) transformOrigin = 'baseline-left';
+	transformOrigin = '' + transformOrigin;
+
+	/* left and baseline, the two that need no adjustment. */
+	const result = { x: maxes.xMin, y: 0 };
+
+	if (transformOrigin.includes('center')) result.x = maxes.center.x;
+	if (transformOrigin.includes('right')) result.x = maxes.xMax;
+
+	if (transformOrigin.includes('top')) result.y = maxes.yMax;
+	if (transformOrigin.includes('middle')) result.y = maxes.center.y;
+	if (transformOrigin.includes('bottom')) result.y = maxes.yMin;
+
+	return result;
+}
+
+/**
  * Takes an items current maxes and future size changes, and calculates
  * the future position changes based on a given transform origin.
  * @param {Number} deltaWidth - how much the item will change in width

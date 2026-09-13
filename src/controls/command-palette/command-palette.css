@@ -9,7 +9,7 @@
 .command-palette__overlay {
 	position: fixed;
 	inset: 0;
-	z-index: 3000;
+	z-index: var(--z-command-palette);
 	display: flex;
 	align-items: flex-start;
 	justify-content: center;
@@ -28,7 +28,14 @@
 	overflow: hidden;
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	/*
+		The same floating surface the menus use: --r-2xl over --sp-2 of padding
+		in the results list, so a row at --r-xl is concentric with the corner
+		holding it. The palette keeps --shadow-4 rather than the menus' -3 - it
+		is the only surface that comes with its own scrim.
+	*/
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-4);
 }
 
@@ -81,12 +88,20 @@
 
 .command-palette__row {
 	display: grid;
-	grid-template-columns: 18px minmax(0, 1fr) min-content min-content;
+	grid-template-columns: 18px minmax(0, 1fr) max-content;
 	align-items: center;
 	gap: var(--sp-4);
-	height: var(--control-h-lg);
+	/*
+		40px and --r-xl, the pairing every menu row in the app now uses. At the
+		32px this was, a browser clamps the radius to half the height and the
+		active row comes out a lozenge - and the height is also what puts a key
+		cap the same distance from the row's top and bottom as from its right
+		edge. See dialogs.css.
+	*/
+	height: calc(var(--row-h) + var(--sp-5));
 	padding: 0 var(--sp-4);
-	border-radius: var(--r-sm);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
 	cursor: pointer;
 	color: var(--text-primary);
 }
@@ -128,6 +143,13 @@
 	white-space: nowrap;
 }
 
+.command-palette__row-trailing {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
+	min-width: 0;
+}
+
 .command-palette__row-keys {
 	display: flex;
 	gap: 2px;
@@ -156,23 +178,43 @@
 	gap: var(--sp-2);
 }
 
-/* Shared key-cap styling for the palette and the shortcut sheet. */
+/*
+	Key caps. Two sizes, and which one you get depends on whether it is sitting
+	inside something.
+
+	In a result row it is --control-h-sm, because a row is 40px and that leaves
+	--sp-4 above, below and to the right - the equal insets that let the cap's
+	corner nest inside the row's. Everywhere else here - the hint strip along
+	the bottom, the reference sheet's columns - there is no row and no corner,
+	so the cap takes the size that sits on a line of text.
+
+	The heavy bottom border both used to carry is gone. It was a drawn bevel,
+	an idiom no other cap in the app uses, and it made the cap sit a pixel high
+	in its own box.
+*/
 .command-palette code,
 .shortcut-sheet code {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 18px;
-	height: 18px;
-	padding: 0 var(--sp-2);
+	min-width: 20px;
+	height: 20px;
+	padding: 0 var(--sp-3);
+	margin: 0;
 	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-default);
-	border-bottom-width: 2px;
-	border-radius: var(--r-xs);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	font-family: var(--font-mono);
 	font-size: var(--fs-2xs);
 	color: var(--text-secondary);
 	line-height: 1;
+}
+
+.command-palette__row-keys code {
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	font-size: var(--fs-xs);
 }
 
 /*
@@ -235,7 +277,7 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--sp-5);
-	min-height: 26px;
+	min-height: var(--control-h);
 }
 
 .shortcut-sheet__label {

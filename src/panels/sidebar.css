@@ -33,7 +33,18 @@
 	Header
 	------------------------------------------------------------ */
 
+/*
+	The header stays while its own section scrolls past. In a column of five
+	accordions the thing you most need on screen is which one you are looking
+	at - and it is the first thing to leave when you scroll into a long one.
+
+	It needs an opaque ground for that: transparent was fine while nothing ever
+	passed underneath it.
+*/
 .sidebar__section-header {
+	position: sticky;
+	top: 0;
+	z-index: 1;
 	display: grid;
 	grid-template-columns: 14px var(--icon-size) minmax(0, 1fr);
 	align-items: center;
@@ -45,7 +56,7 @@
 	margin: 0;
 	border: none;
 	border-radius: 0;
-	background-color: transparent;
+	background-color: var(--bg-surface);
 	color: var(--text-secondary);
 	cursor: pointer;
 	box-shadow: none;
@@ -131,7 +142,7 @@
 	margin-bottom: 0;
 	row-gap: var(--sp-3);
 	column-gap: var(--sp-3);
-	grid-template-columns: minmax(64px, 38%) minmax(0, 1fr);
+	grid-template-columns: var(--panel-label-col) minmax(0, 1fr);
 }
 
 /* Hairline between stacked cards within one section. */
@@ -141,14 +152,42 @@
 	border-top: 1px solid var(--border-subtle);
 }
 
-.sidebar__section-body .panel__card h3 {
+/*
+	Every group heading in a card is the same eyebrow.
+
+	Only h3 was. h4 fell through to the app-wide rule - 14px, sentence case,
+	semibold - so the Properties card had "GLYPH" set at 10px above
+	"Bulk-edit paths" at 14: the sub-heading was larger than the heading over
+	it. They are siblings in meaning, two groups in one card, and they look it
+	now.
+*/
+.sidebar__section-body .panel__card h3,
+.sidebar__section-body .panel__card h4,
+.sidebar__section-body .panel__card h5,
+.sidebar__section-body .panel__card h6 {
 	grid-column: 1 / -1;
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
 	letter-spacing: var(--tracking-caps);
 	text-transform: uppercase;
-	color: var(--text-tertiary);
+	/* --text-tertiary is 2.99:1 on --bg-surface, an AA failure at 10px. */
+	color: var(--text-secondary);
 	margin-bottom: var(--sp-1);
+}
+
+/*
+	A heading that follows a control starts a new group, so it takes the air
+	that says so. The first one in a card has the card's own padding above it
+	and needs none.
+*/
+.sidebar__section-body .panel__card h4,
+.sidebar__section-body .panel__card h5,
+.sidebar__section-body .panel__card h6 {
+	margin-top: var(--sp-5);
+}
+
+.sidebar__section-body .panel__card > :first-child {
+	margin-top: 0;
 }
 
 .sidebar__section-body .panel__card label {
@@ -226,11 +265,21 @@
 	.sidebar__section-body .panel__card {
 		grid-template-columns: minmax(0, 1fr);
 		row-gap: var(--sp-2);
+		/*
+			Collapsed, a label sits on its own row above its control. Holding it
+			to --row-h would spend 28px on one line of 12px text, so rows hug
+			their content here and the gap does the spacing instead.
+		*/
+		grid-auto-rows: auto;
 	}
 
-	/* Everything that was pinned to the second column now flows in the first. */
+	/*
+		Everything that was pinned to the second column now flows in the first.
+		Checkboxes are excluded: they are a fixed square, and stretching one to
+		the full column width gave the Properties card a 275px-wide checkbox.
+	*/
 	.sidebar__section-body .panel__card .doubleInput,
-	.sidebar__section-body .panel__card > input,
+	.sidebar__section-body .panel__card > input:not([type='checkbox']),
 	.sidebar__section-body .panel__card > input-number,
 	.sidebar__section-body .panel__card > option-chooser,
 	.sidebar__section-body .panel__card > option-toggle {
@@ -238,13 +287,21 @@
 		width: 100%;
 	}
 
+	/*
+		Only the spacing changes when the card collapses. This rule also used to
+		drop the label to --fs-xs and --text-tertiary, which is 2.99:1 on
+		--bg-surface - and because the sidebars default to 280 and 300px, the
+		collapsed state is the one the user actually reads. Size and colour come
+		from the base rule above now, so a label looks the same at either width.
+	*/
 	.sidebar__section-body .panel__card label {
 		padding-top: var(--sp-3);
-		font-size: var(--fs-xs);
-		color: var(--text-tertiary);
 	}
 
-	.sidebar__section-body .panel__card h3 + label {
+	.sidebar__section-body .panel__card h3 + label,
+	.sidebar__section-body .panel__card h4 + label,
+	.sidebar__section-body .panel__card h5 + label,
+	.sidebar__section-body .panel__card h6 + label {
 		padding-top: 0;
 	}
 

@@ -1,22 +1,33 @@
+/*
+	On tokens. The readout was --enabled-restingLight-text and the bar's
+	accent-color was --purple-l45, which is the only purple left in the app's
+	chrome and belonged to the gradient era.
+*/
+
 .fancy-slider__wrapper {
 	display: grid;
-	grid-template-columns: 1fr 40px;
+	grid-template-columns: minmax(0, 1fr) 40px;
+	align-items: center;
+	gap: var(--sp-3);
 	width: 100%;
 }
 
 .fancy-slider__slider-readout {
 	display: inline-block;
-	font-family: monospace;
-	padding: 3px 0px 0px 10px;
 	width: 40px;
 	min-width: 30px;
+	padding: 0;
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-sm);
 	text-align: right;
-	color: var(--enabled-restingLight-text);
 }
 
-.fancy-slider__bar{
-	display: inline-block;
+.fancy-slider__bar {
+	display: block;
+	width: 100%;
 	padding: 0;
 	margin: 0;
-	accent-color: var(--purple-l45);
+	accent-color: var(--accent);
 }

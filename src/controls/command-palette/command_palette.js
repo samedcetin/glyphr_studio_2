@@ -400,8 +400,19 @@ function renderResults(list) {
 			makeElement({ className: 'command-palette__row-icon', innerHTML: command.iconMarkup || '' })
 		);
 		row.appendChild(makeElement({ className: 'command-palette__row-name', content: command.name }));
+
+		/*
+			Detail and keys travel together in one cell.
+
+			They used to be two grid columns of their own, and a row with keys
+			but no detail still paid for the detail column's gap - so its
+			shortcut sat 16px from the row's edge while a row's own padding is
+			8. Which is only 8px, but it is the 8px that decides whether the
+			cap's corner nests inside the row's or floats near it.
+		*/
+		const trailing = makeElement({ className: 'command-palette__row-trailing' });
 		if (command.detail) {
-			row.appendChild(
+			trailing.appendChild(
 				makeElement({ className: 'command-palette__row-detail', content: command.detail })
 			);
 		}
@@ -410,8 +421,9 @@ function renderResults(list) {
 			command.shortcut.forEach((key) =>
 				keys.appendChild(makeElement({ tag: 'code', content: key }))
 			);
-			row.appendChild(keys);
+			trailing.appendChild(keys);
 		}
+		if (trailing.firstChild) row.appendChild(trailing);
 
 		// mousedown rather than click: the input keeps focus, so the palette
 		// does not flicker closed on blur before the command runs.

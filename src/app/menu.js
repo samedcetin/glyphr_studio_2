@@ -1,5 +1,4 @@
-import { addAsChildren, insertAfter, makeElement } from '../common/dom.js';
-import logoHorizontal from '../common/graphics/logo-wordmark-horizontal-small.svg?raw';
+import { insertAfter, makeElement } from '../common/dom.js';
 import {
 	closeEveryTypeOfDialog,
 	makeContextMenu,
@@ -17,104 +16,11 @@ import { showAtlasExportDialog } from '../formats_io/atlas/atlas_export.js';
 import { showIconImportDialog, showIconMapDialog } from '../icon_font/icon_dialogs.js';
 import { ioSVG_exportSVGfont } from '../formats_io/svg_font/svg_font_export.js';
 import { makeFileName } from '../project_editor/file_io.js';
-import { emailLink } from './app.js';
-import { makeBreadcrumb } from '../project_editor/navigator.js';
 import { makePage_CrossProjectActions } from './cross_project_actions/cross_project_actions.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from './main.js';
 import { cycleThemePreference, getThemePreference, onThemeChange } from '../common/theme.js';
-import {
-	showCommandPalette,
-	showKeyboardShortcuts,
-} from '../controls/command-palette/command_palette.js';
+import { showKeyboardShortcuts } from '../controls/command-palette/command_palette.js';
 import { makePage_OpenProject } from './open_project.js';
-
-// --------------------------------------------------------------
-// Top bar for the App
-// --------------------------------------------------------------
-
-/**
- * Makes the Top Bar for the App
- * @returns {Element}
- */
-export function makeAppTopBar() {
-	let topBar = makeElement({ tag: 'div', id: 'app__top-bar' });
-
-	let logo = makeElement({ innerHTML: logoHorizontal, className: 'top-bar__logo' });
-
-	let menus = makeElement({ className: 'top-bar__menus' });
-	menus.appendChild(makeMenu('File'));
-	menus.appendChild(makeMenu('Projects'));
-	menus.appendChild(makeMenu('Help'));
-
-	let mailIcon = `
-<?xml version="1.0" encoding="UTF-8"?><svg id="Mail" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 9"><polygon points="8 1 0 1 0 2 8 2 8 1 8 1"/><polygon points="20 0 10 0 10 1 20 1 20 0 20 0"/><polygon points="20 8 10 8 10 9 20 9 20 8 20 8"/><polygon points="8 3 2 3 2 4 8 4 8 3 8 3"/><polygon points="8 7 6 7 6 8 8 8 8 7 8 7"/><polygon points="10 1 9 1 9 8 10 8 10 1 10 1"/><polygon points="21 1 20 1 20 8 21 8 21 1 21 1"/><polygon points="8 5 4 5 4 6 8 6 8 5 8 5"/><polygon points="12 2 10 2 10 3 12 3 12 2 12 2"/><polygon points="14 3 12 3 12 4 14 4 14 3 14 3"/><polygon points="16 4 14 4 14 5 16 5 16 4 16 4"/><polygon points="20 2 18 2 18 3 20 3 20 2 20 2"/><polygon points="18 3 16 3 16 4 18 4 18 3 18 3"/></svg>`;
-	let bugContact = makeElement({
-		className: 'top-bar__bug-contact',
-	});
-
-	bugContact.appendChild(
-		makeElement({
-			className: 'top-bar__bug-blurb',
-			innerHTML: 'Found a bug? Have some feedback?',
-		})
-	);
-
-	bugContact.appendChild(
-		makeElement({
-			className: 'top-bar__bug-icon',
-			innerHTML: emailLink(mailIcon),
-		})
-	);
-
-	bugContact.appendChild(
-		makeElement({
-			className: 'top-bar__bug-link',
-			innerHTML: emailLink(),
-		})
-	);
-
-	/*
-		Where you are lives in the top bar now, not in a stack of slabs above
-		the left panel. That is what frees the rest of the window to be canvas.
-	*/
-	const breadcrumb = makeBreadcrumb();
-	/** @type {Array<Element>} */
-	const children = [logo, menus];
-	if (breadcrumb) children.push(breadcrumb);
-	children.push(makeCommandSearch(), makeThemeToggle(), bugContact);
-
-	addAsChildren(topBar, children);
-
-	return topBar;
-}
-
-/**
- * The command search affordance in the top bar.
- *
- * It looks like a search field but opens the palette - the same pattern Figma
- * and Linear use. A palette nobody knows about is a palette nobody uses, and
- * a keyboard shortcut alone does not teach itself.
- *
- * @returns {Element}
- */
-function makeCommandSearch() {
-	const isMac = navigator.platform.toLowerCase().includes('mac');
-	const modifierKey = isMac ? '\u2318' : 'Ctrl';
-
-	const button = makeElement({
-		tag: 'button',
-		className: 'top-bar__command-search',
-		attributes: { type: 'button', title: 'Search commands, characters and pages' },
-		innerHTML: `
-			<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 2.5a4.5 4.5 0 1 1-2.9 7.94l-2.7 2.7a.5.5 0 0 1-.7-.7l2.7-2.7A4.5 4.5 0 0 1 7 2.5Zm0 1a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg>
-			<span class="top-bar__command-search-label">Search commands</span>
-			<span class="top-bar__command-search-keys"><code>${modifierKey}</code><code>K</code></span>
-		`,
-		onClick: showCommandPalette,
-	});
-
-	return button;
-}
 
 /**
  * Icons for each theme preference. Three states rather than two, because
@@ -136,10 +42,14 @@ const themeLabels = {
  * The theme control in the top bar. Cycles system -> light -> dark.
  * @returns {Element}
  */
-function makeThemeToggle() {
+export function makeThemeToggle() {
+	/*
+		No class of its own. It lives in the left rail, which styles it, and the
+		top-bar class it used to carry set a 28px box and no radius - both of
+		which outranked the rail's rule and gave the button a square hover.
+	*/
 	const button = makeElement({
 		tag: 'button',
-		className: 'top-bar__theme-toggle',
 		title: themeLabels[getThemePreference()],
 		innerHTML: themeIcons[getThemePreference()],
 		attributes: { 'aria-label': themeLabels[getThemePreference()] },
@@ -168,15 +78,45 @@ function makeThemeToggle() {
 // --------------------------------------------------------------
 
 /**
- * Makes one menu, with an entry point and a hidden dropdown
+ * Where a shell menu opens from its entry point.
+ *
+ * Beside the button and top-aligned, because the entry points live in a
+ * vertical rail. Below-and-left-aligned was right when they sat in a horizontal
+ * top bar; kept there, every menu opened on top of the rail it came from.
+ *
+ * Measured from the button rather than from event.target: the target is now the
+ * SVG inside the button, and an icon's box is not the control's box.
+ *
+ * @param {Element} entryPoint - the button the menu belongs to
+ * @returns {Object} - { x, y }
+ */
+function menuAnchor(entryPoint) {
+	const rect = entryPoint.getBoundingClientRect();
+	/*
+		From the rail's edge, not the button's. The buttons are 32px centred in a
+		56px column, so anchoring to the button left the menu sitting 6px over the
+		rail it belongs to.
+	*/
+	const rail = entryPoint.closest('#app__left-rail');
+	const from = rail ? rail.getBoundingClientRect().right : rect.right;
+	return { x: Math.round(from) + 6, y: Math.round(rect.top) };
+}
+
+/**
+ * Makes one menu, with an entry point and a hidden dropdown.
  * @param {String} menuName - Name for the menu entry point
  * @returns {Element}
  */
-function makeMenu(menuName) {
+export function makeMenu(menuName) {
+	/*
+		Same as the theme toggle: no class here. `menu-entry-point` was a top bar
+		style - 24px tall, --r-xs corners, a text label's padding - and it beat
+		the rail's own rule, so File, Projects and Help hovered as small square
+		chips in a column of 32px rounded ones.
+	*/
 	let entryPoint = makeElement({
 		tag: 'button',
 		innerHTML: menuName,
-		className: 'menu-entry-point',
 	});
 	const editor = getCurrentProjectEditor();
 	if (menuName === 'File') {
@@ -185,6 +125,19 @@ function makeMenu(menuName) {
 		// Preferred font export format (the format that was imported, or 'otf'
 		// for new projects) drives the file name preview and the Ctrl+E note.
 		const preferredExportFormat = getPreferredExportFormat();
+		/*
+			Headings name the group; the file name sits on the row that writes it.
+
+			This menu used to head three of its four groups with a file name and
+			the fourth with a category, all in the same style - so the first line
+			a user read was "Oblegg - Glyphr Studio Project - 2026.9.13.gs2", and
+			nothing said what the group was for. Worse, the font group's heading
+			named one file while the four rows under it wrote four different ones.
+
+			A project file and a font file are also the distinction a new user
+			most needs and least has: one is the thing you keep editing, the other
+			is the thing you ship. The descriptions say so once, here.
+		*/
 		if (typeof editor.loadedFileHandle === 'object') {
 			let projectDisplayName = `${editor.project.settings.project.name} - Glyphr Studio Project.gs2`;
 
@@ -195,101 +148,86 @@ function makeMenu(menuName) {
 			}
 
 			fileMenuData.push(
+				{ type: 'heading', name: 'Project' },
 				{
-					child: makeElement({
-						tag: 'h2',
-						content: projectDisplayName,
-					}),
-					className: 'spanAll',
-				},
-				{
-					name: 'Save this project file',
+					name: 'Save project',
+					description: projectDisplayName,
 					icon: 'command_save',
 					note: ['Ctrl', 's'],
 					onClick: () => editor.saveProjectFile(),
 				},
 				{
-					name: 'Save a copy of this project file',
+					name: 'Save a copy',
+					description: 'Keeps editing the original',
 					icon: 'command_save',
 					onClick: () => editor.saveProjectFile(true),
 				}
 			);
 		} else {
 			fileMenuData.push(
+				{ type: 'heading', name: 'Project' },
 				{
-					child: makeElement({
-						tag: 'h2',
-						content: makeFileName('gs2', true),
-					}),
-					className: 'spanAll',
-				},
-				{
-					name: 'Save project file (to downloads folder)',
+					/*
+						The destination is in the verb, not the description. As a
+						suffix on the file name it pushed the string past 80
+						characters, and the half that got ellipsised away was the
+						half that answered "where did it go?".
+					*/
+					name: 'Save project to downloads',
+					description: makeFileName('gs2', true),
 					icon: 'command_save',
 					note: ['Ctrl', 's'],
 					onClick: () => editor.saveProjectFile(),
 				}
 			);
 		}
+		/* Every export writes a different file, so every row names its own. */
+		const fontFileName = (extension) =>
+			`${editor.project.settings.font.family}-${editor.project.settings.font.style}.${extension}`.replaceAll(
+				' ',
+				''
+			);
+
 		fileMenuData = fileMenuData.concat([
 			{ name: 'hr' },
-			{
-				child: makeElement({
-					tag: 'h2',
-					content:
-						`${editor.project.settings.font.family}-${editor.project.settings.font.style}.${preferredExportFormat}`.replaceAll(
-							' ',
-							''
-						),
-				}),
-				className: 'spanAll',
-			},
+			{ type: 'heading', name: 'Font' },
 			{
 				name: 'Export OTF file',
+				description: fontFileName('otf'),
 				icon: 'command_export',
 				note: preferredExportFormat === 'otf' ? ['Ctrl', 'e'] : false,
 				onClick: ioFont_exportOTF,
 			},
 			{
 				name: 'Export TTF file',
+				description: fontFileName('ttf'),
 				icon: 'command_export',
 				note: preferredExportFormat === 'ttf' ? ['Ctrl', 'e'] : false,
 				onClick: ioFont_exportTTF,
 			},
 			{
 				name: 'Export WOFF file',
+				description: fontFileName('woff'),
 				icon: 'command_export',
 				note: preferredExportFormat === 'woff' ? ['Ctrl', 'e'] : false,
 				onClick: ioFont_exportWOFF,
 			},
 			{
 				name: 'Export WOFF2 file',
+				description: fontFileName('woff2'),
 				icon: 'command_export',
 				note: preferredExportFormat === 'woff2' ? ['Ctrl', 'e'] : false,
 				onClick: ioFont_exportWOFF2,
 			},
-			{ name: 'hr' },
-			{
-				child: makeElement({
-					tag: 'h2',
-					content: makeFileName('svg'),
-				}),
-				className: 'spanAll',
-			},
 			{
 				name: 'Export SVG font file',
+				description: makeFileName('svg'),
 				icon: 'command_export',
 				note: ['Ctrl', 'g'],
 				onClick: ioSVG_exportSVGfont,
 			},
 			{ name: 'hr' },
-			{
-				child: makeElement({
-					tag: 'h2',
-					content: 'For game engines',
-				}),
-				className: 'spanAll',
-			},
+			{ type: 'heading', name: 'For game engines' },
 			{
 				name: 'Export font atlas…',
 				icon: 'command_export',
@@ -309,39 +247,110 @@ function makeMenu(menuName) {
 				onClick: showIconMapDialog,
 			},
 		]);
-		entryPoint.addEventListener('click', (event) => {
-			// @ts-expect-error 'property does exist'
-			let rect = event.target.getBoundingClientRect();
+		entryPoint.addEventListener('click', () => {
+			const rect = menuAnchor(entryPoint);
 			closeEveryTypeOfDialog();
-			insertAfter(entryPoint, makeContextMenu(fileMenuData, rect.x, rect.y + rect.height));
+			insertAfter(entryPoint, makeContextMenu(fileMenuData, rect.x, rect.y));
 		});
 	}
 
 	if (menuName === 'Projects') {
-		entryPoint.addEventListener('click', (event) => {
-			// @ts-expect-error 'property does exist'
-			let rect = event.target.getBoundingClientRect();
+		entryPoint.addEventListener('click', () => {
+			const rect = menuAnchor(entryPoint);
 			closeEveryTypeOfDialog();
+			/*
+				Two groups, both named. The previews used to open the menu with no
+				label at all, so two project thumbnails appeared above a list of
+				commands with nothing saying they were the slots you can work in.
+
+				The disabled row says why it is disabled. "Cross-project actions"
+				greyed out with no explanation is a dead end; the description turns
+				it into an instruction.
+			*/
+			const onlyOneProject = getGlyphrStudioApp().projectEditors.length === 1;
+
+			/*
+				The group lists what is open. It used to list what is open plus a
+				dashed placeholder card reading "Open another project" - a button
+				wearing the same box as a status display, which is what made the
+				two unrelatable. Filling a free slot is an action, so it sits with
+				the actions, as a row like every other row in this menu.
+			*/
+			const openProjects = [makeProjectPreviewRow(0), makeProjectPreviewRow(1)]
+				.filter(Boolean)
+				.map((card) => ({ child: card, className: 'spanAll' }));
+
 			let menuRows = makeContextMenu(
 				[
+					{ type: 'heading', name: 'Open projects' },
+					...openProjects,
+					{ name: 'hr' },
+					{ type: 'heading', name: 'Actions' },
 					{
-						child: makeProjectPreviewRow(0),
-						className: 'spanAll',
+						/*
+							The way back.
+
+							makePage_OpenProject had exactly two callers: once at
+							startup, and once as a modal for a *second* project. So
+							after opening a project there was no route to a different
+							one - the menu called Projects could not open a project, and
+							changing fonts meant reloading the tab.
+
+							The import target is set explicitly rather than left to its
+							fallback. It is sticky: a previous "open a second project"
+							leaves it pointing at slot two, and this would then quietly
+							replace the wrong project.
+						*/
+						name: 'Open a different project…',
+						description: `Replaces ${editor.project.settings.project.name} in this slot`,
+						icon: 'menu_projects',
+						onClick: () => {
+							const liveApp = getGlyphrStudioApp();
+							liveApp.editorImportTarget = liveApp.selectedProjectEditor;
+							showModalDialog(makePage_OpenProject(false, true), 780, true);
+						},
 					},
-					{
-						child: makeProjectPreviewRow(1),
-						className: 'spanAll',
-					},
+					...(onlyOneProject
+						? [
+								{
+									name: 'Open a second project',
+									description: 'Work on two fonts in one window',
+									icon: 'command_newTab',
+									onClick: () => {
+										showModalDialog(makePage_OpenProject(true, true), 780, true);
+									},
+								},
+						  ]
+						: []),
 					{
 						name: 'Cross-project actions',
+						description: onlyOneProject
+							? 'Open a second project to use this'
+							: 'Copy glyphs, components and kerning between the two',
 						icon: 'command_crossProjectActions',
 						onClick: () => {
 							getGlyphrStudioApp().appPageNavigate(makePage_CrossProjectActions);
 						},
-						disabled: getGlyphrStudioApp().projectEditors.length === 1,
+						disabled: onlyOneProject,
 					},
 					{
-						name: 'Learn more about working with two projects',
+						/*
+							Not "Open another project" - the empty slot above already
+							says that, and it does something else: it loads a second
+							project into this window. This one starts a separate copy
+							of the app. Two rows with one label is how the rail ended
+							up with two Helps.
+						*/
+						name: 'Open a new window',
+						description: 'A separate copy of the app, with its own projects',
+						icon: 'command_newTab',
+						onClick: () => {
+							window.open('https://glyphrstudio.com/app/', '_blank');
+						},
+					},
+					{
+						name: 'Working with two projects',
+						description: 'glyphrstudio.com/help',
 						icon: 'command_newTab',
 						onClick: () => {
 							window.open(
@@ -350,19 +359,9 @@ function makeMenu(menuName) {
 							);
 						},
 					},
-					{
-						name: 'hr',
-					},
-					{
-						name: 'Open a separate project in a new window',
-						icon: 'command_newTab',
-						onClick: () => {
-							window.open('https://glyphrstudio.com/app/', '_blank');
-						},
-					},
 				],
 				rect.x,
-				rect.y + rect.height,
+				rect.y,
 				500
 			);
 
@@ -371,31 +370,33 @@ function makeMenu(menuName) {
 	}
 
 	if (menuName === 'Help') {
-		entryPoint.addEventListener('click', (event) => {
-			// @ts-expect-error 'property does exist'
-			let rect = event.target.getBoundingClientRect();
+		entryPoint.addEventListener('click', () => {
+			const rect = menuAnchor(entryPoint);
 			closeEveryTypeOfDialog();
 			insertAfter(
 				entryPoint,
 				makeContextMenu(
+					/*
+						Five rows that went to five different places - a dialog, two
+						pages in this app, an external site and an email client - laid
+						out as one flat list. Nothing said which was which, and the
+						only thing distinguishing "In-app help" from "External Help &
+						Documentation site" was a long name doing a label's job.
+
+						Each row says where it goes on its second line, so the choice
+						is visible before the click rather than after it.
+					*/
 					[
+						{ type: 'heading', name: 'Help' },
 						{
 							name: 'Keyboard shortcuts',
 							icon: 'keyboard',
 							note: ['Ctrl', '/'],
 							onClick: showKeyboardShortcuts,
 						},
-						{ name: 'hr' },
 						{
-							name: 'External Help & Documentation site',
-							icon: 'command_newTab',
-							onClick: () => {
-								window.open('https://glyphrstudio.com/help/', '_blank');
-							},
-						},
-						{ name: 'hr' },
-						{
-							name: 'In-app help',
+							name: 'Help & documentation',
+							description: 'In this app',
 							icon: 'command_help',
 							onClick: () => {
 								let editor = getCurrentProjectEditor();
@@ -404,7 +405,18 @@ function makeMenu(menuName) {
 							},
 						},
 						{
+							name: 'Documentation site',
+							description: 'glyphrstudio.com/help',
+							icon: 'command_newTab',
+							onClick: () => {
+								window.open('https://glyphrstudio.com/help/', '_blank');
+							},
+						},
+						{ name: 'hr' },
+						{ type: 'heading', name: 'About' },
+						{
 							name: 'About Glyphr Studio',
+							description: 'Version, credits and licence',
 							icon: 'command_info',
 							onClick: () => {
 								let editor = getCurrentProjectEditor();
@@ -412,9 +424,27 @@ function makeMenu(menuName) {
 								editor.navigate();
 							},
 						},
+						/*
+							The feedback link used to be a standing "Found a bug? Have
+							some feedback?" blurb in the top bar. With the bar gone it
+							belongs here: it is a help action, and it was spending a
+							permanent slice of chrome on something used once.
+						*/
+						{
+							name: 'Send feedback',
+							description: 'mail@glyphrstudio.com',
+							icon: 'mail',
+							onClick: () => {
+								const app = getGlyphrStudioApp();
+								window.open(
+									`mailto:mail@glyphrstudio.com?subject=[${app.version}] Feedback`,
+									'_blank'
+								);
+							},
+						},
 					],
 					rect.x,
-					rect.y + rect.height
+					rect.y
 				)
 			);
 		});
@@ -430,56 +460,63 @@ function makeMenu(menuName) {
  * @returns {Element}
  */
 function makeProjectPreviewRow(projectID = 0) {
-	// log(`makeProjectPreviewRow`, 'start');
-	// log(`projectID: ${projectID}`);
 	const app = getGlyphrStudioApp();
 	const projectEditor = app.projectEditors[projectID];
-	// log(`\n⮟projectEditor⮟`);
-	// log(projectEditor);
+	if (!projectEditor) return false;
 
-	let rowWrapper = makeElement({ tag: 'div', className: 'project-preview__row-wrapper' });
-	let superTitle;
-	let title = makeElement({ tag: 'h3' });
-	let thumbnail;
+	const isCurrent = getCurrentProjectEditor() === projectEditor;
+	const name = projectEditor.project.settings.project.name;
 
-	if (projectEditor) {
-		superTitle = makeElement({ className: 'project-preview__super-title' });
-		if (getCurrentProjectEditor() === projectEditor) {
-			superTitle.innerHTML = 'Editing';
-			rowWrapper.classList.add('project-preview__primary');
-		} else {
-			superTitle.innerHTML = 'Switch to';
-			rowWrapper.classList.add('project-preview__secondary');
-			rowWrapper.addEventListener('click', () => {
-				const app = getGlyphrStudioApp();
-				app.selectedProjectEditor = projectEditor;
-				app.selectedProjectEditor.navigate();
-				showToast(`Switched to<br>${projectEditor.project.settings.project.name}`, 2000, true);
-			});
-		}
-		title.innerHTML = projectEditor.project.settings.project.name;
-		let previewText = projectEditor.project.settings.app.previewText || 'Aa Bb Cc Xx Yy Zz';
-		thumbnail = makeElement({
+	const card = makeElement({
+		tag: isCurrent ? 'div' : 'button',
+		className: `project-card${isCurrent ? ' project-card--current' : ''}`,
+		attributes: isCurrent
+			? { 'aria-current': 'true' }
+			: { type: 'button', title: `Switch to ${name}` },
+	});
+
+	/*
+		Letterforms first, name under them. You are picking between two fonts, and
+		the fastest way to tell two fonts apart is to look at them - the same
+		reason the project hub leads with a specimen. The name strip below is
+		where the state lives, so the preview stays a clean sheet of paper.
+	*/
+	card.appendChild(
+		makeElement({
 			tag: 'display-canvas',
+			className: 'project-card__preview',
 			attributes: {
-				text: previewText,
+				text: projectEditor.project.settings.app.previewText || 'Aa Bb Cc Xx Yy Zz',
 				'font-size': '24',
-				'project-editor': projectID,
+				'project-editor': `${projectID}`,
 				'show-placeholder-message': 'true',
 			},
-		});
-	} else {
-		title.innerHTML = 'Open another project';
-		rowWrapper.classList.add('project-preview__no-project');
-		rowWrapper.addEventListener('click', () => {
-			showModalDialog(makePage_OpenProject(true), 760, true);
+		})
+	);
+
+	const bar = makeElement({ className: 'project-card__bar' });
+	bar.appendChild(makeElement({ className: 'project-card__name', content: name, title: name }));
+	/*
+		Two different things, so two different shapes. "Editing" is a status and is
+		written as one: plain text, no box. "Switch" is what happens if you press
+		this card, so it is drawn as a control. Giving both the same eyebrow
+		treatment made the offer read as one more label.
+	*/
+	bar.appendChild(
+		isCurrent
+			? makeElement({ className: 'project-card__state', content: 'Editing' })
+			: makeElement({ tag: 'span', className: 'project-card__action', content: 'Switch' })
+	);
+	card.appendChild(bar);
+
+	if (!isCurrent) {
+		card.addEventListener('click', () => {
+			const liveApp = getGlyphrStudioApp();
+			liveApp.selectedProjectEditor = projectEditor;
+			liveApp.selectedProjectEditor.navigate();
+			showToast(`Switched to<br>${name}`, 2000, true);
 		});
 	}
 
-	if (superTitle) addAsChildren(rowWrapper, superTitle);
-	addAsChildren(rowWrapper, title);
-	if (thumbnail) addAsChildren(rowWrapper, thumbnail);
-
-	// log(`makeProjectPreviewRow`, 'end');
-	return rowWrapper;
+	return card;
 }

@@ -1,4 +1,4 @@
-import { insertAfter, makeElement } from '../../common/dom.js';
+import { makeElement } from '../../common/dom.js';
 import { closeAllNavMenus } from '../../project_editor/navigator.js';
 import { closeAllOptionChoosers, makeContextMenu } from '../dialogs/dialogs.js';
 import style from './option-chooser.css?inline';
@@ -43,7 +43,9 @@ export class OptionChooser extends HTMLElement {
 
 		this.downArrow = makeElement({
 			className: 'downArrow',
-			content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><polygon points="14.5 8.5 5.5 8.5 10 13 14.5 8.5"/></svg>`,
+			/* The same chevron the breadcrumb and the toolbar draw, on
+				currentColor so it takes the control's state with it. */
+			content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 			attributes: { tabIndex: -1 },
 		});
 		// @ts-expect-error 'property does exist'
@@ -157,7 +159,14 @@ export class OptionChooser extends HTMLElement {
 				if (child.getAttribute('selection-id')) selectionID = child.getAttribute('selection-id');
 				optionRows.push({
 					name: child.innerHTML,
-					icon: currentSelection === selectionID ? 'selected' : 'notSelected',
+					/*
+						Marked, not ticked. Every row used to carry an icon -
+						a check on the chosen one and an empty square on all the
+						rest - so a list of twelve options was a column of eleven
+						empty boxes. The chosen row takes the accent the way the
+						toolbar's tool menus mark theirs.
+					*/
+					selected: currentSelection === selectionID,
 					id: selectionID,
 					note: note,
 					onClick: () => {
@@ -171,28 +180,48 @@ export class OptionChooser extends HTMLElement {
 			}
 		});
 
-		let entryPointRect = this.getBoundingClientRect();
-		// Something strange happens to placement if the dropdown is in a nav element
-		let navRect = document.querySelector('#nav-dropdown-chooser')?.getBoundingClientRect();
+		/*
+			Placed against the window, and hung on #app__wrapper.
 
-		let left = entryPointRect.x - (navRect ? navRect.x : 0);
-		let top = entryPointRect.y + entryPointRect.height - (navRect ? navRect.y : 0);
-		left = Math.max(left, 0);
-		top = Math.max(top, 0);
-		let parentHeight = navRect ? navRect.height : window.innerHeight;
-		let maxHeight = parentHeight - top - 10;
+			It used to be inserted next to the chooser itself, which puts an
+			absolutely positioned menu inside whatever panel or card happens to
+			be positioned nearby - so the viewport coordinates measured here
+			were resolved against that ancestor's corner. There was a correction
+			for exactly one case, the character chooser's nav dropdown, and
+			everywhere else the menu landed wherever the arithmetic happened to
+			put it: opening the transform-origin chooser in a 300px sidebar sent
+			its options 1300px to the right, on the far side of the window.
 
-		// log(`showing options at ${left} / ${top}`);
-		// log(`maxHeight: ${maxHeight}`);
-		// log(`parentHeight: ${parentHeight}`);
+			#app__wrapper starts at the window's top left and does not scroll,
+			so the measurements land where they were taken.
+		*/
+		const entryPointRect = this.getBoundingClientRect();
+		const gap = 4;
+		const left = Math.max(Math.round(entryPointRect.left), gap);
+		const top = Math.round(entryPointRect.bottom + gap);
+		const maxHeight = Math.max(window.innerHeight - top - 16, 120);
 
 		closeAllOptionChoosers();
 		closeAllNavMenus(true);
 		this.setAttribute('deployed', '');
-		insertAfter(
-			this,
-			makeContextMenu(optionRows, left, top - 1, entryPointRect.width, maxHeight, true)
+
+		const menu = makeContextMenu(
+			optionRows,
+			left,
+			top,
+			Math.round(entryPointRect.width),
+			maxHeight,
+			true
 		);
+		(document.querySelector('#app__wrapper') || document.body).appendChild(menu);
+
+		/*
+			Open on what is already chosen. A twelve-row list that always starts
+			at the top makes you find your own current value before you can see
+			what is near it.
+		*/
+		const current = menu.querySelector('.context-menu-row[selected]');
+		if (current) current.scrollIntoView({ block: 'nearest' });
 
 		// log(`OptionsChooser.showOptions`, 'end');
 	}

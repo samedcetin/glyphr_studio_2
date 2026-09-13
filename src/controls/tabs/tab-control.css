@@ -1,3 +1,8 @@
+/*
+	On tokens, and on the app's corner. It was three fixed blues - --blue-l95,
+	--blue-l90, --blue-l40 - so it did not follow the theme, and a 2px radius,
+	which on a 40px tall row is a square.
+*/
 
 .tab-control__tab-container {
 	display: block;
@@ -7,21 +12,30 @@
 .tab-control__tab {
 	display: block;
 	width: 100%;
-	font-size: 1.2em;
+	padding: var(--sp-3) var(--sp-5);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-size: var(--fs-md);
 	cursor: pointer;
-	padding: 10px;
-	border-radius: 2px;
+	transition: var(--transition-color);
 }
 
 .tab-control__tab:hover {
-	background-color: var(--blue-l95);
+	background-color: var(--bg-hover);
 }
 
-.tab-control__tab:focus {
-	outline: var(--global-outline-style);
+.tab-control__tab:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
 }
 
+/*
+	Selected, marked the way the rail marks the page you are on - and with
+	weight as well as tint, so it is not the colour alone saying which one.
+*/
 .tab-control__tab[selected] {
-	color: var(--blue-l40);
-	background-color: var(--blue-l90);
+	background-color: var(--bg-selected);
+	color: var(--text-accent);
+	font-weight: var(--fw-semibold);
 }

@@ -1,8 +1,104 @@
 dialog {
-	z-index: 1000;
+	z-index: var(--z-dropdown);
 }
 
-#toast,
+/* --------------------------------------------------------------
+	Toast
+
+	It was a 300px green slab parked at a hard-coded `left: 520px`, sized for
+	a window that stopped existing several layouts ago - so on a wide screen it
+	sat off to the left of centre, and on a narrow one it sat over the panels.
+	Green said nothing: the same surface carried "Built 4 characters" and "Only
+	SVG files can be dropped on the canvas".
+
+	Now it is the app's floating surface, the same one the menus use, centred
+	at the top of the window where nothing else lives - the breadcrumb is top
+	left, the toolbar is bottom centre. It sizes to its message instead of
+	padding a fixed box, and it is legible in both themes because it is made of
+	the same tokens as everything else.
+	------------------------------------------------------------ */
+
+#toast {
+	display: none;
+	position: fixed;
+	top: var(--sp-6);
+	/*
+		Centred with auto margins rather than a translate. animateRemove()
+		animates `transform` on the way out, which would drop any translateX
+		the moment the exit starts and throw the toast sideways as it faded.
+	*/
+	left: 0;
+	right: 0;
+	margin-inline: auto;
+	/*
+		Sized to the message, with a floor. "Switched to / Oblegg" is 88px of
+		text, and a notice that small arriving at the top of a 1600px window
+		reads as a fragment of something rather than a message.
+	*/
+	width: max-content;
+	min-width: 260px;
+	max-width: min(420px, calc(100vw - var(--sp-9)));
+	padding: var(--sp-4) var(--sp-5);
+	z-index: var(--z-toast);
+	background-color: var(--bg-surface-raised);
+	color: var(--text-primary);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	line-height: 1.45;
+	text-align: left;
+	text-wrap: pretty;
+	animation: var(--dur-slow) var(--ease-out) toast-in;
+}
+
+
+/*
+	The emphatic toast. It used to be a purple gradient at 1.2em - a different
+	visual language from anything else in the app, arriving for two seconds and
+	leaving. It is the accent tint the rail and the project cards already use
+	for "this is the thing you are now in", which is exactly what the one
+	caller says: you just switched projects.
+*/
+#toast[fancy] {
+	/*
+		The tint is translucent, so it needs an opaque surface under it - on its
+		own it let the canvas through and the toast changed colour depending on
+		which glyph happened to be behind it.
+	*/
+	background-color: var(--bg-surface-raised);
+	background-image: linear-gradient(var(--bg-selected), var(--bg-selected));
+	border-color: var(--border-selected);
+	color: var(--text-primary);
+}
+
+#toast a {
+	color: var(--text-accent);
+}
+
+/*
+	Down and settling, not just fading in. The toast appears without being
+	asked for, so it needs a moment of motion to be noticed - and --ease-out
+	lands it rather than stopping it dead.
+*/
+@keyframes toast-in {
+	from {
+		opacity: 0;
+		transform: translateY(-10px) scale(0.96);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* --------------------------------------------------------------
+	Error panel
+	------------------------------------------------------------ */
+
 #error {
 	display: none;
 	width: 300px;
@@ -10,31 +106,14 @@ dialog {
 	left: 520px;
 	top: 0px;
 	margin: 5px 0px 5px 0px;
-	/* background-color: rgb(0, 63, 95); */
-	background-color: var(--green-l90);
-	/* color: rgb(155, 221, 255); */
-	color: var(--green-l10);
-	padding: 4px 8px;
-	z-index: 2010;
+	padding: var(--sp-3) var(--sp-5);
+	z-index: var(--z-toast);
 	text-align: center;
-	border: 1px solid var(--green-l60);
-	border-radius: 4px;
-	box-shadow: var(--l3-shadow-down);
+	border: 1px solid var(--danger);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in-slide-down);
-}
-
-#toast[fancy] {
-	background-color: var(--purple-l30);
-	background: linear-gradient(135deg, var(--purple-l25), var(--purple-l10));
-	color: var(--purple-l95);
-	font-size: 1.2em;
-	border-color: var(--purple-l30);
-	padding: 10px;
-}
-
-#toast a {
-	/* color: rgb(155, 221, 255); */
-	color: var(--green-l10);
 }
 
 #notation {
@@ -45,11 +124,12 @@ dialog {
 	width: auto;
 	height: auto;
 	padding: 0;
-	z-index: 2020;
-	background-color: rgb(229, 234, 239);
-	border: 5px solid rgb(229, 234, 239);
-	border-radius: 5px 5px 0px 5px;
-	box-shadow: var(--l2-shadow-upper-left);
+	z-index: var(--z-alert);
+	background-color: var(--bg-surface-raised);
+	border: 5px solid var(--bg-surface-raised);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in);
 }
 
@@ -70,9 +150,9 @@ dialog {
 
 #error {
 	margin-top: 10px;
-	border-color: var(--red);
-	color: var(--darkRed);
-	background-color: var(--lightRed);
+	border-color: var(--danger);
+	color: var(--text-danger);
+	background-color: var(--danger-bg);
 	display: grid;
 	grid-template-rows: 20px 1fr;
 	padding: 10px 12px 12px 12px;
@@ -81,177 +161,338 @@ dialog {
 }
 
 #error hr {
-	border-color: var(--red);
+	border-color: var(--danger);
 	margin: 10px 0px;
 }
 
 .error__header {
 	display: grid;
-	grid-template-columns: 1fr 20px;
+	grid-template-columns: 1fr var(--control-h-lg);
+	align-items: center;
 }
 
 .error__header h3 {
-	color: var(--darkRed);
+	color: var(--text-danger);
 }
 
 .error__header button {
-	background-color: var(--darkRed);
-	border-color: var(--darkRed);
-	color: var(--lightRed);
-	width: 20px;
-	height: 20px;
-	line-height: 20px;
-	padding: 0px;
-	margin: 0px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--text-danger);
+	box-shadow: none;
+	line-height: 1;
+	transition: var(--transition-color);
 }
 
 .error__header button:hover {
-	color: white;
-	border-color: var(--red);
+	background-color: var(--danger);
+	border-color: transparent;
+	color: var(--danger-bg);
 }
 
-/* Context Menu */
+/* --------------------------------------------------------------
+	Context menu
+
+	One surface for all three kinds: the rail's shell menus, the canvas
+	right-click menu, and the nav dropdowns. A column of rows, each row a
+	button carrying its own box - see makeOneContextMenuRow for why that
+	matters more than it sounds.
+	------------------------------------------------------------ */
+
 #context-menu {
-	display: grid;
-	grid-template-columns: 20px minmax(0, 1fr) min-content min-content;
-	column-gap: 0px;
-	row-gap: 1px;
-	width: fit-content;
-	height: min-content;
-	overflow-y: auto;
-	padding: var(--sp-2);
 	position: absolute;
-	z-index: 2030;
+	z-index: var(--z-menu);
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 200px;
+	width: max-content;
+	max-width: 420px;
+	max-height: min(520px, 80vh);
+	overflow-y: auto;
+	/*
+		4px. The rows and cards inside are --r-xl, so the surface is --r-2xl at
+		16 + 4 = 20 and the two corners are concentric. The arithmetic also
+		works at 2px and 18, but the rows then sit against the wall of the menu
+		with nothing to breathe into. The padding is the fixed term here and the
+		outer radius follows it, not the other way round.
+	*/
+	padding: var(--sp-2);
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-md);
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 	animation: var(--animate-fade-in-slide-down);
 }
 
-/* .context-menu__dropdown {} */
-.context-menu__top-menu {
-	max-height: 400px;
+/*
+	The box is a container, not a stop. Focus goes to a row, so removing the
+	outline here removes nothing a keyboard can reach.
+*/
+#context-menu:focus {
+	outline: none;
 }
 
-#context-menu:focus {
-	outline: 0;
-}
+/* --------------------------------------------------------------
+	Rows
+	------------------------------------------------------------ */
 
 .context-menu-row {
-	display: contents;
-	padding: 5px 10px 5px 5px;
-	height: fit-content;
-	border-radius: 4px;
-}
+	display: grid;
+	grid-template-columns: var(--icon-size-lg) minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-4);
+	/*
+		40px, for every row rather than only the ones carrying a description.
 
-.context-menu-row:hover > span,
-.context-menu-row:hover > .row-notes,
-.context-menu-row:hover > .row-notes span,
-.context-menu-row:hover > .row-notes code {
-	background-color: var(--bg-hover);
-	color: var(--text-primary);
-	cursor: pointer;
-}
-
-/* The icon cell needs the hover background too, or the highlight has a
-	notch cut out of its left edge. */
-.context-menu-row:hover > .row-icon {
-	background-color: var(--bg-hover);
-}
-
-.context-menu-row:focus {
-	outline: var(--global-focus-style);
-}
-
-.context-menu-row[disabled] {
-	opacity: 0.5;
-	color: var(--disabled-text-light);
-}
-
-.context-menu-row[disabled]:hover > span,
-.context-menu-row[disabled]:hover > .row-notes,
-.context-menu-row[disabled]:hover > .row-notes span,
-.context-menu-row[disabled]:hover > .row-notes code {
-	color: var(--disabled-text-light);
-	cursor: default;
+		Two reasons. A bare --row-h row is 28px, and a browser clamps a radius
+		to half the box, so --r-xl came out at 14 and the highlight was a
+		lozenge with corners rounder than the menu holding it. And a key cap can
+		only nest in a row's corner if it is the same distance from the right
+		edge as from the top and bottom - which needs one row height, not two.
+	*/
+	min-height: calc(var(--row-h) + var(--sp-5));
+	padding: 0 var(--sp-4) 0 var(--sp-3);
+	border: none;
+	/* Concentric with the menu: --r-2xl less its --sp-2 of padding. */
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
+	color: var(--text-primary);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-normal);
+	text-align: left;
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--transition-color);
 }
 
-.context-menu-row[disabled] svg g {
-	fill: var(--disabled-text-light) !important;
+/*
+	Not on a row that carries a card. The card does its own hover, and a wash
+	behind it showed up as a second, larger rectangle lighting up around the
+	one you were actually pointing at.
+*/
+.context-menu-row:not(.context-menu-row--child):hover {
+	background-color: var(--bg-hover);
 }
 
-#context-menu .spanAll h2 {
-	font-size: 0.8em;
-	color: var(--enabled-restingLight-lightText);
-	font-family: monospace;
-	padding: 0px 20px 0px 0px;
+/*
+	The chosen row in a chooser. Same mark the toolbar's tool menus use: the
+	accent held back to a tint, kept on hover because it is a statement rather
+	than an offer - and with weight as well, so it is not the tint alone saying
+	which one you are on.
+*/
+.context-menu-row[selected],
+.context-menu-row[selected]:hover {
+	background-color: var(--bg-selected);
+	color: var(--text-primary);
 }
 
-.context-menu-row hr,
-.context-menu-row hr:hover,
-.context-menu-row hr:active,
-.context-menu-row hr:focus {
-	margin: var(--sp-2) 0px;
-	grid-column: 1 / -1;
-	border-width: 0px 0px 1px 0px;
-	border-color: var(--border-subtle);
+.context-menu-row[selected] .row-name {
+	font-weight: var(--fw-semibold);
+}
+
+/* No icons in this menu, so no gutter held open for them. */
+.context-menu--no-icons .context-menu-row {
+	grid-template-columns: minmax(0, 1fr) max-content;
+}
+
+.context-menu--no-icons .context-menu-row .row-icon {
+	display: none;
+}
+
+.context-menu-row[disabled],
+.context-menu-row[disabled]:hover {
+	background-color: transparent;
+	color: var(--text-disabled);
+	cursor: default;
+}
+
+/*
+	A row that carries its own content - a project preview - supplies its own
+	layout, so the grid stands down. No side padding either: the card inside is
+	rounded to be concentric with the menu's own corner, which only works if it
+	sits at the menu's own padding. The vertical 4px keeps two cards apart.
+
+	No hover wash here either - see .context-menu-row:hover.
+*/
+.context-menu-row--child {
+	display: block;
+	padding: var(--sp-2) 0;
 }
 
 .context-menu-row .row-icon {
-	height: var(--row-h);
-	width: 20px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: var(--icon-default);
-	border-radius: var(--r-xs) 0 0 var(--r-xs);
 }
 
 .context-menu-row .row-icon svg {
-	height: 15px;
-	width: 15px;
-	margin: 0;
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+}
+
+.context-menu-row[disabled] .row-icon {
+	color: var(--icon-disabled);
+}
+
+.context-menu-row .row-text {
+	display: grid;
+	gap: 1px;
+	min-width: 0;
 }
 
 .context-menu-row .row-name {
-	line-height: 1.3;
-	min-height: var(--row-h);
-	padding: var(--sp-2) var(--sp-5) var(--sp-2) var(--sp-3);
-	display: flex;
-	align-items: center;
-	font-size: var(--fs-sm);
-	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
+
+/*
+	The file this row writes. Mono because it is a literal name you will go
+	looking for in a folder, and quiet because it is the answer to a question
+	the row's own label has already asked.
+*/
+/*
+	Some labels bring a picture with them - the transform-origin chooser draws
+	the nine anchor points rather than trying to say them. That mark is inside
+	the name, so the row's own column gap does not reach it and the words
+	started flush against the drawing.
+*/
 .context-menu-row .row-name svg {
-	margin-right: 10px;
+	vertical-align: middle;
+	margin-right: var(--sp-3);
 }
+
+.context-menu-row .row-description {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	color: var(--text-secondary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.context-menu-row[disabled] .row-description {
+	color: var(--text-disabled);
+}
+
+/* A row with two lines needs the height it already has to breathe. */
+.context-menu-row:has(.row-description) {
+	padding-top: var(--sp-2);
+	padding-bottom: var(--sp-2);
+}
+
+/* --------------------------------------------------------------
+	Shortcut keys and notes
+	------------------------------------------------------------ */
 
 .context-menu-row .row-notes {
-	background-color: transparent;
-	width: max-content;
-	height: 24px;
-	opacity: 0.8;
-	display: contents;
-	margin-left: 20px;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	color: var(--text-secondary);
+	font-size: var(--fs-xs);
+	white-space: nowrap;
 }
 
+.context-menu-row[disabled] .row-notes {
+	color: var(--text-disabled);
+}
+
+/*
+	Key caps, drawn as caps. They used to inherit whatever a bare <code> looked
+	like, which meant Courier New on Windows - the one place bare `monospace`
+	always lands, and where most of this audience is.
+
+	--control-h-sm tall, which is what puts them --sp-4 from the top and bottom
+	of a 40px row - the same distance the row's own padding holds them from its
+	right edge. That is what makes a cap's corner nest inside the row's rather
+	than sit near it, and it is what the radius is derived from: the row's
+	--r-xl less the 8px, which is --r-md.
+
+	Every key cap in the app is this shape. See menu-button.css and
+	command-palette.css.
+*/
 .context-menu-row .row-notes code {
-	line-height: 18px;
-	margin: 0px 2px;
-	font-size: 0.8em !important;
-	min-height: 24px;
-	min-width: 24px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	margin: 0;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	line-height: 1;
 }
 
-.context-menu-row .row-notes span {
-	grid-column: span 2;
-	font-size: 0.8em;
-	line-height: 24px;
-	padding: 0px 0px 0px 4px;
-	height: 24px;
+.context-menu-row[disabled] .row-notes code {
+	color: var(--text-disabled);
+	border-color: var(--border-subtle);
+}
+
+/* --------------------------------------------------------------
+	Section headings and separators
+	------------------------------------------------------------ */
+
+/*
+	Section heading: what the rows under it are for. An eyebrow, so it reads as
+	a label rather than as another row you could click - the shape the rest of
+	the app uses for the same job, in panels and on the hub.
+*/
+.context-menu-heading {
+	padding: var(--sp-4) var(--sp-3) var(--sp-2) var(--sp-3);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+.context-menu-heading:first-child {
+	padding-top: var(--sp-2);
+}
+
+/* A heading already separates its group, so it absorbs the rule above it. */
+.context-menu-separator + .context-menu-heading {
+	padding-top: var(--sp-2);
+}
+
+/* Rows that bring their own markup - the project previews in Projects. */
+#context-menu .spanAll h2 {
 	margin: 0;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.context-menu-separator {
+	height: 1px;
+	margin: var(--sp-2) var(--sp-3);
+	background-color: var(--border-subtle);
+	flex: 0 0 auto;
 }
 
 /* Modal dialog */
@@ -265,32 +506,42 @@ dialog {
 	top: 0px;
 	width: 100vw;
 	height: 100vh;
-	z-index: 2000;
+	z-index: var(--z-modal);
 	backdrop-filter: blur(2px);
-	background-color: rgba(255, 255, 255, 0.75);
+	/*
+		The scrim was a hard-coded white wash, which in dark mode lit the whole
+		window up behind the dialog. A dark scrim at low opacity reads as depth
+		in both themes, which is what a scrim is for.
+	*/
+	background-color: hsla(220, 25%, 6%, 0.45);
 	animation: var(--animate-fade-in);
 }
 
 .modal-dialog__content {
 	display: grid;
-	grid-template-rows: 30px 1fr;
+	grid-template-rows: min-content 1fr;
 	width: clamp(500px, 66vw, 1000px);
 	max-height: calc(100vh - 80px);
 	overflow-y: hidden;
 	margin: 40px auto;
 	text-align: left;
-	background-color: var(--enabled-focus-background);
-	border: 1px solid var(--blue-l60);
-	border-radius: 8px;
-	box-shadow: var(--l3-shadow-down);
+	/* The same floating surface as the menus and the palette. */
+	background-color: var(--bg-surface-raised);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-4);
 	animation: var(--animate-fade-in-slide-down);
 }
 
+/*
+	The close button sits --sp-2 in from the dialog's corner, which is what
+	makes its --r-md corner concentric with the dialog's --r-2xl at this size.
+*/
 .modal-dialog__header {
-	margin: 4px;
-	height: 20px;
 	display: grid;
-	grid-template-columns: 1fr 20px;
+	grid-template-columns: 1fr var(--control-h-sm);
+	padding: var(--sp-2);
 }
 
 .modal-dialog__body {
@@ -304,33 +555,48 @@ dialog {
 	margin-bottom: 10px;
 }
 
+/*
+	A close button, not a blue chip. It was three hard-coded blues deep and
+	read as the most important control on the dialog; it is the one you press
+	when you are done.
+
+	32px, because this is the control someone reaches for in a hurry and often
+	without looking - it is the only way out of a dialog other than Escape.
+	24px cleared the WCAG minimum and nothing more; every desktop app of this
+	kind lands between 28 and 32, and 44 is the touch figure this is not.
+*/
 .modal-dialog__close-button {
-	background-color: var(--blue-l95);
-	border-color: var(--blue-l85);
-	color: var(--blue-l50);
-	text-align: center;
-	width: 20px;
-	height: 20px;
-	line-height: 14px;
-	font-size: 1.2em;
-	padding: 0px 0px 2px 0px;
-	margin: 0px;
-}
-
-.modal-dialog__close-button:hover {
-	background-color: var(--blue-l90);
-	color: var(--blue-l30);
-	border-color: var(--blue-l70);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-h-lg);
+	height: var(--control-h-lg);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--icon-default);
+	box-shadow: none;
+	line-height: 1;
 	cursor: pointer;
-	padding: 0px 0px 2px 0px;
-	margin: 0px;
+	transition: var(--transition-color);
 }
 
+.modal-dialog__close-button svg {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+}
+
+.modal-dialog__close-button:hover,
 .modal-dialog__close-button:active,
 .modal-dialog__close-button:focus {
-	background-color: var(--blue-l90);
-	color: var(--blue-l50);
+	padding: 0;
+	margin: 0;
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
 	cursor: pointer;
-	padding: 0px;
-	margin: 0px;
 }

@@ -1,8 +1,6 @@
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { makeActionsArea_ComponentInstance } from './actions.js';
 import {
-	dimSplit,
-	dimSplitElement,
 	makeLinkReferenceRow,
 	makeSingleCheckbox,
 	makeSingleInput,
@@ -83,6 +81,8 @@ export function makeCard_componentInstanceAttributes(componentInstance) {
 		'currentComponentInstance',
 		'input-number'
 	);
+	rotationInput.setAttribute('prefix', 'angle');
+	rotationInput.setAttribute('suffix', '°');
 
 	// rotateFirst
 	let rotateFirstLabel = makeSingleLabel('rotate first', makeRotationHelpInfoContent());
@@ -129,20 +129,20 @@ function makeComponentInstanceInputs_translate(item) {
 
 	// Label + inputs
 	let label = makeSingleLabel(
-		`Δ x${dimSplit()}Δ y`,
+		'offset',
 		`
 		The difference in x or y position,
 		as compared to the root Glyph or Component
 		that this Component Instance is linked to.
 	`
 	);
-	let doubleInput = makeElement({ tag: 'div', className: 'doubleInput' });
+	let doubleInput = makeElement({ tag: 'div', className: 'doubleInput doubleInput--pair' });
 	let xInput = makeSingleInput(item, 'translateX', 'currentComponentInstance', 'input-number');
 	let yInput = makeSingleInput(item, 'translateY', 'currentComponentInstance', 'input-number');
+	xInput.setAttribute('prefix', 'ΔX');
+	yInput.setAttribute('prefix', 'ΔY');
 
-	// Put double input together
 	doubleInput.appendChild(xInput);
-	doubleInput.appendChild(dimSplitElement());
 	doubleInput.appendChild(yInput);
 
 	// log(`makeInputs_translate`, 'end');
@@ -155,20 +155,20 @@ function makeComponentInstanceInputs_size(item) {
 
 	// Label + Inputs
 	let inputLabel = makeSingleLabel(
-		`Δ width${dimSplit()}Δ height`,
+		'resize',
 		`
 		The difference in width or height,
 		as compared to the root Glyph or Component
 		that this Component Instance is linked to.
 	`
 	);
-	let doubleInput = makeElement({ tag: 'div', className: 'doubleInput' });
+	let doubleInput = makeElement({ tag: 'div', className: 'doubleInput doubleInput--pair' });
 	let wInput = makeSingleInput(item, 'resizeWidth', 'currentComponentInstance', 'input-number');
 	let hInput = makeSingleInput(item, 'resizeHeight', 'currentComponentInstance', 'input-number');
+	wInput.setAttribute('prefix', 'ΔW');
+	hInput.setAttribute('prefix', 'ΔH');
 
-	// Put double input together
 	doubleInput.appendChild(wInput);
-	doubleInput.appendChild(dimSplitElement());
 	doubleInput.appendChild(hInput);
 
 	// Ratio lock checkbox

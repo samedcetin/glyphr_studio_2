@@ -1,8 +1,10 @@
 import { showAppErrorPage } from '../app/app.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
-import { makeAppTopBar } from '../app/menu.js';
+import { makeLeftRail } from '../app/left_rail.js';
 import { accentColors } from '../common/colors.js';
-import { addAsChildren, insertAfter, makeElement } from '../common/dom.js';
+import { hexesToChars } from '../common/character_ids.js';
+import { getAdjacentItem } from '../panels/card_glyph.js';
+import { addAsChildren, makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
 import { makeIcon } from '../common/graphics.js';
 import { animateRemove, closeEveryTypeOfDialog } from '../controls/dialogs/dialogs.js';
@@ -111,7 +113,7 @@ export class Navigator {
 			try {
 				const pageContent = this.makePageContent();
 				wrapper.innerHTML = '';
-				wrapper.appendChild(makeAppTopBar());
+				wrapper.appendChild(makeLeftRail());
 				wrapper.appendChild(pageContent);
 			} catch (e) {
 				console.warn(`Navigation failed:`, e);
@@ -158,6 +160,28 @@ export class Navigator {
 			// rather than each one building its own copy.
 			if (this.isOnEditCanvasPage) installEditorSidebars(pageContent);
 		}
+		/*
+			Where you are, floating over the top of the canvas. It used to sit in
+			the top bar; with the bar gone it goes here rather than into the rail,
+			because a 56px column cannot hold a path of three names and the path
+			is the point.
+
+			Edit pages only. A content page already states its name in its own
+			heading, and the rail already marks which page is current, so a third
+			copy floating over the text would be clutter rather than orientation.
+		*/
+		if (this.isOnEditCanvasPage) {
+			const breadcrumb = makeBreadcrumb();
+			/*
+				Into .editor__page itself, not the animation wrapper around it.
+				That element is what carries --left-sidebar-w, and the breadcrumb
+				is placed from that variable so it clears a panel whatever width
+				the user has dragged it to.
+			*/
+			const editorPage = pageContent.querySelector('.editor__page') || pageContent;
+			if (breadcrumb) editorPage.appendChild(breadcrumb);
+		}
+
 		// Append results
 		editorContent.appendChild(pageContent);
 
@@ -232,15 +256,31 @@ export function makeBreadcrumb() {
 		const itemName = editor.project.getItemName(editor.selectedItemID, true);
 		wrapper.appendChild(makeElement({ className: 'breadcrumb__separator', content: '/' }));
 
+		/*
+			Step back and forward, either side of the thing being stepped
+			through.
+
+			These used to be a pair of wide buttons at the foot of the
+			Properties card - and again at the foot of Character info, so the
+			same two controls appeared twice in one column. Stepping to the next
+			character is not a property of this character; it belongs with the
+			name, which is what changes when you press it.
+		*/
+		const previousButton = makeStepButton(editor, -1);
+		wrapper.appendChild(previousButton);
+
 		const itemButton = makeElement({
 			tag: 'button',
 			id: 'nav-button-l2',
 			className: 'breadcrumb__button breadcrumb__button--item',
 			attributes: { type: 'button', 'data-nav-type': 'EDITING', title: itemName },
-			innerHTML: `<span>${itemName}</span>${breadcrumbChevron}`,
+			innerHTML: makeItemLabel(editor, itemName) + breadcrumbChevron,
 		});
 		itemButton.addEventListener('click', () => toggleNavDropdown(itemButton));
 		wrapper.appendChild(itemButton);
+
+		const nextButton = makeStepButton(editor, 1);
+		wrapper.appendChild(nextButton);
 
 		/*
 			The breadcrumb is built once, when the page is, but the item it
@@ -253,8 +293,11 @@ export function makeBreadcrumb() {
 			callback: () => {
 				if (!itemButton.isConnected) return;
 				const newName = editor.project.getItemName(editor.selectedItemID || '', true);
-				itemButton.querySelector('span').textContent = newName;
+				itemButton.innerHTML = makeItemLabel(editor, newName) + breadcrumbChevron;
 				itemButton.setAttribute('title', newName);
+				// The step buttons name where they go, so they change too.
+				refreshStepButton(previousButton, editor, -1);
+				refreshStepButton(nextButton, editor, 1);
 			},
 		});
 	}
@@ -263,6 +306,87 @@ export function makeBreadcrumb() {
 }
 
 const breadcrumbChevron = `<svg class="breadcrumb__chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const stepChevron = {
+	'-1': `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.75 4 6.25 8l3.5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+	'1': `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.25 4 9.75 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+};
+
+/**
+ * One step through the items on this page.
+ *
+ * @param {Object} editor - the project editor
+ * @param {Number} delta - -1 for the previous item, 1 for the next
+ * @returns {Element}
+ */
+function makeStepButton(editor, delta) {
+	const button = makeElement({
+		tag: 'button',
+		className: 'breadcrumb__step',
+		attributes: { type: 'button' },
+		innerHTML: stepChevron[String(delta)],
+	});
+
+	refreshStepButton(button, editor, delta);
+
+	button.addEventListener('click', () => {
+		const target = getAdjacentItem(editor.selectedItem, delta);
+		if (!target) return;
+		editor.selectedItemID = target.id;
+		editor.history.addState(`Navigated to ${editor.project.getItemName(target.id, true)}`);
+	});
+
+	return button;
+}
+
+/**
+ * A step button says where it goes, since where it goes changes every time
+ * one of them is pressed.
+ *
+ * @param {Element} button - the button to update
+ * @param {Object} editor - the project editor
+ * @param {Number} delta - -1 for the previous item, 1 for the next
+ */
+function refreshStepButton(button, editor, delta) {
+	if (!button) return;
+	let label = delta < 0 ? 'Previous item' : 'Next item';
+	try {
+		const target = getAdjacentItem(editor.selectedItem, delta);
+		if (target) label = `${delta < 0 ? 'Previous' : 'Next'}: ${editor.project.getItemName(target.id, true)}`;
+	} catch (error) {
+		// An item with no neighbours keeps the plain label.
+	}
+	const shortcut = delta < 0 ? 'Ctrl ,' : 'Ctrl .';
+	button.setAttribute('title', `${label}\n${shortcut}`);
+	button.setAttribute('aria-label', label);
+}
+
+/**
+ * What the breadcrumb says about the thing being edited.
+ *
+ * For a character, the character and its code point rather than its Unicode
+ * name. "Latin Capital Letter A" spent 142px of a 330px bar saying "A", and
+ * the full name is already on screen, in Character Info on the right. The
+ * code point comes with it because the letterform alone is not an answer: A,
+ * Alpha and the Cyrillic A are the same shape and three different characters.
+ *
+ * Everything else - ligatures, components, kern groups - has no code point
+ * and a name someone chose, so it keeps the name.
+ *
+ * @param {Object} editor - the project editor
+ * @param {String} itemName - the long name, used as the fallback
+ * @returns {String} - markup for the button's label
+ */
+function makeItemLabel(editor, itemName) {
+	const id = editor.selectedItemID || '';
+	const hex = id.startsWith('glyph-') ? id.replace('glyph-', '') : '';
+	const chars = hex ? hexesToChars(hex) : '';
+
+	if (!hex || !chars) return `<span>${itemName}</span>`;
+
+	const codePoint = `U+${hex.replace(/^0x/i, '').toUpperCase().padStart(4, '0')}`;
+	return `<span class="breadcrumb__glyph">${chars}</span><span class="breadcrumb__codepoint">${codePoint}</span>`;
+}
 
 export function makeNavButton(properties = {}) {
 	let title = properties.title || 't i t l e';
@@ -317,10 +441,22 @@ export function closeAllNavMenus(isChooserMenu = false) {
 
 export function showNavDropdown(parentElement) {
 	// log(`showNavDropdown`, 'start');
-	let size = '500px';
+	let size = '';
 	let navID;
 	let rect = parentElement.getBoundingClientRect();
-	let top = rect.top + rect.height - 3;
+
+	/*
+		Measured from the breadcrumb, not from the button inside it.
+
+		The button is 24px tall inside a 33px box with a border and its own
+		padding, so hanging the menu 3px below the button put it seven pixels
+		*inside* the breadcrumb's bottom edge - the menu grew up out of the
+		middle of the control that opened it. The 6px gap is the one the rail's
+		menus already stand off by.
+	*/
+	const anchor = parentElement.closest('.breadcrumb') || parentElement;
+	const anchorRect = anchor.getBoundingClientRect();
+	let top = anchorRect.bottom + 6;
 
 	let dropdownContent = makeElement({ tag: 'h3', content: 'Uninitialized' });
 	let dropdownType = parentElement.getAttribute('data-nav-type');
@@ -328,7 +464,12 @@ export function showNavDropdown(parentElement) {
 
 	if (dropdownType === 'PAGE') {
 		dropdownContent = makePageChooserContent();
-		size = `${parentElement.parentElement.getBoundingClientRect().width - 2}px`;
+		/*
+			Sized by its own longest row. It used to be told to match the width
+			of the whole breadcrumb - which is as wide as a project name plus a
+			page name plus a character name - for a list of eleven short words.
+			Two thirds of it was empty.
+		*/
 		navID = 'nav-dropdown-page';
 	}
 
@@ -341,10 +482,16 @@ export function showNavDropdown(parentElement) {
 			closeAllNavMenus();
 		});
 
-		if (
+		if (editor.nav.page === 'Characters') {
+			/*
+				The character grid decides how wide this is - ten columns of
+				forty - rather than the window deciding how wide the grid is.
+				See #nav-dropdown-chooser in nav.css.
+			*/
+			size = '';
+		} else if (
 			(editor.nav.page === 'Ligatures' && countItems(project.ligatures) > 25) ||
-			(editor.nav.page === 'Components' && countItems(project.components) > 25) ||
-			editor.nav.page === 'Characters'
+			(editor.nav.page === 'Components' && countItems(project.components) > 25)
 		) {
 			size = '80%';
 		} else {
@@ -370,11 +517,16 @@ export function showNavDropdown(parentElement) {
 			buttons became surface-colored. Its surface now comes from nav.css
 			so it stays opaque and themed.
 		*/
+		/*
+			Width is only set here for the two dropdowns that have to match
+			something else - the character chooser's grid and the panel
+			chooser's button. The page chooser takes the width of its own
+			longest row, which nav.css bounds.
+		*/
 		style: `
-			left: ${rect.left + 1}px;
-			top: ${top}px;
-			min-width: ${size};
-			max-width: 60%;
+			left: ${Math.round(rect.left)}px;
+			top: ${Math.round(top)}px;
+			${size ? `min-width: ${size}; max-width: 80%;` : ''}
 		`,
 	});
 
@@ -386,7 +538,20 @@ export function showNavDropdown(parentElement) {
 
 	// let appWrapper = document.querySelector('#app__wrapper');
 	// appWrapper.appendChild(dropDown).focus();
-	insertAfter(parentElement, dropDown);
+	/*
+		Appended to the shell, not next to the button that opened it.
+
+		It used to be inserted as a sibling of its button, which was fine while
+		those buttons lived in a full-width top bar. The breadcrumb replaced that
+		bar: it is a floating 33px-tall box with `overflow: hidden`, so the
+		dropdown was being clipped to nine pixels of its own first row - and the
+		viewport coordinates above were being resolved against the breadcrumb's
+		own corner, which put what survived off the right of the screen.
+
+		#app__wrapper starts at the window's top left and does not scroll, so
+		the coordinates measured above land where they were measured.
+	*/
+	document.querySelector('#app__wrapper')?.appendChild(dropDown);
 
 	// log(`showNavDropdown`, 'end');
 }
@@ -421,37 +586,49 @@ function makeNavButton_Page(pageName, iconName) {
 	});
 	button.innerHTML += makeIcon({ name: iconName, color: accentColors.blue.l90 });
 	button.appendChild(makeElement({ content: pageName }));
-	button.addEventListener('click', () => {
-		let editor = getCurrentProjectEditor();
-		if (editor.nav.page !== pageName) {
-			editor.multiSelect.shapes.clear();
-			editor.multiSelect.points.clear();
-		}
-
-		// Ensure the selected Panel is availabe for the new page, otherwise default to Attributes
-		editor.nav.page = pageName;
-		if (panelsPerPage?.[pageName]) {
-			if (!panelsPerPage[pageName].includes(editor.nav.panel)) editor.nav.panel = 'Attributes';
-		}
-
-		editor.navigate();
-		if (editor.selectedItemID) {
-			let lastChange = editor.history.queue[0] || false;
-
-			// Only add a nav item to the history queue if the previous undo item:
-			//  - matches the current selected item
-			//  - is not a whole project save
-			if (
-				lastChange &&
-				!(lastChange.wholeProjectSave || lastChange.itemID === editor.selectedItemID)
-			) {
-				editor.history.addState(
-					`Navigated to ${editor.project.getItemName(editor.selectedItemID, true)}`
-				);
-			}
-		}
-	});
+	button.addEventListener('click', () => navigateToPage(pageName));
 	return button;
+}
+
+/**
+ * Goes to a page.
+ *
+ * Exported because two things navigate now - this dropdown and the left rail -
+ * and the steps around the navigate() call are not optional: a stale selection
+ * carried into another page, or a panel that page does not have, both end in a
+ * broken sidebar.
+ *
+ * @param {String} pageName - a key of nav.tableOfContents
+ */
+export function navigateToPage(pageName) {
+	let editor = getCurrentProjectEditor();
+	if (editor.nav.page !== pageName) {
+		editor.multiSelect.shapes.clear();
+		editor.multiSelect.points.clear();
+	}
+
+	// Ensure the selected Panel is availabe for the new page, otherwise default to Attributes
+	editor.nav.page = pageName;
+	if (panelsPerPage?.[pageName]) {
+		if (!panelsPerPage[pageName].includes(editor.nav.panel)) editor.nav.panel = 'Attributes';
+	}
+
+	editor.navigate();
+	if (editor.selectedItemID) {
+		let lastChange = editor.history.queue[0] || false;
+
+		// Only add a nav item to the history queue if the previous undo item:
+		//  - matches the current selected item
+		//  - is not a whole project save
+		if (
+			lastChange &&
+			!(lastChange.wholeProjectSave || lastChange.itemID === editor.selectedItemID)
+		) {
+			editor.history.addState(
+				`Navigated to ${editor.project.getItemName(editor.selectedItemID, true)}`
+			);
+		}
+	}
 }
 
 const panelsPerPage = {

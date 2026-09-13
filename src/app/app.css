@@ -1,3 +1,10 @@
+/*
+	The shell is a rail and everything else.
+
+	It was a full-width top bar above the content. A bar spends an entire row of
+	the window on nine items and their labels; the rail spends a 56px column and
+	gives the row back to the canvas, which is the surface this app is about.
+*/
 #app__wrapper {
 	background-color: var(--bg-app);
 	height: 100%;
@@ -9,29 +16,129 @@
 	left: 0px;
 	overflow: hidden;
 	display: grid;
-	grid-template-rows: var(--topbar-h) calc(100vh - var(--topbar-h));
-}
-
-/*
-	A flex row rather than fixed 150px columns, so items can be added to the bar
-	without re-counting grid tracks, and so the right-hand cluster stays pinned.
-*/
-#app__top-bar {
-	grid-row: 1;
-	display: flex;
-	align-items: center;
-	gap: var(--sp-5);
-	padding: 0px var(--sp-4) 0px var(--sp-5);
-	background-color: var(--bg-surface);
-	border-bottom: 1px solid var(--border-subtle);
-	z-index: 2000 !important;
+	grid-template-columns: var(--rail-w) minmax(0, 1fr);
 }
 
 #app__main-content {
-	grid-row: 2;
+	grid-column: 2;
+	position: relative;
 	width: 100%;
-	min-width: 720px;
+	min-width: 0;
 	background-color: var(--bg-app);
+	overflow: hidden;
+}
+
+/*
+	App pages - the project hub and cross-project actions - replace the whole
+	wrapper and bring their own sidebar, so no rail is built for them. Without
+	this the content stayed in column 2 and the rail's 56px column sat empty
+	down the left of the screen.
+*/
+#app__wrapper > #app__main-content:only-child {
+	grid-column: 1 / -1;
+}
+
+/* --------------------------------------------------------------
+	Left rail
+	------------------------------------------------------------ */
+
+#app__left-rail {
+	grid-column: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--sp-2);
+	padding: var(--sp-3) 0;
+	background-color: var(--bg-surface);
+	border-right: 1px solid var(--border-subtle);
+	/*
+		--z-shell, not --z-canvas-float. The rail opens menus, and a positioned
+		element with a z-index caps its descendants inside its own stacking
+		context - so the rail has to clear everything those menus must clear.
+		At --z-canvas-float it tied with the editor panels, and since the panels
+		come later in the DOM a tie means they win: the File menu painted behind
+		the left panel.
+	*/
+	z-index: var(--z-shell);
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.left-rail__mark {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tool-size);
+	height: var(--tool-size);
+	margin-bottom: var(--sp-2);
+	color: var(--text-primary);
+	flex: 0 0 auto;
+}
+
+.left-rail__group {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	flex: 0 0 auto;
+}
+
+.left-rail__divider {
+	width: 20px;
+	height: 1px;
+	margin: var(--sp-2) 0;
+	background-color: var(--border-subtle);
+	flex: 0 0 auto;
+}
+
+/* Pushes whatever follows it to the bottom of the column. */
+.left-rail__spacer {
+	flex: 1 1 auto;
+	min-height: var(--sp-4);
+}
+
+.left-rail__button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tool-size);
+	height: var(--tool-size);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	box-shadow: none;
+	color: var(--icon-default);
+	cursor: pointer;
+	transition: var(--transition-color);
+	flex: 0 0 auto;
+}
+
+.left-rail__button:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
+}
+
+/*
+	The current page is marked with the accent, held back from the solid fill the
+	toolbar's selected tool carries. Both say "this one", but the toolbar is
+	answering "what am I drawing with right now" while the rail answers "where am
+	I", and the second is a quieter question. A full-strength fill in a column of
+	twelve would also pull the eye off the canvas every time it passed.
+*/
+.left-rail__button--current,
+.left-rail__button--current:hover {
+	background-color: var(--bg-selected);
+	color: var(--icon-accent);
+}
+
+.left-rail__button svg {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
 }
 
 #app__page {
@@ -45,306 +152,13 @@
 	animation: var(--animate-fade-in);
 }
 
-.top-bar__logo {
-	display: flex;
-	align-items: center;
-	flex: 0 0 auto;
-}
-
-.top-bar__logo svg {
-	fill: var(--text-primary);
-	opacity: 0.9;
-	height: 18px;
-	width: auto;
-}
-
-.top-bar__menus {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-1);
-	flex: 0 0 auto;
-	margin: 0;
-	height: var(--control-h);
-}
-
-/* Pushes everything after it to the right edge of the bar. */
-.top-bar__theme-toggle {
-	margin-left: auto;
-	flex: 0 0 auto;
-	width: var(--control-h);
-	height: var(--control-h);
-	min-height: var(--control-h);
-	padding: 0;
-	border-color: transparent;
-	background-color: transparent;
-	color: var(--icon-default);
-}
-
-.top-bar__theme-toggle:hover {
-	background-color: var(--bg-hover);
-	border-color: transparent;
-	color: var(--icon-strong);
-}
-
-.top-bar__theme-toggle svg {
-	width: var(--icon-size);
-	height: var(--icon-size);
-	fill: currentColor;
-}
-
-.menu-entry-point,
-.menu-entry-point:active,
-.menu-entry-point:focus {
-	font-size: var(--fs-sm);
-	font-weight: var(--fw-medium);
-	padding: 0px var(--sp-3);
-	height: var(--control-h-sm);
-	min-height: var(--control-h-sm);
-	margin: 0px;
-	position: static;
-	background-color: transparent;
-	border: 1px solid transparent;
-	border-radius: var(--r-xs);
-	box-shadow: none;
-	color: var(--text-secondary);
-}
-
-.menu-entry-point:hover {
-	color: var(--text-primary);
-	background-color: var(--bg-hover);
-	border-color: transparent;
-}
-
-/*
-	Was absolutely positioned over the bar; now it is just the last flex item,
-	so it can never collide with anything added to the right-hand cluster.
-*/
-.top-bar__bug-contact {
-	position: static;
-	flex: 0 0 auto;
-	display: flex;
-	align-items: center;
-	gap: var(--sp-2);
-	padding: 0px var(--sp-3);
-	height: var(--control-h-sm);
-	background-color: transparent;
-	border: 1px solid var(--border-subtle);
-	color: var(--text-secondary);
-	border-radius: var(--r-xs);
-}
-
-@media (min-width: 810px) {
-	.top-bar__bug-blurb {
-		display: inline-block !important;
-	}
-	.top-bar__bug-icon {
-		position: relative;
-		top: 1px;
-	}
-	.top-bar__bug-link {
-		display: inline-block !important;
-	}
-}
-.top-bar__bug-blurb {
-	display: none;
-}
-
-.top-bar__bug-link {
-	display: none;
-}
-
-.top-bar__bug-icon {
-	position: relative;
-	left: -2px;
-}
-
-.top-bar__bug-contact span {
-	font-size: var(--fs-xs);
-	margin: 0;
-	padding: 0;
-}
-
-.top-bar__bug-contact svg {
-	height: 9px;
-	fill: var(--icon-default);
-}
-
-.top-bar__bug-icon:hover svg {
-	fill: var(--icon-strong);
-}
-
-.top-bar__bug-link a,
-.top-bar__bug-link a:hover,
-.top-bar__bug-link a:focus,
-.top-bar__bug-link a:visited,
-.top-bar__bug-link a:active {
-	font-size: var(--fs-xs);
-	color: var(--text-secondary);
-}
-
-.top-bar__bug-link a:hover {
-	color: var(--text-primary);
-}
-
 /*
 	Project Preview menu
 */
-.project-preview__row-wrapper {
-	box-shadow: var(--l1-shadow-down);
-	border-radius: 8px;
-	padding: 10px;
-	padding-top: 5px;
-	margin-bottom: 10px;
-}
 
-.project-preview__super-title {
-	font-size: 0.75em;
-	letter-spacing: 0.2ch;
-	opacity: 80%;
-}
 
-.project-preview__row-wrapper display-canvas {
-	background-color: var(--gray-l97);
-	border-radius: 4px;
-	display: block;
-	height: 42px;
-	overflow: hidden;
-}
 
-.project-preview__primary {
-	background: linear-gradient(135deg, var(--blue-l35), var(--blue-l25));
-	border: 1px solid var(--blue-l60);
-}
 
-.project-preview__primary h3,
-.project-preview__primary .project-preview__super-title {
-	color: var(--blue-l90);
-}
-
-.project-preview__secondary {
-	background: linear-gradient(135deg, var(--gray-l95), var(--gray-l90));
-	border: 1px solid var(--gray-l90);
-}
-
-.project-preview__secondary h3,
-.project-preview__secondary .project-preview__super-title {
-	color: var(--gray-l20);
-}
-
-.project-preview__no-project {
-	background: linear-gradient(135deg, white, var(--blue-l95));
-	border: 1px dashed var(--blue-l60);
-	vertical-align: middle;
-	text-align: center;
-}
-
-.project-preview__no-project h3,
-.project-preview__no-project .project-preview__super-title {
-	color: var(--blue-l40);
-	opacity: 0.5;
-	margin: 5px 0px 0px 0px;
-}
-
-.project-preview__no-project:hover,
-.project-preview__secondary:hover {
-	cursor: pointer;
-	box-shadow: var(--l2-shadow-down);
-	border-color: var(--blue-l80);
-	position: relative;
-	top: -1px;
-	left: -1px;
-}
-.project-preview__no-project:hover,
-.project-preview__secondary:hover h3 {
-	opacity: 1;
-	border-color: var(--blue-l80);
-}
-
-/*
-	Command search. Reads as a search field but opens the command palette -
-	the pattern Figma and Linear use, and the only way a keyboard-only
-	feature teaches itself.
-*/
-.top-bar__command-search {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-3);
-	margin-left: auto;
-	flex: 0 1000 260px;
-	min-width: 0;
-	height: var(--control-h);
-	min-height: var(--control-h);
-	padding: 0 var(--sp-3);
-	border: 1px solid var(--border-default);
-	border-radius: var(--r-sm);
-	background-color: var(--bg-surface-sunken);
-	color: var(--text-tertiary);
-	font-weight: var(--fw-normal);
-	cursor: pointer;
-}
-
-.top-bar__command-search:hover {
-	background-color: var(--bg-surface-sunken);
-	border-color: var(--border-strong);
-	color: var(--text-secondary);
-}
-
-.top-bar__command-search svg {
-	width: 14px;
-	height: 14px;
-	fill: currentColor;
-	flex: 0 0 auto;
-}
-
-.top-bar__command-search-label {
-	flex: 1 1 auto;
-	text-align: left;
-	font-size: var(--fs-sm);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.top-bar__command-search-keys {
-	display: flex;
-	gap: 2px;
-	flex: 0 0 auto;
-}
-
-.top-bar__command-search-keys code {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 17px;
-	height: 17px;
-	padding: 0 var(--sp-1);
-	background-color: var(--bg-surface);
-	border: 1px solid var(--border-default);
-	border-radius: var(--r-xs);
-	font-family: var(--font-mono);
-	font-size: var(--fs-2xs);
-	color: var(--text-tertiary);
-	line-height: 1;
-}
-
-/* The theme toggle no longer needs to push itself right - search does that. */
-.top-bar__theme-toggle {
-	margin-left: 0;
-}
-
-@media (max-width: 900px) {
-	.top-bar__command-search-label,
-	.top-bar__command-search-keys {
-		display: none;
-	}
-
-	.top-bar__command-search {
-		flex: 0 0 auto;
-		width: var(--control-h);
-		justify-content: center;
-		padding: 0;
-	}
-}
 
 /* --------------------------------------------------------
 	Breadcrumb
@@ -360,13 +174,36 @@
 	what you are actually looking at. Without explicit flex values the item
 	label was the one that collapsed to nothing.
 */
+/*
+	The breadcrumb floats over the top left of the content now that there is no
+	top bar to sit in. It is placed clear of the left panel by the editor page,
+	which knows how wide that panel has been dragged - see editor-pages.css.
+*/
 .breadcrumb {
+	position: absolute;
+	top: var(--sp-4);
+	left: var(--sp-4);
+	z-index: var(--z-canvas-float);
 	display: flex;
 	align-items: center;
 	gap: var(--sp-1);
+	max-width: calc(100% - var(--sp-8));
 	min-width: 0;
-	flex: 1 1 auto;
 	overflow: hidden;
+	/*
+		Even padding, so the control at each end is the same distance from the
+		bar's edge as from its top and bottom - which is what lets their corners
+		nest inside the bar's. It was 8px at the sides against 4 top and bottom,
+		on controls that already carry their own 4px: three different insets
+		between the bar's edge and a word.
+	*/
+	padding: var(--sp-2);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	/* The same radius as the toolbar strip - the app's other floating bar. */
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-2);
 }
 
 .breadcrumb__project {
@@ -401,7 +238,12 @@
 	padding: 0 var(--sp-2);
 	margin: 0;
 	border: 1px solid transparent;
-	border-radius: var(--r-xs);
+	/*
+		Derived from the bar it sits in: the breadcrumb's radius, less its
+		border, less the --sp-2 it holds this off its edges by.
+	*/
+	border-radius: calc(var(--r-xl) - 1px - var(--sp-2));
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--text-primary);
 	font-size: var(--fs-sm);
@@ -416,6 +258,75 @@
 .breadcrumb__button--item {
 	flex: 0 1 auto;
 	min-width: 84px;
+}
+
+/*
+	Step back and forward, either side of the name they change.
+
+	Icon-only, because the label is the thing between them: with a name in the
+	middle saying which character you are on, a button on each side of it does
+	not need to spell out "previous item" to be read as one. Both name their
+	destination and their shortcut on hover, which the old pair could not -
+	they were at the foot of a panel, nowhere near the name they moved.
+*/
+.breadcrumb__step {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	/* Derived from the bar, like its siblings: --r-xl less the border, less
+		the --sp-2 the bar holds them off its edges by. */
+	border-radius: calc(var(--r-xl) - 1px - var(--sp-2));
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--icon-default);
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.breadcrumb__step:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
+}
+
+.breadcrumb__step svg {
+	width: 16px;
+	height: 16px;
+}
+
+/*
+	The character itself, in the app's UI face rather than the font being
+	edited - the breadcrumb is chrome, and a glyph you are halfway through
+	drawing is not a label you can read.
+*/
+.breadcrumb__glyph {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+/*
+	What the letterform on its own cannot say. A, Alpha and the Cyrillic A are
+	one shape and three characters; this is the part that tells them apart, so
+	it is quiet but it is not optional.
+*/
+/* A little air between the letterform and its number - the button's own
+	gap is 2px, which is right for a word and its chevron and too tight for
+	two things that are not the same kind of thing. */
+.breadcrumb__codepoint {
+	margin-left: var(--sp-1);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
 }
 
 .breadcrumb__button:hover {
@@ -444,4 +355,197 @@
 	.breadcrumb__separator:first-of-type {
 		display: none;
 	}
+}
+
+/* --------------------------------------------------------------
+	Project cards
+
+	The two slots this app can hold open at once, in the Projects menu.
+
+	They used to be two boxes that looked alike and behaved differently: the
+	current project was an inert blue gradient slab, the other an identical
+	slab that was clickable, and an empty slot was a dashed placeholder reading
+	"Open another project" - a button dressed as a status display. Nothing said
+	these were slots, and the empty one is now an action row with the rest of
+	the actions, which is what it always was.
+
+	What is left is a list of what is open. The current one is marked and inert;
+	the other is plainly a control.
+	------------------------------------------------------------ */
+
+/*
+	One rounded box, not three that have to agree.
+
+	The card used to be a padded container holding a separately rounded preview,
+	which meant two radii to keep concentric every time the padding moved. Now
+	the preview and the name strip run to the card's edges and the card clips
+	them, so the only radius in here is the card's own - and the corner shape
+	only has to be declared once.
+*/
+.project-card {
+	display: flex;
+	flex-direction: column;
+	/*
+		Explicit, because a <button> centres its flex children by user-agent rule
+		and the div card does not. Without it the two cards laid out differently.
+	*/
+	align-items: stretch;
+	/*
+		Buttons carry a 4px gap from the app's base stylesheet. Here it opened a
+		seam between the preview and the name strip - and only on the switchable
+		card, which is the button, so the two cards came out 4px apart in height.
+	*/
+	gap: 0;
+	width: 100%;
+	padding: 0;
+	margin: 0;
+	overflow: hidden;
+	border: 1px solid var(--border-subtle);
+	/*
+		Concentric with the menu around it: the menu is --r-2xl with --sp-2 of
+		padding, and 20 - 4 = 16, which is --r-xl.
+	*/
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--canvas-bg);
+	text-align: left;
+	box-shadow: none;
+	transition: var(--transition-color), box-shadow var(--dur-fast) var(--ease);
+}
+
+/* Only the one you can act on behaves like a control. */
+button.project-card {
+	cursor: pointer;
+}
+
+/*
+	The card lifts as a whole. Tinting alone was not enough to see: the only
+	part of the card that can take a tint is the name strip - the preview has
+	to stay on canvas white or the two fonts stop being comparable - and a
+	32px strip lighting up at the bottom of a 90px card reads as nothing. A
+	shadow and a stronger edge are the whole object answering.
+*/
+button.project-card:hover {
+	border-color: var(--border-strong);
+	box-shadow: var(--shadow-2);
+}
+
+button.project-card:hover .project-card__bar {
+	background-color: var(--bg-hover);
+}
+
+/*
+	The current project is tinted rather than filled, and only along its name
+	strip - the preview is a specimen and stays on paper white in both cards, so
+	the two fonts are compared under the same light. It is a statement, not an
+	offer: the same distinction the left rail draws between the page you are on
+	and the tool you are holding.
+*/
+.project-card--current {
+	border-color: var(--border-selected);
+	cursor: default;
+}
+
+/*
+	The letterforms are the point of the card - it is how you tell two fonts
+	apart at a glance - so they lead, full width, on the ground the canvas uses.
+*/
+.project-card__preview {
+	display: block;
+	height: 52px;
+	background-color: var(--canvas-bg);
+	pointer-events: none;
+}
+
+/*
+	The right padding is 4px, not 12, and that is the whole trick: the Switch
+	chip has to sit the same distance from the card's right edge as it does
+	from the bottom one, or its corner cannot be concentric with the card's.
+	The bottom distance is the strip's vertical padding, so the right one has
+	to match it. The name keeps its 12px on the left, where there is no corner
+	to nest inside - only one to stay clear of.
+
+	The vertical padding is also what sets the height: a 24px chip plus 4px top
+	and bottom, so the strip grows out of the control it holds rather than out
+	of a number.
+*/
+.project-card__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-4);
+	min-width: 0;
+	min-height: var(--row-h);
+	padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-5);
+	border-top: 1px solid var(--border-subtle);
+	background-color: var(--bg-surface);
+	transition: var(--transition-color);
+}
+
+.project-card--current .project-card__bar {
+	border-top-color: var(--border-selected);
+	background-color: var(--bg-selected);
+}
+
+.project-card__name {
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+/*
+	A status, written as one. No box, no uppercase eyebrow - both of those made
+	it read as a control sitting next to the one below.
+*/
+.project-card__state {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	/*
+		Same height as the Switch chip opposite it, so the two cards come out the
+		same height. Without it the card with the chip stood 8px taller than the
+		one with the word, and two cards in a stack are read against each other.
+	*/
+	height: var(--control-h-sm);
+	/*
+		Lands this word's right edge where the chip's word lands on the card
+		below: 4px of strip padding plus the chip's own 8px. Two cards in a
+		stack, two labels down the right, one line.
+	*/
+	padding-right: var(--sp-4);
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-medium);
+	color: var(--text-accent);
+}
+
+/* What pressing the card does, drawn as the control it belongs to. */
+.project-card__action {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-4);
+	border: 1px solid var(--border-default);
+	/*
+		Concentric with the card's bottom-right corner: the card's radius less
+		its own border, less the 4px the strip holds the chip off its edges.
+		Derived rather than picked, so it follows the card if the card moves.
+	*/
+	border-radius: calc(var(--r-xl) - 1px - var(--sp-2));
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface);
+	color: var(--text-secondary);
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-medium);
+	white-space: nowrap;
+	transition: var(--transition-color);
+}
+
+button.project-card:hover .project-card__action {
+	border-color: var(--border-strong);
+	color: var(--text-primary);
 }

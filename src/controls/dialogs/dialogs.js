@@ -2,8 +2,10 @@ import { getCurrentProjectEditor } from '../../app/main.js';
 import { addAsChildren, makeElement, textToNode } from '../../common/dom.js';
 import { round } from '../../common/functions.js';
 import { makeIcon } from '../../common/graphics.js';
+import { makeLineIcon } from '../../common/icons.js';
 import { sXcX, sYcY } from '../../edit_canvas/edit_canvas.js';
 import { closeAllNavMenus } from '../../project_editor/navigator.js';
+import { closeAllMenuButtons } from '../menu-button/menu_button.js';
 
 // --------------------------------------------------------------
 // Generic dialog stuff
@@ -21,6 +23,7 @@ export function closeEveryTypeOfDialog() {
 	closeAllToasts();
 	closeAllNotations();
 	closeAllInfoBubbles();
+	closeAllMenuButtons();
 	// log(`closeEveryTypeOfDialog`, 'end');
 }
 
@@ -146,11 +149,15 @@ export function animateRemove(element, animationLength = 120, scale = 0.98, tran
 // Toast
 // -----------------------------------------------------------------
 
+/** Countdown for the toast currently on screen, so a new one can cancel it. */
+let toastTimer = 0;
+
 /**
  * Creates and shows a little message at the top/center
  * of the screen, which disappears after a set time
  * @param {String} message - message to show
  * @param {Number} duration - how long to show the message (milliseconds)
+ * @param {Boolean =} fancy - mark it with the accent, for a change of state
  */
 export function showToast(message = '0_o', duration = 3000, fancy = false) {
 	// log(`showToast`, 'start');
@@ -169,17 +176,44 @@ export function showToast(message = '0_o', duration = 3000, fancy = false) {
 		element = makeElement({
 			tag: 'div',
 			id: 'toast',
-			attributes: { tabindex: '-1' },
+			/*
+				A toast is announced, not focused. It is removed on a timer, so
+				moving focus into it would strand the keyboard when it goes -
+				and role="status" reads it without taking focus at all.
+			*/
+			attributes: { role: 'status', 'aria-live': 'polite' },
 			style: 'display: none;',
 		});
-		if (fancy) element.setAttribute('fancy', '');
 		document.body.appendChild(element);
 	}
 
+	/*
+		Set every time, not only when the element is built. The toast element is
+		reused, so the first fancy toast of a session used to make every toast
+		after it fancy, and a fancy one arriving after a plain one was plain.
+	*/
+	if (fancy) element.setAttribute('fancy', '');
+	else element.removeAttribute('fancy');
+
 	element.innerHTML = message;
 	element.style.display = 'block';
-	window.setTimeout(() => {
-		// log(`showToast - timeout animateRemove`);
+	/*
+		Restart the entry animation. The element survives between toasts, and a
+		CSS animation does not replay just because the text changed - a second
+		toast within the first one's lifetime appeared with no motion at all.
+	*/
+	element.style.animation = 'none';
+	void element.offsetWidth;
+	element.style.animation = '';
+
+	/*
+		One timer, belonging to the element. They used to accumulate: a second
+		toast arriving before the first had expired inherited the first one's
+		countdown and vanished early, having been on screen for whatever was
+		left of it.
+	*/
+	window.clearTimeout(toastTimer);
+	toastTimer = window.setTimeout(() => {
 		animateRemove(element);
 	}, duration);
 	// log(`showToast`, 'end');
@@ -277,33 +311,87 @@ export function makeContextMenu(rows = [], x, y, width, height, isDropdown = fal
 		element.appendChild(makeOneContextMenuRow(item));
 	});
 
-	// Move it and show it
+	/*
+		A menu whose rows have no icons does not hold a column open for them.
+		Every row builds an empty icon cell so that a menu mixing rows with and
+		without icons still lines up - but when none of them has one, that is 20
+		pixels of gutter plus a gap indenting the whole list for nothing.
+	*/
+	const hasIcons = rows.some((item) => item && (item.icon || item.iconMarkup));
+	if (!hasIcons) element.classList.add('context-menu--no-icons');
+
+	/*
+		Position only. The radius used to be set here too - square on the edge
+		that met the bar, rounded on the other three - so the menu read as an
+		extension of the control that opened it. That was a top-bar idea; the
+		entry points are in a left rail now and the menu sits beside them with
+		air on every side, so it is rounded all round, from the stylesheet.
+	*/
 	if (isFinite(x) && isFinite(y)) {
-		element.style.position = 'absolute';
 		element.style.left = `${x}px`;
 		element.style.top = `${y}px`;
-		element.style.display = 'grid';
-		if (isDropdown) {
-			element.style.borderRadius = '0px 0px 4px 4px';
-			element.style.borderTopWidth = '0px';
-		} else {
-			element.style.borderRadius = '0px 4px 4px 4px';
-			element.style.borderTopWidth = '1px';
-		}
-		if (width) {
-			element.style.width = `${width}px`;
-		}
-		if (height) {
-			if (isDropdown) element.style.maxHeight = `${height}px`;
-			else element.style.height = `${height}px`;
-		}
-		element.focus();
+		if (width) element.style.width = `${width}px`;
+		if (height) element.style.maxHeight = `${height}px`;
 	} else {
 		console.warn(`Context menu not supplied with a screen position.`);
 	}
 
+	addContextMenuKeyboardNav(element);
+
+	/*
+		Focus the first actionable row rather than the menu box, so the arrow keys
+		have somewhere to move from and the menu is usable the moment it opens.
+
+		In a microtask, because this element is not in the document yet - every
+		caller inserts what this function returns - and focus() on a detached node
+		does nothing. The old code called element.focus() here and silently failed
+		for the same reason. A microtask runs after the caller's synchronous
+		insertion, which is the first moment focus can land.
+	*/
+	queueMicrotask(() => {
+		if (!element.isConnected) return;
+		const firstRow = element.querySelector('button.context-menu-row:not([disabled])');
+		if (firstRow) /** @type {HTMLElement} */ (firstRow).focus();
+	});
+
 	// log(`makeContextMenu`, 'end');
 	return element;
+}
+
+/**
+ * Arrow-key movement inside a context menu.
+ *
+ * Rows are buttons, so Enter and Space already activate them and Escape is
+ * handled globally. This adds what a menu still owes the keyboard: Up and Down
+ * to move, Home and End to jump, and both wrapping, so holding an arrow key
+ * cannot strand focus at one end.
+ *
+ * @param {Element} menu
+ */
+function addContextMenuKeyboardNav(menu) {
+	menu.addEventListener('keydown', (event) => {
+		const key = /** @type {KeyboardEvent} */ (event).key;
+		const rows = /** @type {Array<HTMLElement>} */ ([
+			...menu.querySelectorAll('button.context-menu-row:not([disabled])'),
+		]);
+		if (!rows.length) return;
+
+		const index = rows.indexOf(/** @type {HTMLElement} */ (document.activeElement));
+
+		if (key === 'ArrowDown') {
+			event.preventDefault();
+			rows[(index + 1) % rows.length].focus();
+		} else if (key === 'ArrowUp') {
+			event.preventDefault();
+			rows[(index - 1 + rows.length) % rows.length].focus();
+		} else if (key === 'Home') {
+			event.preventDefault();
+			rows[0].focus();
+		} else if (key === 'End') {
+			event.preventDefault();
+			rows[rows.length - 1].focus();
+		}
+	});
 }
 
 /**
@@ -316,27 +404,83 @@ function makeOneContextMenuRow(data = {}) {
 	// log(data);
 	let isDisabled = data.disabled || false;
 
-	let row = makeElement({
-		tag: 'div',
-		className: data?.className || 'context-menu-row',
-		attributes: { tabindex: '0' },
-	});
-	if (isDisabled) row.setAttribute('disabled', '');
+	/*
+		A real <button>, not a div with tabindex.
 
+		The row used to be a div with `display: contents`, which means it has no
+		box of its own: its cells were laid out directly by the menu's grid. Three
+		things followed from that, all of them bugs. Hover had to be painted onto
+		each cell separately, and the CSS carried a note about the notch that left
+		in the highlight's left edge. A focus ring could not render at all, since
+		there was no box to draw it around. And the div had tabindex="0" with only
+		a click listener, so it took focus and then did nothing on Enter or Space.
+
+		A button fixes all three by existing: one box to highlight, one outline to
+		draw, and Enter and Space activate it natively.
+	*/
 	if (data.child) {
-		row.appendChild(data.child);
-		if (!isDisabled) {
-			row.addEventListener('click', () => {
+		const childRow = makeElement({
+			tag: data.onClick ? 'button' : 'div',
+			className: `context-menu-row context-menu-row--child${
+				data.className ? ` ${data.className}` : ''
+			}`,
+			attributes: data.onClick ? { type: 'button' } : {},
+		});
+		if (isDisabled) childRow.setAttribute('disabled', '');
+		childRow.appendChild(data.child);
+		if (!isDisabled && data.onClick) {
+			childRow.addEventListener('click', () => {
 				closeAllOptionChoosers();
-				if (data.onClick) data.onClick();
+				data.onClick();
 			});
 		}
-		return row;
+		return childRow;
 	}
 
 	if (data.name === 'hr') {
-		row.appendChild(makeElement({ tag: 'hr' }));
-		return row;
+		return makeElement({
+			className: 'context-menu-separator',
+			attributes: { role: 'separator' },
+		});
+	}
+
+	/*
+		A section heading names what the rows under it are for.
+
+		It used to be a file name in an <h2>, which is why a menu could open with
+		"Oblegg - Glyphr Studio Project - 2026.9.13.gs2" as its first line: the
+		label said what you would get rather than what the group was, and three
+		of the File menu's four headings were file names while the fourth was a
+		category. Same treatment, different meanings, so neither read.
+
+		File names are still shown - see `description` below - on the row that
+		actually produces them, where each one is true.
+	*/
+	if (data.type === 'heading') {
+		return makeElement({
+			className: 'context-menu-heading',
+			content: data.name,
+			attributes: { role: 'presentation' },
+		});
+	}
+
+	let row = makeElement({
+		tag: 'button',
+		className: data?.className || 'context-menu-row',
+		attributes: { type: 'button', role: data.selected === undefined ? 'menuitem' : 'menuitemradio' },
+	});
+	if (isDisabled) row.setAttribute('disabled', '');
+
+	/*
+		The chosen one, in a menu that is choosing between things - the option
+		chooser's list. Marked with the accent rather than ticked: a tick needs
+		a column, and a column held open on every row so that one of them can
+		show a mark is a list of empty boxes. aria-checked carries the same
+		thing to a screen reader.
+	*/
+	if (data.selected !== undefined) {
+		row.setAttribute('aria-checked', data.selected ? 'true' : 'false');
+		if (data.selected) row.setAttribute('selected', '');
 	}
 
 	/*
@@ -364,9 +508,22 @@ function makeOneContextMenuRow(data = {}) {
 		row.appendChild(makeElement({ className: 'row-icon' }));
 	}
 
-	// Command name
+	/*
+		Name, and under it an optional description - the file this row writes,
+		the thing it will do. One cell so the two lines share a left edge and the
+		row stays a three-column grid whether or not there is a second line.
+	*/
 	data.name = data.name || 'NAME';
-	row.appendChild(makeElement({ className: 'row-name', innerHTML: data.name }));
+	const textCell = makeElement({ className: 'row-text' });
+	textCell.appendChild(makeElement({ className: 'row-name', innerHTML: data.name }));
+	if (data.description) {
+		textCell.appendChild(
+			makeElement({ className: 'row-description', innerHTML: data.description })
+		);
+		/* A long file name ellipsises; the tooltip still carries all of it. */
+		row.setAttribute('title', `${data.name} — ${data.description}`);
+	}
+	row.appendChild(textCell);
 
 	// Note / Keyboard Shortcut
 	let noteWrapper = makeElement({ className: 'row-notes' });
@@ -455,7 +612,10 @@ export function makeModalDialog(contentNode, maxWidth, openProjectDialog = false
 		<div class="modal-dialog__content">
 			<div class="modal-dialog__header">
 				<span></span>
-				<button class="modal-dialog__close-button">&times;</button>
+				<button class="modal-dialog__close-button" type="button" title="Close" aria-label="Close">${makeLineIcon(
+					'close',
+					20
+				)}</button>
 			</div>
 			<div class="modal-dialog__body"></div>
 		</div>

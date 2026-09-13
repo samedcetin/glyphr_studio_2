@@ -22,7 +22,8 @@
 	text-align: left;
 	justify-content: start;
 	align-content: center;
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	border: 1px solid var(--border-default);
 	background-color: var(--bg-surface);
 	box-shadow: none;
@@ -39,15 +40,20 @@
 	background-color: var(--bg-active);
 }
 
-#nav-button-l1,
-#nav-button-l1:active,
-#nav-button-l1:hover,
-#nav-button-l1:focus {
-	width: max-content;
-	min-width: 108px;
-	padding-right: var(--sp-5);
-}
+/*
+	Nothing here for the breadcrumb's buttons.
 
+	These ids belonged to the old two-line PAGE / EDITING slabs, which needed a
+	minimum width so a short page name did not make a narrow tower, and extra
+	right padding to clear a chevron that sat in a corner. The breadcrumb reuses
+	the ids so the dropdown machinery keeps working, and inherited both: a 108px
+	floor on a button whose content is 90, which the user-agent then centred - so
+	Characters sat in the middle of a box with nine pixels of nothing on each
+	side - and a right padding that made its two sides uneven.
+
+	The page button now measures its own words. The item button keeps a ceiling,
+	because a character name can be long.
+*/
 #nav-button-l2,
 #nav-button-l2:active,
 #nav-button-l2:hover,
@@ -107,17 +113,42 @@
 	project hub's sidebar included - and positioned it absolutely as a
 	floating menu.
 */
+/*
+	Same surface as the rail's menus and the toolbar's: --r-2xl with --sp-2 of
+	padding, so whatever sits inside at --r-xl is concentric with it. A popover
+	is a popover wherever it opens from.
+
+	--z-menu, not --z-sticky. It is a sibling of the left rail now, and the rail
+	sits at --z-shell.
+*/
 nav[id^='nav-dropdown'] {
-	display: block;
+	/*
+		A column, not a block. The rows used to be width:100% inside a
+		shrink-to-fit block, which is a width resolving against a container that
+		is waiting on its contents - so they contributed nothing to the intrinsic
+		width and the menu fell back to its floor. A flex column stretches them
+		instead, and max-content then measures the longest label.
+	*/
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
 	box-shadow: var(--shadow-3);
 	position: absolute;
-	border-radius: var(--r-md);
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
 	max-height: calc(100% - 95px);
-	min-width: 240px;
+	/*
+		Sized to its longest row. The floor is there so a list of short words is
+		not a narrow strip under a wide control, and the cap stops a long
+		character name from stretching it across the canvas.
+	*/
+	width: max-content;
+	min-width: 220px;
+	max-width: min(420px, 60vw);
 	padding: var(--sp-2);
-	z-index: 100;
+	z-index: var(--z-menu);
 	overflow-x: hidden;
 	overflow-y: auto;
 	animation: var(--animate-fade-in-slide-down);
@@ -127,22 +158,42 @@ nav[id^='nav-dropdown']:focus {
 	outline: 0;
 }
 
+/*
+	The character chooser. Its width comes from its grid and its height is
+	capped so it is a menu rather than a second window - it used to open at
+	80% of the viewport in both directions.
+*/
+#nav-dropdown-chooser {
+	width: max-content;
+	min-width: 0;
+	max-width: none;
+	max-height: min(460px, calc(100vh - 120px));
+	overflow: hidden;
+}
+
 #nav-dropdown-page {
 	padding: var(--sp-2);
 }
 
+/*
+	The same eyebrow, at the same insets, as the rail menus' headings - see
+	.context-menu-heading. It was on --text-tertiary, a step quieter than the
+	one over there, and carried its own margins instead of the heading padding.
+*/
 .nav-dropdown__subtitle {
-	margin: var(--sp-4) 0px var(--sp-1) var(--sp-3);
-	color: var(--text-tertiary);
+	margin: 0;
+	padding: var(--sp-4) var(--sp-3) var(--sp-2) var(--sp-3);
+	color: var(--text-secondary);
 	opacity: 1;
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
 	letter-spacing: var(--tracking-caps);
 	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 .nav-dropdown__subtitle:first-child {
-	margin-top: var(--sp-1);
+	padding-top: var(--sp-2);
 }
 
 .nav-dropdown__button {
@@ -151,38 +202,64 @@ nav[id^='nav-dropdown']:focus {
 	column-gap: var(--sp-4);
 	grid-template-columns: min-content 1fr;
 	justify-items: start;
-	margin: 1px 0px;
-	padding: 0px var(--sp-3);
-	height: var(--row-h);
-	min-height: var(--row-h);
-	border-radius: var(--r-xs);
+	/*
+		No margin. It carried 1px top and bottom, which is the kind of spacing
+		that exists because a row once needed separating from its neighbour -
+		the menu's own 1px gap does that now, and the extra two pixels only
+		showed up as the list not lining up with the rail's menus.
+	*/
+	margin: 0;
+	/*
+		min-width, not width. The menu is wider than its longest row - a list of
+		short page names under a 220px floor - and Chrome does not stretch a
+		<button> to a flex line it did not ask for. A percentage minimum fills it
+		without feeding back into the max-content the menu is measured by.
+	*/
+	min-width: 100%;
+	padding: 0px var(--sp-4) 0px var(--sp-3);
+	/*
+		40px and --r-xl, the same pairing the rail's and the toolbar's menu rows
+		use. At --row-h the browser would clamp the radius to half the height and
+		the highlight would come out a lozenge.
+	*/
+	height: calc(var(--row-h) + var(--sp-5));
+	min-height: calc(var(--row-h) + var(--sp-5));
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
 	border: 1px solid transparent;
 	color: var(--text-primary);
 	text-align: left;
 	background-color: transparent;
 	font-size: var(--fs-sm);
-	width: 100%;
 	box-shadow: none;
 }
 
 .nav-dropdown__button:hover,
 .nav-dropdown__button:focus {
 	border-color: transparent;
-	margin: 1px 0px;
+	margin: 0;
 	color: var(--text-primary);
 	background-color: var(--bg-hover);
 	box-shadow: none;
 }
 
+/*
+	`color`, not `fill`.
+
+	These are line icons - fill="none" stroke="currentColor" - and a CSS `fill`
+	outranks the presentation attribute on the element, so `fill: var(...)`
+	poured the icon colour into the inside of every outline. What looked like
+	icons with a coloured background was the background of the icon itself.
+*/
 .nav-dropdown__button svg {
-	height: var(--icon-size);
-	width: var(--icon-size);
-	fill: var(--icon-default);
+	height: var(--icon-size-lg);
+	width: var(--icon-size-lg);
+	color: var(--icon-default);
 }
 
 .nav-dropdown__button:hover svg,
 .nav-dropdown__button:focus svg {
-	fill: var(--icon-accent);
+	color: var(--icon-accent);
 }
 
 .nav-dropdown__button span {

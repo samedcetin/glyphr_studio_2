@@ -7,7 +7,6 @@ import { makeCard_componentInstanceAttributes } from './card_component_instance.
 import {
 	makeCard_glyphAttributes,
 	makeCard_glyphLinks,
-	makeCard_itemNavigation,
 } from './card_glyph.js';
 import { makeCard_multiSelectPathAttributes, makeCard_pathAttributes } from './card_path.js';
 import {
@@ -69,7 +68,6 @@ export function makePanel_GlyphAttributes() {
 
 	// Glyph
 	content.push(makeCard_glyphAttributes(editor.selectedItem));
-	content.push(makeCard_itemNavigation(editor.selectedItem));
 	const linksCard = makeCard_glyphLinks(editor.selectedItem);
 	if (linksCard) content.push(linksCard);
 

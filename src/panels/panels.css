@@ -1,16 +1,29 @@
 /*
 	Cards fill the panel rather than being pinned to 450px, so the panel width
 	is now a single variable in editor-pages.css instead of a constant repeated
-	across files. The label column shrinks with the panel instead of pushing
-	the inputs out of view.
+	across files.
+
+	Two rules make every card in the app line up with every other one:
+
+		- the label track is --panel-label-col, a fixed width. It used to be
+		  minmax(96px, 40%) here and minmax(64px, 38%) in the sidebar, so a
+		  label ended at a different x in each sidebar and slid while the user
+		  dragged the resizer.
+
+		- rows are grid-auto-rows, not the height of whatever landed in them.
+		  A 24px input, a 20px checkbox and a 26px button used to produce three
+		  different row heights inside one card.
+
+	Below the sidebar container breakpoint the card collapses to a single
+	column and both rules stand down - see the @container block in sidebar.css.
 */
 .panel__card {
 	display: grid;
-	/* align with buttons at the bottom of cards */
-	grid-template-columns: minmax(96px, 40%) minmax(0, 1fr);
+	grid-template-columns: var(--panel-label-col) minmax(0, 1fr);
+	grid-auto-rows: minmax(var(--row-h), auto);
 	align-items: center;
 	justify-items: left;
-	row-gap: var(--sp-3);
+	row-gap: var(--sp-1);
 	column-gap: var(--sp-4);
 	margin-bottom: var(--sp-2);
 	margin-right: 0px;
@@ -21,7 +34,6 @@
 	background-color: var(--bg-surface);
 	border-radius: var(--r-md);
 	box-shadow: none;
-	animation: var(--animate-fade-update);
 }
 
 .more-padding {
@@ -38,60 +50,11 @@
 	padding: var(--sp-5) 0px;
 }
 
-.thumbnail-button {
-	line-height: 24px;
-}
-
-.thumbnail-button svg {
-	background-color: white;
-	border: 1px solid var(--enabled-restingLight-border);
-	fill: var(--enabled-resting-fill);
-	border-radius: 4px;
-	width: 24px;
-	height: 24px;
-	margin-bottom: -7px;
-}
-
-.thumbnail-button span {
-	display: inline-block;
-}
-
-.button-left svg {
-	margin-left: -4px;
-}
-
-.button-left span {
-	margin: 0px 0px 0px 10px;
-}
-
-.button-left div {
-	display: inline-block;
-	width: 18px;
-	text-align: left;
-	font-size: 1.2em;
-	font-weight: bold;
-}
-
-.button-right svg {
-	margin-right: -4px;
-}
-
-.button-right span {
-	margin: 0px 10px 0px 0px;
-}
-
-.button-right div {
-	display: inline-block;
-	width: 18px;
-	text-align: right;
-	font-size: 1.2em;
-	font-weight: bold;
-}
-
-.thumbnail-button:hover svg,
-.thumbnail-button:active svg {
-	fill: var(--enabled-resting-text);
-}
+/*
+	The thumbnail buttons that used to sit at the foot of three panels - a
+	wide Previous item / Next item pair - are gone. Stepping through the items
+	belongs beside the name it changes: see .breadcrumb__step in app.css.
+*/
 
 .panel__card.full-width,
 .pre-checkbox {
@@ -110,21 +73,6 @@
 	display: inline-block !important;
 }
 
-#h1InputGroup,
-#h2InputGroup {
-	grid-column: 1 / -1;
-	display: grid;
-	width: 100%;
-	/* align with buttons at the bottom of cards */
-	grid-template-columns: clamp(110px, 150px, 190px) 1fr;
-	align-items: center;
-	justify-items: left;
-	row-gap: 5px;
-	column-gap: 11px;
-	margin-bottom: 5px;
-	margin-right: 5px;
-}
-
 .panel__card h1,
 .panel__card h2,
 .panel__card h3,
@@ -140,27 +88,42 @@
 	grid-column: 1 / -1;
 }
 
+/*
+	min-width: 0 because a grid item defaults to min-width: auto and so refuses
+	to shrink below its own text. Without it the three longest labels - bearings,
+	transform origin, lock aspect ratio - pushed 7-38px past the label track and
+	sat on top of their own fields.
+*/
 .panel__card label {
 	grid-column: 1;
-	line-height: 20px;
+	line-height: var(--lh-tight);
+	min-width: 0;
 }
 
 .panel__card label[disabled] {
 	color: var(--disabled-text);
 }
 
+/*
+	A full-width label spans both columns, so it has no field to sit beside and
+	only needs the row's own height. The previous rule fixed it at 20px and then
+	pulled it up 5px with position:relative to fake vertical centring; the row
+	grid centres it now.
+*/
 .panel__card.full-width label {
-	height: 20px;
-	line-height: 20px;
-	padding: 0px 0px 10px 10px;
-	position: relative;
-	top: -5px;
+	line-height: var(--lh-tight);
+	padding-left: var(--sp-4);
 }
 
+/*
+	A label carrying an info-bubble is itself a grid. minmax(0, max-content) on
+	the text cell rather than max-content: the bare keyword is a floor as well as
+	a ceiling, so the text could not wrap and the label overflowed its track.
+*/
 .panel__card .info {
 	display: grid !important;
 	gap: 8px;
-	grid-template-columns: max-content min-content;
+	grid-template-columns: minmax(0, max-content) min-content;
 	grid-template-rows: max-content;
 	align-items: center;
 }
@@ -185,10 +148,14 @@
 	border-radius: 4px;
 }
 
+/*
+	24px, not 20px: a checkbox is a pointer target and 20 is under the floor.
+	The margin-bottom was nudging it towards the centre of a row whose height
+	depended on its neighbour; grid-auto-rows plus align-items does that now.
+*/
 .panel__card input[type='checkbox'] {
-	width: 20px;
-	height: 20px;
-	margin-bottom: 4px;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
 	cursor: pointer;
 }
 
@@ -202,7 +169,56 @@
 	min-width: 0;
 	grid-column: 2;
 	display: grid;
+	/*
+		Whatever sits between two fields - the slash, the ratio-lock chain, the
+		empty spacer - is centred on them. Grid cells stretch by default, so the
+		separator was a full-height box with its glyph sitting at the top of it,
+		one line above the numbers it separates.
+	*/
+	align-items: center;
 	grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr);
+}
+
+/*
+	A row that is one field and a button, not two fields. The three-column
+	track put the button at the left edge of a 130px column, so it floated
+	twenty pixels off its own field with a hundred of nothing after it. It sits
+	against the field it belongs to now.
+*/
+.panel__card .doubleInput:has(> button),
+.panel__card .doubleInput:has(> fancy-button) {
+	grid-template-columns: minmax(0, 1fr) var(--sp-2) max-content;
+
+	/*
+		And it is the height of that field. A fancy-button is 32 on its own,
+		which is right for a dialog footer and wrong inline beside a 28px
+		input - the two read as misaligned rather than as one row.
+	*/
+	--fancy-button-h: var(--control-h);
+}
+
+/* The component reserves room for a neighbour it does not have here. */
+.panel__card .doubleInput > fancy-button {
+	margin-right: 0;
+}
+
+/*
+	Two fields with nothing between them, because each one now says what it is
+	from the inside - X and Y, W and H, L and R. The 16px track in the middle
+	held a slash that repeated what the label above the pair already said; both
+	are gone. See the affix note in input-number.
+*/
+.panel__card .doubleInput--pair {
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	column-gap: var(--sp-2);
+}
+
+/*
+	And with no label beside it, the pair takes the whole card rather than
+	sitting indented past an empty label column.
+*/
+.panel__card .doubleInput--full {
+	grid-column: 1 / -1;
 }
 
 .panel__card input,
@@ -223,32 +239,45 @@
 .panel-card__action-button:hover,
 .panel-card__action-button:focus,
 .panel-card__action-button:active {
-	width: min-content;
-	height: 26px;
+	/* Square, and the same height as the field it sits beside. It was
+		--control-h-sm, four
+		pixels short of every control in the row, and 25 wide against 28 tall. */
+	width: var(--control-h);
+	height: var(--control-h);
 	padding: 2px;
 	margin: 0px 0px 0px 2px;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 }
 
+/*
+	On tokens. It was --blue-l95 in every state, which is a fixed pale blue -
+	it did not follow the theme, and it did not change on hover either, so the
+	button had no way of saying it had been reached.
+*/
 .panel-card__action-button {
-	background-color: var(--blue-l95);
+	background-color: var(--bg-surface-sunken);
+	border-color: var(--border-subtle);
+	color: var(--icon-default);
 }
 
 .panel-card__action-button:hover,
 .panel-card__action-button:focus,
 .panel-card__action-button:active {
-	background-color: var(--blue-l95);
+	background-color: var(--bg-hover);
+	border-color: var(--border-strong);
+	color: var(--icon-strong);
 }
 
-.panel__card.char-info {
-	grid-template-columns: max-content 1fr !important;
-	column-gap: 20px;
-	row-gap: 10px;
-}
-
+/*
+	Character info used to override the card grid with `max-content 1fr
+	!important`, which is why its labels ended at a different x from every other
+	card in the same sidebar. It uses the shared track now and overrides nothing.
+*/
 .char-info input {
-	font-family: monospace;
+	font-family: var(--font-mono);
 	padding: 4px 8px;
-	height: 32px;
+	height: var(--control-h-lg);
 }
 
 .rowPad {
@@ -261,13 +290,98 @@
 	grid-column: 1 / -1;
 }
 
-.dimSplit {
-	color: var(--gray-l80);
+/*
+	The aspect-ratio lock, in the gap between width and height.
+
+	It is the same 16px slot the slash uses in the other paired rows, widened
+	to a control - so the two fields lose twelve pixels between them and gain
+	a button that says what ties them together. See makeRatioLockToggle.
+
+	It is the height of the fields either side of it. At --control-h-sm it
+	stood four pixels short of them, so the row read as a control with a
+	smaller thing wedged in the middle rather than as three parts of one row.
+*/
+.panel__card .doubleInput:has(> .ratio-lock),
+.panel__card .doubleInput:has(> .ratio-lock__gap) {
+	grid-template-columns: minmax(0, 1fr) var(--control-h) minmax(0, 1fr);
+}
+
+.ratio-lock {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-h);
+	height: var(--control-h);
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	/* --r-md, the corner the fields either side of it take. */
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--icon-default);
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.ratio-lock:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
+}
+
+/*
+	On. The accent tint the app uses for "this is the state you are in", and
+	the chain is drawn whole rather than broken - so the state is readable
+	without the colour as well as with it.
+*/
+.ratio-lock[selected],
+.ratio-lock[selected]:hover {
+	background-color: var(--bg-selected);
+	border-color: transparent;
+	color: var(--icon-accent);
+}
+
+.ratio-lock svg {
 	width: 16px;
-	text-align: center;
+	height: 16px;
+}
+
+/*
+	The slash between two paired labels - "bearings: left / right".
+
+	It was --gray-l80, a fixed light grey from the old ramp, which in dark mode
+	is rgb(50,54,62): one shade off the panel it is written on, so the pair read
+	as "bearings: left right". --text-tertiary is the role it wants and it moves
+	with the theme.
+
+	This one lives inside the label text, so it stays inline - giving it a
+	display of its own broke "bearings: left / right" into three lines. The
+	16px box is what puts air either side of a glyph that carries none, and
+	the padding-top that used to nudge it onto the baseline is gone: it is
+	aligned by its own line box now, so it no longer shifts when a label wraps.
+*/
+.dimSplit {
 	display: inline-block;
-	font-size: 0.8em;
-	padding-top: 6px;
+	width: 16px;
+	color: var(--text-tertiary);
+	font-size: var(--fs-xs);
+	text-align: center;
+}
+
+/*
+	The same span, but standing in the middle column of a field pair rather than
+	in a run of text. Here it is a cell, and it centres its glyph on the two
+	fields either side.
+*/
+.panel__card .doubleInput > .dimSplit {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	line-height: 1;
 }
 
 /*
@@ -277,8 +391,8 @@
 .pointTypeButton:hover,
 .pointTypeButton:focus {
 	display: inline-block;
-	width: 28px;
-	height: 28px;
+	width: var(--control-h);
+	height: var(--control-h);
 	background-color: var(--enabled-restingLight-background);
 	color: var(--gray-l60);
 	padding: 3px 5px 5px 3px;
@@ -328,7 +442,7 @@
 .renderFlavorButton:hover,
 .renderFlavorButton:focus {
 	display: inline-block;
-	height: 28px;
+	height: var(--control-h);
 	padding: 0px 10px;
 	background-color: var(--enabled-restingLight-background);
 	color: var(--blue-l15);
@@ -386,9 +500,16 @@
 	grid-column: 1 / -1;
 }
 
+/*
+	The same corner the toolbar's tools and the rail's buttons take. These are
+	the same object - a square that holds one icon - so they should not be
+	three different shapes depending on which side of the window they are on.
+*/
 .panel__actions-area button {
 	background-color: var(--bg-surface-sunken);
 	border-color: var(--border-subtle);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	color: var(--icon-default);
 	padding: 4px;
 	width: 100%;
@@ -443,6 +564,92 @@
 nav .item-chooser__wrapper {
 	padding: 20px;
 	margin-top: 5px;
+}
+
+/* --------------------------------------------------------------
+	Compact item chooser
+
+	The character dropdown behind the breadcrumb. See
+	makeSingleItemTypeChooserContent for why it is built this way rather than
+	as the Characters page at 80% of the window.
+	------------------------------------------------------------ */
+
+nav .item-chooser__wrapper--compact {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
+	gap: var(--sp-4);
+	padding: 0;
+	margin: 0;
+	background-color: transparent;
+	min-height: 0;
+}
+
+.item-chooser__wrapper--compact .item-chooser__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-4);
+	padding: var(--sp-2) var(--sp-3) 0 var(--sp-3);
+}
+
+.item-chooser__wrapper--compact .item-chooser__header option-chooser {
+	width: auto;
+	min-width: 0;
+	flex: 1 1 auto;
+	max-width: 240px;
+}
+
+/* How many are in the range you are looking at - the answer to "is this all
+	of them", which a grid that scrolls cannot give you. */
+.item-chooser__count {
+	flex: 0 0 auto;
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/*
+	Ten columns of 40, which is what sets the dropdown's width - the grid
+	decides how wide the menu is, rather than the window deciding how wide the
+	grid is.
+*/
+.item-chooser__wrapper--compact .item-chooser__tile-grid {
+	display: grid;
+	grid-template-columns: repeat(10, 40px);
+	gap: var(--sp-1);
+	justify-content: start;
+	padding: 0 var(--sp-3);
+	/* Room for the scrollbar, always - so the last column does not shift
+		sideways the moment a range is long enough to scroll. */
+	scrollbar-gutter: stable;
+	overflow-y: auto;
+	min-height: 0;
+}
+
+.item-chooser__wrapper--compact .item-chooser__tile-grid glyph-tile {
+	display: block;
+	margin: 0;
+}
+
+/*
+	The handoff. This control is for browsing; the palette is for finding, and
+	it already searches every character by name, by the character itself and by
+	its id. Saying so is cheaper than building a second search.
+*/
+.item-chooser__footer {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	padding: var(--sp-3) var(--sp-3) var(--sp-2) var(--sp-3);
+	border-top: 1px solid var(--border-subtle);
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+}
+
+.item-chooser__footer code {
+	min-width: 20px;
+	height: 20px;
 }
 
 .content-page__right-area .item-chooser__wrapper {
@@ -566,7 +773,8 @@ nav .item-chooser__wrapper {
 	border: 1px solid transparent;
 	padding: var(--sp-1) var(--sp-2);
 	background-color: transparent;
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	width: 100%;
 	max-width: none;
 	height: 40px;
@@ -952,7 +1160,8 @@ nav .item-chooser__wrapper {
 	padding: 0;
 	margin: 0;
 	border: 1px solid transparent;
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--icon-default);
 	box-shadow: none;
@@ -1000,7 +1209,8 @@ nav .item-chooser__wrapper {
 	color: var(--text-primary);
 	background-color: var(--bg-surface);
 	border: 1px solid var(--accent);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 }
 
 /* --------------------------------------------------------------
@@ -1027,6 +1237,13 @@ nav .item-chooser__wrapper {
 	right: 0;
 	height: 2px;
 	background-color: var(--accent);
+	/*
+		The one stacking value that is not a --z-* token, on purpose. Every step
+		of that scale names a layer of the window; this only lifts a 2px line
+		above the two layer rows it sits between. Giving it a scale token would
+		put a global name on a local decision, which is the shadow-alias mistake
+		in a different costume.
+	*/
 	z-index: 2;
 }
 
@@ -1036,4 +1253,147 @@ nav .item-chooser__wrapper {
 
 .layer-row--drop-below::after {
 	bottom: -1px;
+}
+
+/*
+	Transform card
+
+	Figma's block, because that is the transform panel most designers already
+	read fluently: fields down the left, the origin grid and the one-click
+	transforms down the right, the icons under the grid they pivot about.
+
+	So the card stands down from the label/control two-column grid every other
+	card uses, and lays out its own two columns instead.
+*/
+.panel__card.transform-card {
+	grid-template-columns: minmax(0, 1fr);
+	grid-auto-rows: auto;
+	column-gap: 0;
+	row-gap: 0;
+}
+
+/*
+	92px is three 28px buttons and the two gaps between them, so the grid and
+	the icon row under it are the same width and read as one block.
+*/
+.transform-card__body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 92px;
+	align-items: start;
+	gap: var(--sp-3);
+	width: 100%;
+}
+
+.transform-card__fields,
+.transform-card__aside {
+	display: grid;
+	gap: var(--sp-3);
+	min-width: 0;
+}
+
+/*
+	These fields carry a mark and a unit inside themselves, so the 50px floor
+	input-number keeps for a bare number would push them off the panel.
+*/
+.transform-card__fields input-number {
+	--number-input-min-w: 0;
+	width: 100%;
+}
+
+/*
+	Three across, always. The actions area's auto-fill would reflow them to
+	whatever fits, and it spans every column of the card it lands in - which
+	here would take it out of the right-hand column entirely. Three classes
+	because sidebar.css says the same thing with two, and later.
+*/
+.transform-card .transform-card__aside .panel__actions-area {
+	grid-column: 1;
+	grid-template-columns: repeat(3, var(--control-h));
+	grid-auto-rows: var(--control-h);
+	gap: var(--sp-2);
+	margin-bottom: 0;
+	width: 100%;
+}
+/*
+	Transform origin grid
+
+	The twelve origins as the em box they live in: three columns, and four rows
+	for top, middle, baseline and bottom. A dropdown asked the reader to hold
+	the coordinate system in their head and then find its name in a list of
+	twelve. Every drawing tool puts this on a reference-point grid instead.
+*/
+.origin-grid {
+	position: relative;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(4, 1fr);
+	width: 100%;
+	aspect-ratio: 1;
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	overflow: hidden;
+}
+
+/*
+	The baseline, drawn through the row that means y = 0 - which is what tells
+	the third row apart from the fourth.
+*/
+.origin-grid::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 62.5%;
+	height: 1px;
+	background-color: var(--border-default);
+	pointer-events: none;
+}
+
+.origin-grid__cell,
+.origin-grid__cell:hover,
+.origin-grid__cell:focus,
+.origin-grid__cell:active {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	border-radius: 0;
+	background-color: transparent;
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.origin-grid__cell::before {
+	content: '';
+	width: 3px;
+	height: 3px;
+	border-radius: var(--r-pill);
+	background-color: var(--icon-default);
+	opacity: 0.45;
+	transition: var(--transition-color);
+}
+
+.origin-grid__cell:hover::before {
+	width: 5px;
+	height: 5px;
+	opacity: 1;
+}
+
+.origin-grid__cell[selected]::before,
+.origin-grid__cell[selected]:hover::before {
+	width: 7px;
+	height: 7px;
+	opacity: 1;
+	background-color: var(--accent);
+}
+
+.origin-grid__cell:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: -2px;
 }

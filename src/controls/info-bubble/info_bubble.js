@@ -52,11 +52,6 @@ export class InfoBubble extends HTMLElement {
 		let bubbleStyles = makeElement({ tag: 'style', innerHTML: bubbleStyle });
 		bubble.appendChild(bubbleStyles);
 
-		// log(`Making pointer...`);
-		let pointer = makeElement({
-			className: 'pointer',
-		});
-
 		// log(`Making content...`);
 		let content = makeElement({
 			innerHTML: this.innerHTML,
@@ -66,35 +61,44 @@ export class InfoBubble extends HTMLElement {
 		// log(`bubbleWidth: ${bubbleWidth}`);
 		if (bubbleWidth) content.setAttribute('style', `width: ${bubbleWidth};`);
 
-		bubble.appendChild(pointer);
 		bubble.appendChild(content);
 		content.addEventListener('mouseleave', () => this.hide(this.entryPoint));
 
 		// Add and show bubble
 		document.body.appendChild(bubble);
-		let entryPointRect = this.entryPoint.getBoundingClientRect();
-		let bubbleRect = bubble.getBoundingClientRect();
-		let left = entryPointRect.x + entryPointRect.width + 2;
-		let top = entryPointRect.y - bubbleRect.height / 2 + 18;
 
-		if (left < 0 || top < 0) {
-			/** @type {HTMLElement} */
-			const pointer = bubble.querySelector('.pointer');
-			pointer.style.display = 'none';
-		}
-		left = Math.max(left, 0);
-		top = Math.max(top, 0);
+		/*
+			Placed against the window, not just next to the mark.
+
+			It used to open to the right of its "?" and clamp at zero, which
+			handles running off the top or the left - neither of which happens -
+			and does nothing about running off the right, which is where every
+			one of these lives: the far edge of the Properties panel. A 360px
+			bubble opened from a control 40px from the window's edge spent 320px
+			of itself outside it. Now it flips to the other side when there is
+			no room, and is held inside the window on both axes either way.
+		*/
+		const gap = 8;
+		const entryPointRect = this.entryPoint.getBoundingClientRect();
+		const bubbleRect = bubble.getBoundingClientRect();
+		const limitRight = window.innerWidth - bubbleRect.width - gap;
+		const limitBottom = window.innerHeight - bubbleRect.height - gap;
+
+		let left = entryPointRect.right + gap;
+		if (left > limitRight) left = entryPointRect.left - bubbleRect.width - gap;
+		left = Math.min(Math.max(left, gap), Math.max(limitRight, gap));
+
+		let top = entryPointRect.top + entryPointRect.height / 2 - bubbleRect.height / 2;
+		top = Math.min(Math.max(top, gap), Math.max(limitBottom, gap));
 
 		// log(`showing bubble at ${left} / ${top}`);
 		// log(this.entryPoint);
 		bubble.style.left = `${left}px`;
 		bubble.style.top = `${top}px`;
 
-		this.entryPoint.style.borderColor = 'rgb(180, 180, 180)';
-		this.entryPoint.style.backgroundColor = 'rgb(180, 180, 180)';
-		this.entryPoint.style.color = 'rgb(250, 250, 250)';
-		this.entryPoint.style.cursor = 'pointer';
-		this.entryPoint.innerHTML = '✖';
+		// State on an attribute, so the open look lives in the stylesheet.
+		this.entryPoint.setAttribute('open', '');
+		this.entryPoint.innerHTML = '✕';
 
 		// log(`info-bubble show`, 'end');
 	}
@@ -113,10 +117,7 @@ export class InfoBubble extends HTMLElement {
 		// document.body.removeChild(bubble);
 		// log(`bubble has been removed`);
 
-		entryPoint.style.borderColor = 'rgb(180, 180, 180)';
-		entryPoint.style.backgroundColor = 'transparent';
-		entryPoint.style.color = 'rgb(180, 180, 180)';
-		entryPoint.style.cursor = 'help';
+		entryPoint.removeAttribute('open');
 		entryPoint.innerHTML = '?';
 		entryPoint.blur();
 		// log(`info-bubble hide`, 'end');

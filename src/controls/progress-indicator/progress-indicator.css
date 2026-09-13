@@ -1,3 +1,9 @@
+/*
+	On tokens. The message was --blue-l80 at 80% opacity - a fixed pale blue
+	that vanished on a light ground and glowed on a dark one - and the bar was
+	the same blue-purple-orange gradient the buttons used to run.
+*/
+
 #progress-indicator__wrapper {
 	display: block;
 	position: relative;
@@ -6,37 +12,32 @@
 
 #progress-indicator__message {
 	display: block;
-	font-size: 1.5em;
-	color: var(--blue-l80);
-	opacity: 80%;
+	color: var(--text-secondary);
+	font-size: var(--fs-lg);
 	animation: var(--animate-fade-in);
 }
 
 .progress-indicator__title {
-	font-size: inherit;
 	display: block;
-	margin-bottom: 10px;
+	margin-bottom: var(--sp-4);
+	font-size: inherit;
+	color: var(--text-primary);
+	font-weight: var(--fw-medium);
 }
 
 .progress-indicator__counter {
-	font-family: monospace;
-	font-size: inherit;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-md);
+	color: var(--text-secondary);
 }
 
 #progress-indicator__bar {
-	margin: 20px 0px 0px 0px;
+	margin: var(--sp-7) 0 0 0;
 	width: 400px;
+	max-width: 100%;
 	height: 4px;
-	border-radius: 2px;
-	padding: 0px;
-	background: linear-gradient(
-		135deg,
-		var(--blue-l55),
-		var(--purple-l45),
-		var(--orange-l55),
-		var(--purple-l45),
-		var(--blue-l55)
-	);
-	background-position: 0%;
-	background-size: 500% 500%;
+	padding: 0;
+	border-radius: var(--r-pill);
+	background-color: var(--accent);
 }

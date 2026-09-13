@@ -91,6 +91,12 @@
 	--bg-hover: hsla(220, 15%, 40%, 0.07);
 	--bg-active: hsla(220, 15%, 40%, 0.12);
 	--bg-selected: var(--a-05);
+	/*
+		The ground shown while a file is being dragged over the window.
+		Translucent on purpose: it sits over a blur, so what you are about to drop
+		onto stays visible behind it rather than being replaced by a coloured sheet.
+	*/
+	--bg-drop: hsla(212, 100%, 97%, 0.8);
 	--bg-selected-strong: var(--a-50);
 	--bg-disabled: var(--n-04);
 
@@ -127,6 +133,13 @@
 	/* Status - semantic aliases */
 	--danger: var(--danger-60);
 	--danger-bg: var(--danger-tint-light);
+	/*
+		The ground of a destructive button, as opposed to --danger, which is the
+		colour destructive *text* is written in. They part company in dark mode:
+		text there has to lighten to stay legible on a dark ground, and a fill
+		that lightens with it leaves white text on pink at 2.5:1.
+	*/
+	--bg-danger: var(--danger-60);
 	--warn: var(--warn-60);
 	--warn-bg: var(--warn-tint-light);
 	--ok: var(--ok-60);
@@ -211,7 +224,28 @@
 	--r-sm: 5px;
 	--r-md: 8px;
 	--r-lg: 12px;
+	--r-xl: 16px;
+	/*
+		Floating surfaces only - popovers and menus. It is the one radius that
+		sits above the page rather than in it, and it is sized to hold a --r-xl
+		child concentrically at --sp-2 of padding: 20 - 4 = 16. The padding came
+		first: 2px was concentric too, at 18, but it left the rows pressed
+		against the wall of the menu.
+	*/
+	--r-2xl: 20px;
 	--r-pill: 999px;
+
+	/*
+		Corner smoothing, Apple style: the turn is spread along the edge and
+		eased into, so curvature never jumps the way a quarter circle's does.
+
+		Only Chromium ships `corner-shape` so far. Everywhere else the whole
+		declaration is invalid and dropped, leaving the plain circular radius -
+		which is why this is a separate property and not folded into --r-*.
+		Icons do not use this: they carry the geometry in their path data, so
+		they get the same corner in every browser. See common/icons.js.
+	*/
+	--corner-smooth: squircle;
 
 	/* Control sizing - dense by default, this is a pro tool */
 	--control-h: 28px;
@@ -221,7 +255,63 @@
 	--icon-size: 16px;
 	--icon-size-lg: 20px;
 	--tool-size: 32px;
-	--topbar-h: 44px;
+
+	/*
+		The shell's one dimension. It replaced --topbar-h, which nothing reads
+		since the top bar became a rail - and a declared-but-unread size is an
+		invitation to build against something that is not there any more.
+	*/
+	--rail-w: 56px;
+
+	/*
+		The single label track for every panel card, in both sidebars. Fixed, not
+		proportional: a percentage made the label column a different width in each
+		sidebar and moved it while the user dragged the resizer, so fields never
+		lined up across two open sections. Below the sidebar container breakpoint
+		the card collapses to one column and this track stops applying - see the
+		@container block in panels/sidebar.css.
+	*/
+	--panel-label-col: 96px;
+
+	/*
+		STACKING
+		--------
+		The whole scale, named for what sits at each value. Every z-index in the
+		app comes from here; a bare number is a decision made in isolation, and
+		fifteen of those is how the left rail's menu ended up painting behind a
+		panel that had picked the same number from a different file.
+
+		The order is deliberate and worth stating, because it is not obvious:
+
+			shell (2000) is above every page surface, so chrome and the menus it
+			opens are never covered by content.
+
+			modal (2005) sits one step above shell. That step is the whole
+			reason the old top bar carried `z-index: 2000 !important` - it was
+			fighting the modal for the same number. Nothing needs !important now.
+
+			toast, alert, menu (2010-2030) are above the modal on purpose: a
+			confirmation that cannot be read over the dialog it belongs to is
+			worse than one that covers it.
+
+		A positioned element with a z-index creates a stacking context, and its
+		children are then capped inside it. So a surface that opens a menu needs
+		a value at least as high as the things that menu must clear - which is
+		why the rail is --z-shell rather than --z-canvas-float.
+	*/
+	--z-base: 0;
+	--z-resizer: 5;
+	--z-canvas-float: 10;
+	--z-sticky: 100;
+	--z-dropdown: 1000;
+	--z-shell: 2000;
+	--z-modal: 2005;
+	--z-toast: 2010;
+	--z-alert: 2020;
+	--z-menu: 2030;
+	--z-command-palette: 3000;
+	/* The hide-UI preview covers the whole window, palette included. */
+	--z-full-screen: 3100;
 
 	/* Motion. Two durations, one easing. Resist adding more. */
 	--dur-fast: 90ms;
@@ -265,6 +355,7 @@
 	--bg-hover: hsla(220, 30%, 80%, 0.07);
 	--bg-active: hsla(220, 30%, 80%, 0.12);
 	--bg-selected: hsla(212, 90%, 55%, 0.18);
+	--bg-drop: hsla(212, 90%, 50%, 0.2);
 	--bg-selected-strong: var(--a-60);
 	--bg-disabled: var(--n-90);
 
@@ -296,6 +387,7 @@
 
 	--danger: var(--danger-40);
 	--danger-bg: var(--danger-tint-dark);
+	--bg-danger: var(--danger-60);
 	--warn: var(--warn-40);
 	--warn-bg: var(--warn-tint-dark);
 	--ok: var(--ok-40);

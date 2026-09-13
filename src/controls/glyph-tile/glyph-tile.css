@@ -129,3 +129,99 @@
 .wrapper[has-changed = "false"] .thumbnail {
 	background-color: var(--gray-l99) !important;
 } */
+
+/* --------------------------------------------------------------
+	Compact
+
+	The tile as it appears in the breadcrumb's character dropdown: the
+	letterform and nothing else. The name strip is what makes the full tile
+	52 by 75 - three quarters of its height is a caption - and in a grid you
+	are scanning for a shape, the caption is the part you are not reading. It
+	is still on the host's `title`, so it is one hover away.
+	------------------------------------------------------------ */
+
+:host([compact]),
+:host([compact]) .wrapper {
+	width: 40px;
+	height: 40px;
+}
+
+:host([compact]) .wrapper {
+	padding: 0;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+}
+
+/*
+	No plate under the letterform.
+
+	The full tile draws the glyph on a bordered square of canvas white, because
+	at 50px you are reading it as a drawing on paper. At 40, in a grid of a
+	hundred, ninety-five borders and ninety-five white squares are a lattice
+	you have to see past to find the letter. The letterform sits on the menu
+	surface, and the tile's own hover and selected states are the only boxes
+	drawn.
+*/
+:host([compact]) .thumbnail {
+	width: 40px;
+	height: 40px;
+	padding-top: 0;
+	font-size: 24px;
+	line-height: 40px;
+	background-color: transparent;
+	border: none;
+	opacity: 1;
+}
+
+/* The glyph is drawn to the box, so it needs the inset the border used to
+	give it - otherwise a cap-height letter touches the tile above it. */
+:host([compact]) .thumbnail svg {
+	display: block;
+	width: 36px;
+	height: 36px;
+	margin: 2px auto;
+}
+
+/*
+	A space, drawn as an empty slot rather than labelled as one.
+
+	The full tile writes "white space" across the thumbnail, which is readable
+	at fifty pixels and is two illegible lines at forty. A dashed box says the
+	same thing at any size, and distinguishes a character that is meant to have
+	no outline from one that has not been drawn yet - which shows as the letter
+	itself, greyed, in the interface font.
+*/
+:host([compact]) .whitespace-char-thumbnail {
+	box-sizing: border-box;
+	width: 18px;
+	height: 18px;
+	margin: 11px auto;
+	padding: 0;
+	font-size: 0;
+	line-height: 0;
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
+}
+
+:host([compact]) .name {
+	display: none;
+}
+
+/*
+	A character with nothing drawn in it yet. The full tile says so in its
+	caption; without one, the tile itself has to - so it sits back, and the
+	ones that have been drawn come forward.
+*/
+:host([compact]) .wrapper[session-state='notCreated'] .thumbnail {
+	opacity: 0.45;
+}
+
+/* The hover and selected rules above put the plate back; in compact the tile
+	itself carries those states. */
+:host([compact]) .wrapper:hover .thumbnail,
+:host([compact]) .wrapper:focus .thumbnail,
+:host([compact]) .wrapper[selected] .thumbnail {
+	background-color: transparent;
+	border: none;
+}

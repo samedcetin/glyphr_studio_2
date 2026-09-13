@@ -1,4 +1,5 @@
 import { addAsChildren, makeElement } from '../common/dom.js';
+import { makeLineIcon } from '../common/icons.js';
 import logoHorizontal from '../common/graphics/logo-wordmark-horizontal-small.svg?raw';
 import { closeEveryTypeOfDialog, showError, showToast } from '../controls/dialogs/dialogs.js';
 import { makeProgressIndicator } from '../controls/progress-indicator/progress_indicator.js';
@@ -37,8 +38,19 @@ import { makeFontPreviewSVG, projectFromSavedData } from './project_preview.js';
 	underneath; what changed is what you land on.
  */
 
-/** True when opening a second project alongside the current one (modal mode). */
+/** True when opening a second project alongside the current one. */
 let isSecondProject = false;
+
+/**
+ * True when the hub is running inside a modal dialog rather than as the page.
+ *
+ * This used to be inferred from isSecondProject, which was wrong in both
+ * directions: the hub is a modal when you replace the project in this window
+ * too, and it is the whole page at startup, where isSecondProject is also
+ * false. The two questions are separate - what am I opening into, and where
+ * am I being shown - and the second one is what decides the layout.
+ */
+let isModal = false;
 
 /** Which view the hub is showing: 'recents' | 'examples' | 'new' | 'open'. */
 let currentView = 'recents';
@@ -54,15 +66,19 @@ const hubViews = {
 	open: { label: 'Open a file', icon: 'upload', title: 'Open a file' },
 };
 
-const hubIcons = {
-	clock: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 1a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM8 4a.5.5 0 0 1 .5.5v3.3l2.1 1.2a.5.5 0 1 1-.5.9L7.75 8.55A.5.5 0 0 1 7.5 8.1V4.5A.5.5 0 0 1 8 4Z"/></svg>`,
-	sparkle: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 9.3 5.2a2 2 0 0 0 1.5 1.3L14.5 8l-3.7 1.5a2 2 0 0 0-1.5 1.3L8 14.5l-1.3-3.7a2 2 0 0 0-1.5-1.3L1.5 8l3.7-1.5a2 2 0 0 0 1.5-1.3L8 1.5Z"/></svg>`,
-	plus: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3a.5.5 0 0 1 .5.5v4h4a.5.5 0 0 1 0 1h-4v4a.5.5 0 0 1-1 0v-4h-4a.5.5 0 0 1 0-1h4v-4A.5.5 0 0 1 8 3Z"/></svg>`,
-	upload: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.7a.5.5 0 0 1 .35.15l3 3a.5.5 0 1 1-.7.7L8.5 3.4v6.6a.5.5 0 0 1-1 0V3.4L5.35 5.55a.5.5 0 1 1-.7-.7l3-3A.5.5 0 0 1 8 1.7ZM2.5 10a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 12.5 14h-9A1.5 1.5 0 0 1 2 12.5v-2a.5.5 0 0 1 .5-.5Z"/></svg>`,
-	system: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h9A1.5 1.5 0 0 1 14 3.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 9.5v-6Zm1.5-.5a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-9ZM5 13h6v1H5v-1Z"/></svg>`,
-	light: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0-1a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0-9a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 1-1 0V1.5A.5.5 0 0 1 8 1Zm0 12a.5.5 0 0 1 .5.5V15a.5.5 0 0 1-1 0v-1.5A.5.5 0 0 1 8 13ZM15 8a.5.5 0 0 1-.5.5H13a.5.5 0 0 1 0-1h1.5A.5.5 0 0 1 15 8ZM3 8a.5.5 0 0 1-.5.5H1a.5.5 0 0 1 0-1h1.5A.5.5 0 0 1 3 8Zm9.9-4.9a.5.5 0 0 1 0 .7l-1 1a.5.5 0 1 1-.8-.7l1-1a.5.5 0 0 1 .8 0ZM4.9 11.1a.5.5 0 0 1 0 .7l-1 1a.5.5 0 0 1-.8-.7l1-1a.5.5 0 0 1 .8 0Zm8 1.8a.5.5 0 0 1-.8 0l-1-1a.5.5 0 0 1 .8-.7l1 1a.5.5 0 0 1 0 .7ZM4.9 4.9a.5.5 0 0 1-.8 0l-1-1a.5.5 0 1 1 .8-.7l1 1a.5.5 0 0 1 0 .7Z"/></svg>`,
-	dark: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.2 2.1a.5.5 0 0 1 .1.6 5 5 0 0 0 6.9 6.9.5.5 0 0 1 .7.6A6 6 0 1 1 5.6 2a.5.5 0 0 1 .6.1Zm-1.3 1.3a5 5 0 1 0 7.7 7.7A6 6 0 0 1 4.9 3.4Z"/></svg>`,
-};
+/**
+ * Hub icons, by name, from the one line set.
+ *
+ * This used to be seven 16x16 filled SVG strings written out here - a fifth
+ * icon set living in a page file. The names are unchanged, so every call site
+ * below still reads hubIcons.plus and friends.
+ *
+ * @type {Object<string, string>}
+ */
+const hubIcons = {};
+['clock', 'sparkle', 'plus', 'upload', 'system', 'light', 'dark'].forEach((name) => {
+	hubIcons[name] = makeLineIcon(name, 20);
+});
 
 const themeLabels = {
 	system: 'Theme: follow system',
@@ -110,10 +126,12 @@ function makeHubThemeToggle() {
 /**
  * Page Maker for the Open Project page
  * @param {Boolean} secondProjectFlag - true if it's not the currently selected project
+ * @param {Boolean =} modalFlag - true when shown in a dialog rather than as the page
  * @returns {Element}
  */
-export function makePage_OpenProject(secondProjectFlag = false) {
+export function makePage_OpenProject(secondProjectFlag = false, modalFlag = false) {
 	isSecondProject = secondProjectFlag;
+	isModal = modalFlag;
 
 	// Land on whatever is most useful: your own work if you have any, the
 	// new-font form on a genuinely first run.
@@ -121,12 +139,38 @@ export function makePage_OpenProject(secondProjectFlag = false) {
 	// Restoring an auto-save into a second editor is not supported, so that
 	// view is not offered there.
 	if (isSecondProject) currentView = 'new';
+	/*
+		The dialog opens on its list and nothing else. It is titled "Open a
+		project"; landing on a box asking you to name a new one contradicts the
+		thing you just clicked, and with nothing auto-saved there is still
+		something to open.
+	*/
+	if (isModal) currentView = 'list';
 
+	/*
+		Two shells, because a dialog is not a page.
+
+		The page gets the file-browser layout: a rail of destinations down the
+		left, a heading and the app's own identity. Inside a dialog all of that
+		is furniture you already have - you are three feet from the app's left
+		rail and its theme toggle, and you know which app you are in. What a
+		dialog needs is a title that says what pressing something here will do,
+		one row of places to look, and the thing you came for.
+	*/
 	const content = makeElement({
 		tag: 'div',
 		id: 'app__page',
-		innerHTML: `
-			<div id="open-project__page" class="${isSecondProject ? 'open-project__page--compact' : ''}">
+		innerHTML: isModal
+			? `
+			<div id="open-project__page" class="open-project__page--modal">
+				<header id="open-project__header"></header>
+				<div id="open-project__body"></div>
+				<footer id="open-project__footer"></footer>
+				<div id="open-project__drop-note"></div>
+			</div>
+		`
+			: `
+			<div id="open-project__page">
 				<div id="open-project__sidebar"></div>
 				<div id="open-project__main">
 					<header id="open-project__header"></header>
@@ -137,7 +181,12 @@ export function makePage_OpenProject(secondProjectFlag = false) {
 		`,
 	});
 
-	content.querySelector('#open-project__sidebar').appendChild(makeHubSidebar());
+	if (isModal) {
+		content.querySelector('#open-project__header').appendChild(makeModalHeading());
+		content.querySelector('#open-project__footer').appendChild(makeModalFooter());
+	} else {
+		content.querySelector('#open-project__sidebar').appendChild(makeHubSidebar());
+	}
 	renderHubView(content);
 
 	// Drag over handlers
@@ -152,6 +201,26 @@ export function makePage_OpenProject(secondProjectFlag = false) {
 		handleOpenProjectPageFileInput(event?.dataTransfer?.items || []);
 	});
 	dropNote.addEventListener('dragleave', handleDragLeave);
+
+	/*
+		Put the keyboard somewhere useful. A dialog that opens with focus still
+		out on the page behind it means the first Tab goes to whatever was next
+		in the editor, and Escape is the only key that does anything.
+
+		Queued, because the caller has not inserted this into the document yet
+		and focus() on a detached node does nothing at all.
+	*/
+	if (isModal) {
+		queueMicrotask(() => {
+			if (!content.isConnected) return;
+			/** @type {HTMLElement} */
+			const target =
+				content.querySelector('#input__new-project-name') ||
+				content.querySelector('.hub-card') ||
+				content.querySelector('.hub-modal__footer-actions .hub-button');
+			target?.focus();
+		});
+	}
 
 	return content;
 }
@@ -238,17 +307,178 @@ function makeHubSidebar() {
 	return wrapper;
 }
 
+// --------------------------------------------------------------
+// Modal shell
+// --------------------------------------------------------------
+
 /**
- * Switches which view is showing, without rebuilding the sidebar.
+ * The dialog's title, and what it will do.
+ *
+ * The dialog used to open on "Start a new font" with no statement of
+ * consequence anywhere in it - which is the one thing it owes you here, since
+ * opening a project replaces one you may have been editing for an hour.
+ *
+ * @returns {Element}
+ */
+function makeModalHeading() {
+	const currentName = getCurrentProjectEditor()?.project?.settings?.project?.name || 'this project';
+
+	const wrapper = makeElement({ className: 'hub-modal__header-inner' });
+	wrapper.appendChild(
+		makeElement({
+			tag: 'h1',
+			className: 'hub-modal__title',
+			content: isSecondProject ? 'Open a second project' : 'Open a project',
+		})
+	);
+	wrapper.appendChild(
+		makeElement({
+			className: 'hub-modal__subtitle',
+			content: isSecondProject
+				? `Opens alongside ${currentName}. Switch between the two from Projects.`
+				: `Replaces ${currentName} in this window.`,
+		})
+	);
+
+	return wrapper;
+}
+
+/**
+ * The footer: the two things that are not in the list.
+ *
+ * These used to be tabs, alongside the two lists. Which made a form and a
+ * file picker into places you could be - and "New font" is not a place: you
+ * went there and found a text box instead of projects. They are actions, so
+ * they are drawn as buttons, and the list stops being one view among three
+ * and becomes the thing the dialog is.
+ *
+ * @returns {Element}
+ */
+function makeModalFooter() {
+	const footer = makeElement({ className: 'hub-modal__footer-inner' });
+
+	const actions = makeElement({ className: 'hub-modal__footer-actions' });
+	addAsChildren(actions, [
+		makeElement({
+			tag: 'button',
+			className: 'hub-button',
+			// Marked when the form it opens is what the body is showing, so it
+			// is not still offering to take you somewhere you already are.
+			attributes: { type: 'button', 'data-view': 'new' },
+			innerHTML: `${hubIcons.plus}<span>New font</span>`,
+			onClick: () => switchHubView('new'),
+		}),
+		makeElement({
+			tag: 'button',
+			className: 'hub-button',
+			attributes: { type: 'button' },
+			innerHTML: `${hubIcons.upload}<span>Open a file…</span>`,
+			onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
+		}),
+	]);
+
+	addAsChildren(footer, [
+		makeElement({
+			className: 'hub-modal__drop-hint',
+			innerHTML: `Or drop a font file anywhere here — <code>.gs2</code> <code>.otf</code> <code>.ttf</code> <code>.woff</code> <code>.svg</code>`,
+		}),
+		actions,
+	]);
+	return footer;
+}
+
+/**
+ * Everything you can open, in one list.
+ *
+ * Your own work first, then the two samples, under headings - rather than one
+ * behind each tab. Nothing to discover, no empty view to land in, and the
+ * examples are visible to someone who has never seen them without having to
+ * guess that a tab holds them.
+ *
+ * @returns {Element}
+ */
+function makeModalListView() {
+	const wrapper = makeElement({ className: 'hub-sections' });
+
+	// An auto-save cannot be restored into a second editor, so it is not offered.
+	if (!isSecondProject) {
+		const saves = getAutoSaves();
+		const ids = Object.keys(saves).sort((a, b) => (saves[b]?.time || 0) - (saves[a]?.time || 0));
+
+		wrapper.appendChild(
+			makeHubSection(
+				'Your projects',
+				ids.length
+					? ids.map((id) => {
+							const save = saves[id];
+							return makeProjectCard({
+								title: save?.name || 'Untitled',
+								meta: describeTimeAgo(save?.time),
+								previewHTML: makeFontPreviewSVG(projectFromSavedData(save?.project)),
+								onClick: () => loadProjectFromAutoSave(id),
+							});
+					  })
+					: [],
+				'Nothing auto-saved in this browser yet.'
+			)
+		);
+	}
+
+	wrapper.appendChild(makeHubSection('Examples', makeExampleCards()));
+	return wrapper;
+}
+
+/**
+ * One labelled group of cards.
+ * @param {String} label - the heading
+ * @param {Array<Element>} cards - what goes under it
+ * @param {String =} emptyNote - shown instead of the grid when there are none
+ * @returns {Element}
+ */
+function makeHubSection(label, cards, emptyNote = '') {
+	const section = makeElement({ tag: 'section', className: 'hub-section' });
+	section.appendChild(makeElement({ className: 'hub-section__label', content: label }));
+
+	if (cards.length) {
+		const grid = makeElement({ className: 'hub-grid' });
+		addAsChildren(grid, cards);
+		section.appendChild(grid);
+	} else if (emptyNote) {
+		section.appendChild(makeElement({ className: 'hub-section__empty', content: emptyNote }));
+	}
+
+	return section;
+}
+
+/**
+ * The back link out of the new-font form.
+ * @returns {Element}
+ */
+function makeBackToList() {
+	return makeElement({
+		tag: 'button',
+		className: 'hub-back',
+		attributes: { type: 'button' },
+		innerHTML: `${makeLineIcon('back', 16)}<span>All projects</span>`,
+		onClick: () => switchHubView('list'),
+	});
+}
+
+/**
+ * Switches which view is showing, without rebuilding the shell around it.
  * @param {String} viewName - key into hubViews
  */
 function switchHubView(viewName) {
-	if (!hubViews[viewName]) return;
+	// 'list' only exists in the dialog, where it is everything the page splits
+	// across recents and examples.
+	if (viewName !== 'list' && !hubViews[viewName]) return;
 	currentView = viewName;
 
-	document.querySelectorAll('.hub-sidebar__nav-item').forEach((item) => {
-		item.toggleAttribute('selected', item.getAttribute('data-view') === viewName);
-	});
+	document
+		.querySelectorAll('.hub-sidebar__nav-item, .hub-modal__footer-actions [data-view]')
+		.forEach((item) => {
+			item.toggleAttribute('selected', item.getAttribute('data-view') === viewName);
+		});
 
 	renderHubView(document);
 }
@@ -262,34 +492,59 @@ function renderHubView(root) {
 	const body = root.querySelector('#open-project__body');
 	if (!header || !body) return;
 
-	header.innerHTML = '';
 	body.innerHTML = '';
 
-	header.appendChild(
-		makeElement({ tag: 'h1', className: 'hub-header__title', content: hubViews[currentView].title })
-	);
+	/*
+		The dialog's header is built once and stays: its title is about what the
+		dialog does, which does not change with what is in the body.
+	*/
+	if (!isModal) {
+		header.innerHTML = '';
+		header.appendChild(
+			makeElement({
+				tag: 'h1',
+				className: 'hub-header__title',
+				content: hubViews[currentView].title,
+			})
+		);
 
-	// Create and open stay reachable from every view, the way a file browser
-	// keeps its "new" button in the corner regardless of which folder you are in.
-	const actions = makeElement({ className: 'hub-header__actions' });
-	addAsChildren(actions, [
-		makeHubThemeToggle(),
-		makeElement({
-			tag: 'button',
-			className: 'hub-button hub-button--primary',
-			attributes: { type: 'button' },
-			innerHTML: `${hubIcons.plus}<span>New font</span>`,
-			onClick: () => switchHubView('new'),
-		}),
-		makeElement({
-			tag: 'button',
-			className: 'hub-button',
-			attributes: { type: 'button' },
-			innerHTML: `${hubIcons.upload}<span>Open file</span>`,
-			onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
-		}),
-	]);
-	header.appendChild(actions);
+		// Create and open stay reachable from every view, the way a file browser
+		// keeps its "new" button in the corner regardless of which folder you are in.
+		const actions = makeElement({ className: 'hub-header__actions' });
+		addAsChildren(actions, [
+			makeHubThemeToggle(),
+			makeElement({
+				tag: 'button',
+				className: 'hub-button hub-button--primary',
+				attributes: { type: 'button' },
+				innerHTML: `${hubIcons.plus}<span>New font</span>`,
+				onClick: () => switchHubView('new'),
+			}),
+			makeElement({
+				tag: 'button',
+				className: 'hub-button',
+				attributes: { type: 'button' },
+				innerHTML: `${hubIcons.upload}<span>Open file</span>`,
+				onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
+			}),
+		]);
+		header.appendChild(actions);
+	}
+
+	if (isModal && currentView === 'list') {
+		body.appendChild(makeModalListView());
+		return;
+	}
+
+	// The one place the dialog goes other than its list, and the way back out.
+	if (isModal && currentView === 'new') {
+		body.appendChild(makeBackToList());
+		body.appendChild(makeNewProjectView());
+		/** @type {HTMLElement} */
+		const nameField = body.querySelector('#input__new-project-name');
+		nameField?.focus();
+		return;
+	}
 
 	if (currentView === 'recents') body.appendChild(makeRecentsView());
 	else if (currentView === 'examples') body.appendChild(makeExamplesView());
@@ -303,7 +558,8 @@ function renderHubView(root) {
 export function resetOpenProjectTabs() {
 	const page = document.querySelector('#open-project__page');
 	if (!page) return;
-	switchHubView(countAutoSaves() && !isSecondProject ? 'recents' : 'new');
+	if (isModal) switchHubView('list');
+	else switchHubView(countAutoSaves() && !isSecondProject ? 'recents' : 'new');
 }
 
 // --------------------------------------------------------------
@@ -316,22 +572,25 @@ export function resetOpenProjectTabs() {
  * @param {String} args.title - project name
  * @param {String} args.meta - secondary line, e.g. a relative time
  * @param {String} args.previewHTML - inline SVG for the thumbnail
- * @param {String=} args.badge - optional corner label
  * @param {(event: Event) => void} args.onClick - what opening the card does
  * @returns {Element}
  */
-function makeProjectCard({ title, meta, previewHTML, badge = '', onClick }) {
+function makeProjectCard({ title, meta, previewHTML, onClick }) {
 	const card = makeElement({
 		tag: 'button',
 		className: 'hub-card',
 		attributes: { type: 'button', title: `Open ${title}` },
 	});
 
+	/*
+		No corner badge. Every card in the Examples view is an example, under a
+		tab that says so - and the pill sat on top of the letterforms, which are
+		the only thing on the card worth looking at.
+	*/
 	const preview = makeElement({
 		className: 'hub-card__preview',
 		innerHTML: previewHTML || `<span class="hub-card__preview-empty">No outlines yet</span>`,
 	});
-	if (badge) preview.appendChild(makeElement({ className: 'hub-card__badge', content: badge }));
 
 	const info = makeElement({
 		className: 'hub-card__info',
@@ -412,7 +671,9 @@ function makeRecentsView() {
 	if (!ids.length) {
 		return makeEmptyState(
 			`Nothing saved yet. Projects you work on are auto-saved in this browser and show up here.`,
-			'Create your first font',
+			// "Your first font" is only true on the page, where this is a first
+			// run. In the dialog you are looking at this with a project open.
+			isModal ? 'Start a new font' : 'Create your first font',
 			() => switchHubView('new')
 		);
 	}
@@ -449,7 +710,16 @@ function makeRecentsView() {
  */
 function makeExamplesView() {
 	const grid = makeElement({ className: 'hub-grid' });
+	addAsChildren(grid, makeExampleCards());
+	return grid;
+}
 
+/**
+ * The bundled sample projects, as cards - shared by the page's Examples view
+ * and the dialog's one list.
+ * @returns {Array<Element>}
+ */
+function makeExampleCards() {
 	const examples = [
 		{
 			id: 'oblegg',
@@ -465,7 +735,7 @@ function makeExamplesView() {
 		},
 	];
 
-	examples.forEach((example) => {
+	return examples.map((example) => {
 		// The samples ship as raw text or JSON depending on the file, so they go
 		// through the same importer the file drop uses before being previewed.
 		let previewHTML = '';
@@ -479,18 +749,13 @@ function makeExamplesView() {
 			console.warn(`Could not preview example project ${example.id}:`, error);
 		}
 
-		grid.appendChild(
-			makeProjectCard({
-				title: example.name,
-				meta: example.meta,
-				previewHTML: previewHTML,
-				badge: 'Example',
-				onClick: () => handleLoadSample(example.id),
-			})
-		);
+		return makeProjectCard({
+			title: example.name,
+			meta: example.meta,
+			previewHTML: previewHTML,
+			onClick: () => handleLoadSample(example.id),
+		});
 	});
-
-	return grid;
 }
 
 /**
@@ -605,7 +870,7 @@ async function handleOpenProjectPageFileInput(files) {
 
 	/** @type {HTMLElement} */
 	const dropNote = document.querySelector('#open-project__drop-note');
-	if (dropNote) dropNote.style.display = 'none';
+	dropNote?.classList.remove('is-active');
 
 	const body = document.querySelector('#open-project__body');
 	if (body) {
@@ -738,14 +1003,36 @@ function handleMessage(event) {
  */
 function handleDragEnter(event) {
 	// log(`handleDragEnter`, 'start');
-	// cancelDefaultEventActions(event);
 	event.dataTransfer.dropEffect = 'copy';
 	/** @type {HTMLElement} */
 	const dropNote = document.querySelector('#open-project__drop-note');
-	dropNote.style.animation = 'var(--animate-fade-in)';
-	dropNote.style.opacity = '1';
-	dropNote.innerHTML = `Drop it!`;
-	dropNote.style.display = 'block';
+	if (!dropNote) return;
+
+	/*
+		Built once and kept. It used to be written on every dragenter, which
+		fires again for every element the cursor crosses - so the overlay's
+		contents were being torn down and rebuilt continuously for as long as a
+		file was held over the window.
+	*/
+	if (!dropNote.firstElementChild) {
+		const card = makeElement({ className: 'drop-note__card' });
+		addAsChildren(card, [
+			makeElement({ className: 'drop-note__icon', innerHTML: makeLineIcon('upload', 22) }),
+			makeElement({
+				className: 'drop-note__title',
+				content: isSecondProject ? 'Drop to open alongside' : 'Drop to open',
+			}),
+			makeElement({
+				className: 'drop-note__formats',
+				innerHTML: ['.gs2', '.otf', '.ttf', '.woff', '.svg']
+					.map((extension) => `<code>${extension}</code>`)
+					.join(''),
+			}),
+		]);
+		dropNote.appendChild(card);
+	}
+
+	dropNote.classList.add('is-active');
 	// log(`handleDragEnter`, 'end');
 }
 
@@ -754,14 +1041,11 @@ function handleDragEnter(event) {
  */
 function handleDragLeave() {
 	// log(`handleDragLeave`, 'start');
-	// cancelDefaultEventActions(event);
 	/** @type {HTMLElement} */
 	const dropNote = document.querySelector('#open-project__drop-note');
-	dropNote.style.animation = 'var(--animate-fade-out)';
-	window.setTimeout(() => {
-		dropNote.style.display = 'none';
-		dropNote.style.opacity = '0';
-	}, 170);
+	// One class, and the stylesheet fades it out. There is no longer a 170ms
+	// timer racing a 170ms animation to decide when it disappears.
+	dropNote?.classList.remove('is-active');
 	// log(`handleDragLeave`, 'end');
 }
 

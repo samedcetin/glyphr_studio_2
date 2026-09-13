@@ -1,5 +1,7 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
 import { addAsChildren, makeElement } from '../../common/dom.js';
+import { makeLineIcon } from '../../common/icons.js';
+import { makeMenuButton } from '../../controls/menu-button/menu_button.js';
 import { arePanelsHidden, setPanelsHidden } from '../../panels/sidebar.js';
 import { round, valuesAreClose } from '../../common/functions.js';
 import { drawShape } from '../../display_canvas/draw_paths.js';
@@ -80,46 +82,6 @@ export function makeEditToolsButtons() {
 		toolButtonData.pathAddPoint.disabled = true;
 	}
 
-	// Make all the new buttons
-	let toolButtonElements = {};
-
-	Object.keys(toolButtonData).forEach((buttonName) => {
-		// log(`buttonName: ${buttonName}`);
-
-		let isSelected = editor.selectedTool === buttonName;
-
-		const toolTitle = toolButtonData[buttonName].shortcut
-			? `${toolButtonData[buttonName].title}  (${toolButtonData[buttonName].shortcut})`
-			: toolButtonData[buttonName].title;
-
-		let newToolButton = makeElement({
-			tag: 'button',
-			title: toolTitle,
-			className: 'editor-page__tool',
-			innerHTML: makeToolButtonSVG({
-				name: buttonName,
-				selected: isSelected,
-				disabled: toolButtonData[buttonName].disabled,
-			}),
-		});
-
-		newToolButton.addEventListener('click', () => selectTool(buttonName));
-
-		if (isSelected) newToolButton.classList.add('editor-page__tool-selected');
-
-		editor.subscribe({
-			topic: 'whichToolIsSelected',
-			subscriberID: `tools.${buttonName}`,
-			callback: (newSelectedTool) => {
-				let isSelected = newSelectedTool === buttonName;
-				newToolButton.classList.toggle('editor-page__tool-selected', isSelected);
-				newToolButton.innerHTML = makeToolButtonSVG({ name: buttonName, selected: isSelected });
-			},
-		});
-
-		toolButtonElements[buttonName] = newToolButton;
-	});
-
 	// Put it all together
 	let content = [];
 
@@ -127,32 +89,145 @@ export function makeEditToolsButtons() {
 	const onComponentPage = editor.nav.page === 'Components';
 	const onLigaturesPage = editor.nav.page === 'Ligatures';
 	const selectedItem = editor.selectedItem;
+	const canDrawNewShapes =
+		onGlyphEditPage || onLigaturesPage || (onComponentPage && selectedItem && !selectedItem.pathPoints);
 
-	if (onGlyphEditPage || onLigaturesPage) {
-		if (pixelMode) content.push(toolButtonElements.pixelPen);
-		content.push(toolButtonElements.newRectangle);
-		content.push(toolButtonElements.newOval);
-		content.push(toolButtonElements.newPath);
-	}
+	/*
+		Tools are grouped by what they are for rather than listed flat: one slot
+		per family, showing whichever member was used last, with the rest a
+		chevron away. Eight buttons in a row asked the user to remember which of
+		three arrow-ish icons did what; three slots ask them to remember three
+		families, and the menu names every member and its key.
 
-	if (onComponentPage && selectedItem && !selectedItem.pathPoints) {
-		if (pixelMode) content.push(toolButtonElements.pixelPen);
-		content.push(toolButtonElements.newRectangle);
-		content.push(toolButtonElements.newOval);
-		content.push(toolButtonElements.newPath);
-	}
+		The group only appears if at least one of its members is available on
+		this page, and a group of one renders as a plain button - a chevron over
+		a menu with a single row is a control that lies about having a choice.
+	*/
+	const toolGroups = [
+		{
+			id: 'select',
+			name: 'Select',
+			members: ['resize', 'pathEdit', 'pan'],
+			available: onGlyphEditPage || onComponentPage || onLigaturesPage,
+		},
+		{
+			id: 'shape',
+			name: 'Shape',
+			members: ['newRectangle', 'newOval'],
+			available: canDrawNewShapes,
+		},
+		{
+			id: 'draw',
+			name: 'Draw',
+			members: pixelMode
+				? ['newPath', 'pathAddPoint', 'pixelPen']
+				: ['newPath', 'pathAddPoint'],
+			available: canDrawNewShapes || onGlyphEditPage || onComponentPage || onLigaturesPage,
+		},
+	];
 
-	if (onGlyphEditPage || onComponentPage || onLigaturesPage) {
-		content.push(toolButtonElements.pathAddPoint);
-		content.push(makeElement({ tag: 'div', style: 'height: 20px;' }));
-		content.push(toolButtonElements.pathEdit);
-		content.push(toolButtonElements.resize);
-	}
-
-	if (content.length) content.push(makePanelToggleButton());
+	toolGroups.forEach((group) => {
+		if (!group.available) return;
+		const members = group.members.filter((name) => toolButtonData[name] || name === 'pan');
+		if (!members.length) return;
+		content.push(makeToolGroup(group, members, toolButtonData));
+	});
 
 	// log('makeEditToolsButtons', 'end');
 	return content;
+}
+
+/**
+	The Pan tool sits in the Select group but is built by makeViewToolsButtons,
+	so its label lives here rather than in toolButtonData. Space-drag pans from
+	any tool (events_keyboard.js), which is what the hint reports - there is no
+	letter bound to pan, and inventing one would collide with Pen, which already
+	answers to both W and H.
+*/
+const panToolData = { title: 'Pan', shortcut: 'Space' };
+
+/**
+ * Builds one tool family as a split button: the face runs the member used last,
+ * the chevron lists the family.
+ *
+ * @param {Object} group - { id, name }
+ * @param {Array} members - tool names in this group, in menu order
+ * @param {Object} toolButtonData - titles, shortcuts and disabled state
+ * @returns {Element}
+ */
+function makeToolGroup(group, members, toolButtonData) {
+	const editor = getCurrentProjectEditor();
+
+	const items = members.map((name) => {
+		const data = name === 'pan' ? panToolData : toolButtonData[name];
+		return {
+			id: name,
+			name: data?.title || name,
+			shortcut: data?.shortcut || '',
+			disabled: !!data?.disabled,
+			icon: makeToolButtonSVG({ name: name, selected: false, disabled: !!data?.disabled }),
+		};
+	});
+
+	/* Open on whichever member is live, so the strip reflects the canvas. */
+	const selected = members.includes(editor.selectedTool) ? editor.selectedTool : members[0];
+
+	const menuButton = makeMenuButton({
+		items: items,
+		activeID: selected,
+		groupName: group.name,
+		className: `editor-page__tool-group editor-page__tool-group--${group.id}`,
+		/* The bar sits at the bottom of the canvas, so every menu opens upward. */
+		openUp: true,
+		isFacePressed: () => members.includes(getCurrentProjectEditor().selectedTool),
+		onSelect: (toolName) => selectTool(toolName),
+	});
+
+	/*
+		A shortcut key selects a tool without going through this control, so the
+		group follows the editor rather than the other way round.
+	*/
+	editor.subscribe({
+		topic: 'whichToolIsSelected',
+		subscriberID: `tools.group.${group.id}`,
+		callback: (newSelectedTool) => {
+			if (members.includes(newSelectedTool)) menuButton.setActiveID(newSelectedTool);
+			else menuButton.refresh();
+		},
+	});
+
+	return menuButton.element;
+}
+
+/**
+ * Fills the editor's single toolbar: drawing tools on the left, then the view
+ * controls, in one strip centred at the bottom of the canvas.
+ *
+ * There used to be two floating strips - tools centred at the top, zoom pinned
+ * to the bottom right corner - which put the two halves of one job at opposite
+ * ends of the window, and made the zoom strip's position depend on how wide the
+ * right panel had been dragged.
+ *
+ * @param {Element} content - the page, holding .editor-page__tools-area
+ * @param {Array} toolButtons - page-specific tools; kerning supplies its own
+ * @returns {Boolean} - whether the bar was found and filled
+ */
+export function fillEditorToolBar(content, toolButtons = []) {
+	const bar = content.querySelector('.editor-page__tools-area');
+	if (!bar) return false;
+
+	bar.innerHTML = '';
+	/* Kerning hands over a single element rather than an array. */
+	const tools = [].concat(toolButtons || []).filter(Boolean);
+
+	let children = [];
+	if (tools.length) {
+		children = children.concat(tools);
+		children.push(makeElement({ className: 'editor-page__strip-divider' }));
+	}
+	children = children.concat(makeViewToolsButtons());
+	addAsChildren(bar, children);
+	return true;
 }
 
 /**
@@ -171,10 +246,11 @@ export function refreshEditToolsArea() {
 	const toolsArea = document.querySelector('.editor-page__tools-area');
 	if (!toolsArea) return false;
 
-	const buttons = makeEditToolsButtons();
-	toolsArea.innerHTML = '';
-	if (buttons) addAsChildren(toolsArea, buttons);
-	return true;
+	/*
+		The whole bar, not just the tool half: the view controls share it now, and
+		rebuilding only the tools would drop them.
+	*/
+	return fillEditorToolBar(toolsArea.parentElement || document, makeEditToolsButtons());
 }
 
 const panelIcons = {
@@ -223,12 +299,15 @@ function makePanelToggleButton() {
 export function makeViewToolsButtons() {
 	// log(`makeViewToolsButtons`, 'start');
 
-	// Button data
+	/*
+		Only the buttons that still stand on their own in the strip. Pan moved
+		into the Select group at the top, and the two zoom presets moved into the
+		zoom menu below - each of them made a button here and a subscription, and
+		a button that is never added to the DOM keeps its subscription alive for
+		the life of the page.
+	*/
 	let viewButtonTitles = {
 		displayMode: 'Toggle fill / outline display mode',
-		pan: 'Pan the edit canvas',
-		zoom1to1: 'Zoom so 1 pixel = 1 em',
-		zoomEm: 'Zoom to fit a full Em',
 		zoomIn: 'Zoom in 10%',
 		zoomOut: 'Zoom out 10%',
 	};
@@ -292,30 +371,108 @@ export function makeViewToolsButtons() {
 	let view = editor.view;
 	if (view) zoomReadoutNumber = '' + round(editor.view.dz * 100, 2);
 
+	/*
+		The readout is an editable field, not a label. It used to carry the
+		disabled attribute, so the change handler below it could never fire and
+		typing a zoom level was impossible - the only ways to a specific zoom
+		were the 10% buttons and the two presets.
+
+		`this` in that handler was the module, not the input, so it would have
+		read undefined even had it run.
+	*/
 	let zoomReadout = makeElement({
 		tag: 'input',
 		className: 'editor-page__zoom-readout',
-		title: 'Zoom level',
-		innerHTML: `${zoomReadoutNumber}%`,
+		attributes: {
+			type: 'text',
+			inputmode: 'decimal',
+			'aria-label': 'Zoom level, percent',
+			title: 'Zoom level',
+		},
 	});
-	zoomReadout.setAttribute('value', zoomReadoutNumber);
-	zoomReadout.setAttribute('disabled', '');
-	zoomReadout.addEventListener('change', () => {
-		getCurrentProjectEditor().setViewZoom(this.value);
-		this.innerHTML = `${this.value}%`;
-		this.value = `${zoomReadoutNumber}%`;
+	zoomReadout.setAttribute('value', `${zoomReadoutNumber}%`);
+
+	/** Reads the field, and puts the view back on screen if it is nonsense. */
+	function commitZoomReadout() {
+		const input = /** @type {HTMLInputElement} */ (zoomReadout);
+		const typed = parseFloat(input.value.replace('%', '').trim());
+		const liveEditor = getCurrentProjectEditor();
+		if (isFinite(typed) && typed > 0) liveEditor.setViewZoom(typed);
+		else input.value = `${round(liveEditor.view.dz * 100, 2)}%`;
+	}
+
+	zoomReadout.addEventListener('change', commitZoomReadout);
+	zoomReadout.addEventListener('keydown', (event) => {
+		const keyEvent = /** @type {KeyboardEvent} */ (event);
+		if (keyEvent.key === 'Enter') {
+			event.preventDefault();
+			commitZoomReadout();
+			/** @type {HTMLInputElement} */ (zoomReadout).blur();
+		}
+		if (keyEvent.key === 'Escape') {
+			/** @type {HTMLInputElement} */ (zoomReadout).value = `${round(
+				getCurrentProjectEditor().view.dz * 100,
+				2
+			)}%`;
+			/** @type {HTMLInputElement} */ (zoomReadout).blur();
+		}
 	});
+	/* Select the whole value on focus, so typing replaces rather than appends. */
+	zoomReadout.addEventListener('focus', () =>
+		/** @type {HTMLInputElement} */ (zoomReadout).select()
+	);
 
 	editor.subscribe({
 		topic: 'editCanvasView',
 		subscriberID: 'tools.zoomReadout',
 		callback: (newView) => {
-			let zoomReadoutNumber = round(newView.dz * 100, 2);
-			zoomReadout.setAttribute('value', '' + zoomReadoutNumber);
-			zoomReadout.innerHTML = `${zoomReadoutNumber}%`;
+			/* Not while the user is typing in it. */
+			if (document.activeElement === zoomReadout) return;
 			// @ts-expect-error 'property does exist'
-			zoomReadout.value = `${zoomReadoutNumber}%`;
+			zoomReadout.value = `${round(newView.dz * 100, 2)}%`;
 		},
+	});
+
+	/*
+		The zoom presets. Figma puts these behind the percentage itself; here they
+		are behind a chevron beside it, because the percentage is a field the user
+		can type into and a field that also opens a menu is two controls wearing
+		one coat.
+
+		sticky is off: these are actions, not modes, so running one must not
+		change what the chevron would offer next time.
+	*/
+	const zoomMenu = makeMenuButton({
+		items: [
+			{
+				id: 'zoomEm',
+				name: 'Zoom to fit',
+				icon: makeToolButtonSVG({ name: 'zoomEm', selected: false }),
+			},
+			{
+				id: 'zoom1to1',
+				name: 'Actual size, 1 em = 1 pixel',
+				icon: makeToolButtonSVG({ name: 'zoom1to1', selected: false }),
+			},
+			{
+				id: 'zoomIn',
+				name: 'Zoom in',
+				shortcut: '+',
+				icon: makeToolButtonSVG({ name: 'zoomIn', selected: false }),
+			},
+			{
+				id: 'zoomOut',
+				name: 'Zoom out',
+				shortcut: '-',
+				icon: makeToolButtonSVG({ name: 'zoomOut', selected: false }),
+			},
+		],
+		activeID: 'zoomEm',
+		groupName: 'Zoom',
+		className: 'editor-page__zoom-menu',
+		sticky: false,
+		openUp: true,
+		onSelect: (id) => selectTool(id),
 	});
 
 	// Live Preview pop-out
@@ -338,21 +495,37 @@ export function makeViewToolsButtons() {
 		// log(`Live Preview Pop Out CLICK HANDLER`, 'end');
 	});
 
-	// Put it all together
-	let responsiveGroup = makeElement({ className: 'editor-page__responsive-group' });
+	/*
+		Put it all together: the zoom stepper and its field, then the zoom menu,
+		then the two view toggles - grouped, in that order, because the first
+		group changes how much you see and the second changes what you see.
 
+		The dividers were two &emsp; text nodes, which is a space character doing
+		a border's job; they are elements with a rule now, as in the top strip.
+	*/
+	let responsiveGroup = makeElement({ className: 'editor-page__responsive-group' });
 	addAsChildren(responsiveGroup, [
-		makeElement({ tag: 'div', content: '&emsp;' }),
 		viewButtonElements.zoomOut,
 		zoomReadout,
 		viewButtonElements.zoomIn,
-		makeElement({ tag: 'div', content: '&emsp;' }),
-		viewButtonElements.displayMode,
-		viewButtonElements.zoom1to1,
 	]);
 
+	/*
+		Two groups, one divider: everything about zoom, then everything about what
+		the workspace shows. The panel toggle ends the bar because it is the one
+		control that changes the window rather than the drawing - it used to sit
+		among the drawing tools, which put a workspace switch where a hand reaching
+		for the pen would land.
+	*/
 	// log(`makeViewToolsButtons`, 'end');
-	return [viewButtonElements.pan, responsiveGroup, viewButtonElements.zoomEm, livePreviewPopOut];
+	return [
+		responsiveGroup,
+		zoomMenu.element,
+		makeElement({ className: 'editor-page__strip-divider' }),
+		viewButtonElements.displayMode,
+		livePreviewPopOut,
+		makePanelToggleButton(),
+	];
 }
 
 /**
@@ -661,584 +834,20 @@ export function isSideBearingHere(cx, cy, item) {
 // Tool button graphics
 // --------------------------------------------------------------
 
-let icons = {};
 
 /**
- * Makes a SVG icon based on options
- * @param {Object} oa - options
+ * Makes a tool icon.
+ *
+ * The selected and disabled flags used to change the icon itself, by drawing
+ * its fill layer at three different opacities. They do nothing here: the line
+ * set is one stroke in currentColor, so the button's CSS colour carries every
+ * state, which is what lets one rule cover resting, hover, selected, pressed
+ * and disabled instead of the icon needing to know about any of them.
+ *
+ * @param {Object} oa - options: { name }
  * @returns {String} - SVG code
  */
 export function makeToolButtonSVG(oa) {
-	// log(`makeToolButtonSVG`, 'start');
-	// log(`oa.name: ${oa.name}`);
-	/*
-		Icons draw in currentColor rather than baked-in hex values, so a single
-		CSS `color` on the button drives resting, hover, selected and disabled
-		states - and they follow the theme instead of being fixed at import time.
-
-		The two-tone look is kept by drawing the fill layer at reduced opacity
-		rather than in a second hard-coded color.
-	*/
-	let icon = icons[oa.name];
-	let fillOpacity = oa.selected ? 0.4 : 0.26;
-	if (oa.disabled) fillOpacity = 0.18;
-
-	let innerHTML = '';
-	if (icon.fill) {
-		innerHTML += `
-			<g pointer-events="none" fill="currentColor" fill-opacity="${fillOpacity}">
-			${icon.fill}
-			</g>
-		`;
-	}
-
-	innerHTML += `
-		<g pointer-events="none" fill="currentColor">
-		${icon.outline}
-		</g>
-	`;
-
-	let content = `
-		<svg
-			version="1.1"
-			xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-			x="0px" y="0px" width="20px" height="20px" viewBox="0 0 20 20"
-		>
-			${innerHTML}
-		</svg>
-	`;
-
-	// log(`makeToolButtonSVG`, 'end');
-	return content;
+	return makeLineIcon(oa.name, 20);
 }
 
-// Arrow
-icons.resize = {
-	fill: `
-		<rect x="11" y="14" width="1" height="4"></rect>
-		<rect x="12" y="16" width="1" height="2"></rect>
-		<rect x="9" y="12" width="1" height="2"></rect>
-		<rect x="5" y="3" width="2" height="1"></rect>
-		<rect x="10" y="7" width="1" height="9"></rect>
-		<rect x="5" y="6" width="5" height="6"></rect>
-		<rect x="12" y="9" width="1" height="3"></rect>
-		<rect x="11" y="8" width="1" height="4"></rect>
-		<rect x="14" y="11" width="1" height="1"></rect>
-		<rect x="13" y="10" width="1" height="2"></rect>
-		<rect x="5" y="15" width="1" height="1"></rect>
-		<rect x="5" y="2" width="1" height="1"></rect>
-		<rect x="5" y="14" width="2" height="1"></rect>
-		<rect x="5" y="13" width="3" height="1"></rect>
-		<rect x="5" y="4" width="3" height="1"></rect>
-		<rect x="5" y="12" width="4" height="1"></rect>
-		<rect x="5" y="5" width="4" height="1"></rect>
-	`,
-	outline: `
-		<rect x="4" width="1" height="17"></rect>
-		<rect x="5" y="1" width="1" height="1"></rect>
-		<rect x="7" y="3" width="1" height="1"></rect>
-		<rect x="6" y="2" width="1" height="1"></rect>
-		<rect x="9" y="5" width="1" height="1"></rect>
-		<rect x="8" y="4" width="1" height="1"></rect>
-		<rect x="11" y="7" width="1" height="1"></rect>
-		<rect x="10" y="6" width="1" height="1"></rect>
-		<rect x="11" y="12" width="5" height="1"></rect>
-		<rect x="12" y="8" width="1" height="1"></rect>
-		<rect x="13" y="9" width="1" height="1"></rect>
-		<rect x="14" y="10" width="1" height="1"></rect>
-		<rect x="15" y="11" width="1" height="1"></rect>
-		<rect x="11" y="18" width="2" height="1"></rect>
-		<rect x="5" y="16" width="1" height="1"></rect>
-		<rect x="6" y="15" width="1" height="1"></rect>
-		<rect x="7" y="14" width="1" height="1"></rect>
-		<rect x="8" y="13" width="1" height="1"></rect>
-		<rect x="9" y="14" width="1" height="2"></rect>
-		<rect x="10" y="16" width="1" height="2"></rect>
-		<rect x="11" y="12" width="1" height="2"></rect>
-		<rect x="12" y="14" width="1" height="2"></rect>
-		<rect x="13" y="16" width="1" height="2"></rect>
-	`,
-};
-
-// Pen Plus
-icons.pathAddPoint = {
-	fill: `
-		<rect x="5" y="4" width="5" height="14"></rect>
-		<rect x="10" y="8" width="2" height="6"></rect>
-		<rect x="3" y="8" width="2" height="6"></rect>
-	`,
-	outline: `
-		<rect id="MINUS_SHAPE" x="14" y="16" width="5" height="1"></rect>
-		<rect id="PLUS_SHAPE" x="16" y="14" width="1" height="5"></rect>
-		<rect x="4" y="16" width="1" height="3"></rect>
-		<rect x="10" y="16" width="1" height="3"></rect>
-		<rect x="7" y="1" width="1" height="12"></rect>
-		<rect x="4" y="18" width="7" height="1"></rect>
-		<rect x="4" y="16" width="7" height="1"></rect>
-		<rect x="8" y="2" width="1" height="2"></rect>
-		<rect x="9" y="4" width="1" height="2"></rect>
-		<rect x="10" y="6" width="1" height="2"></rect>
-		<rect x="3" y="8" width="1" height="2"></rect>
-		<rect x="2" y="10" width="1" height="2"></rect>
-		<rect x="12" y="10" width="1" height="2"></rect>
-		<rect x="6" y="10" width="3" height="2"></rect>
-		<rect x="3" y="12" width="1" height="2"></rect>
-		<rect x="4" y="14" width="1" height="2"></rect>
-		<rect x="6" y="2" width="1" height="2"></rect>
-		<rect x="5" y="4" width="1" height="2"></rect>
-		<rect x="4" y="6" width="1" height="2"></rect>
-		<rect x="11" y="8" width="1" height="2"></rect>
-		<rect x="11" y="12" width="1" height="2"></rect>
-		<rect x="10" y="14" width="1" height="2"></rect>
-	`,
-};
-
-// Pen Minus
-icons.pathRemovePoint = {
-	fill: `
-		<rect x="5" y="4" width="5" height="14"></rect>
-		<rect x="10" y="8" width="2" height="6"></rect>
-		<rect x="3" y="8" width="2" height="6"></rect>
-	`,
-	outline: `
-		<rect id="MINUS_SHAPE" x="14" y="16" width="5" height="1"></rect>
-		<rect x="4" y="16" width="1" height="3"></rect>
-		<rect x="10" y="16" width="1" height="3"></rect>
-		<rect x="7" y="1" width="1" height="12"></rect>
-		<rect x="4" y="18" width="7" height="1"></rect>
-		<rect x="4" y="16" width="7" height="1"></rect>
-		<rect x="8" y="2" width="1" height="2"></rect>
-		<rect x="9" y="4" width="1" height="2"></rect>
-		<rect x="10" y="6" width="1" height="2"></rect>
-		<rect x="3" y="8" width="1" height="2"></rect>
-		<rect x="2" y="10" width="1" height="2"></rect>
-		<rect x="12" y="10" width="1" height="2"></rect>
-		<rect x="6" y="10" width="3" height="2"></rect>
-		<rect x="3" y="12" width="1" height="2"></rect>
-		<rect x="4" y="14" width="1" height="2"></rect>
-		<rect x="6" y="2" width="1" height="2"></rect>
-		<rect x="5" y="4" width="1" height="2"></rect>
-		<rect x="4" y="6" width="1" height="2"></rect>
-		<rect x="11" y="8" width="1" height="2"></rect>
-		<rect x="11" y="12" width="1" height="2"></rect>
-		<rect x="10" y="14" width="1" height="2"></rect>
-	`,
-};
-
-// Pen
-icons.pathEdit = {
-	fill: `
-		<rect x="7" y="4" width="5" height="14"></rect>
-		<rect x="12" y="8" width="2" height="6"></rect>
-		<rect x="5" y="8" width="2" height="6"></rect>
-	`,
-	outline: `
-		<rect x="6" y="16" width="1" height="3"></rect>
-		<rect x="12" y="16" width="1" height="3"></rect>
-		<rect x="9" y="1" width="1" height="12"></rect>
-		<rect x="6" y="18" width="7" height="1"></rect>
-		<rect x="6" y="16" width="7" height="1"></rect>
-		<rect x="10" y="2" width="1" height="2"></rect>
-		<rect x="11" y="4" width="1" height="2"></rect>
-		<rect x="12" y="6" width="1" height="2"></rect>
-		<rect x="5" y="8" width="1" height="2"></rect>
-		<rect x="4" y="10" width="1" height="2"></rect>
-		<rect x="14" y="10" width="1" height="2"></rect>
-		<rect x="8" y="10" width="3" height="2"></rect>
-		<rect x="5" y="12" width="1" height="2"></rect>
-		<rect x="6" y="14" width="1" height="2"></rect>
-		<rect x="8" y="2" width="1" height="2"></rect>
-		<rect x="7" y="4" width="1" height="2"></rect>
-		<rect x="6" y="6" width="1" height="2"></rect>
-		<rect x="13" y="8" width="1" height="2"></rect>
-		<rect x="13" y="12" width="1" height="2"></rect>
-		<rect x="12" y="14" width="1" height="2"></rect>
-	`,
-};
-
-// Square with handles
-icons.pathResize = {
-	fill: `
-		<rect x="1" y="1" display="inline" width="4" height="4"></rect>
-		<rect x="8" y="8" display="inline" width="4" height="4"></rect>
-		<rect x="15" y="15" display="inline" width="4" height="4"></rect>
-		<rect x="15" y="1" display="inline" width="4" height="4"></rect>
-		<rect x="1" y="15" display="inline" width="4" height="4"></rect>
-	`,
-	outline: `
-		<rect x="16" y="5" width="1" height="10"></rect>
-		<rect x="5" y="16" width="10" height="1"></rect>
-		<rect x="5" y="3" width="10" height="1"></rect>
-		<rect x="3" y="5" width="1" height="10"></rect>
-		<rect x="1" y="1" width="4" height="1"></rect>
-		<rect x="1" y="4" width="4" height="1"></rect>
-		<rect x="1" y="1" width="1" height="4"></rect>
-		<rect x="4" y="1" width="1" height="4"></rect>
-		<rect x="15" y="1" width="4" height="1"></rect>
-		<rect x="15" y="4" width="4" height="1"></rect>
-		<rect x="15" y="1" width="1" height="4"></rect>
-		<rect x="18" y="1" width="1" height="4"></rect>
-		<rect x="15" y="15" width="4" height="1"></rect>
-		<rect x="15" y="18" width="4" height="1"></rect>
-		<rect x="15" y="15" width="1" height="4"></rect>
-		<rect x="18" y="15" width="1" height="4"></rect>
-		<rect x="1" y="15" width="4" height="1"></rect>
-		<rect x="1" y="18" width="4" height="1"></rect>
-		<rect x="1" y="15" width="1" height="4"></rect>
-		<rect x="4" y="15" width="1" height="4"></rect>
-		<rect x="8" y="8" width="4" height="1"></rect>
-		<rect x="8" y="11" width="4" height="1"></rect>
-		<rect x="8" y="8" width="1" height="4"></rect>
-		<rect x="11" y="8" width="1" height="4"></rect>
-	`,
-};
-
-icons.newRectangle = {
-	fill: `<rect x="2" y="2" width="12" height="12"></rect>
-`,
-	outline: `
-		<rect x="1" y="1" width="13" height="1"></rect>
-		<rect x="1" y="13" width="13" height="1"></rect>
-		<rect x="14" y="16" width="5" height="1"></rect>
-		<rect x="1" y="2" width="1" height="12"></rect>
-		<rect x="13" y="2" width="1" height="12"></rect>
-		<rect x="16" y="14" width="1" height="5"></rect>
-	`,
-};
-
-icons.newOval = {
-	fill: `
-		<rect x="6" y="2" width="4" height="1"></rect>
-		<rect x="6" y="12" width="4" height="1"></rect>
-		<rect x="5" y="10.1" width="4" height="1"></rect>
-		<rect x="2" y="6" width="1" height="3"></rect>
-		<rect x="13" y="6" width="1" height="3"></rect>
-		<rect x="11" y="5.1" width="1" height="3"></rect>
-		<rect x="3" y="3" width="10" height="9"></rect>
-	`,
-	outline: `
-		<rect x="6" y="1" width="4" height="1"></rect>
-		<rect x="4" y="2" width="2" height="1"></rect>
-		<rect x="6" y="13" width="4" height="1"></rect>
-		<rect x="1" y="6" width="1" height="3"></rect>
-		<rect x="2" y="4" width="1" height="2"></rect>
-		<rect x="10" y="2" width="2" height="1"></rect>
-		<rect x="13" y="4" width="1" height="2"></rect>
-		<rect x="4" y="12" width="2" height="1"></rect>
-		<rect x="2" y="9" width="1" height="2"></rect>
-		<rect x="10" y="12" width="2" height="1"></rect>
-		<rect x="13" y="9" width="1" height="2"></rect>
-		<rect x="14" y="6" width="1" height="3"></rect>
-		<rect x="14" y="16" width="5" height="1"></rect>
-		<rect x="16" y="14" width="1" height="5"></rect>
-		<rect x="12" y="3" width="1" height="1"></rect>
-		<rect x="12" y="11" width="1" height="1"></rect>
-		<rect x="3" y="11" width="1" height="1"></rect>
-		<rect x="3" y="3" width="1" height="1"></rect>
-	`,
-};
-
-icons.newPath = {
-	fill: `
-		<rect x="5" y="2" width="5" height="13"></rect>
-		<rect x="10" y="4" width="2" height="11"></rect>
-		<rect x="3" y="9" width="2" height="6"></rect>
-		<rect x="6" y="15" width="3" height="1"></rect>
-		<rect x="12" y="6" width="2" height="7"></rect>
-		<rect x="2" y="2" width="3" height="1"></rect>
-		<rect x="4" y="3" width="3" height="1"></rect>
-	`,
-	outline: `
-		<rect x="14" y="16" width="5" height="1"></rect>
-		<rect x="16" y="14" width="1" height="5"></rect>
-		<rect x="8" y="2" width="2" height="1"></rect>
-		<rect x="2" y="1" width="6" height="1"></rect>
-		<rect x="6" y="16" width="3" height="1"></rect>
-		<rect x="10" y="3" width="1" height="1"></rect>
-		<rect x="11" y="4" width="1" height="1"></rect>
-		<rect x="12" y="5" width="1" height="1"></rect>
-		<rect x="1" y="1" width="1" height="2"></rect>
-		<rect x="2" y="3" width="2" height="1"></rect>
-		<rect x="4" y="4" width="1" height="1"></rect>
-		<rect x="2" y="10" width="1" height="4"></rect>
-		<rect x="3" y="9" width="1" height="1"></rect>
-		<rect x="3" y="14" width="1" height="1"></rect>
-		<rect x="5" y="5" width="1" height="3"></rect>
-		<rect x="4" y="8" width="1" height="1"></rect>
-		<rect x="12" y="13" width="1" height="1"></rect>
-		<rect x="11" y="14" width="1" height="1"></rect>
-		<rect x="9" y="15" width="2" height="1"></rect>
-		<rect x="4" y="15" width="2" height="1"></rect>
-		<rect x="13" y="11" width="1" height="2"></rect>
-		<rect x="13" y="6" width="1" height="2"></rect>
-		<rect x="14" y="8" width="1" height="3"></rect>
-	`,
-};
-
-// View and Zoom
-
-icons.zoomEm = {
-	outline: `
-		<polygon points="15,3 11,3 11,5 13,5 13,6 12,6 12,7 11,7 11,8 10,8 9,8 9,7 8,7 8,6 7,6 7,5 9,5 9,3 5,3 3,3 3,5 3,9 5,9 5,7 6,7 6,8 7,8 7,9 8,9 8,10 8,11 7,11 7,12 6,12 6,13 5,13 5,11 3,11 3,15 3,17 5,17 9,17 9,15 7,15 7,14 8,14 8,13 9,13 9,12 10,12 11,12 11,13 12,13 12,14 13,14 13,15 11,15 11,17 15,17 17,17 17,15 17,11 15,11 15,13 14,13 14,12 13,12 13,11 12,11 12,10 12,9 13,9 13,8 14,8 14,7 15,7 15,9 17,9 17,5 17,3"/>
-		<rect x="18" y="1" width="1" height="18"></rect>
-		<rect x="1" y="18" width="18" height="1"></rect>
-		<rect x="1" y="1" width="18" height="1"></rect>
-		<rect x="1" y="1" width="1" height="18"></rect>
-	`,
-};
-
-icons.displayModeFilled = {
-	outline: `
-		<path d="M18,4v-1h-1v-1h-1v-1h-5v1h-1v1h-4v1h-1v1h-1v1h-1v1h-1v1h-1v6h1v1h1v1h1v1h1v1h0s1,0,1,0v1h6v-1h1v-1h1v-1h1v-1h1v-1h1v-4h1v-1h1v-5h-1ZM16,11h-5v-1h-1v-1h0s-1-0-1-0v-5h4v1h1v1h1v1h1v4Z"/>
-	`,
-};
-
-icons.displayModeOutlined = {
-	outline: `
-		<rect x="1" y="8" width="1" height="6"/>
-		<rect x="2" y="7" width="1" height="1"/>
-		<rect x="5" y="4" width="1" height="1"/>
-		<rect x="12" y="4" width="1" height="1"/>
-		<rect x="15" y="7" width="1" height="1"/>
-		<polygon points="17 8 16 8 16 11 11 11 11 12 16 12 16 14 17 14 17 10 18 10 18 9 17 9 17 8"/>
-		<rect x="15" y="14" width="1" height="1"/>
-		<rect x="12" y="17" width="1" height="1"/>
-		<rect x="6" y="18" width="6" height="1"/>
-		<rect x="5" y="17" width="1" height="1"/>
-		<rect x="2" y="14" width="1" height="1"/>
-		<rect x="11" y="1" width="5" height="1"/>
-		<rect x="16" y="2" width="1" height="1"/>
-		<rect x="17" y="3" width="1" height="1"/>
-		<rect x="18" y="4" width="1" height="5"/>
-		<rect x="10" y="10" width="1" height="1"/>
-		<rect x="9" y="9" width="1" height="1"/>
-		<polygon points="8 9 9 9 9 4 12 4 12 3 11 3 11 2 10 2 10 3 6 3 6 4 8 4 8 9"/>
-		<rect x="14" y="15" width="1" height="1"/>
-		<rect x="13" y="16" width="1" height="1"/>
-		<rect x="3" y="15" width="1" height="1"/>
-		<rect x="4" y="16" width="1" height="1"/>
-		<rect x="3" y="6" width="1" height="1"/>
-		<rect x="4" y="5" width="1" height="1"/>
-		<rect x="14" y="6" width="1" height="1"/>
-		<rect x="13" y="5" width="1" height="1"/>
-	`,
-};
-
-icons.zoom1to1 = {
-	outline: `
-		<rect x="5" y="4" width="2" height="12"></rect>
-		<rect x="14" y="4" width="2" height="12"></rect>
-		<rect x="18" y="1" width="1" height="18"></rect>
-		<rect x="1" y="1" width="1" height="18"></rect>
-		<rect x="13" y="5" width="1" height="1"></rect>
-		<rect x="4" y="5" width="1" height="1"></rect>
-		<rect x="9" y="11" width="2" height="2"></rect>
-		<rect x="9" y="7" width="2" height="2"></rect>
-		<rect x="1" y="1" width="18" height="1"></rect>
-		<rect x="1" y="18" width="18" height="1"></rect>
-	`,
-};
-
-icons.zoomIn = {
-	outline: `
-		<rect x="9" y="3" width="2" height="14"></rect>
-		<rect x="3" y="9" width="14" height="2"></rect>
-	`,
-};
-
-icons.zoomOut = {
-	outline: `<rect x="3" y="9" width="14" height="2"></rect>`,
-};
-
-icons.pan = {
-	fill: `
-		<rect x="9" y="1" width="2" height="18"></rect>
-		<rect x="1" y="9" width="18" height="2"></rect>
-		<rect x="2" y="7" width="2" height="6"></rect>
-		<rect x="7" y="16" width="6" height="2"></rect>
-		<rect x="16" y="7" width="2" height="6"></rect>
-		<rect x="7" y="2" width="6" height="2"></rect>
-	`,
-	outline: `
-		<rect x="8" y="4" width="1" height="5"></rect>
-		<rect x="8" y="11" width="1" height="5"></rect>
-		<rect x="11" y="4" width="1" height="5"></rect>
-		<rect x="11" y="11" width="1" height="5"></rect>
-		<rect x="4" y="8" width="4" height="1"></rect>
-		<rect x="11" y="8" width="5" height="1"></rect>
-		<rect x="4" y="11" width="4" height="1"></rect>
-		<rect x="4" y="12" width="1" height="2"></rect>
-		<rect x="4" y="6" width="1" height="2"></rect>
-		<rect x="2" y="12" width="1" height="1"></rect>
-		<rect x="1" y="11" width="1" height="1"></rect>
-		<rect x="0" y="9" width="1" height="2"></rect>
-		<rect x="1" y="8" width="1" height="1"></rect>
-		<rect x="3" y="6" width="1" height="1"></rect>
-		<rect x="2" y="7" width="1" height="1"></rect>
-		<rect x="3" y="13" width="1" height="1"></rect>
-		<rect x="11" y="11" width="5" height="1"></rect>
-		<rect x="12" y="15" width="2" height="1"></rect>
-		<rect x="6" y="15" width="2" height="1"></rect>
-		<rect x="12" y="17" width="1" height="1"></rect>
-		<rect x="13" y="16" width="1" height="1"></rect>
-		<rect x="11" y="18" width="1" height="1"></rect>
-		<rect x="9" y="19" width="2" height="1"></rect>
-		<rect x="8" y="18" width="1" height="1"></rect>
-		<rect x="7" y="17" width="1" height="1"></rect>
-		<rect x="6" y="16" width="1" height="1"></rect>
-		<rect x="15" y="6" width="1" height="2"></rect>
-		<rect x="15" y="12" width="1" height="2"></rect>
-		<rect x="17" y="7" width="1" height="1"></rect>
-		<rect x="16" y="6" width="1" height="1"></rect>
-		<rect x="18" y="8" width="1" height="1"></rect>
-		<rect x="19" y="9" width="1" height="2"></rect>
-		<rect x="18" y="11" width="1" height="1"></rect>
-		<rect x="17" y="12" width="1" height="1"></rect>
-		<rect x="16" y="13" width="1" height="1"></rect>
-		<rect x="6" y="4" width="2" height="1"></rect>
-		<rect x="12" y="4" width="2" height="1"></rect>
-		<rect x="7" y="2" width="1" height="1"></rect>
-		<rect x="6" y="3" width="1" height="1"></rect>
-		<rect x="8" y="1" width="1" height="1"></rect>
-		<rect x="9" y="0" width="2" height="1"></rect>
-		<rect x="11" y="1" width="1" height="1"></rect>
-		<rect x="12" y="2" width="1" height="1"></rect>
-		<rect x="13" y="3" width="1" height="1"></rect>
-	`,
-};
-
-icons.livePreview = {
-	outline: `
-		<polygon points="8 12 7 12 7 13 5 13 5 9 6 9 6 8 3 8 3 9 4 9 4 13 3 13 3 14 8 14 8 12"/>
-		<rect x="8" y="10" width="1" height="1"/>
-		<rect x="10" y="10" width="2" height="1"/>
-		<rect x="12" y="11" width="1" height="2"/>
-		<polygon points="12 13 10 13 10 11 9 11 9 15 8 15 8 16 10 16 10 14 12 14 12 13"/>
-		<rect x="1" y="6" width="1" height="12"/>
-		<rect x="14" y="8" width="1" height="10"/>
-		<rect x="2" y="5" width="10" height="1"/>
-		<polygon points="14 1 14 2 18 2 18 6 19 6 19 1 14 1"/>
-		<rect x="15" y="4" width="1" height="1"/>
-		<rect x="16" y="3" width="1" height="1"/>
-		<rect x="14" y="5" width="1" height="1"/>
-		<rect x="13" y="6" width="1" height="1"/>
-		<rect x="17" y="2" width="1" height="1"/>
-		<rect x="2" y="18" width="12" height="1"/>
-	`,
-};
-
-icons.openLivePreview = {
-	fill: `
-	<rect data-name="Background" x="2" y="6" width="12" height="12"/>
-	`,
-	outline: `
-		<g data-name="Lp">
-			<polygon points="8 12 7 12 7 13 5 13 5 9 6 9 6 8 3 8 3 9 4 9 4 13 3 13 3 14 8 14 8 12"/>
-			<rect x="8" y="10" width="1" height="1"/>
-			<rect x="10" y="10" width="2" height="1"/>
-			<rect x="12" y="11" width="1" height="2"/>
-			<polygon points="12 13 10 13 10 11 9 11 9 15 8 15 8 16 10 16 10 14 12 14 12 13"/>
-			<rect x="1" y="6" width="1" height="12"/>
-			<rect x="14" y="8" width="1" height="10"/>
-			<rect x="2" y="5" width="10" height="1"/>
-			<rect x="2" y="18" width="12" height="1"/>
-		</g>
-		<g data-name="Launch">
-			<polygon points="14 1 14 2 18 2 18 6 19 6 19 1 14 1"/>
-			<rect x="15" y="4" width="1" height="1"/>
-			<rect x="16" y="3" width="1" height="1"/>
-			<rect x="14" y="5" width="1" height="1"/>
-			<rect x="13" y="6" width="1" height="1"/>
-			<rect x="17" y="2" width="1" height="1"/>
-		</g>
-	`,
-};
-
-icons.closeLivePreview = {
-	fill: `
-	<rect data-name="Background" x="2" y="6" width="12" height="12"/>
-	`,
-	outline: `
-		<g data-name="Lp">
-			<polygon points="8 12 7 12 7 13 5 13 5 9 6 9 6 8 3 8 3 9 4 9 4 13 3 13 3 14 8 14 8 12"/>
-			<rect x="8" y="10" width="1" height="1"/>
-			<rect x="10" y="10" width="2" height="1"/>
-			<rect x="12" y="11" width="1" height="2"/>
-			<polygon points="12 13 10 13 10 11 9 11 9 15 8 15 8 16 10 16 10 14 12 14 12 13"/>
-			<rect x="1" y="6" width="1" height="12"/>
-			<rect x="14" y="8" width="1" height="10"/>
-			<rect x="2" y="5" width="10" height="1"/>
-			<rect x="2" y="18" width="12" height="1"/>
-		</g>
-		<g data-name="Close">
-			<rect x="15" y="4" width="1" height="1"/>
-			<rect x="16" y="3" width="1" height="1"/>
-			<rect x="14" y="5" width="1" height="1"/>
-			<rect x="13" y="6" width="1" height="1"/>
-			<rect x="13" y="0" width="1" height="1"/>
-			<rect x="19" y="0" width="1" height="1"/>
-			<rect x="19" y="6" width="1" height="1"/>
-			<rect x="17" y="2" width="1" height="1"/>
-			<rect x="18" y="1" width="1" height="1"/>
-			<rect x="15" y="2" width="1" height="1"/>
-			<rect x="14" y="1" width="1" height="1"/>
-			<rect x="18" y="5" width="1" height="1"/>
-			<rect x="17" y="4" width="1" height="1"/>
-		</g>
-	`,
-};
-
-icons.kern = {
-	fill: `
-		<rect x="1" y="9" width="18" height="2"></rect>
-		<rect x="2" y="7" width="2" height="6"></rect>
-		<rect x="16" y="7" width="2" height="6"></rect>
-	`,
-	outline: `
-		<rect x="4" y="8" width="12" height="1"></rect>
-		<rect x="4" y="11" width="12" height="1"></rect>
-		<rect x="4" y="12" width="1" height="2"></rect>
-		<rect x="4" y="6" width="1" height="2"></rect>
-		<rect x="2" y="12" width="1" height="1"></rect>
-		<rect x="1" y="11" width="1" height="1"></rect>
-		<rect y="9" width="1" height="2"></rect>
-		<rect x="1" y="8" width="1" height="1"></rect>
-		<rect x="3" y="6" width="1" height="1"></rect>
-		<rect x="2" y="7" width="1" height="1"></rect>
-		<rect x="3" y="13" width="1" height="1"></rect>
-		<rect x="15" y="6" width="1" height="2"></rect>
-		<rect x="15" y="12" width="1" height="2"></rect>
-		<rect x="17" y="7" width="1" height="1"></rect>
-		<rect x="16" y="6" width="1" height="1"></rect>
-		<rect x="18" y="8" width="1" height="1"></rect>
-		<rect x="19" y="9" width="1" height="2"></rect>
-		<rect x="18" y="11" width="1" height="1"></rect>
-		<rect x="17" y="12" width="1" height="1"></rect>
-		<rect x="16" y="13" width="1" height="1"></rect>
-		<rect x="9" y="2" width="2" height="16"></rect>
-	`,
-};
-
-// Pixel pen - a nib over a grid
-icons.pixelPen = {
-	fill: `
-		<rect x="2" y="12" width="2" height="2"></rect>
-		<rect x="4" y="10" width="2" height="2"></rect>
-		<rect x="6" y="8" width="2" height="2"></rect>
-		<rect x="8" y="6" width="2" height="2"></rect>
-		<rect x="10" y="4" width="2" height="2"></rect>
-		<rect x="12" y="2" width="2" height="2"></rect>
-	`,
-	outline: `
-		<rect x="2" y="14" width="2" height="2"></rect>
-		<rect x="4" y="14" width="2" height="2"></rect>
-		<rect x="2" y="16" width="2" height="2"></rect>
-		<rect x="6" y="12" width="2" height="2"></rect>
-		<rect x="8" y="10" width="2" height="2"></rect>
-		<rect x="10" y="8" width="2" height="2"></rect>
-		<rect x="12" y="6" width="2" height="2"></rect>
-		<rect x="14" y="4" width="2" height="2"></rect>
-		<rect x="14" y="2" width="2" height="2"></rect>
-		<rect x="16" y="2" width="2" height="2"></rect>
-	`,
-};

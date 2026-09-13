@@ -1,0 +1,280 @@
+/*
+	MENU BUTTON
+	-----------
+	Split control: a face that runs the active item, a chevron that offers the
+	rest. Sized from the control tokens so it lines up with the plain tool
+	buttons standing next to it in the same strip.
+*/
+
+.menu-button {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+/* --------------------------------------------------------------
+	The face
+	------------------------------------------------------------ */
+
+.menu-button__face {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tool-size);
+	height: var(--tool-size);
+	padding: 0;
+	border: none;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--icon-default);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.menu-button__face:hover {
+	background-color: var(--bg-hover);
+	color: var(--icon-strong);
+}
+
+.menu-button__face--pressed,
+.menu-button__face--pressed:hover {
+	background-color: var(--accent);
+	color: var(--icon-on-accent);
+}
+
+.menu-button__face[disabled],
+.menu-button__face[disabled]:hover {
+	background-color: transparent;
+	color: var(--icon-disabled);
+	cursor: default;
+}
+
+.menu-button__face svg {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+	pointer-events: none;
+}
+
+/* --------------------------------------------------------------
+	The chevron
+
+	Narrow on purpose - it is the secondary half of the control - but it
+	keeps a full-height hit area, so the target clears the 24px floor even
+	though the arrow drawn inside it is 12px.
+	------------------------------------------------------------ */
+
+.menu-button__chevron {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: var(--tool-size);
+	padding: 0;
+	border: none;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--icon-default);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity var(--dur-fast) var(--ease), var(--transition-color);
+}
+
+/*
+	The chevron appears on hover, on focus, and while its menu is open - the
+	way Figma does it. It is always in the layout, so nothing shifts when it
+	fades in, and it is always reachable by keyboard whether or not it shows.
+*/
+.menu-button:hover .menu-button__chevron,
+.menu-button__chevron:focus-visible,
+.menu-button--open .menu-button__chevron {
+	opacity: 1;
+}
+
+.menu-button__chevron:hover {
+	color: var(--icon-strong);
+}
+
+.menu-button__chevron svg {
+	width: 12px;
+	height: 12px;
+	pointer-events: none;
+}
+
+/* --------------------------------------------------------------
+	The menu
+	------------------------------------------------------------ */
+
+/*
+	Explicit, because the `display: flex` below outranks the user-agent's
+	`[hidden] { display: none }` and the closed menus rendered as empty panels
+	hanging off both strips.
+*/
+.menu-button__menu[hidden] {
+	display: none;
+}
+
+.menu-button__menu {
+	position: absolute;
+	left: 0;
+	top: calc(100% + var(--sp-3));
+	z-index: var(--z-canvas-float);
+	/*
+		Sized to its longest row rather than to a guessed constant, so a tool
+		name is never clipped and a menu of short names is never a wide empty
+		box. The cap keeps a long name wrapping to an ellipsis instead of
+		stretching the menu across the canvas.
+	*/
+	width: max-content;
+	min-width: 180px;
+	max-width: 320px;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	/* 4px, with --r-2xl at 20 so that 20 - 4 = 16 lands on the rows. See dialogs.css. */
+	padding: var(--sp-2);
+	background-color: var(--bg-surface-raised);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-2xl);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
+}
+
+/*
+	The toolbar sits at the bottom of the canvas, so its menus open upward. They
+	stay anchored to the left edge of their button: the bar is centred, with
+	canvas on both sides, so there is nothing for a menu to overflow.
+*/
+.menu-button__menu--up {
+	top: auto;
+	bottom: calc(100% + var(--sp-3));
+}
+
+.menu-button__row {
+	display: grid;
+	grid-template-columns: var(--icon-size-lg) minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-4);
+	/*
+		No `width: 100%`. The menu sizes itself with max-content, so a percentage
+		width on the row resolves against a container that is waiting on the row -
+		the track collapsed and every row rendered as a 24px stub with its name
+		clipped away. The column flex container stretches the rows instead.
+	*/
+	/*
+		40px, the same as the rail's menu rows. Taller than --row-h on purpose:
+		a browser clamps a radius to half the box, so --r-xl on a 28px row came
+		out at 14 and the highlight was a lozenge with corners rounder than the
+		menu holding it. 40 also puts a --control-h-sm key cap --sp-4 from the
+		top and bottom, which is the distance the row holds it from its right
+		edge - see the cap below.
+	*/
+	min-height: calc(var(--row-h) + var(--sp-5));
+	/* The same inset the rail's menu rows use, now that the tick gutter is
+		not holding the icon away from the edge. */
+	padding: 0 var(--sp-4) 0 var(--sp-3);
+	border: none;
+	/* Same pairing as the rail's menus: --r-2xl surface, --r-xl rows. */
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--text-primary);
+	font-size: var(--fs-sm);
+	text-align: left;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.menu-button__row:hover {
+	background-color: var(--bg-hover);
+}
+
+/*
+	The selected row, marked the way the rail marks the page you are on: the
+	accent held back to a tint. It is a statement, not an offer - so it keeps
+	the tint on hover as well, where a row you could choose gets --bg-hover.
+
+	Not the tint alone. The name takes semibold and the icon takes the accent,
+	so the row is still telling you which one is chosen with a screen in
+	greyscale or an eye that cannot separate this blue from that grey.
+*/
+.menu-button__row[aria-checked='true'],
+.menu-button__row[aria-checked='true']:hover {
+	background-color: var(--bg-selected);
+	color: var(--text-primary);
+}
+
+.menu-button__row[aria-checked='true'] .menu-button__row-name {
+	font-weight: var(--fw-semibold);
+}
+
+.menu-button__row[aria-checked='true'] .menu-button__row-icon {
+	color: var(--icon-accent);
+}
+
+.menu-button__row[disabled],
+.menu-button__row[disabled]:hover {
+	background-color: transparent;
+	color: var(--text-disabled);
+	cursor: default;
+}
+
+.menu-button__row-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--icon-default);
+}
+
+.menu-button__row-icon svg {
+	width: var(--icon-size-lg);
+	height: var(--icon-size-lg);
+}
+
+.menu-button__row[disabled] .menu-button__row-icon {
+	color: var(--icon-disabled);
+}
+
+.menu-button__row-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/*
+	A key cap, drawn as one - the same cap the rail's menus use. It was bare
+	mono text here and a bordered cap over there, which made a keyboard
+	shortcut look like two different kinds of thing depending on which popover
+	you happened to open.
+*/
+.menu-button__row-key {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	margin: 0;
+	border: 1px solid var(--border-subtle);
+	/* Concentric with the row: its --r-xl less the --sp-4 the row holds this
+		off its edges by. See dialogs.css for the whole argument. */
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-xs);
+	line-height: 1;
+}
+
+/* Rows without a shortcut still build the span. An empty cap is a stray box. */
+.menu-button__row-key:empty {
+	display: none;
+}
+
+.menu-button__row[disabled] .menu-button__row-key {
+	color: var(--text-disabled);
+	border-color: var(--border-subtle);
+}

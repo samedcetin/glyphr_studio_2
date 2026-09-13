@@ -141,34 +141,41 @@ strong {
 	font-weight: bold;
 }
 
+/*
+	Links, on the accent. They were three fixed blues from the old ramp -
+	--blue-l55 at rest, --blue-l65 on hover - which is a colour that gets
+	*lighter* when you point at it and does not move with the theme, so on a
+	dark page they sat a shade above the background and below the body text.
+*/
 a,
 a:visited {
 	background-color: transparent;
-	border-radius: 4px;
-	color: var(--blue-l55);
+	border-radius: var(--r-xs);
+	color: var(--text-accent);
 	text-decoration: none;
 }
 
 a:active {
-	color: var(--blue-l40);
-	background-color: hsla(200, 100%, 45%, 0.1);
+	color: var(--text-accent);
+	background-color: var(--bg-selected);
 }
 
 a:focus,
 a:hover {
-	color: var(--blue-l65);
+	color: var(--text-accent);
 	text-decoration: underline;
 	cursor: pointer;
 }
 
 a[danger],
 a[danger]:visited {
-	color: var(--darkRed);
+	color: var(--text-danger);
 }
 
 a[danger]:hover,
 a[danger]:focus {
-	color: var(--red);
+	color: var(--text-danger);
+	text-decoration: underline;
 }
 
 p {
@@ -258,10 +265,26 @@ label:hover {
 	color: var(--text-primary);
 }
 
+/*
+	One radius for every control of this height.
+
+	Inputs were --r-xs and buttons --r-md, so a text field and the button next
+	to it - both 24px, both in the same row - were drawn with different
+	corners. 8px is what the app gives a 24px control everywhere else: the key
+	caps in the menus, the Switch chip on a project card. `select` is in here
+	too, so a native one matches the option chooser beside it.
+*/
 input,
-textarea {
+textarea,
+select {
 	padding: 0px var(--sp-3);
-	height: var(--control-h-sm);
+	/*
+		--control-h, not --control-h-sm. 24px is the WCAG target-size floor, and
+		a panel row full of fields sitting exactly on the floor is a row you have
+		to aim at. It also put text fields a step shorter than the option chooser
+		beside them once that grew. 28 is the app's control height.
+	*/
+	height: var(--control-h);
 	text-align: left;
 	font-family: var(--font-mono);
 	font-size: var(--fs-sm);
@@ -269,7 +292,8 @@ textarea {
 	background-color: var(--bg-surface-sunken);
 	color: var(--text-primary);
 	border: 1px solid var(--border-strong);
-	border-radius: var(--r-xs);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	transition: var(--transition-color);
 	-webkit-user-select: text;
 	-moz-user-select: text;
@@ -278,14 +302,16 @@ textarea {
 }
 
 input:hover,
-textarea:hover {
+textarea:hover,
+select:hover {
 	background-color: var(--enabled-focus-background);
 	color: var(--enabled-focus-text);
 	border-color: var(--enabled-focus-border);
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
 	background-color: var(--bg-surface);
 	color: var(--text-primary);
 	border-color: var(--accent);
@@ -305,10 +331,15 @@ info-bubble {
 	One visible focus ring for everything, drawn outside the element so it is
 	never clipped. :focus-visible keeps it off mouse clicks but on for keyboard.
 */
+/*
+	No border-radius here. An outline already follows the shape of the element
+	it is drawn around, and setting a radius in this rule was changing the
+	element's own corners the moment it took focus - a 16px menu row squared
+	itself off to 3px while the keyboard was on it.
+*/
 :focus-visible {
 	outline: var(--focus-style);
 	outline-offset: var(--focus-offset);
-	border-radius: var(--r-xs);
 }
 
 input:focus-visible,
@@ -341,10 +372,86 @@ input[type='number'][disabled='disabled'] {
 	color: var(--text-disabled);
 }
 
+/*
+	The checkbox, drawn rather than borrowed.
+
+	The native one only looks right at the size the platform drew it for. The
+	panels ask for 24px, and a stretched native control at that size is a
+	blurry slab with no edge you can find - and accent-color only reaches the
+	checked state anyway, so the unchecked one never followed the theme at all.
+
+	Everything here is a proportion of the box, so it is the same checkbox at
+	14, 20 or 24 - which is what lets the panels set their own size without
+	the mark inside falling out of register.
+*/
 input[type='checkbox'] {
+	appearance: none;
+	-webkit-appearance: none;
+	/*
+		The tick is positioned, not laid out. A grid item's percentage width
+		resolves against a track that is itself sized by that item, so 30% came
+		out as whatever auto happened to be - a dot. Against a padding box it is
+		definite, and the mark holds its proportions at any size.
+	*/
+	position: relative;
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	padding: 0;
+	margin: 0;
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+input[type='checkbox']:hover {
+	border-color: var(--accent);
+}
+
+input[type='checkbox']:checked {
+	background-color: var(--accent);
+	border-color: var(--accent);
+}
+
+/* The tick: two sides of a box, turned. Sized in percentages so it holds its
+	proportions whatever height the box is given. */
+input[type='checkbox']::before {
+	content: '';
+	position: absolute;
+	left: 34%;
+	top: 16%;
+	width: 26%;
+	height: 52%;
+	border: solid var(--text-on-accent);
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg) scale(0.4);
+	opacity: 0;
+	transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+
+input[type='checkbox']:checked::before {
+	transform: rotate(45deg) scale(1);
+	opacity: 1;
+}
+
+input[type='checkbox'][disabled],
+input[type='checkbox'][disabled]:hover {
+	background-color: var(--bg-disabled);
+	border-color: var(--border-subtle);
+	cursor: default;
+}
+
+input[type='radio'] {
 	accent-color: var(--accent);
 	width: 14px;
 	height: 14px;
+	padding: 0;
+	background: none;
+	border: none;
+	border-radius: 0;
 	cursor: pointer;
 }
 
@@ -430,7 +537,15 @@ button {
 	min-height: var(--control-h-sm);
 	margin: 0px;
 	cursor: pointer;
-	border-radius: var(--r-xs);
+	/*
+		The default every button in the app falls back to, and most of them do.
+		--r-xs is an input's radius - 3px, meant for a field sitting in a row -
+		and on a 30px icon button it reads as a square with the corners filed
+		off. --r-md is the button radius the rest of the app was already using
+		where it said so explicitly.
+	*/
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	border: 1px solid var(--border-default);
 	background-color: var(--bg-surface);
 	color: var(--text-primary);

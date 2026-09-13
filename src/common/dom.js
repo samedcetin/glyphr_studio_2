@@ -60,9 +60,24 @@ export function makeElement({
 	}
 
 	if (innerHTML) {
-		const template = document.createElement('template');
-		template.innerHTML = innerHTML;
-		newElement.appendChild(template.content);
+		if (tag === 'style') {
+			/*
+				A stylesheet is text, not markup.
+
+				Every component that carries its own CSS builds it this way, and
+				the template below parses what it is given as HTML - so the first
+				angle bracket anywhere in a stylesheet, including inside a
+				comment, became an element node. That splits the style element's
+				text in two and the CSS parser stops at the split, silently
+				dropping every rule after it. A comment mentioning a `span` tag
+				cost this component its entire appearance.
+			*/
+			newElement.textContent = innerHTML;
+		} else {
+			const template = document.createElement('template');
+			template.innerHTML = innerHTML;
+			newElement.appendChild(template.content);
+		}
 
 		// log(`makeElement - newElement:`);
 		// log(newElement);

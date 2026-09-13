@@ -1,225 +1,182 @@
+/*
+	The app's button, in a web component.
+
+	It was a rainbow: an animated 120-second gradient running blue to purple to
+	orange around the border, white text cut out of a second copy of the same
+	gradient, and hard-coded whites underneath. Which meant it did not follow
+	the theme - a white plate and white text on a dark panel - and it was a
+	visual language nothing else in the app spoke. Seventy call sites got it
+	because it is what `fancy-button` means, not because any of them wanted a
+	rainbow.
+
+	Same four variants, same attribute names, so nothing calling it changes.
+	They are the app's four button states now: the default is the accent, and
+	secondary, minimal and danger are what they say.
+*/
+
 * {
 	box-sizing: border-box;
 	user-select: none;
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
-	user-select: none;
-	transition: var(--global-transition);
 }
 
 :host {
-	margin-right: 8px;
 	display: inline-block;
 	width: max-content;
-	min-width: 40px;
-	--fancy-gradient: linear-gradient(
-		135deg,
-		var(--blue-l55),
-		var(--purple-l45),
-		var(--orange-l50),
-		var(--purple-l45),
-		var(--blue-l55),
-		var(--purple-l45)
-	);
-	--fancy-animation: gradFade 120s linear infinite;
-	--fancy-background-size: 500% 500%;
+	min-width: 0;
+	margin-right: var(--sp-4);
+	vertical-align: middle;
 }
 
-@keyframes gradFade {
-	0% {
-		background-position: 0% 0%;
-	}
-
-	100% {
-		background-position: 100% 100%;
-	}
-}
-
-:host(:active) .wrapper {
-	top: 1px;
-	left: 1px;
-	box-shadow: none;
-}
-
-:host([disabled]:active) .wrapper {
-	top: 0px;
-	left: 0px;
-}
-
-/* Primary */
 .wrapper {
-	display: inline-block;
-	position: relative;
-	top: 0px;
-	left: 0px;
-	margin: 0px;
-	padding: 2px;
-	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	width: 100%;
-	border-style: solid;
-	border-width: 0px;
-	border-radius: 5px;
-	animation: var(--fancy-animation);
-	box-shadow: var(--l2-shadow);
-	background: var(--fancy-gradient);
-	background-size: var(--fancy-background-size);
-}
-
-.wrapper:hover,
-.wrapper *:hover,
-.wrapper:focus,
-.wrapper *:focus {
+	height: 100%;
+	/*
+		The app's standalone button height, but a call site can say otherwise:
+		one of these sitting inline beside a 28px field has to match the field,
+		not stand four pixels taller than it.
+	*/
+	min-height: var(--fancy-button-h, var(--control-h-lg));
+	margin: 0;
+	padding: 0 var(--sp-5);
+	border: 1px solid var(--accent);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--accent);
+	color: var(--text-on-accent);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	line-height: 1;
+	text-align: center;
+	box-shadow: none;
 	cursor: pointer;
+	transition: var(--transition-color);
 }
 
-.wrapper:focus {
-	outline: var(--global-focus-style);
+.wrapper:hover {
+	background-color: var(--accent-hover);
+	border-color: var(--accent-hover);
+}
+
+.wrapper:active {
+	background-color: var(--accent-hover);
+}
+
+.wrapper:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
 }
 
 .buttonContent {
 	display: flex;
 	align-items: center;
-	padding: 0px;
-	border-radius: 3px;
-	background-color: transparent;
+	justify-content: center;
+	gap: var(--sp-2);
 	width: 100%;
 	height: 100%;
-}
-
-.buttonText {
-	display: inline-block;
-	width: max-content;
-	height: max-content;
-	margin: 5px 10px;
-	color: white;
-	animation: var(--fancy-animation);
 	background-color: transparent;
 }
 
-/* Secondary */
-.wrapper[secondary] .buttonContent {
-	background-color: rgba(255, 255, 255, 0.95);
+/*
+	A slot, so the label is whatever the call site put inside the element -
+	often an icon and a word. It carries no colour of its own; the wrapper's
+	`color` reaches it, which is what lets one rule change all four variants.
+*/
+.buttonText {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--sp-2);
+	width: max-content;
+	color: inherit;
+	background-color: transparent;
 }
 
-.wrapper[secondary] .buttonText {
-	background: var(--fancy-gradient);
-	background-size: var(--fancy-background-size);
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
+/* --------------------------------------------------------------
+	Secondary - the app's ordinary button
+	------------------------------------------------------------ */
+
+.wrapper[secondary] {
+	background-color: var(--bg-surface);
+	border-color: var(--border-default);
+	color: var(--text-primary);
 }
 
-.wrapper:hover .buttonContent,
-.wrapper:active .buttonContent {
-	background-color: rgba(255, 255, 255, 0.1);
+.wrapper[secondary]:hover,
+.wrapper[secondary]:active {
+	background-color: var(--bg-hover);
+	border-color: var(--border-strong);
+	color: var(--text-primary);
 }
 
-.wrapper[secondary]:hover .buttonContent,
-.wrapper[secondary]:active .buttonContent {
-	background-color: white;
-}
+/* --------------------------------------------------------------
+	Minimal - a button that only shows itself when reached
+	------------------------------------------------------------ */
 
-/* Minimal */
 .wrapper[minimal] {
-	padding: 1px;
-	box-shadow: var(--l1-shadow);
-	background: linear-gradient(135deg,
-		var(--blue-l85),
-		var(--blue-l90)
-	);
-	animation: var(--fancy-animation);
-}
-
-.wrapper[minimal] .buttonContent {
-	background-color: rgba(255, 255, 255, 0.95);
-}
-
-.wrapper[minimal] .buttonText {
-	background: linear-gradient(135deg,
-		var(--blue-l70),
-		var(--blue-l90)
-	);
-	background-size: var(--fancy-background-size);
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
+	background-color: transparent;
+	border-color: transparent;
+	color: var(--text-accent);
+	box-shadow: none;
 }
 
 .wrapper[minimal]:hover,
 .wrapper[minimal]:active {
-	box-shadow: var(--l2-shadow);
-	background: linear-gradient(135deg,
-		var(--blue-l65),
-		var(--blue-l70)
-	);
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--text-accent);
 }
 
-.wrapper[minimal]:hover .buttonContent,
-.wrapper[minimal]:active .buttonContent {
-	background-color: white;
-}
+/* --------------------------------------------------------------
+	Danger
+	------------------------------------------------------------ */
 
-.wrapper[minimal]:hover .buttonText,
-.wrapper[minimal]:active .buttonText {
-	background: linear-gradient(135deg,
-		var(--blue-l40),
-		var(--blue-l70)
-	);
-	background-size: var(--fancy-background-size);
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
-}
-
-/* Danger */
 .wrapper[danger] {
-	background: linear-gradient(135deg,
-			var(--orange-l50),
-			var(--red));
-	animation: var(--fancy-animation);
+	background-color: var(--bg-danger);
+	border-color: var(--bg-danger);
+	color: var(--text-on-accent);
 }
 
-.wrapper[danger] .buttonText {
-	background: white;
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
+.wrapper[danger]:hover,
+.wrapper[danger]:active {
+	background-color: var(--bg-danger);
+	border-color: var(--bg-danger);
+	filter: brightness(0.92);
 }
 
-.wrapper[secondary][danger] .buttonText {
-	background: var(--red);
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
+/* Danger, stated rather than shouted - for the one in a row of settings. */
+.wrapper[secondary][danger] {
+	background-color: var(--bg-surface);
+	border-color: var(--danger);
+	color: var(--text-danger);
+	filter: none;
 }
 
-/* Disabled */
+.wrapper[secondary][danger]:hover,
+.wrapper[secondary][danger]:active {
+	background-color: var(--danger-bg);
+	border-color: var(--danger);
+	color: var(--text-danger);
+	filter: none;
+}
+
+/* --------------------------------------------------------------
+	Disabled
+	------------------------------------------------------------ */
+
 .wrapper[disabled],
 .wrapper[disabled]:hover,
 .wrapper[disabled]:focus,
 .wrapper[disabled]:active {
-	background-image: none;
-	background-color: var(--disabled-border);
-	cursor: default;
+	background-color: var(--bg-disabled);
+	border-color: var(--border-disabled);
+	color: var(--text-disabled);
+	filter: none;
 	box-shadow: none;
-}
-
-.wrapper[disabled] .buttonContent,
-.wrapper[disabled]:hover .buttonContent,
-.wrapper[disabled]:focus .buttonContent,
-.wrapper[disabled]:active .buttonContent {
-	background-color: var(--disabled-background);
-	cursor: default;
-}
-
-.wrapper[disabled] .buttonText,
-.wrapper[disabled]:hover .buttonText,
-.wrapper[disabled]:focus .buttonText,
-.wrapper[disabled]:active .buttonText {
-	background-color: var(--disabled-background);
-	background-clip: none;
-	-webkit-text-fill-color: var(--disabled-border);
-	color: var(--disabled-border);
 	cursor: default;
 }
