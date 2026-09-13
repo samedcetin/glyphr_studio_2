@@ -131,12 +131,13 @@ dialog {
 	max-height: min(520px, 80vh);
 	overflow-y: auto;
 	/*
-		2px, not 4. The rows and cards inside are --r-xl, the surface is --r-2xl,
-		and 18 - 2 = 16 is what makes those two corners concentric rather than
-		nearly so. It also reads correctly: a menu is a stack of rows, not a box
-		with a margin around a stack of rows.
+		4px. The rows and cards inside are --r-xl, so the surface is --r-2xl at
+		16 + 4 = 20 and the two corners are concentric. The arithmetic also
+		works at 2px and 18, but the rows then sit against the wall of the menu
+		with nothing to breathe into. The padding is the fixed term here and the
+		outer radius follows it, not the other way round.
 	*/
-	padding: var(--sp-1);
+	padding: var(--sp-2);
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
 	border-radius: var(--r-2xl);
@@ -166,7 +167,7 @@ dialog {
 	padding: 0 var(--sp-4) 0 var(--sp-3);
 	border: none;
 	/*
-		Concentric with the menu: --r-2xl less its --sp-1 of padding. On the
+		Concentric with the menu: --r-2xl less its --sp-2 of padding. On the
 		40px rows that carry a description - which is most of them - this is a
 		soft rectangle; on a bare 28px row the browser clamps it to half the
 		height and it comes out a lozenge.
@@ -203,7 +204,7 @@ dialog {
 	A row that carries its own content - a project preview - supplies its own
 	layout, so the grid stands down. No side padding either: the card inside is
 	rounded to be concentric with the menu's own corner, which only works if it
-	sits at the menu's own 2px. The vertical 4px keeps two cards apart.
+	sits at the menu's own padding. The vertical 4px keeps two cards apart.
 
 	No hover wash here either - see .context-menu-row:hover.
 */

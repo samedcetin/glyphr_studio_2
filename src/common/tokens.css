@@ -215,9 +215,11 @@
 	/*
 		Floating surfaces only - popovers and menus. It is the one radius that
 		sits above the page rather than in it, and it is sized to hold a --r-xl
-		child concentrically at --sp-1 of padding: 18 - 2 = 16.
+		child concentrically at --sp-2 of padding: 20 - 4 = 16. The padding came
+		first: 2px was concentric too, at 18, but it left the rows pressed
+		against the wall of the menu.
 	*/
-	--r-2xl: 18px;
+	--r-2xl: 20px;
 	--r-pill: 999px;
 
 	/*

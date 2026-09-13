@@ -132,8 +132,8 @@
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
-	/* 2px so that 18 - 2 = 16 lands on the rows. See dialogs.css. */
-	padding: var(--sp-1);
+	/* 4px, with --r-2xl at 20 so that 20 - 4 = 16 lands on the rows. See dialogs.css. */
+	padding: var(--sp-2);
 	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--border-default);
 	border-radius: var(--r-2xl);

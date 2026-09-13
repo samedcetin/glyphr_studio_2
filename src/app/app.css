@@ -320,8 +320,8 @@
 	overflow: hidden;
 	border: 1px solid var(--border-subtle);
 	/*
-		Concentric with the menu around it: the menu is --r-2xl with --sp-1 of
-		padding, and 18 - 2 = 16, which is --r-xl.
+		Concentric with the menu around it: the menu is --r-2xl with --sp-2 of
+		padding, and 20 - 4 = 16, which is --r-xl.
 	*/
 	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
