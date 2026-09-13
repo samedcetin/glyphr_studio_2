@@ -27,7 +27,8 @@
 
 .content-page__nav-area #nav-button-l1 {
 	width: 100%;
-	border-radius: 4px;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 }
 
 #content-page__panel {
@@ -39,14 +40,15 @@
 }
 
 .content-page__right-area {
-	border: 1px solid var(--blue-l85);
-	background-color: var(--offWhite);
+	border: 1px solid var(--border-subtle);
+	background-color: var(--bg-app);
 	grid-column: 2;
-	border-radius: 4px;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	width: 100%;
 	overflow-x: hidden;
 	overflow-y: auto;
-	box-shadow: var(--l3-shadow);
+	box-shadow: var(--shadow-3);
 	padding: 20px;
 }
 
@@ -54,12 +56,16 @@
 	display: inline-block;
 }
 
+/*
+	The wordmark on the About page. It was filled purple with a darker purple
+	stroke, which is the one place the old gradient palette still reached the
+	screen - and it did not change with the theme, so on a dark page it was a
+	purple mark on black.
+*/
 .about-page__logo {
-	/* fill: url(#logoGradient); */
 	width: 300px;
-	fill: var(--purple-l40);
-	stroke: var(--purple-l10);
-	stroke-width: 10px;
+	fill: var(--text-primary);
+	stroke: none;
 }
 
 .about-page__contact-table {
@@ -77,7 +83,7 @@
 .logoNote {
 	margin-top: 10px;
 	font-size: 0.8em;
-	color: var(--purple-l65);
+	color: var(--text-secondary);
 	font-style: italic;
 }
 
@@ -97,11 +103,12 @@
 	margin-bottom: 5px;
 	margin-right: 0px;
 
-	border: 1px solid var(--gray-l85);
+	border: 1px solid var(--border-subtle);
 	padding: 10px 10px 15px 10px;
-	background-color: white;
-	border-radius: 4px;
-	box-shadow: var(--l2-shadow);
+	background-color: var(--bg-surface);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-2);
 	vertical-align: top;
 }
 
@@ -114,7 +121,8 @@
 .page__card__logo-image {
 	width: 100px;
 	height: 100px;
-	border-radius: 4px;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	overflow: hidden;
 	margin-right: 10px;
 }
@@ -144,7 +152,7 @@
 }
 
 .content-page__right-area label {
-	color: var(--enabled-restingLight-lightText);
+	color: var(--text-secondary);
 	margin-right: 4px;
 }
 
@@ -288,7 +296,7 @@ span.spacer {
 }
 
 .settings-page__tab-content p {
-	color: var(--enabled-restingLight-lightText);
+	color: var(--text-secondary);
 	margin-top: 5px;
 }
 
@@ -304,7 +312,7 @@ span.spacer {
 .settings_read-only-value {
 	font-family: monospace;
 	padding-left: 4px;
-	color: var(--enabled-resting-text);
+	color: var(--text-primary);
 	user-select: text;
 }
 
@@ -322,12 +330,12 @@ span.spacer {
 	font-size: 0.8em;
 	line-height: 24px;
 	width: min-content;
-	color: var(--disabled-text);
+	color: var(--text-disabled);
 	border-style: dashed;
-	border-color: var(--disabled-border);
+	border-color: var(--border-subtle);
 	border-width: 0px 1px 1px 0px;
 	opacity: 0.4;
-	border-radius: 0px 10px 0px 0px;
+	border-radius: 0 var(--r-md) 0 0;
 	padding: 2px 5px 0px 2px;
 }
 
@@ -346,7 +354,7 @@ span.spacer {
 .panose-value {
 	font-size: 2em;
 	line-height: 0.9em;
-	color: var(--gray-l40);
+	color: var(--text-secondary);
 	font-family: monospace;
 	text-align: center;
 	width: 100%;
@@ -375,11 +383,12 @@ span.spacer {
 	margin-bottom: 20px;
 	margin-right: 0px;
 	margin-top: 20px;
-	border: 1px solid var(--blue-l95);
+	border: 1px solid var(--border-subtle);
 	padding: 10px 20px 10px 10px;
-	background-color: white;
-	border-radius: 4px;
-	box-shadow: var(--l1-shadow);
+	background-color: var(--bg-surface);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-1);
 	animation: var(--animate-fade-in-slide-down);
 }
 
@@ -390,9 +399,9 @@ span.spacer {
 .global-actions__effect-description {
 	line-height: 1.3em;
 	padding: 10px;
-	background-color: var(--orange-l97);
-	color: var(--orange-l20);
-	border-left: 5px solid var(--orange-l85);
+	background-color: var(--warn-bg);
+	color: var(--warn);
+	border-left: 3px solid var(--warn);
 }
 
 .global-actions__card .global-actions__effect-description,
@@ -437,7 +446,7 @@ span.spacer {
 }
 
 .textAction {
-	color: var(--blue-l60);
+	color: var(--text-accent);
 	text-decoration: none;
 }
 
@@ -462,12 +471,12 @@ span.spacer {
 .list__column-header {
 	font-size: 0.9em;
 	padding: 0px 10px 0px 5px;
-	color: var(--enabled-restingLight-lightText);
+	color: var(--text-secondary);
 	font-style: italic;
 	position: relative;
 	top: 5px;
 	width: 100%;
-	border-bottom: 1px solid var(--disabled-background);
+	border-bottom: 1px solid var(--border-subtle);
 	margin-bottom: 5px;
 }
 
@@ -481,23 +490,25 @@ span.spacer {
 .list__row-wrapper__static span,
 .list__row-wrapper__selectable span {
 	padding-left: 6px;
-	border-radius: 4px;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	display: inline-block;
 }
 
 .list__row-wrapper__selectable:hover {
-	color: var(--blue-l50);
+	color: var(--text-accent);
 	cursor: pointer;
 }
 
 .list__row-wrapper__selectable:hover span {
-	background-color: var(--blue-l95);
+	background-color: var(--bg-selected);
 }
 
 /* Current ranges */
 .range-table__list-area {
-	background-color: white;
-	border-radius: 4px;
+	background-color: var(--bg-surface);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	padding: 0px 10px 10px 10px;
 	display: grid;
 	width: 100%;
@@ -551,11 +562,12 @@ span.spacer {
 	max-height: calc(100vh - 400px);
 	min-height: 200px;
 	overflow-y: auto;
-	border: 1px solid var(--disabled-border);
+	border: 1px solid var(--border-subtle);
 	margin: 10px 0px 20px 0px;
-	border-radius: 4px;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	padding: 5px;
-	color: var(--enabled-restingLight-lightText);
+	color: var(--text-secondary);
 }
 
 #glyph-range-chooser__preview-selected {
@@ -585,12 +597,12 @@ span.spacer {
 
 .glyph-range-chooser__preview-tile {
 	display: inline-block;
-	color: var(--enabled-restingLight-lightText);
+	color: var(--text-secondary);
 	margin: 1px 1px 0px 0px;
 }
 
 .glyph-range-chooser__preview-tile:hover {
-	color: var(--blue-l60);
+	color: var(--text-accent);
 }
 
 /* Custom range chooser */
@@ -640,15 +652,16 @@ span.spacer {
 	overflow-y: auto;
 	min-height: 40px;
 	max-height: 200px;
-	border: 1px solid var(--enabled-resting-border);
-	border-radius: 4px;
-	background-color: var(--enabled-restingLight-background);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
 	padding: 10px;
 	font-family: monospace;
 }
 
 .delete-note {
-	color: var(--enabled-restingLight-lightText);
+	color: var(--text-secondary);
 	display: block;
 	line-height: 30px;
 	margin-left: 5px;
@@ -658,11 +671,11 @@ span.spacer {
 	display: inline-block;
 	height: 20px;
 	width: 20px;
-	border-radius: 10px;
+	border-radius: var(--r-pill);
 	text-align: center;
 	line-height: 22px;
-	background-color: var(--enabled-resting-border);
-	color: white;
+	background-color: var(--icon-default);
+	color: var(--text-on-accent);
 	margin: 5px;
 	padding-right: 1px;
 	font-weight: bold;

@@ -141,34 +141,41 @@ strong {
 	font-weight: bold;
 }
 
+/*
+	Links, on the accent. They were three fixed blues from the old ramp -
+	--blue-l55 at rest, --blue-l65 on hover - which is a colour that gets
+	*lighter* when you point at it and does not move with the theme, so on a
+	dark page they sat a shade above the background and below the body text.
+*/
 a,
 a:visited {
 	background-color: transparent;
-	border-radius: 4px;
-	color: var(--blue-l55);
+	border-radius: var(--r-xs);
+	color: var(--text-accent);
 	text-decoration: none;
 }
 
 a:active {
-	color: var(--blue-l40);
-	background-color: hsla(200, 100%, 45%, 0.1);
+	color: var(--text-accent);
+	background-color: var(--bg-selected);
 }
 
 a:focus,
 a:hover {
-	color: var(--blue-l65);
+	color: var(--text-accent);
 	text-decoration: underline;
 	cursor: pointer;
 }
 
 a[danger],
 a[danger]:visited {
-	color: var(--darkRed);
+	color: var(--text-danger);
 }
 
 a[danger]:hover,
 a[danger]:focus {
-	color: var(--red);
+	color: var(--text-danger);
+	text-decoration: underline;
 }
 
 p {
