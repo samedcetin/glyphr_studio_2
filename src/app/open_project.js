@@ -216,7 +216,8 @@ export function makePage_OpenProject(secondProjectFlag = false, modalFlag = fals
 			/** @type {HTMLElement} */
 			const target =
 				content.querySelector('#input__new-project-name') ||
-				content.querySelector('.hub-tabs__tab[selected]');
+				content.querySelector('.hub-card') ||
+				content.querySelector('.hub-modal__footer-actions .hub-button');
 			target?.focus();
 		});
 	}
@@ -869,7 +870,7 @@ async function handleOpenProjectPageFileInput(files) {
 
 	/** @type {HTMLElement} */
 	const dropNote = document.querySelector('#open-project__drop-note');
-	if (dropNote) dropNote.style.display = 'none';
+	dropNote?.classList.remove('is-active');
 
 	const body = document.querySelector('#open-project__body');
 	if (body) {
@@ -1002,14 +1003,36 @@ function handleMessage(event) {
  */
 function handleDragEnter(event) {
 	// log(`handleDragEnter`, 'start');
-	// cancelDefaultEventActions(event);
 	event.dataTransfer.dropEffect = 'copy';
 	/** @type {HTMLElement} */
 	const dropNote = document.querySelector('#open-project__drop-note');
-	dropNote.style.animation = 'var(--animate-fade-in)';
-	dropNote.style.opacity = '1';
-	dropNote.innerHTML = `Drop it!`;
-	dropNote.style.display = 'block';
+	if (!dropNote) return;
+
+	/*
+		Built once and kept. It used to be written on every dragenter, which
+		fires again for every element the cursor crosses - so the overlay's
+		contents were being torn down and rebuilt continuously for as long as a
+		file was held over the window.
+	*/
+	if (!dropNote.firstElementChild) {
+		const card = makeElement({ className: 'drop-note__card' });
+		addAsChildren(card, [
+			makeElement({ className: 'drop-note__icon', innerHTML: makeLineIcon('upload', 22) }),
+			makeElement({
+				className: 'drop-note__title',
+				content: isSecondProject ? 'Drop to open alongside' : 'Drop to open',
+			}),
+			makeElement({
+				className: 'drop-note__formats',
+				innerHTML: ['.gs2', '.otf', '.ttf', '.woff', '.svg']
+					.map((extension) => `<code>${extension}</code>`)
+					.join(''),
+			}),
+		]);
+		dropNote.appendChild(card);
+	}
+
+	dropNote.classList.add('is-active');
 	// log(`handleDragEnter`, 'end');
 }
 
@@ -1018,14 +1041,11 @@ function handleDragEnter(event) {
  */
 function handleDragLeave() {
 	// log(`handleDragLeave`, 'start');
-	// cancelDefaultEventActions(event);
 	/** @type {HTMLElement} */
 	const dropNote = document.querySelector('#open-project__drop-note');
-	dropNote.style.animation = 'var(--animate-fade-out)';
-	window.setTimeout(() => {
-		dropNote.style.display = 'none';
-		dropNote.style.opacity = '0';
-	}, 170);
+	// One class, and the stylesheet fades it out. There is no longer a 170ms
+	// timer racing a 170ms animation to decide when it disappears.
+	dropNote?.classList.remove('is-active');
 	// log(`handleDragLeave`, 'end');
 }
 

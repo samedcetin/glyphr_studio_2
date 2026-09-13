@@ -479,27 +479,134 @@
 	margin-right: 2px;
 }
 
+/*
+	The drop overlay.
+
+	It was a 55%-opaque blue sheet covering the whole surface with "Drop it!"
+	set at --fs-2xl - and set in the top left corner, because the rule centred
+	it with align-items while the handler switched it on with `display: block`,
+	where align-items does nothing. So the one job it had, telling you where
+	the file was going to land, it did by hiding it.
+
+	Now it is what every application that takes a dropped file draws: a dashed
+	frame inset from the edge, the surface still visible through a blur behind
+	a light wash, and a line that says what will happen and what is accepted.
+	The frame is inset rather than flush so the corner you are dropping into
+	is still the dialog's corner, not a second one drawn over it.
+*/
 #open-project__drop-note {
-	display: none;
 	position: absolute;
-	left: 0;
-	top: 0;
-	height: 100%;
-	width: 100%;
+	inset: var(--sp-4);
+	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	font-size: var(--fs-2xl);
-	font-weight: var(--fw-semibold);
-	color: var(--text-on-accent);
-	animation: var(--animate-fade-in);
+	gap: var(--sp-4);
+	z-index: var(--z-sticky);
+	padding: var(--sp-6);
+	margin: 0;
 	backdrop-filter: blur(3px);
-	background-color: hsla(212, 92%, 40%, 0.55);
-	border: 2px dashed hsla(0, 0%, 100%, 0.5);
+	background-color: var(--bg-drop);
+	border: 2px dashed var(--accent);
+	/* Concentric with the dialog: its radius, less its border, less the inset. */
+	border-radius: calc(var(--r-2xl) - 1px - var(--sp-4));
+	corner-shape: var(--corner-smooth);
+	color: var(--text-accent);
+	text-align: center;
+	/*
+		Hidden by opacity rather than display, so it fades both ways and does
+		not need a timer to take itself off screen. visibility is what keeps it
+		out of the way of the dragenter that brings it back.
+	*/
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity var(--dur-fast) var(--ease), visibility 0s linear var(--dur-fast);
+}
+
+#open-project__drop-note.is-active {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity var(--dur-fast) var(--ease), visibility 0s;
+}
+
+/*
+	Nothing inside can take the pointer. A dragleave fires when the cursor
+	crosses into a child element, so a label in the middle of a drop target
+	makes the target flicker off and on as you move across it.
+*/
+#open-project__drop-note > * {
+	pointer-events: none;
+}
+
+/*
+	The message sits on its own surface rather than straight on the wash. The
+	wash is deliberately thin - the whole point is that you can still see what
+	you are dropping onto - and a line of text over a font specimen is a line
+	of text over a font specimen. This is also the shape the applications that
+	do this well use: a small card in the middle of a framed region.
+*/
+.drop-note__card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--sp-4);
+	padding: var(--sp-7) var(--sp-8);
+	background-color: var(--bg-surface-raised);
+	border: 1px solid var(--border-selected);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
+}
+
+.drop-note__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
 	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
-	z-index: var(--z-sticky);
-	padding: 0;
-	margin: 0;
+	background-color: var(--bg-selected);
+	color: var(--icon-accent);
+}
+
+.drop-note__icon svg {
+	width: 22px;
+	height: 22px;
+}
+
+.drop-note__title {
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semibold);
+	color: var(--text-accent);
+}
+
+.drop-note__card > * {
+	pointer-events: none;
+}
+
+.drop-note__formats {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--sp-2);
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+}
+
+.drop-note__formats code {
+	display: inline-flex;
+	align-items: center;
+	height: 18px;
+	padding: 0 var(--sp-2);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface);
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	line-height: 1;
 }
 
 /* --------------------------------------------------------

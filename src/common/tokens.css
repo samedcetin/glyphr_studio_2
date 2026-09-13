@@ -91,6 +91,12 @@
 	--bg-hover: hsla(220, 15%, 40%, 0.07);
 	--bg-active: hsla(220, 15%, 40%, 0.12);
 	--bg-selected: var(--a-05);
+	/*
+		The ground shown while a file is being dragged over the window.
+		Translucent on purpose: it sits over a blur, so what you are about to drop
+		onto stays visible behind it rather than being replaced by a coloured sheet.
+	*/
+	--bg-drop: hsla(212, 100%, 97%, 0.8);
 	--bg-selected-strong: var(--a-50);
 	--bg-disabled: var(--n-04);
 
@@ -342,6 +348,7 @@
 	--bg-hover: hsla(220, 30%, 80%, 0.07);
 	--bg-active: hsla(220, 30%, 80%, 0.12);
 	--bg-selected: hsla(212, 90%, 55%, 0.18);
+	--bg-drop: hsla(212, 90%, 50%, 0.2);
 	--bg-selected-strong: var(--a-60);
 	--bg-disabled: var(--n-90);
 
