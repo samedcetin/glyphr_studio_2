@@ -1,4 +1,5 @@
 import { makeElement } from '../../common/dom.js';
+import { attachTooltip } from '../tooltip/tooltip.js';
 import { hasLineIcon, makeLineIcon } from '../../common/icons.js';
 import { cancelDefaultEventActions } from '../../edit_canvas/events.js';
 import style from './input-number.css?inline';
@@ -215,7 +216,49 @@ export class InputNumber extends HTMLElement {
 		if (this.hasAttribute('disabled')) {
 			this.setToDisabled();
 		}
+		this.attachDragHint();
+
 		// log(`InputNumber.connectedCallback`, 'end');
+	}
+
+	/**
+	 * Say that the field can be dragged, in the one place it costs nothing.
+	 *
+	 * The gesture is deliberately invisible - no cursor on hover, no handle -
+	 * so it needs somewhere to announce itself, and a tooltip is where this app
+	 * already puts that kind of sentence. It appears exactly when someone is
+	 * pointing at the field wondering what it does.
+	 *
+	 * It also moves these fields off the OS tooltip. Three of them carried a
+	 * native title - advance width and the two side bearings - which arrived a
+	 * second late, in an OS font, under everything else the app draws.
+	 */
+	attachDragHint() {
+		if (this.hasAttribute('disabled')) return;
+
+		const title = (this.getAttribute('title') || '').trim();
+		const [first, ...rest] = title.split(String.fromCharCode(10));
+
+		/*
+			A field that says what it is keeps saying it, and the hint is the
+			second line. A field that does not - most of them carry a prefix mark
+			instead - makes the hint the heading, and then the second line has to
+			add something rather than repeat it.
+		*/
+		attachTooltip(this, {
+			name: first || 'Drag to change',
+			body: first
+				? [rest.join(' ').trim(), 'Drag left or right to change it. Hold Shift for tens.']
+						.filter(Boolean)
+						.join(' ')
+				: 'A pixel is one unit. Hold Shift for tens.',
+		});
+
+		/* Or the OS would draw its own on top of this one a second later. */
+		if (title) {
+			if (!this.getAttribute('aria-label')) this.setAttribute('aria-label', title);
+			this.removeAttribute('title');
+		}
 	}
 
 	/**
