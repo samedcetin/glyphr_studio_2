@@ -1433,145 +1433,111 @@ nav .item-chooser__wrapper--compact {
 	resize: vertical;
 }
 
-/*
-	Guides
-*/
-.guides-card__view-options {
-	grid-template-columns: 20px min-content 1fr;
-}
+/* --------------------------------------------------------------
+	GUIDES PANEL
 
-.guides-card__view-options h3,
-.guides-card__system h3,
-.guides-card__custom h3 {
-	margin-bottom: 4px;
-}
+	Every part of this panel used to return four to six separate children into
+	a card that collapses to one column in a sidebar this narrow, so each
+	setting became a tower rather than a row: seven key metrics made a 777px
+	card, and the left panel came to 2516px against a 910px window. Each one
+	is a row now, and the tracks that tried to hold them - 20px 1fr 20px 85px,
+	20px 1fr 22px 22px 22px 90px - are gone with them.
+	------------------------------------------------------------ */
 
-.guides-card__view-options h4 {
-	position: relative;
-	top: -2px;
-	grid-column: 2 / -1;
-	column-span: 2 / 3;
-}
-
-.guides-card__view-options label {
-	grid-column: auto;
-}
-
-.guides-card__view-options .guide-transparency-input {
-	width: 90px;
-	grid-column: auto;
-}
-
-.guides-card__system {
-	display: grid;
-	grid-template-columns: 20px 1fr 20px 85px;
-}
-
-.guides-card__custom {
-	display: grid;
-	grid-template-columns: 20px 1fr 22px 22px 22px 90px;
-	column-gap: 4px;
-}
-
-.guides-card__custom input[type='checkbox'] {
-	margin: 0px 0px 0px 0px;
-}
-
-.guides-card__custom button {
-	height: 22px;
-	width: 22px;
-	padding: 0;
-}
-
-.guides-card__custom .guide-delete-button,
-.guides-card__custom .guide-angle-button {
-	background-color: transparent;
-	border-color: transparent;
-	box-shadow: none;
-}
-
-.guides-card__custom .guide-color-button {
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;
-	height: 20px;
-	width: 20px;
-	background-color: transparent;
-	border-color: var(--offWhite);
-	border-radius: 5px 10px 5px 5px;
-	padding: 9px 13px 11px 7px;
-	border-image-width: 700px;
-	border-width: 2px;
-}
-
-.guide-color-button::-webkit-color-swatch {
-	border: none;
-}
-
-.guide-color-button::-moz-color-swatch {
-	border: none;
-}
-
-.guides-card__custom .guide-color-button:hover {
-	cursor: pointer;
-	border-color: white;
-}
-
-.guides-card__custom .guide-delete-button {
-	opacity: 0.4;
-}
-
-.guides-card__custom .guide-angle-button {
-	opacity: 1;
-}
-
-.guides-card__custom .guide-delete-button:hover,
-.guides-card__custom .guide-color-button:hover,
-.guides-card__custom .guide-angle-button:hover {
-	background-color: var(--enabled-focus-background);
-	border-color: inherit;
-	box-shadow: inherit;
-	opacity: 1;
-}
-
-.guides-card__custom .guide-color-button:hover {
-	border-color: white;
-}
-
-.guides-card__custom .guide-delete-button svg {
-	height: 10px;
-	width: 10px;
-}
-
-.guides-card__custom .guide-angle-button svg,
-.guides-card__system .guide-system-angle svg {
-	position: relative;
-	top: 2px;
-	width: 14px;
-	height: 14px;
-}
-
-.guides-card__custom input-number {
-	width: 90px;
-}
-
-.guides-card__system label {
-	grid-column: auto;
-}
-
-.guide-system-angle {
-	width: 20px;
-	height: 20px;
-	text-align: center;
-}
-
-.guide-system-value {
-	font-family: monospace;
-	color: var(--enabled-restingLight-lightText);
-	text-align: right;
+/* Heading on the left, the switch for the whole group on the right. */
+.guides-card__group-head {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
 	width: 100%;
-	padding-right: 30px;
+	margin-top: var(--sp-5);
 }
+
+.guides-card__group-head h4 {
+	margin: 0;
+}
+
+/* One setting: its name, and the control for it against the right edge. */
+.guides-card__option {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-3);
+	width: 100%;
+	min-height: var(--row-h);
+}
+
+.guides-card__option label {
+	padding-top: 0;
+}
+
+/*
+	Switch, name, position - one row per metric.
+
+	The switch is the orientation mark as well: it says which way the line
+	runs, being pressed says the line is on, and it carries the line's own
+	colour. So the control in here and the line out there are recognisably
+	one thing, the way the quality check dots match their rings.
+*/
+.guides-card__metric {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-3);
+	width: 100%;
+	height: var(--row-h);
+}
+
+.guides-card__metric-name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/*
+	Not editable here, and no longer dressed as if it were. It was monospace
+	in --enabled-restingLight-lightText with 30px of right padding to fake
+	its alignment; the track does that now.
+*/
+.guides-card__metric-value {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+/* Show, name, place, turn, delete - one row per custom guide. */
+.guides-card__custom-row {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr) 72px max-content max-content;
+	align-items: center;
+	gap: var(--sp-2);
+	width: 100%;
+	min-height: var(--row-h);
+}
+
+.guides-card__custom-row input.guides-card__custom-name,
+.guides-card__custom-row input-number.guides-card__custom-value {
+	width: 100%;
+	min-width: 0;
+}
+
+/*
+	The guide's colour, on its switch. --toggle-on-color is set inline by
+	makeDirectToggle; without one a toggle looks like every other toggle.
+*/
+.icon-toggle[aria-pressed='true'][style*='--toggle-on-color'] {
+	background-color: transparent;
+	color: var(--toggle-on-color, var(--text-accent));
+}
+
 
 /* A label that sits beside a checkbox rather than in the label column. */
 .panel__card-label--wide {

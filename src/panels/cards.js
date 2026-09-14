@@ -437,6 +437,42 @@ export function dimSplitElement() {
 // 'direct' controls that don't use pub/sub
 // --------------------------------------------------------------
 
+/**
+ * A boolean that is written straight back to the object it came from.
+ *
+ * makePropertyToggle is for a property the editor publishes about;. this one
+ * is for the view settings, which nothing subscribes to - they just redraw.
+ * Same control, so the sidebar has one switch rather than two.
+ *
+ * @param {Object} item - the object holding the property
+ * @param {String} property - the boolean to read and write
+ * @param {Function =} callback - called with the new value
+ * @param {Object =} args - { icon, name, body, className, color }
+ * @returns {HTMLElement}
+ */
+export function makeDirectToggle(item, property, callback, args = {}) {
+	const toggle = makeIconToggle({
+		icon: args.icon || 'check',
+		name: args.name || property,
+		body: args.body || '',
+		className: args.className || '',
+		pressed: !!item[property],
+		onToggle: (on) => {
+			item[property] = on;
+			if (callback) callback(on);
+		},
+	});
+
+	/*
+		A guide toggle carries the colour of the line it draws, so the switch in
+		the panel and the line on the canvas are the same thing - the way the
+		quality check dots match their rings.
+	*/
+	if (args.color) toggle.style.setProperty('--toggle-on-color', args.color);
+
+	return toggle;
+}
+
 export function makeDirectCheckbox(item, property, callback, id = false) {
 	let newCheckbox = makeElement({
 		tag: 'input',
