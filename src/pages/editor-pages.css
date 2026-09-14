@@ -328,58 +328,6 @@ body.is-resizing-sidebar * {
 	border-color: var(--border-strong);
 }
 
-/* Keep preview renderers in their grid column so the options remain clickable. */
-.content__page.live-preview-page {
-	height: 100%;
-	min-height: 0;
-	grid-template-columns: 450px minmax(0, 1fr);
-}
-
-.live-preview-page .content-page__left-area {
-	min-height: 0;
-	grid-template-rows: min-content minmax(0, 1fr);
-}
-
-.live-preview-page #content-page__panel {
-	grid-row: 2;
-	min-height: 0;
-	width: 100%;
-}
-
-.live-preview-page__canvas-wrapper {
-	position: relative;
-	grid-column: 2;
-	min-width: 0;
-	min-height: 0;
-	background-color: var(--canvas-bg);
-	display: grid;
-	grid-template-columns: minmax(0, 1fr);
-	grid-template-rows: minmax(0, 1fr);
-	overflow: auto;
-}
-
-.live-preview-page__native-wrapper {
-	display: grid;
-	grid-template-columns: 1fr;
-	grid-template-rows: 1fr;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-}
-
-.live-preview-page__native-textarea {
-	width: 100%;
-	height: 100%;
-	border: none;
-	outline: none;
-	resize: none;
-	padding: var(--sp-5);
-	box-sizing: border-box;
-	background-color: var(--canvas-bg);
-	color: var(--canvas-ink);
-	overflow-y: auto;
-}
-
 #done-creating-path-button {
 	position: absolute;
 	color: var(--blue-l30);

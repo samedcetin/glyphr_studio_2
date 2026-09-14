@@ -53,7 +53,7 @@ const PANGRAM = 'The quick brown fox jumps over the lazy dog.';
  */
 export function makePage_Overview() {
 	const content = makeElement({ tag: 'div', id: 'app__page' });
-	const page = makeElement({ className: 'overview' });
+	const page = makeElement({ className: 'studio-page overview' });
 	content.appendChild(page);
 
 	page.appendChild(makeHead());
@@ -71,7 +71,7 @@ export function makePage_Overview() {
 	page.addEventListener('chooser-range-change', (event) => {
 		// @ts-expect-error 'CustomEvent detail'
 		const rangeName = event.detail?.name || '';
-		const context = page.querySelector('.overview__context-range');
+		const context = page.querySelector('.studio-page__context-range');
 		if (context) context.textContent = rangeName;
 
 		/*
@@ -108,13 +108,13 @@ function makeHead() {
 	const editor = getCurrentProjectEditor();
 	const project = getCurrentProject();
 
-	const head = makeElement({ className: 'overview__head' });
+	const head = makeElement({ className: 'studio-page__head' });
 
-	const titles = makeElement({ className: 'overview__titles' });
-	titles.appendChild(makeElement({ tag: 'h1', className: 'overview__title', content: 'Overview' }));
+	const titles = makeElement({ className: 'studio-page__titles' });
+	titles.appendChild(makeElement({ tag: 'h1', className: 'studio-page__title', content: 'Overview' }));
 	titles.appendChild(
 		makeElement({
-			className: 'overview__subtitle',
+			className: 'studio-page__subtitle',
 			content: 'Shape, review, and complete your typeface.',
 		})
 	);
@@ -125,19 +125,19 @@ function makeHead() {
 		move through the coverage grid, so it is marked for the range-change
 		handler in makePage_Overview to write into.
 	*/
-	const context = makeElement({ className: 'overview__context' });
+	const context = makeElement({ className: 'studio-page__context' });
 	context.appendChild(
 		makeElement({
 			tag: 'span',
-			className: 'overview__context-range',
+			className: 'studio-page__context-range',
 			content: editor.selectedCharacterRange?.name || 'Characters',
 		})
 	);
-	context.appendChild(makeElement({ tag: 'span', className: 'overview__dot' }));
+	context.appendChild(makeElement({ tag: 'span', className: 'studio-page__dot' }));
 	context.appendChild(
 		makeElement({
 			tag: 'span',
-			className: 'overview__context-style',
+			className: 'studio-page__context-style',
 			content: project.settings.font.style || 'Regular',
 		})
 	);
@@ -162,10 +162,10 @@ function makeHead() {
  */
 function makeSpecimenCard() {
 	const project = getCurrentProject();
-	const card = makeElement({ className: 'overview__card overview__specimen' });
+	const card = makeElement({ className: 'studio-card overview__specimen' });
 
 	card.appendChild(
-		makeElement({ className: 'overview__eyebrow', content: 'Typeface preview' })
+		makeElement({ className: 'studio-eyebrow', content: 'Typeface preview' })
 	);
 
 	const stage = makeElement({ className: 'overview__specimen-stage' });
@@ -199,7 +199,7 @@ function makeSpecimenCard() {
 	stage.appendChild(line);
 	card.appendChild(stage);
 
-	card.appendChild(makeElement({ className: 'overview__rule' }));
+	card.appendChild(makeElement({ className: 'studio-rule' }));
 	card.appendChild(makeSpecimenControls(headline, startingText, startingSize));
 
 	return card;
@@ -224,7 +224,7 @@ function makeSpecimenControls(headline, startingText, startingSize) {
 	// --- Sample text ---------------------------------------------
 	const textField = makeElement({
 		tag: 'input',
-		className: 'overview__text-input',
+		className: 'studio-field',
 		attributes: { type: 'text', value: startingText, spellcheck: 'false' },
 	});
 	textField.addEventListener('input', (event) => {
@@ -237,7 +237,7 @@ function makeSpecimenControls(headline, startingText, startingSize) {
 	controls.appendChild(makeControlGroup('Sample text', textField, 'overview__control--text'));
 
 	// --- Size, twice ---------------------------------------------
-	const sizeSelect = makeElement({ tag: 'select', className: 'overview__select' });
+	const sizeSelect = makeElement({ tag: 'select', className: 'studio-select' });
 	PREVIEW_SIZES.forEach((size) => {
 		const option = makeElement({ tag: 'option', content: `${size} pt` });
 		option.setAttribute('value', `${size}`);
@@ -283,7 +283,7 @@ function makeSpecimenControls(headline, startingText, startingSize) {
 	controls.appendChild(makeControlGroup('Size', sizeSelect));
 
 	// --- Style ---------------------------------------------------
-	const styleSelect = makeElement({ tag: 'select', className: 'overview__select' });
+	const styleSelect = makeElement({ tag: 'select', className: 'studio-select' });
 	const currentStyle = project.settings.font.style || 'Regular';
 	const styles = FONT_STYLES.includes(currentStyle)
 		? FONT_STYLES
@@ -306,7 +306,7 @@ function makeSpecimenControls(headline, startingText, startingSize) {
 		// @ts-expect-error 'property does exist'
 		const value = event.target.value;
 		editor.project.settings.font.style = value;
-		const shown = document.querySelector('.overview__context-style');
+		const shown = document.querySelector('.studio-page__context-style');
 		if (shown) shown.textContent = value;
 	});
 	controls.appendChild(makeControlGroup('Style', styleSelect));
@@ -352,12 +352,12 @@ function makeControlGroup(label, control, className = '') {
  */
 function makeCoverageCard() {
 	const editor = getCurrentProjectEditor();
-	const card = makeElement({ className: 'overview__card overview__coverage' });
+	const card = makeElement({ className: 'studio-card overview__coverage' });
 
 	// --- Heading and progress ------------------------------------
 	const head = makeElement({ className: 'overview__coverage-head' });
 	head.appendChild(
-		makeElement({ tag: 'h2', className: 'overview__card-title', content: 'Character coverage' })
+		makeElement({ tag: 'h2', className: 'studio-card__title', content: 'Character coverage' })
 	);
 
 	const counts = coverageCounts(editor);
@@ -559,10 +559,10 @@ function openItem(itemID) {
 function makeSnapshotCard() {
 	const project = getCurrentProject();
 	const font = project.settings.font;
-	const card = makeElement({ className: 'overview__card overview__snapshot' });
+	const card = makeElement({ className: 'studio-card overview__snapshot' });
 
 	card.appendChild(
-		makeElement({ tag: 'h2', className: 'overview__card-title', content: 'Project snapshot' })
+		makeElement({ tag: 'h2', className: 'studio-card__title', content: 'Project snapshot' })
 	);
 
 	/*
@@ -584,9 +584,9 @@ function makeSnapshotCard() {
 	});
 	card.appendChild(metrics);
 
-	card.appendChild(makeElement({ className: 'overview__rule' }));
+	card.appendChild(makeElement({ className: 'studio-rule' }));
 	card.appendChild(makeContinueEditing());
-	card.appendChild(makeElement({ className: 'overview__rule' }));
+	card.appendChild(makeElement({ className: 'studio-rule' }));
 	card.appendChild(makeRecentActivity());
 
 	return card;
@@ -639,9 +639,9 @@ function makeContinueEditing() {
 
 	const open = makeElement({
 		tag: 'button',
-		className: 'overview__link',
+		className: 'studio-link',
 		attributes: { type: 'button' },
-		innerHTML: `Open ${editor.project.getItemName(entry.itemID, true)} <span class="overview__link-arrow">&rarr;</span>`,
+		innerHTML: `Open ${editor.project.getItemName(entry.itemID, true)} <span class="studio-link-arrow">&rarr;</span>`,
 	});
 	open.addEventListener('click', () => openItem(entry.itemID));
 	detail.appendChild(open);

@@ -359,7 +359,50 @@ function makeTextBlockOptions_pageOptions(textBlockOptions) {
 	];
 }
 
-function redrawAllLivePreviews() {
+/**
+ * Redraws every live preview there is - the page, and the popped-out window
+ * if one is open.
+ *
+ * Exported because the Live preview page builds its own settings card now and
+ * has to go through the same path: the pop-out is the half that is easy to
+ * forget, and a control that updates the page but not the second window is
+ * worse than one that updates neither.
+ */
+export function redrawAllLivePreviews() {
 	redrawLivePreviewPageDisplayCanvas();
 	if (getCurrentProjectEditor().popOutWindow) updatePopOutWindowContent();
 }
+
+/**
+ * The sample texts, in one place.
+ *
+ * The panel built these as rows of buttons and the page now offers them as a
+ * menu and a list, so the strings themselves are here rather than in either
+ * of them.
+ */
+export const PANGRAMS = [
+	{ name: 'English pangram', text: 'the quick brown fox jumps over a lazy dog' },
+	{ name: 'Boxing wizards', text: 'the five boxing wizards jump quickly' },
+	{ name: 'Liquor jugs', text: 'pack my box with five dozen liquor jugs' },
+	{ name: 'Discotheques', text: 'amazingly few discotheques provide jukeboxes' },
+	{ name: 'Gunboats', text: 'quick enemy movement will jeopardize six of the gunboats' },
+];
+
+/** The punctuation and symbols of Basic Latin, in code point order. */
+const SYMBOL_CODE_POINTS = [
+	0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x3a,
+	0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60, 0x7b, 0x7c, 0x7d, 0x7e,
+];
+
+export const GLYPH_SETS = [
+	{
+		name: 'Uppercase & lowercase',
+		text: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz',
+	},
+	{
+		name: 'Numbers & punctuation',
+		text: `0123456789\n${SYMBOL_CODE_POINTS.map((point) => String.fromCodePoint(point)).join('')}`,
+	},
+	{ name: 'Uppercase pairs', text: () => makePermutations(true) },
+	{ name: 'Lowercase pairs', text: () => makePermutations(false) },
+];

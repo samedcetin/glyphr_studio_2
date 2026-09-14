@@ -705,31 +705,36 @@ span.spacer {
 	those cards and why none of it outlived the first visit.
 	------------------------------------------------------------ */
 
-.overview {
-	display: grid;
-	grid-template-rows: min-content min-content minmax(0, 1fr);
-	gap: var(--sp-7);
+/*
+	The page shell the content pages share: the whole window, its own edge on
+	all four sides, and no bar.
+
+	The edge is a page edge rather than a container - these pages used to cap
+	themselves and centre, which on a wide monitor left the thing the page is
+	named after between two empty margins.
+
+	It can scroll, but as a safety valve rather than the normal state: a page
+	built on this lays its last row out as 1fr and lets that row scroll inside
+	itself, so the head stays put. The page only moves if the window is short
+	enough that the rows above it will not fit.
+*/
+.studio-page {
 	width: 100%;
 	height: 100%;
 	min-height: 0;
-	/*
-		A page edge rather than a container. The page used to cap itself at
-		1280 and centre, which on a wide monitor left the thing the page is
-		named after in the middle of two empty margins.
-	*/
 	padding: var(--sp-8);
-	/*
-		A safety valve rather than the normal state. The three rows are
-		min-content, min-content and 1fr, so the last one takes whatever is
-		left and the page does not scroll - unless the window is short enough
-		that the head and the specimen alone will not fit, and then it does.
-	*/
 	overflow-y: auto;
 	scrollbar-width: none;
 }
 
-.overview::-webkit-scrollbar {
+.studio-page::-webkit-scrollbar {
 	display: none;
+}
+
+.overview {
+	display: grid;
+	grid-template-rows: min-content min-content minmax(0, 1fr);
+	gap: var(--sp-7);
 }
 
 /*
@@ -740,7 +745,7 @@ span.spacer {
 	corner is a long enough run of edge, and on a card this wide neither 16
 	nor 20 was. See the token, which exists for panels this size.
 */
-.overview__card {
+.studio-card {
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-subtle);
 	border-radius: var(--r-3xl);
@@ -758,7 +763,7 @@ span.spacer {
 }
 
 /* A hairline between two parts of one card. */
-.overview__rule {
+.studio-rule {
 	height: 1px;
 	background-color: var(--border-subtle);
 	margin: var(--sp-6) 0;
@@ -768,14 +773,14 @@ span.spacer {
 	Head
 	------------------------------------------------------------ */
 
-.overview__head {
+.studio-page__head {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: var(--sp-6);
 }
 
-.overview__title {
+.studio-page__title {
 	margin: 0;
 	font-size: var(--fs-3xl);
 	font-weight: var(--fw-semibold);
@@ -784,14 +789,14 @@ span.spacer {
 	color: var(--text-primary);
 }
 
-.overview__subtitle {
+.studio-page__subtitle {
 	margin-top: var(--sp-2);
 	font-size: var(--fs-md);
 	color: var(--text-secondary);
 }
 
 /* Which slice of the font is on screen. */
-.overview__context {
+.studio-page__context {
 	display: flex;
 	align-items: center;
 	gap: var(--sp-3);
@@ -805,7 +810,7 @@ span.spacer {
 	A dot, not a slash: it separates without reading as a character in the
 	words on either side of it.
 */
-.overview__dot {
+.studio-page__dot {
 	width: 3px;
 	height: 3px;
 	border-radius: var(--r-pill);
@@ -822,7 +827,7 @@ span.spacer {
 }
 
 /* The small caps line that names a block without spending a heading on it. */
-.overview__eyebrow {
+.studio-eyebrow {
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
 	letter-spacing: var(--tracking-wide);
@@ -879,7 +884,7 @@ span.spacer {
 	min-width: 180px;
 }
 
-.overview__text-input {
+.studio-field {
 	flex: 1 1 auto;
 	min-width: 0;
 	height: var(--control-h);
@@ -894,11 +899,11 @@ span.spacer {
 	transition: var(--transition-color);
 }
 
-.overview__text-input:hover {
+.studio-field:hover {
 	border-color: var(--accent);
 }
 
-.overview__text-input:focus-visible {
+.studio-field:focus-visible {
 	outline: var(--focus-style);
 	outline-offset: var(--focus-offset);
 	border-color: var(--accent);
@@ -909,7 +914,7 @@ span.spacer {
 	the sunken ground, --border-strong, --r-md and the smoothed corner - so it
 	sits in the row as a field rather than as a browser control.
 */
-.overview__select {
+.studio-select {
 	height: var(--control-h);
 	padding: 0 var(--sp-7) 0 var(--sp-3);
 	background-color: var(--bg-surface);
@@ -935,11 +940,11 @@ span.spacer {
 	background-repeat: no-repeat;
 }
 
-.overview__select:hover {
+.studio-select:hover {
 	border-color: var(--accent);
 }
 
-.overview__select:focus-visible {
+.studio-select:focus-visible {
 	outline: var(--focus-style);
 	outline-offset: var(--focus-offset);
 	border-color: var(--accent);
@@ -1012,7 +1017,7 @@ span.spacer {
 	}
 }
 
-.overview__card-title {
+.studio-card__title {
 	margin: 0;
 	font-size: var(--fs-lg);
 	font-weight: var(--fw-semibold);
@@ -1323,7 +1328,7 @@ span.spacer {
 	The links out of a card
 	------------------------------------------------------------ */
 
-.overview__link {
+.studio-link {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--sp-2);
@@ -1345,13 +1350,13 @@ span.spacer {
 	resets.css states a background, a border colour and a text colour on
 	button:hover, so all three have to be answered or one of them leaks.
 */
-.overview__link:hover {
+.studio-link:hover {
 	background-color: transparent;
 	border: none;
 	color: var(--accent-hover);
 }
 
-.overview__link:focus-visible {
+.studio-link:focus-visible {
 	outline: var(--focus-style);
 	outline-offset: var(--focus-offset);
 	border-radius: var(--r-sm);
@@ -1361,12 +1366,304 @@ span.spacer {
 	The arrow moves, which is the whole of the affordance on a control with no
 	edges of its own.
 */
-.overview__link-arrow {
+.studio-link-arrow {
 	display: inline-block;
 	transition: transform var(--dur-fast) var(--ease-out);
 }
 
-.overview__link:hover .overview__link-arrow {
+.studio-link:hover .studio-link-arrow {
 	transform: translateX(2px);
+}
+
+
+/* --------------------------------------------------------------
+	LIVE PREVIEW PAGE
+
+	The same shape as the Overview: the thing on the left, the controls on the
+	right, both on the shared page shell. See makePage_LivePreview for what
+	this replaced.
+	------------------------------------------------------------ */
+
+.live-preview {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr);
+	gap: var(--sp-7);
+}
+
+.live-preview__columns {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	gap: var(--sp-6);
+	align-items: stretch;
+	min-height: 0;
+}
+
+/* One column once the settings' 340px stops being a third of the width. */
+@media (max-width: 1100px) {
+	.live-preview__columns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/*
+	The pop-out, at the end of the context line. It opens the same preview in
+	a window of its own, which is something you do to the page rather than a
+	setting on it - it used to be a card in the middle of the options.
+*/
+.live-preview__pop-out {
+	display: grid;
+	place-items: center;
+	width: var(--control-h);
+	height: var(--control-h);
+	margin: 0 0 0 var(--sp-2);
+	padding: 0;
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--icon-default);
+	cursor: pointer;
+	box-shadow: none;
+	transition: var(--transition-color);
+}
+
+/* resets.css states a background, a border colour and a text colour on
+	button:hover, so all three have to be answered or one of them leaks. */
+.live-preview__pop-out:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------
+	The preview itself
+	------------------------------------------------------------ */
+
+.live-preview__stage {
+	display: grid;
+	grid-template-rows: min-content min-content minmax(0, 1fr) min-content min-content min-content min-content;
+	min-height: 0;
+}
+
+/* The font's own name, and the way to change it. */
+.live-preview__identity {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
+	margin-top: var(--sp-2);
+}
+
+.live-preview__family {
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	color: var(--text-primary);
+}
+
+/*
+	The renderer's box. It owns the scrolling, so a long sample runs inside the
+	card rather than pushing the page past the bottom of the window.
+*/
+.live-preview__canvas-wrapper {
+	min-height: 0;
+	margin: var(--sp-6) 0;
+	overflow: auto;
+	scrollbar-width: none;
+}
+
+.live-preview__canvas-wrapper::-webkit-scrollbar {
+	display: none;
+}
+
+.live-preview__canvas-wrapper display-canvas,
+.live-preview__canvas-wrapper font-preview {
+	display: block;
+	width: 100%;
+}
+
+/* The fixed second specimen, under the one you are typing into. */
+.live-preview__sample {
+	margin-top: var(--sp-4);
+	overflow: hidden;
+}
+
+.live-preview__sample display-canvas {
+	display: block;
+	max-width: 100%;
+}
+
+.live-preview__stage-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-4);
+	margin-top: var(--sp-6);
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.live-preview__state {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+}
+
+/* Lit, because this is the page where the word "live" is a claim: what is
+	drawn above follows the outlines as you edit them. */
+.live-preview__state-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: var(--r-pill);
+	background-color: var(--ok);
+}
+
+.live-preview__size-readout {
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------
+	Settings
+	------------------------------------------------------------ */
+
+.live-preview__settings {
+	display: grid;
+	align-content: start;
+	gap: var(--sp-4);
+}
+
+/* A label on the left, one control on the right. */
+.live-preview__row {
+	display: grid;
+	grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+	align-items: center;
+	gap: var(--sp-4);
+}
+
+.live-preview__row label {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/* Size takes a third track for its slider. */
+.live-preview__row--size {
+	grid-template-columns: minmax(0, max-content) max-content minmax(0, 1fr);
+}
+
+.live-preview__size-slider {
+	min-width: 0;
+}
+
+/* No readout: the Size field beside it is already the number, and so is the
+	one at the foot of the preview. */
+.live-preview__size-slider .fancy-slider__slider-readout {
+	display: none;
+}
+
+.live-preview__size-slider.fancy-slider__wrapper {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.live-preview__line-gap {
+	justify-self: start;
+	width: 96px;
+}
+
+/*
+	The sample text. A field rather than a row of it: this is the one control
+	on the page you type a sentence into, and a 28px line is not where you
+	read one back.
+*/
+.live-preview__text {
+	width: 100%;
+	min-height: 76px;
+	padding: var(--sp-3);
+	resize: vertical;
+	line-height: var(--lh-normal);
+}
+
+.live-preview__section-title {
+	margin: var(--sp-2) 0 0 0;
+	font-size: var(--fs-md);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+.live-preview__display {
+	display: grid;
+	gap: var(--sp-2);
+}
+
+.live-preview__display-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-4);
+	min-height: var(--row-h);
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/*
+	The other sample texts, as rows rather than as their own contents. The
+	panel printed each one as the button's label, which for the letter-pair
+	sets is six hundred and seventy-six pairs rendered into a control you are
+	meant to be able to point at.
+*/
+.live-preview__samples {
+	display: grid;
+	gap: var(--sp-1);
+}
+
+.live-preview__sample-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-4);
+	width: calc(100% + var(--sp-4));
+	margin: 0 calc(var(--sp-2) * -1);
+	padding: var(--sp-1) var(--sp-2);
+	min-height: var(--row-h);
+	background-color: transparent;
+	border: none;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+	text-align: left;
+	cursor: pointer;
+	box-shadow: none;
+	transition: var(--transition-color);
+}
+
+.live-preview__sample-row:hover {
+	background-color: var(--bg-hover);
+	border: none;
+	color: var(--text-primary);
+}
+
+.live-preview__chevron {
+	flex: 0 0 auto;
+	color: var(--text-tertiary);
+	font-size: var(--fs-lg);
+	line-height: 1;
+}
+
+/* What the page is for, said once at the foot of the controls. */
+.live-preview__note {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	margin-top: var(--sp-2);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.live-preview__note-icon {
+	display: flex;
+	flex: 0 0 auto;
+	color: var(--icon-default);
 }
 
