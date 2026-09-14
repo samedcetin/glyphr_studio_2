@@ -108,6 +108,18 @@ export class InputNumber extends HTMLElement {
 		this.arrowWrapper.appendChild(arrowSeparator);
 		this.arrowWrapper.appendChild(this.downArrow);
 
+		/*
+			Bound, because two of these listen on window rather than on an element
+			inside this component - the pointer leaves the field the moment the drag
+			starts - so the elementRoot back-reference the other handlers use is not
+			available to them.
+		*/
+		this.scrubStart = this.scrubStart.bind(this);
+		this.scrubMove = this.scrubMove.bind(this);
+		this.scrubEnd = this.scrubEnd.bind(this);
+		/** @type {Object | false} */
+		this.scrub = false;
+
 		shadow.appendChild(this.field);
 		shadow.appendChild(this.arrowWrapper);
 		shadow.appendChild(this.padlock);
@@ -312,6 +324,7 @@ export class InputNumber extends HTMLElement {
 	 */
 	addAllEventListeners() {
 		// log('addAllEventListeners');
+		this.field.addEventListener('pointerdown', this.scrubStart);
 		this.upArrow.addEventListener('click', this.increment);
 		this.downArrow.addEventListener('click', this.decrement);
 		this.arrowWrapper.addEventListener('keydown', this.arrowButtonsKeyboardPressed);
@@ -324,6 +337,7 @@ export class InputNumber extends HTMLElement {
 	 */
 	removeAllEventListeners() {
 		// log('removeAllEventListeners');
+		this.field.removeEventListener('pointerdown', this.scrubStart);
 		this.upArrow.removeEventListener('click', this.increment);
 		this.downArrow.removeEventListener('click', this.decrement);
 		this.arrowWrapper.removeEventListener('keydown', this.arrowButtonsKeyboardPressed);
@@ -383,6 +397,105 @@ export class InputNumber extends HTMLElement {
 		let newValue = this.elementRoot.sanitizeValue(ev.target.value);
 		this.elementRoot.updateToNewValue(newValue);
 		// log(`InputNumber.numberInputChanged`, 'end');
+	}
+
+	/**
+	 * Drag the field sideways to change the number.
+	 *
+	 * The steppers are for one step at a time and for the keyboard. Getting
+	 * from 40 to 400 through them is three hundred and sixty clicks, which is
+	 * what every other design tool solved by making the field itself a
+	 * scrubber - Blender, After Effects and Figma all do this.
+	 *
+	 * It stays invisible. No cursor change on hover, no handle: a click still
+	 * puts the caret where you clicked, and the drag only takes over once the
+	 * pointer has moved past a threshold, so selecting the text still works.
+	 * The resize cursor appears only once it has.
+	 *
+	 * @param {PointerEvent} ev
+	 */
+	scrubStart(ev) {
+		if (ev.button !== 0 || this.numberInput.hasAttribute('disabled')) return;
+
+		this.scrub = {
+			startX: ev.clientX,
+			startValue: parseFloat(this.getAttribute('value')) || 0,
+			active: false,
+			pointerId: ev.pointerId,
+			frame: 0,
+		};
+
+		window.addEventListener('pointermove', this.scrubMove);
+		window.addEventListener('pointerup', this.scrubEnd);
+		window.addEventListener('pointercancel', this.scrubEnd);
+	}
+
+	/**
+	 * @param {PointerEvent} ev
+	 */
+	scrubMove(ev) {
+		const scrub = this.scrub;
+		if (!scrub || ev.pointerId !== scrub.pointerId) return;
+
+		const distance = ev.clientX - scrub.startX;
+
+		/*
+			Three pixels of slack before this becomes a drag. Under that it is a
+			click, and a click has to keep working: it places the caret, and two
+			of them select a word.
+		*/
+		if (!scrub.active) {
+			if (Math.abs(distance) < 3) return;
+			scrub.active = true;
+			this.setAttribute('scrubbing', '');
+			this.numberInput.blur();
+		}
+
+		ev.preventDefault();
+
+		/*
+			The same steps the arrows take, so the two agree: a pixel is one, and
+			a modifier makes it ten. A font has four-digit coordinates, so the
+			modifier is what makes a long distance reachable in one gesture.
+		*/
+		const step = ev.shiftKey || ev.ctrlKey || ev.altKey || ev.metaKey ? 10 : 1;
+		const next = this.sanitizeValue(scrub.startValue + Math.round(distance) * step);
+
+		/*
+			One commit per frame. updateToNewValue dispatches change, and a change
+			on one of these can redraw the canvas or rebuild a panel - at raw
+			pointermove rate that is several times more work than the screen can
+			show.
+		*/
+		scrub.pending = next;
+		if (scrub.frame) return;
+		scrub.frame = window.requestAnimationFrame(() => {
+			scrub.frame = 0;
+			if (this.scrub) this.updateToNewValue(this.scrub.pending);
+		});
+	}
+
+	/**
+	 * @param {PointerEvent} ev
+	 */
+	scrubEnd(ev) {
+		const scrub = this.scrub;
+		if (!scrub || ev.pointerId !== scrub.pointerId) return;
+
+		/*
+			Flush, do not cancel. The last pointermove of a drag usually lands in the
+			same frame as the pointerup, so cancelling the pending commit threw away
+			the end of the gesture - a drag of ninety pixels stopped at forty-five.
+		*/
+		if (scrub.frame) window.cancelAnimationFrame(scrub.frame);
+		if (scrub.active && scrub.pending !== undefined) this.updateToNewValue(scrub.pending);
+
+		this.scrub = false;
+		this.removeAttribute('scrubbing');
+
+		window.removeEventListener('pointermove', this.scrubMove);
+		window.removeEventListener('pointerup', this.scrubEnd);
+		window.removeEventListener('pointercancel', this.scrubEnd);
 	}
 
 	/**

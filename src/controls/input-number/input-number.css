@@ -64,6 +64,31 @@
 	corner-shape: var(--corner-smooth);
 }
 
+/*
+	Dragging the field sideways changes the number - see scrubStart in
+	input_number.js. Nothing marks it on hover, on purpose: the field is still
+	a field, a click still puts the caret in it, and the gesture only takes
+	over after three pixels of movement.
+
+	Once it has, the whole control says so. The resize cursor is on :host so it
+	holds while the pointer is outside the field, which it will be within half
+	a second of starting.
+*/
+:host([scrubbing]) {
+	cursor: ew-resize;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+:host([scrubbing]) .field {
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
+}
+
+:host([scrubbing]) .numberInput {
+	cursor: ew-resize;
+}
+
 .field:hover,
 .field:focus-within {
 	background-color: var(--bg-surface);
