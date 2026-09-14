@@ -1,4 +1,5 @@
 import { makeElement } from '../common/dom.js';
+import { attachTooltip } from '../controls/tooltip/tooltip.js';
 
 // --------------------------------------------------------------
 // Transform origin
@@ -100,106 +101,18 @@ export function makeTransformOriginGrid(onPick) {
 					role: 'radio',
 					'aria-checked': 'false',
 					'aria-label': transformOriginName(origin),
-					/* Read by the tip, which stands in for the native title. */
-					'data-gloss': `${originGloss[x]}, ${originGloss[y]}.`,
 				},
 			});
 
 			cell.addEventListener('click', () => onPick(origin));
 			/* Pointer and keyboard both, so tabbing the grid explains itself too. */
-			cell.addEventListener('mouseenter', () => showOriginTip(cell));
-			cell.addEventListener('focus', () => showOriginTip(cell));
-			cell.addEventListener('mouseleave', hideOriginTip);
-			cell.addEventListener('blur', hideOriginTip);
+			attachTooltip(cell, {
+				name: transformOriginName(origin),
+				body: `${originGloss[x]}, ${originGloss[y]}.`,
+			});
 			grid.appendChild(cell);
 		});
 	});
 
-	grid.addEventListener('mouseleave', hideOriginTip);
-
 	return grid;
-}
-
-// --------------------------------------------------------------
-// The tip
-// --------------------------------------------------------------
-
-/*
-	Twelve dots in a box is a fast control to aim at and a slow one to learn,
-	and the native `title` is the wrong teacher: a second of nothing, then an
-	OS tooltip in an OS font saying the two words the dot already implies.
-
-	This says what the point actually is, in the app's own surface, quickly
-	enough to read while sweeping across the grid. One element, moved and
-	refilled - twelve of them would animate twelve times on one sweep.
-*/
-
-/** The one tip element, made on first hover. */
-let originTip = null;
-
-/** So a sweep across the grid does not fade in once per dot. */
-let originTipTimer = 0;
-
-/**
- * @returns {HTMLElement} the tip, attached to the app shell
- */
-function getOriginTip() {
-	if (originTip && originTip.isConnected) return originTip;
-
-	originTip = makeElement({ className: 'origin-tip', attributes: { role: 'tooltip' } });
-	originTip.appendChild(makeElement({ className: 'origin-tip__name' }));
-	originTip.appendChild(makeElement({ className: 'origin-tip__gloss' }));
-
-	/*
-		On the shell rather than in the grid: the grid clips its own overflow to
-		keep the dots inside its corners, which would cut the tip in half.
-	*/
-	(document.querySelector('#app__wrapper') || document.body).appendChild(originTip);
-	return originTip;
-}
-
-/**
- * Put the tip over one cell.
- * @param {HTMLElement} cell - the dot being pointed at
- */
-function showOriginTip(cell) {
-	const tip = getOriginTip();
-	const origin = cell.getAttribute('data-origin');
-
-	tip.querySelector('.origin-tip__name').textContent = transformOriginName(origin);
-	tip.querySelector('.origin-tip__gloss').textContent = cell.getAttribute('data-gloss');
-
-	/* Measure after filling, so the width is the width it will actually be. */
-	tip.setAttribute('measuring', '');
-	const cellBox = cell.getBoundingClientRect();
-	const tipBox = tip.getBoundingClientRect();
-	const gap = 8;
-
-	/* Centred on the dot, then pulled back inside the window. */
-	const left = Math.min(
-		Math.max(cellBox.left + cellBox.width / 2 - tipBox.width / 2, gap),
-		window.innerWidth - tipBox.width - gap
-	);
-
-	/* Above, unless the dot is too near the top of the window to fit there. */
-	const above = cellBox.top - tipBox.height - gap;
-	const flipped = above < gap;
-
-	tip.style.left = `${Math.round(left)}px`;
-	tip.style.top = `${Math.round(flipped ? cellBox.bottom + gap : above)}px`;
-	tip.removeAttribute('measuring');
-
-	window.clearTimeout(originTipTimer);
-	if (tip.hasAttribute('open')) return;
-
-	/* A beat before the first one, so brushing past the grid shows nothing. */
-	originTipTimer = window.setTimeout(() => tip.setAttribute('open', ''), 80);
-}
-
-/**
- * Take it away.
- */
-function hideOriginTip() {
-	window.clearTimeout(originTipTimer);
-	if (originTip) originTip.removeAttribute('open');
 }

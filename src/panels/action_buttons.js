@@ -1,5 +1,6 @@
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
+import { attachTooltip } from '../controls/tooltip/tooltip.js';
 
 // --------------------------------------------------------------
 // Action Buttons
@@ -28,6 +29,15 @@ export function makeActionButton({
 
 	if (onClick) newButton.addEventListener('click', onClick);
 	if (disabled) newButton.setAttribute('disabled', 'disabled');
+
+	/*
+		The app’s hover label rather than the browser’s. These are icon-only
+		buttons in grids of nine and ten, and every title here is already
+		written as a name on the first line and an explanation under it - which
+		is the shape the tooltip reads. A native title took a second to appear
+		and arrived unstyled, which is a poor way to learn thirty icons.
+	*/
+	attachTooltip(newButton);
 	if (typeof id === 'string') newButton.setAttribute('id', id);
 
 	// log(`makeActionButton`, 'end');

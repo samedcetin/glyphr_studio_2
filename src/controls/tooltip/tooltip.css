@@ -1,0 +1,76 @@
+/*
+	TOOLTIP
+	-------
+	The app's hover label, in place of the browser's. Built for the transform
+	origin grid and now shared with the toolbar's quick actions - both are
+	grids of icons where the only way to learn one used to be to wait a second
+	for an OS tooltip in an OS font.
+
+	Fixed, and on the app shell rather than beside its target: the surfaces
+	that want it clip their own overflow to keep their contents inside their
+	corners, and a tip inside one would be cut in half.
+*/
+.tooltip {
+	position: fixed;
+	z-index: var(--z-menu);
+	max-width: 220px;
+	padding: var(--sp-3) var(--sp-4);
+	/* The surface every other floating thing in the app is made of. */
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-raised);
+	box-shadow: var(--shadow-3);
+	pointer-events: none;
+
+	/*
+		Out of the way until it is wanted. visibility rather than display so it
+		can still be measured, and so the fade has something to fade.
+	*/
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(3px) scale(0.97);
+	transform-origin: center bottom;
+	transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease-out),
+		visibility 0s linear var(--dur-fast);
+}
+
+.tooltip[open] {
+	opacity: 1;
+	visibility: visible;
+	transform: none;
+	transition: opacity var(--dur-fast) var(--ease), transform var(--dur-base) var(--ease-out),
+		visibility 0s;
+}
+
+/*
+	Laid out for measuring: invisible, not animating, and at its real size.
+	getBoundingClientRect reports the transformed box, so measuring through the
+	closed state's scale and offset put the tip three pixels off its target
+	instead of eight.
+*/
+.tooltip[measuring] {
+	transition: none;
+	transform: none;
+}
+
+.tooltip__name {
+	display: block;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+	line-height: var(--lh-tight);
+}
+
+.tooltip__body {
+	display: block;
+	margin-top: 2px;
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+	line-height: var(--lh-normal);
+}
+
+/* A name with nothing to add takes the whole tip. */
+.tooltip__body[hidden] {
+	display: none;
+}
