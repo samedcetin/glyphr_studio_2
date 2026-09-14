@@ -19,6 +19,28 @@ const HIT_RADIUS = 9;
 const ARM = 7;
 
 /**
+ * The anchor the panel is pointing at, by name, or false.
+ *
+ * Four crosses on one glyph look alike, and the panel lists them by name
+ * and coordinates - so without this there is no way to tell which row is
+ * which point except by reading numbers off the canvas. Hovering a row
+ * lights its anchor up; selecting one keeps it lit.
+ */
+let highlightedAnchorName = false;
+
+/**
+ * Point the canvas at one anchor, or at none.
+ * @param {String | false} name - the anchor to light up
+ * @returns {Boolean} - whether this changed anything worth redrawing
+ */
+export function setHighlightedAnchor(name) {
+	const wanted = name || false;
+	if (wanted === highlightedAnchorName) return false;
+	highlightedAnchorName = wanted;
+	return true;
+}
+
+/**
  * Draws every anchor on a glyph.
  *
  * @param {Object} ctx - canvas context
@@ -30,16 +52,34 @@ export function drawAnchors(ctx, glyph, view) {
 	const anchors = glyph?.anchors || [];
 	if (!anchors.length) return 0;
 
-	const color = getCanvasColors().anchor;
+	const colors = getCanvasColors();
+	const color = colors.anchor;
+	const accent = colors.selection || colors.pointSelected || color;
 	ctx.save();
 
 	anchors.forEach((anchor) => {
 		const x = sXcX(anchor.x, view);
 		const y = sYcY(anchor.y, view);
 
-		ctx.strokeStyle = color;
-		ctx.fillStyle = color;
-		ctx.lineWidth = 1.5;
+		const lit = anchor.name === highlightedAnchorName;
+
+		ctx.strokeStyle = lit ? accent : color;
+		ctx.fillStyle = lit ? accent : color;
+		ctx.lineWidth = lit ? 2.5 : 1.5;
+
+		/*
+			A halo rather than a bigger cross: growing the mark would move its
+			arms away from the point they are naming, and the point is the whole
+			content of an anchor.
+		*/
+		if (lit) {
+			ctx.save();
+			ctx.globalAlpha = 0.18;
+			ctx.beginPath();
+			ctx.arc(x, y, ARM + 4, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.restore();
+		}
 
 		// The cross says exactly where the point is; the ring or dot says
 		// which kind of anchor it is.
@@ -55,7 +95,7 @@ export function drawAnchors(ctx, glyph, view) {
 		if (anchor.isMarkAnchor) ctx.fill();
 		else ctx.stroke();
 
-		ctx.font = '10px ui-sans-serif, system-ui, sans-serif';
+		ctx.font = `${lit ? 'bold ' : ''}10px ui-sans-serif, system-ui, sans-serif`;
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'middle';
 		ctx.fillText(anchor.name, x + ARM + 4, y - ARM - 2);

@@ -129,6 +129,13 @@ const sectionDefinitions = {
 			defaultOpen: false,
 			// Kern groups have no outlines of their own for a mark to attach to.
 			isAvailable: (page) => page !== 'Kerning',
+			/*
+				This panel holds text fields people type into. Rebuilding it on
+				every publish took focus out of the field mid-word and replaced
+				the input under the caret, so arrow-key nudging worked once and
+				then stopped. It updates itself instead - see anchors_panel.js.
+			*/
+			skipOnRefresh: true,
 		},
 		{
 			id: 'characterInfo',

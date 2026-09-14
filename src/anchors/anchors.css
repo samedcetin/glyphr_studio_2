@@ -9,13 +9,12 @@
 	gap: var(--sp-3);
 }
 
-.anchors__intro {
-	font-size: var(--fs-xs);
-	line-height: var(--lh-normal);
-	color: var(--text-tertiary);
-}
-
-.anchors__intro code {
+/*
+	The explanation moved into the empty state. It was above the list on
+	every glyph forever, which is right the first time and furniture after
+	that - and the empty panel was already saying a shorter version of it.
+*/
+.anchors__empty code {
 	font-family: var(--font-mono);
 	font-size: var(--fs-2xs);
 	background-color: var(--bg-surface-sunken);
@@ -30,29 +29,110 @@
 
 .anchors__row {
 	display: grid;
-	/* Name, x, y, delete - the delete button sized to itself so the three
-	   editable fields share whatever is left. */
-	grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+	/*
+		Kind, name, x, y, delete. The mark and the delete button are sized to
+		themselves so the three editable fields share whatever is left.
+	*/
+	grid-template-columns: 10px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto;
 	gap: var(--sp-2);
 	align-items: center;
+	padding: 0 var(--sp-2);
+	margin: 0 calc(var(--sp-2) * -1);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
+}
+
+/* Pointing at a row lights its anchor on the canvas, so the row says so. */
+.anchors__row:hover,
+.anchors__row:focus-within {
+	background-color: var(--bg-hover);
+}
+
+/*
+	The two shapes the canvas draws: a ring is a place something can land,
+	a filled dot is the thing that lands. Same distinction, same glance.
+*/
+.anchors__kind {
+	width: 8px;
+	height: 8px;
+	border: 1.5px solid var(--icon-default);
+	border-radius: var(--r-pill);
+}
+
+.anchors__row--mark .anchors__kind {
+	background-color: var(--icon-default);
+}
+
+/*
+	A field box holding the axis mark and the number, so the two read as one
+	control - the shape input-number has, without the component, which does
+	not fit in sixty pixels.
+*/
+.anchors__field {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: center;
+	height: var(--control-h);
+	min-width: 0;
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
+}
+
+.anchors__field:hover,
+.anchors__field:focus-within {
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
+}
+
+.anchors__axis {
+	padding-left: var(--sp-3);
+	font-size: var(--fs-xs);
+	line-height: 1;
+	color: var(--text-tertiary);
+	user-select: none;
+	-webkit-user-select: none;
 }
 
 .anchors__name,
 .anchors__number {
 	width: 100%;
 	height: var(--control-h);
-	padding: 0 var(--sp-2);
+	padding: 0 var(--sp-3);
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
 }
 
+/*
+	The browser’s own spinners, hidden. They are a different shape and a
+	different size from the ones input-number draws four rows further up,
+	and two spinner designs in one panel is worse than none: these fields
+	are nudged with the arrow keys or dragged on the canvas.
+*/
 .anchors__number {
+	background-color: transparent;
+	border: 0;
+	outline: none;
+	padding: 0 var(--sp-3) 0 var(--sp-2);
 	font-variant-numeric: tabular-nums;
+	text-align: right;
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+
+.anchors__number::-webkit-outer-spin-button,
+.anchors__number::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
 }
 
 .anchors__delete {
-	width: 22px;
-	height: 22px;
+	/* --control-h-sm, not 22: the row around it is built of 28s. */
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
 	padding: 3px;
 	background: none;
 	border: none;
@@ -67,6 +147,7 @@
 
 .anchors__empty {
 	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
 	color: var(--text-tertiary);
 	padding: var(--sp-2) 0;
 }
