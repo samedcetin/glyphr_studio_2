@@ -110,11 +110,32 @@
 	display: block;
 }
 
+/*
+	Placed, not auto-placed.
+
+	The field has three columns and between one and three children, so
+	auto-placement fills them in order: with no prefix, the input landed in
+	column 1 - an "auto" track, which an input sizes to its own intrinsic
+	width - and the suffix landed in the 1fr track, which was then whatever
+	was left of a field the input had already overflowed. Nothing. So an "em"
+	sat on top of its own number and hung out under the stepper.
+
+	It only showed on a suffix with no prefix, which the Quality checks
+	thresholds were the first to use: every other field in the app carries a
+	prefix, which happened to fill column 1 and push the other two into
+	place.
+*/
 .prefix {
+	grid-column: 1;
 	padding-left: var(--sp-3);
 }
 
+.numberInput {
+	grid-column: 2;
+}
+
 .suffix {
+	grid-column: 3;
 	padding-right: var(--sp-3);
 }
 
