@@ -61,12 +61,23 @@
 	cursor: pointer;
 	box-shadow: none;
 	text-align: left;
+	transition: var(--transition-color);
 }
 
 .sidebar__section-header:hover {
 	background-color: var(--bg-hover);
 	border: none;
 	color: var(--text-primary);
+}
+
+/*
+	After :hover, which it has to beat - you are always hovering something you
+	are pressing, and the two rules carry the same weight, so this one wins by
+	standing later. A header is a 32px strip with no edges of its own; without
+	this, holding the mouse down on one looks exactly like hovering it.
+*/
+.sidebar__section-header:active {
+	background-color: var(--bg-active);
 }
 
 .sidebar__section--open > .sidebar__section-header {
@@ -82,12 +93,17 @@
 	text-overflow: ellipsis;
 }
 
+/*
+	Timed to the body, not to itself. At --dur-fast it had finished turning
+	before the section had started moving, so the two halves of one action
+	read as two. --ease-out lands it rather than stopping it.
+*/
 .sidebar__chevron {
 	width: 14px;
 	height: 14px;
 	color: var(--icon-default);
 	transform: rotate(0deg);
-	transition: transform var(--dur-fast) var(--ease);
+	transition: transform var(--dur-base) var(--ease-out);
 }
 
 .sidebar__section--open > .sidebar__section-header .sidebar__chevron {
@@ -99,6 +115,7 @@
 	width: var(--icon-size);
 	height: var(--icon-size);
 	color: var(--icon-default);
+	transition: var(--transition-color);
 }
 
 .sidebar__section--open > .sidebar__section-header > svg:not(.sidebar__chevron) {
@@ -109,14 +126,66 @@
 	Body
 	------------------------------------------------------------ */
 
+/*
+	Open and close as a height, not as a switch.
+
+	It was display: none against display: block, which is a cut - the panel
+	is either not there or all the way there, with nothing in between. In a
+	column of four accordions that means everything below the one you clicked
+	jumps a few hundred pixels with no indication of where it went, and the
+	thing you were reading is somewhere else now.
+
+	The track does the work: 0fr to 1fr is the one way to transition to a
+	height nobody has measured. It needs the content one level in, because a
+	track can only size something it contains - which is also what lets the
+	padding collapse, so a closed section is nothing high rather than sixteen
+	pixels of empty padding.
+*/
 .sidebar__section-body {
-	display: none;
-	padding: var(--sp-2) var(--sp-4) var(--sp-5) var(--sp-4);
+	display: grid;
+	grid-template-rows: 0fr;
+	overflow: hidden;
 	min-width: 0;
+	transition: grid-template-rows var(--dur-base) var(--ease);
 }
 
 .sidebar__section--open > .sidebar__section-body {
-	display: block;
+	grid-template-rows: 1fr;
+}
+
+.sidebar__section-content {
+	/* A grid item holds its content size open unless it is told it may not. */
+	min-height: 0;
+	min-width: 0;
+	padding-inline: var(--sp-4);
+	/*
+		The vertical padding belongs to the open state. A track can shrink an
+		item's content to nothing but not its padding, so leaving it on left
+		every closed section sixteen pixels tall - four accordions closed came
+		to 64px of empty column. It has to travel with the height.
+	*/
+	padding-block: 0;
+	transition: padding-block var(--dur-base) var(--ease);
+}
+
+/*
+	The content arrives rather than being uncovered. Opacity only: the box
+	growing is already the movement, and a second thing sliding at the same
+	time reads as two events for one click.
+*/
+.sidebar__section--open > .sidebar__section-body > .sidebar__section-content {
+	padding-block: var(--sp-2) var(--sp-5);
+	animation: sidebar-section-reveal var(--dur-base) var(--ease-out);
+}
+
+@keyframes sidebar-section-reveal {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
 }
 
 .sidebar__section-error {
@@ -131,6 +200,15 @@
 	one. Their headings survive because in the Properties panel they are what
 	tells you whether you are looking at a point, a path, or the glyph.
 */
+/*
+	No grid-template-columns here. This rule used to restate the base one from
+	panels.css word for word - and because two classes beat one, that harmless
+	looking copy was overriding every card that lays itself out differently:
+	Transform, History, no-card. They only looked right because the container
+	query below forces one column at the width the sidebars ship at. Drag one
+	wider than that and each of them was handed a 96px label track and a 390px
+	control track it was never built for.
+*/
 .sidebar__section-body .panel__card {
 	width: 100%;
 	max-width: none;
@@ -142,7 +220,6 @@
 	margin-bottom: 0;
 	row-gap: var(--sp-3);
 	column-gap: var(--sp-3);
-	grid-template-columns: var(--panel-label-col) minmax(0, 1fr);
 }
 
 /*
@@ -155,7 +232,7 @@
 	above the --sp-5 between two cards and the --sp-3 between rows inside one,
 	so the ladder says how far apart things are.
 */
-.sidebar__section-body > fancy-button {
+.sidebar__section-content > fancy-button {
 	margin-top: var(--sp-6);
 }
 
@@ -276,9 +353,35 @@
 	sidebar is, which the user sets by dragging, not how wide the window is.
 	------------------------------------------------------------ */
 
-.sidebar__section-body {
+/*
+	On the content, not the body. A container query measures its own content
+	box, and the padding that used to be on the body is in here now - putting
+	it on the body would move the 320px threshold by the 24px of padding and
+	change when the cards fold to one column.
+*/
+.sidebar__section-content {
 	container-type: inline-size;
 	container-name: sidebar-body;
+}
+
+/*
+	A wider label column when the panel is wide enough to spend it.
+
+	--panel-label-col is 96px, which is the right floor: it is what makes
+	every label in every card line up. But a label needing 104 - transform
+	origin, with its info bubble - had nowhere to go and broke across two
+	lines in a panel with 390px of empty control track beside it.
+
+	320px is where the cards go back to two columns, so the wider label and
+	the two-column layout arrive together rather than 80px apart.
+
+	Still one column, still the same width for every card in the panel. It
+	just knows how much room it has.
+*/
+@container sidebar-body (min-width: 320px) {
+	.sidebar__section-body .panel__card {
+		--panel-label-col: 112px;
+	}
 }
 
 @container sidebar-body (max-width: 320px) {
@@ -368,10 +471,10 @@
 	padding-right: var(--sp-5);
 }
 
-.editor-page__left-area .sidebar__section-body,
-.editor-page__right-area .sidebar__section-body {
-	padding-left: var(--sp-5);
-	padding-right: var(--sp-5);
+/* The padding is on the content now - the body has to stay at nothing. */
+.editor-page__left-area .sidebar__section-content,
+.editor-page__right-area .sidebar__section-content {
+	padding-inline: var(--sp-5);
 }
 
 .editor-page__left-area .sidebar__section-body .item-links__rows-area,

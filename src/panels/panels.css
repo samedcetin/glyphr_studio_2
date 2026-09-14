@@ -1609,6 +1609,45 @@ button.history-list__row:focus {
 	width: 130px;
 }
 
+/*
+	The slider drops under its label once the two stop fitting side by side.
+
+	Its 130px is a fixed width, and the label track next to it is what gives
+	way - so dragging a sidebar down towards its 220px minimum left 59px for
+	a label needing 103, and "Character opacity" broke across two lines while
+	the slider kept every pixel of its own. Stacked, the label has the whole
+	row and the slider is wider than it was.
+
+	250px: the label, the gap and the slider come to 239 at their smallest
+	comfortable sizes, so this is the first step on the scale that clears it.
+*/
+@container sidebar-body (max-width: 250px) {
+	/*
+		Prefixed, like the other container rules in this file: a query adds no
+		specificity of its own, and .guides-card__option is declared further
+		down the file than this. Without the prefix the slider went full width
+		here while the row kept two columns, which starved the label to 13px -
+		worse than what it started with.
+	*/
+	/*
+		Only the rows whose control is a slider. A toggle is a 24px square and
+		sits beside any label these cards have; dropping it onto a line of its
+		own spent a whole row on one icon and left the label pointing at
+		nothing.
+		*/
+	.sidebar__section-body .context-card__option:has(.fancy-slider__wrapper),
+	.sidebar__section-body .guides-card__option:has(.fancy-slider__wrapper) {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: var(--sp-1);
+		padding-block: var(--sp-1);
+	}
+
+	.sidebar__section-body .context-card__option .fancy-slider__wrapper,
+	.sidebar__section-body .guides-card__option .fancy-slider__wrapper {
+		width: 100%;
+	}
+}
+
 .context-card__field-label {
 	grid-column: 1 / -1;
 	padding-top: 0;
@@ -1859,6 +1898,22 @@ button.history-list__row:focus {
 	gap: var(--sp-2);
 	width: 100%;
 	margin-top: var(--sp-3);
+}
+
+/*
+	Stacked once the halves stop holding their labels. Side by side in a
+	sidebar dragged down to its 220px minimum each button is 96px, which is
+	not enough for "Add horizontal" - it broke across two lines inside a 32px
+	button, and only one of the pair did, so they did not even break
+	symmetrically. Full width, they each fit on one line again.
+
+	240px of container is where the wider of the two labels stops fitting,
+	measured rather than guessed.
+*/
+@container sidebar-body (max-width: 240px) {
+	.guides-card__add {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 .guides-card__add fancy-button {

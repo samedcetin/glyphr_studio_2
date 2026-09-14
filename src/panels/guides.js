@@ -1,6 +1,7 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeRandomSaturatedColor } from '../common/colors.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
+import { round } from '../common/functions.js';
 import { makeIconButton } from '../controls/icon-toggle/icon_toggle.js';
 import { attachTooltip } from '../controls/tooltip/tooltip.js';
 
@@ -156,6 +157,16 @@ function makeSystemGuideRow(property, title, value = '0000', color) {
 	const vertical = property === 'leftSide' || property === 'rightSide';
 
 	/*
+		Rounded, because one of these is not a round number. Five come from the
+		font and are whole; the two that follow the glyph's advance width are
+		whatever the outline works out to, and 1283.7171065122461 is not a
+		reading of anything. It also took the row apart once the sidebar was
+		dragged narrow - a 132px value in a 195px row left 23px for the name,
+		so "Right side" showed as "R".
+	*/
+	const shown = round(parseFloat(`${value}`) || 0, 2);
+
+	/*
 		Five of these come from the font and never change as you work; two
 		come from this glyph's own advance width and move as you edit it.
 		They happen to be exactly the horizontal ones and the vertical ones,
@@ -182,8 +193,8 @@ function makeSystemGuideRow(property, title, value = '0000', color) {
 		icon: vertical ? 'command_verticalBar' : 'command_horizontalBar',
 		name: title,
 		body: fromGlyph
-			? `A vertical line at ${value} em, ${fromOrigin ? 'at the glyph origin' : 'at the advance width'}.`
-			: `A horizontal line at ${value} em, from the font’s key metrics.`,
+			? `A vertical line at ${shown} em, ${fromOrigin ? 'at the glyph origin' : 'at the advance width'}.`
+			: `A horizontal line at ${shown} em, from the font’s key metrics.`,
 		color: color,
 	});
 
@@ -202,7 +213,7 @@ function makeSystemGuideRow(property, title, value = '0000', color) {
 		beside a name is as easily a count of something.
 	*/
 	const valueDisplay = makeElement({ className: 'guides-card__metric-value' });
-	valueDisplay.innerHTML = `${value}<span class='guides-card__metric-unit'>em</span>`;
+	valueDisplay.innerHTML = `${shown}<span class='guides-card__metric-unit'>em</span>`;
 	attachTooltip(valueDisplay, {
 		name: 'Guide position',
 		body: fromGlyph

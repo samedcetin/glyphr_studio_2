@@ -245,20 +245,20 @@ const chevronSVG = `<svg class="sidebar__chevron" viewBox="0 0 16 16" aria-hidde
  * callbacks against detached elements.
  *
  * @param {Object} definition - section definition
- * @param {Element} body - the section body element to fill
+ * @param {Element} host - the section content element to fill
  */
-function buildSectionBody(definition, body) {
+function buildSectionBody(definition, host) {
 	const editor = getCurrentProjectEditor();
 	editor.unsubscribe({ idToRemove: definition.subscriberPrefix });
 
-	body.innerHTML = '';
+	host.innerHTML = '';
 
 	try {
 		const content = definition.maker(editor.nav.page);
-		if (content) addAsChildren(body, content);
+		if (content) addAsChildren(host, content);
 	} catch (error) {
 		console.warn(`Panel "${definition.id}" failed to build:`, error);
-		body.appendChild(
+		host.appendChild(
 			makeElement({
 				className: 'sidebar__section-error',
 				content: `This panel could not be shown.`,
@@ -301,22 +301,57 @@ function makeSection(definition) {
 		id: `sidebar-body-${definition.id}`,
 	});
 
+	/*
+		The body is the box that opens and closes; this is what is inside it.
+
+		They have to be two elements. The open and close is a grid track going
+		from 0fr to 1fr - the one way to animate to a height nobody has
+		measured - and a track can only size something it contains. Padding
+		belongs in here too, so that a closed section is genuinely nothing
+		high instead of a closed section's worth of padding.
+	*/
+	const content = makeElement({ className: 'sidebar__section-content' });
+	body.appendChild(content);
+
 	// Closed sections are built the first time they are opened, so a project
 	// with eight collapsed panels does not pay to construct all of them.
-	if (open) buildSectionBody(definition, body);
+	if (open) buildSectionBody(definition, content);
+
+	let emptyAfterClosing = 0;
 
 	header.addEventListener('click', () => {
 		const nowOpen = !section.classList.contains('sidebar__section--open');
+
+		if (nowOpen) {
+			/*
+				Filled before the class goes on, so the track has something to
+				grow to, and after cancelling any teardown still pending from a
+				close that has not finished - that would empty the section we
+				are in the middle of opening. buildSectionBody clears what was
+				there and registers fresh subscribers.
+			*/
+			window.clearTimeout(emptyAfterClosing);
+			buildSectionBody(definition, content);
+		}
+
 		section.classList.toggle('sidebar__section--open', nowOpen);
 		header.setAttribute('aria-expanded', String(nowOpen));
 		setSectionOpen(definition.id, nowOpen);
 
-		if (nowOpen) {
-			buildSectionBody(definition, body);
-		} else {
+		if (!nowOpen) {
 			// Stop listening while hidden - nothing is there to update.
 			getCurrentProjectEditor().unsubscribe({ idToRemove: definition.subscriberPrefix });
-			body.innerHTML = '';
+			/*
+				Emptied once it has finished collapsing, not before: wiping it
+				first leaves an empty box to animate, so the section vanishes
+				rather than closing. The wait is read off the element instead
+				of being repeated here, which means the reduced-motion block
+				that zeroes every duration is obeyed without asking.
+			*/
+			const seconds = parseFloat(getComputedStyle(body).transitionDuration) || 0;
+			emptyAfterClosing = window.setTimeout(() => {
+				content.innerHTML = '';
+			}, seconds * 1000);
 		}
 	});
 
@@ -544,8 +579,8 @@ function rebuildOpenSections() {
 			`.sidebar__section[data-section-id="${definition.id}"].sidebar__section--open`
 		);
 		if (!section) return;
-		const body = section.querySelector('.sidebar__section-body');
-		if (body) buildSectionBody(definition, body);
+		const content = section.querySelector('.sidebar__section-content');
+		if (content) buildSectionBody(definition, content);
 	});
 
 	scrollPositions.forEach((top, area) => {

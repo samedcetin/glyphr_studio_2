@@ -4,8 +4,16 @@
 	the same plan-then-do shape as the icon import and the atlas export.
 */
 
-.anchors-card {
+/*
+	A stack: the marks, what they are for, and the one button that uses them.
+	Two classes because it has to beat the generic label-and-control pair on
+	.panel__card - without that the card is only a stack while the sidebar is
+	narrow enough for the container query to flatten everything, and dragging
+	the panel wider put the marks and the button in the 96px label track.
+*/
+.panel__card.anchors-card {
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: var(--sp-3);
 }
 
@@ -203,9 +211,16 @@
 	--r-lg, the corner the toolbar takes: both are 32px tall, and a control
 	that height reads as a different family at 8. Radius is a density signal,
 	so two of them on one screen say the two things are unrelated.
+
+	The 32px is a floor rather than a height. The label is a sentence, and in
+	a sidebar dragged down towards its minimum it needs two lines - against a
+	fixed height those had no room and sat on the button’s edges. At every
+	width where the label fits on one line it is the same 32px it was.
 */
 .anchors__compose {
-	height: var(--control-h-lg);
+	min-height: var(--control-h-lg);
+	padding: var(--sp-2) var(--sp-4);
+	line-height: var(--lh-tight);
 	margin-top: var(--sp-2);
 	background-color: var(--accent);
 	color: var(--text-on-accent);
