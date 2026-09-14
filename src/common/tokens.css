@@ -288,6 +288,14 @@
 	--panel-label-col: 96px;
 
 	/*
+		The width of a chooser behind the breadcrumb. The character chooser
+		arrives at it on its own - ten 40px tiles, their gaps and the grid
+		padding - and the kern group chooser is told it, so the two popovers
+		that open from the same control are the same size.
+	*/
+	--chooser-w: 440px;
+
+	/*
 		STACKING
 		--------
 		The whole scale, named for what sits at each value. Every z-index in the

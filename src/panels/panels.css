@@ -893,6 +893,12 @@ nav .item-chooser__wrapper--compact {
 	color: var(--text-secondary);
 }
 
+/* The kerning chooser puts its one action in the footer instead of a
+	sentence, so the footer stops being a line of text and becomes a bar. */
+.item-chooser__wrapper--compact .item-chooser__footer:has(fancy-button) {
+	padding: var(--sp-3);
+}
+
 .item-chooser__footer code {
 	min-width: 20px;
 	height: 20px;
@@ -1023,59 +1029,115 @@ nav .item-chooser__wrapper--compact {
 	margin: 0;
 }
 
-.kern-group-chooser__list {
-	width: 100%;
-	margin-bottom: 20px;
-	display: grid;
-	row-gap: 10px;
+/*
+	KERN GROUP CHOOSER
+	------------------
+	The list behind the breadcrumb. It was built out of raw numbers - 20px of
+	padding, a 10px gap, a 4px corner, a 100px column overridden to max-content
+	two lines later - and its own greys. Every value here is a token now.
+
+	THE COLUMNS HOLD STILL. They were all content-sized, so the divider landed
+	at a different x on every row: measured, 34px, 146px and 62px into three
+	rows of the same list. The two halves of a kern pair are a mirror, and a
+	mirror only reads as one if its line does not move. Left side right-aligned
+	against the rule, right side left-aligned away from it, equal tracks.
+*/
+
+/*
+	Told its width rather than growing to its widest row. With two equal
+	tracks and nothing holding them, one twenty-character group stretched the
+	whole popover to 571px - wider than the character chooser that opens from
+	the same breadcrumb.
+*/
+.item-chooser__wrapper--compact:has(.kern-group-chooser__list) {
+	width: var(--chooser-w);
 }
 
+.kern-group-chooser__list {
+	display: grid;
+	gap: var(--sp-1);
+	width: 100%;
+	padding: 0 var(--sp-3);
+	overflow-y: auto;
+	min-height: 0;
+	scrollbar-gutter: stable;
+}
+
+/*
+	A row grows with its groups rather than clipping them. A kern class in a
+	real font runs to twenty characters; `overflow: hidden` on a 40px row
+	answered that by hiding the half you had not seen yet.
+*/
 .kern-group-chooser__row {
 	display: grid;
-	grid-template-columns: max-content max-content min-content max-content;
-	column-gap: 0px;
-	transition: none;
-	border: 1px solid var(--gray-l90);
-	padding-left: 20px;
-	background-color: var(--gray-l95);
-	border-radius: 4px;
-	width: 100%;
-	height: 40px;
-	overflow: hidden;
+	grid-template-columns: max-content minmax(0, 1fr) 1px minmax(0, 1fr) max-content;
 	align-items: center;
-}
-
-.kern-group-chooser__members-divider {
-	color: var(--gray-l80);
-}
-
-.kern-group-chooser__right-members {
-	width: 100px;
-	text-align: left;
-	width: max-content;
-	margin-right: 10px;
-}
-
-.kern-group-chooser__left-members {
-	width: 100px;
-	text-align: right;
-	width: max-content;
-	margin-left: 10px;
-}
-
-.kern-group-chooser__row:hover,
-.kern-group-chooser__row:active {
-	transition: none;
-	border-left-width: 10px;
-	border-color: var(--gray-l80);
-	padding-left: 11px;
+	gap: var(--sp-3);
+	width: 100%;
+	min-height: var(--control-h-lg);
+	padding: var(--sp-2) var(--sp-3);
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	cursor: pointer;
 }
 
+/*
+	Hover and selection are a background and a colour, not a border that grows
+	from 1px to 10 while the padding shrinks from 20 to 11 to hide the reflow.
+*/
+.kern-group-chooser__row:hover,
+.kern-group-chooser__row:focus {
+	background-color: var(--bg-hover);
+}
+
 .kern-group-chooser__row[selected] {
-	border-left-width: 10px;
-	border-color: var(--blue-l70);
-	padding-left: 11px;
+	background-color: var(--bg-selected);
+}
+
+/* The internal handle. It is how a group is addressed and how the list sorts,
+	and it is never the thing you are looking for, so it is quiet. */
+.kern-group-chooser__id {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+.kern-group-chooser__row[selected] .kern-group-chooser__id {
+	color: var(--text-accent);
+}
+
+/* Each side pushed up against the rule, so the pair reads inwards. */
+.kern-group-chooser__left-members,
+.kern-group-chooser__right-members {
+	min-width: 0;
+}
+
+.kern-group-chooser__left-members .kern-chips {
+	justify-content: flex-end;
+}
+
+.kern-group-chooser__members-divider {
+	justify-self: center;
+	width: 1px;
+	height: var(--control-h-sm);
+	background-color: var(--border-default);
+}
+
+/* Tabular, so a column of kern values lines up on its digits and its sign. */
+.kern-group-chooser__value {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+.kern-group-chooser__row[selected] .kern-group-chooser__value {
+	color: var(--text-primary);
 }
 
 /*
