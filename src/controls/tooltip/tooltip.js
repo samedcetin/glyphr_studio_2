@@ -57,7 +57,7 @@ export function showTooltip(target, name, body) {
 	element.querySelector('.tooltip__name').textContent = name;
 	const bodyElement = element.querySelector('.tooltip__body');
 	bodyElement.textContent = body;
-	bodyElement.hidden = !body;
+	if (bodyElement instanceof HTMLElement) bodyElement.hidden = !body;
 
 	/*
 		Measure with the closed state's transform off. getBoundingClientRect

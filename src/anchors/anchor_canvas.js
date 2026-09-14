@@ -26,6 +26,7 @@ const ARM = 7;
  * which point except by reading numbers off the canvas. Hovering a row
  * lights its anchor up; selecting one keeps it lit.
  */
+/** @type {String | false} - the anchor drawn lit, if any */
 let highlightedAnchorName = false;
 
 /**

@@ -143,9 +143,19 @@ describe('Navigator: Page Navigation', () => {
 		editor.selectedGlyphID = 'glyph-0x42';
 		editor.publish('whichGlyphIsSelected', 'glyph-0x42');
 
-		const after = breadcrumb.querySelector('#nav-button-l2 span')?.textContent;
+		const itemButton = breadcrumb.querySelector('#nav-button-l2');
+		const after = itemButton?.querySelector('span')?.textContent;
 		expect(after).not.toEqual(before);
-		expect(after).toEqual(editor.project.getItemName('glyph-0x42', true));
+
+		/*
+			The label shows the character itself with its code point beside it;
+			the full Unicode name lives in the tooltip. Both have to follow the
+			selection.
+		*/
+		expect(after).toEqual('B');
+		expect(itemButton?.getAttribute('title')).toEqual(
+			editor.project.getItemName('glyph-0x42', true)
+		);
 
 		breadcrumb.remove();
 		editor.editCanvas = realCanvas;

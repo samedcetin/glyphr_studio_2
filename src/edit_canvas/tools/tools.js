@@ -246,7 +246,9 @@ export function fillEditorToolBar(content, toolButtons = []) {
 		buttons whose label changes have already set theirs and are skipped,
 		because they carry no title to read.
 	*/
-	bar.querySelectorAll('button[title]').forEach((button) => attachTooltip(button));
+	/** @type {NodeListOf<HTMLElement>} */
+	const titled = bar.querySelectorAll('button[title]');
+	titled.forEach((button) => attachTooltip(button));
 
 	return true;
 }
@@ -271,7 +273,7 @@ export function refreshEditToolsArea() {
 		The whole bar, not just the tool half: the view controls share it now, and
 		rebuilding only the tools would drop them.
 	*/
-	return fillEditorToolBar(toolsArea.parentElement || document, makeEditToolsButtons());
+	return fillEditorToolBar(toolsArea.parentElement || document.body, makeEditToolsButtons());
 }
 
 const panelIcons = {

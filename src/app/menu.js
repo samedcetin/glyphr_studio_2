@@ -458,7 +458,7 @@ export function makeMenu(menuName) {
  * Makes a special row for a menu that displays a small
  * project preview
  * @param {Number} projectID - which project to show
- * @returns {Element}
+ * @returns {Element | false} - false when there is no such project
  */
 function makeProjectPreviewRow(projectID = 0) {
 	const app = getGlyphrStudioApp();

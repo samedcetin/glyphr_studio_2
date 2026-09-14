@@ -50,11 +50,11 @@ function timeAgo(timeStamp, now) {
  * @param {Object} args
  * @param {String} args.title - what happened
  * @param {String} args.state - 'ahead' | 'now' | 'past'
- * @param {Boolean} args.isNavigation - a move between items rather than an edit
- * @param {Number | false} args.timeStamp
+ * @param {Boolean=} args.isNavigation - a move between items rather than an edit
+ * @param {Number | false} [args.timeStamp]
  * @param {Number} args.now
- * @param {String} args.itemName - which item it happened to
- * @param {Function | false} args.onClick
+ * @param {String=} args.itemName - which item it happened to
+ * @param {(() => void) | false} [args.onClick]
  * @returns {HTMLElement}
  */
 function makeHistoryRow({
@@ -111,7 +111,7 @@ function makeHistoryRow({
 			.join(' '),
 	});
 
-	if (onClick) row.addEventListener('click', onClick);
+	if (onClick) row.addEventListener('click', () => onClick());
 	return row;
 }
 
