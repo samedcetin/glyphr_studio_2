@@ -100,7 +100,9 @@ export function showItemRange(editor, target) {
 	const name = typeof target === 'string' ? target : target.name;
 
 	// And so does which filter chip is the pressed one.
-	wrapper.querySelectorAll('.overview__filter').forEach((chip) => {
+	/** @type {NodeListOf<HTMLElement>} */
+	const chips = wrapper.querySelectorAll('.overview__filter');
+	chips.forEach((chip) => {
 		chip.setAttribute('aria-pressed', `${chip.dataset.rangeName === name}`);
 	});
 
