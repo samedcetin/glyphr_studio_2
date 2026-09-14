@@ -196,21 +196,41 @@
 	cursor: default;
 }
 
+/*
+	The panel’s one primary button.
+
+	--r-lg, the corner the toolbar takes: both are 32px tall, and a control
+	that height reads as a different family at 8. Radius is a density signal,
+	so two of them on one screen say the two things are unrelated.
+*/
 .anchors__compose {
 	height: var(--control-h-lg);
 	margin-top: var(--sp-2);
 	background-color: var(--accent);
 	color: var(--text-on-accent);
-	border: none;
-	border-radius: var(--r-md);
+	border: 1px solid var(--accent);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	font-family: var(--font-ui);
 	font-size: var(--fs-sm);
 	cursor: pointer;
 }
 
-.anchors__compose:hover {
+/*
+	Every state stated, not just the background.
+
+	resets.css carries `button:hover` with a background, a border colour and
+	`color: var(--text-primary)`, and `button:active` with another background.
+	The old rule set the hover background and nothing else, so the text on this
+	blue button turned dark the moment the pointer touched it - white on blue
+	until hover, then near-black on blue.
+*/
+.anchors__compose:hover,
+.anchors__compose:focus,
+.anchors__compose:active {
 	background-color: var(--accent-hover);
+	border-color: var(--accent-hover);
+	color: var(--text-on-accent);
 }
 
 /* --------------------------------------------------------
