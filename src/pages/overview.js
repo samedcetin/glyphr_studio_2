@@ -395,21 +395,12 @@ function makeCoverageCard() {
 	}
 	card.appendChild(chooser);
 
-	// --- The way out ---------------------------------------------
-	const footer = makeElement({ className: 'overview__coverage-footer' });
-	const viewAll = makeElement({
-		tag: 'button',
-		className: 'overview__link',
-		attributes: { type: 'button' },
-		innerHTML: 'View all characters <span class="overview__link-arrow">&rarr;</span>',
-	});
-	viewAll.addEventListener('click', () => {
-		const target = getCurrentProjectEditor();
-		target.nav.page = 'Characters';
-		target.navigate();
-	});
-	footer.appendChild(viewAll);
-	card.appendChild(footer);
+	/*
+		No "View all characters" link. The mock has one because the card it sits
+		in is a sample of sixteen; this grid is the range, all of it, scrolling
+		inside the card - so the link pointed at what you were already looking
+		at. Clicking a tile still opens it on the Characters page.
+	*/
 
 	return card;
 }
