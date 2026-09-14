@@ -717,7 +717,13 @@ span.spacer {
 		1280 and centre, which on a wide monitor left the thing the page is
 		named after in the middle of two empty margins.
 	*/
-	padding: var(--sp-8) var(--sp-8) 0 var(--sp-8);
+	padding: var(--sp-8);
+	/*
+		A safety valve rather than the normal state. The three rows are
+		min-content, min-content and 1fr, so the last one takes whatever is
+		left and the page does not scroll - unless the window is short enough
+		that the head and the specimen alone will not fit, and then it does.
+	*/
 	overflow-y: auto;
 	scrollbar-width: none;
 }
@@ -973,9 +979,15 @@ span.spacer {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 320px;
 	gap: var(--sp-6);
-	align-items: start;
+	/*
+		stretch, so the two cards are the height of the row they are in and the
+		coverage grid scrolls inside its own card. At start they were the height
+		of their contents, which for ninety-five tiles is taller than the window
+		- so the whole page scrolled, and the heading, the progress and the
+		search scrolled away with it.
+	*/
+	align-items: stretch;
 	min-height: 0;
-	padding-bottom: var(--sp-8);
 }
 
 /* One column once the snapshot's 320px stops being a third of the width. */
