@@ -20,9 +20,36 @@ import {
 	removeLinkFromUsedIn,
 	resolveItemLinks,
 } from '../project_editor/cross_item_actions.js';
+import { makeDirectToggle } from '../panels/cards.js';
 import { addRangeToSelectedFilterInputs, glyphIterator } from './global_actions.js';
 import { makeOneSettingsRow } from './settings.js';
 import { addCharacterRangeToCurrentProject } from './settings_project.js';
+
+/**
+ * One on-or-off option inside an action card.
+ *
+ * These were native checkboxes written into the card's HTML with an id, and
+ * read back at click time with document.getElementById. Two things wrong with
+ * that: a global name for something that exists inside one card, and the one
+ * control the rest of the app has already replaced everywhere else.
+ *
+ * The state lives on the object passed in, which is what the card's button
+ * reads now - no lookup, and nothing to collide with.
+ *
+ * @param {Object} state - the card's own options object
+ * @param {String} property - which key on it this switches
+ * @param {String} label - what it says
+ * @param {String} icon - a line icon name
+ * @returns {Element}
+ */
+function makeCardOption(state, property, label, icon = 'check') {
+	const row = makeElement({ className: 'global-actions__option' });
+	row.appendChild(
+		makeDirectToggle(state, property, () => {}, { icon: icon, name: label, body: '' })
+	);
+	row.appendChild(makeElement({ tag: 'span', content: label }));
+	return row;
+}
 
 // --------------------------------------------------------------
 // Move
@@ -186,14 +213,10 @@ export function makeCard_ScaleHorizontal() {
 		`,
 	});
 	card.appendChild(table);
-	table = makeElement({
-		className: 'settings-table',
-		innerHTML: `
-			<span><input id="scaleHorizontalUpdateAdvanceWidth" type="checkbox" checked></span>
-			<label for="scaleHorizontalUpdateAdvanceWidth">Scale the item's advance width property</label>
-		`,
-	});
-	card.appendChild(table);
+	const options = { updateAdvanceWidth: true };
+	card.appendChild(
+		makeCardOption(options, 'updateAdvanceWidth', `Scale the item's advance width property`, 'advanceWidth')
+	);
 
 	const button = makeElement({ tag: 'fancy-button', attributes: {'secondary': ''}, content: 'Scale all glyphs' });
 	button.addEventListener('click', () => {
@@ -201,9 +224,7 @@ export function makeCard_ScaleHorizontal() {
 		const scaleHorizontalInput = document.querySelector('#scaleHorizontal');
 		const scaleHorizontal = parseFloat(scaleHorizontalInput.value) || 1;
 
-		/** @type {HTMLInputElement} */
-		const updateAdvanceWidthBox = document.querySelector('#scaleHorizontalUpdateAdvanceWidth');
-		const updateAdvanceWidth = updateAdvanceWidthBox.checked;
+		const updateAdvanceWidth = options.updateAdvanceWidth;
 
 		glyphIterator({
 			title: 'Horizontally scaling glyph',
@@ -263,19 +284,18 @@ export function makeCard_Resize() {
 		`,
 	});
 	card.appendChild(table);
-	table = makeElement({
-		className: 'settings-table',
-		innerHTML: `
-			<span><input id="resizeUpdateAdvanceWidth" type="checkbox" checked></span>
-			<label for="resizeUpdateAdvanceWidth">Update the item's advance width property</label>
-			<span>&nbsp;</span>
-
-			<span><input id="resizeMaintainAspectRatio" type="checkbox"></span>
-			<label for="resizeMaintainAspectRatio">Maintain aspect ratio (<i>leave either &#916;&nbsp;Width or &#916;&nbsp;Height as zero</i>)</label>
-			<span>&nbsp;</span>
-		`,
-	});
-	card.appendChild(table);
+	const options = { updateAdvanceWidth: true, maintainAspectRatio: false };
+	card.appendChild(
+		makeCardOption(options, 'updateAdvanceWidth', `Update the item's advance width property`, 'advanceWidth')
+	);
+	card.appendChild(
+		makeCardOption(
+			options,
+			'maintainAspectRatio',
+			'Maintain aspect ratio — leave either width or height at zero',
+			'linked'
+		)
+	);
 
 	const button = makeElement({ tag: 'fancy-button', attributes: {'secondary': ''}, content: 'Re-size all glyphs' });
 	button.addEventListener('click', () => {
@@ -288,13 +308,8 @@ export function makeCard_Resize() {
 		const resizeHInput = document.querySelector('#resizeHeight');
 		const resizeH = parseFloat(resizeHInput.value) || 0;
 
-		/** @type {HTMLInputElement} */
-		const ratioBox = document.querySelector('#resizeMaintainAspectRatio');
-		const ratio = ratioBox.checked;
-
-		/** @type {HTMLInputElement} */
-		const updateAdvanceWidthBox = document.querySelector('#resizeUpdateAdvanceWidth');
-		const updateAdvanceWidth = updateAdvanceWidthBox.checked;
+		const ratio = options.maintainAspectRatio;
+		const updateAdvanceWidth = options.updateAdvanceWidth;
 
 		if (ratio && !resizeH && !resizeW) {
 			// For ratio lock to work, one delta value has to be zero
@@ -355,14 +370,15 @@ export function makeCard_Skew() {
 		`,
 	});
 	card.appendChild(table);
-	table = makeElement({
-		className: 'settings-table',
-		innerHTML: `
-			<span><input id="skewAngleUpdateAdvanceWidth" type="checkbox" checked></span>
-			<label for="skewAngleUpdateAdvanceWidth">Also update the item's advance width property</label>
-		`,
-	});
-	card.appendChild(table);
+	const options = { updateAdvanceWidth: true };
+	card.appendChild(
+		makeCardOption(
+			options,
+			'updateAdvanceWidth',
+			`Also update the item's advance width property`,
+			'advanceWidth'
+		)
+	);
 
 	const button = makeElement({ tag: 'fancy-button', attributes: {'secondary': ''}, content: 'Skew all glyphs' });
 	button.addEventListener('click', () => {
@@ -370,9 +386,7 @@ export function makeCard_Skew() {
 		const skewAngleInput = document.querySelector('#skewAngle');
 		const skewAngle = parseFloat(skewAngleInput.value) || 0;
 
-		/** @type {HTMLInputElement} */
-		const updateAdvanceWidthBox = document.querySelector('#skewAngleUpdateAdvanceWidth');
-		const updateAdvanceWidth = updateAdvanceWidthBox.checked;
+		const updateAdvanceWidth = options.updateAdvanceWidth;
 
 		glyphIterator({
 			title: 'Skewing glyphs',
@@ -471,22 +485,29 @@ export function makeCard_SideBearings() {
 	});
 	card.appendChild(effect);
 
-	let table = makeElement({
-		className: 'settings-table',
-		innerHTML: `
-			<label for="sideBearingLeft">
-				<input type="checkbox" style="position: relative; top: 5px;" id="sideBearingLeftCheckbox">
-				&nbsp;Left&nbsp;Side&nbsp;Bearing:
-			</label>
-			<input-number id="sideBearingLeft" type="number" value="0"></input-number>
-			<pre title="Expected value type" class="value-type">Em</pre>
-			<label for="sideBearingRight">
-				<input type="checkbox" style="position: relative; top: 5px;" id="sideBearingRightCheckbox">
-				&nbsp;Right&nbsp;Side&nbsp;Bearing:
-			</label>
-			<input-number id="sideBearingRight" type="number" value="0"></input-number>
-			<pre title="Expected value type" class="value-type">Em</pre>
-		`,
+	/*
+		A switch per side, because either one can be left alone. The checkbox
+		used to sit inside the label, nudged down five pixels by an inline
+		style to line it up with the text it was in.
+	*/
+	const options = { left: false, right: false };
+	let table = makeElement({ className: 'settings-table' });
+	[
+		['left', 'Left side bearing', 'sideBearingLeft'],
+		['right', 'Right side bearing', 'sideBearingRight'],
+	].forEach(([property, label, inputID]) => {
+		table.appendChild(makeCardOption(options, property, label, 'advanceWidth'));
+		table.appendChild(
+			makeElement({ tag: 'input-number', attributes: { id: inputID, value: '0' } })
+		);
+		table.appendChild(
+			makeElement({
+				tag: 'pre',
+				className: 'value-type',
+				title: 'Expected value type',
+				content: 'Em',
+			})
+		);
 	});
 	card.appendChild(table);
 
@@ -498,18 +519,14 @@ export function makeCard_SideBearings() {
 		const left = parseFloat(leftInput.value);
 		// log(`left input: ${left}`);
 
-		/** @type {HTMLInputElement} */
-		const leftCheckboxBox = document.querySelector('#sideBearingLeftCheckbox');
-		let leftCheckbox = leftCheckboxBox.checked;
+		let leftCheckbox = options.left;
 
 		/** @type {HTMLInputElement} */
 		const rightInput = document.querySelector('#sideBearingRight');
 		const right = parseFloat(rightInput.value);
 		// log(`right input: ${right}`);
 
-		/** @type {HTMLInputElement} */
-		const rightCheckboxBox = document.querySelector('#sideBearingRightCheckbox');
-		let rightCheckbox = rightCheckboxBox.checked;
+		let rightCheckbox = options.right;
 
 		if (leftCheckbox || rightCheckbox) {
 			if (isNaN(left) || isNaN(right)) {
@@ -609,10 +626,16 @@ export function makeCard_RemoveItems() {
 	});
 	card.appendChild(effect);
 
-	const options = makeElement({ className: 'settings-table' });
-	addAsChildren(options, makeOneSettingsRow('app', 'unlinkComponentInstances', undefined, true));
-	options.style.marginTop = '10px';
-	card.appendChild(options);
+	/*
+		The one option on this page that is not a card option: it is a project
+		setting, built by the Settings page's own row maker and stored on the
+		project, so it keeps that control rather than becoming a card switch.
+		Named apart from the `options` state objects the other cards carry.
+	*/
+	const settingRow = makeElement({ className: 'settings-table' });
+	addAsChildren(settingRow, makeOneSettingsRow('app', 'unlinkComponentInstances', undefined, true));
+	settingRow.style.marginTop = '10px';
+	card.appendChild(settingRow);
 
 	let button = makeElement({
 		tag: 'fancy-button', attributes: {'secondary': ''},
@@ -732,22 +755,16 @@ export function makeCard_AllCaps() {
 	});
 	card.appendChild(effect);
 
-	let table = makeElement({
-		className: 'settings-table',
-		innerHTML: `
-			<input type="checkbox" id="allCapsBasic" checked="true"/>
-			<label for="allCapsBasic">Basic Latin</label>
-			<span></span>
-			<input type="checkbox" id="allCapsSupplement"/>
-			<label for="allCapsSupplement">Latin Supplement</label>
-			<span></span>
-			<input type="checkbox" id="allCapsLatinA"/>
-			<label for="allCapsLatinA">Latin Extended A</label>
-			<span></span>
-			<input type="checkbox" id="allCapsLatinB"/>
-			<label for="allCapsLatinB">Latin Extended B</label>
-			<span></span>
-		`,
+	/* Which ranges to convert. A list of four, so they are a list. */
+	const options = { basic: true, supplement: false, latinA: false, latinB: false };
+	let table = makeElement({ className: 'global-actions__option-list' });
+	[
+		['basic', 'Basic Latin'],
+		['supplement', 'Latin Supplement'],
+		['latinA', 'Latin Extended A'],
+		['latinB', 'Latin Extended B'],
+	].forEach(([property, label]) => {
+		table.appendChild(makeCardOption(options, property, label, 'page_characters'));
 	});
 	card.appendChild(table);
 
@@ -790,9 +807,7 @@ export function makeCard_AllCaps() {
 		}
 
 		// Basic Latin range
-		/** @type {HTMLInputElement} */
-		const allCapsBasicBox = document.querySelector('#allCapsBasic');
-		if (allCapsBasicBox.checked) {
+		if (options.basic) {
 			// log(`Converting range: allCapsBasic`);
 			let range = getUnicodeBlockByName('Basic Latin');
 			if (range) {
@@ -804,9 +819,7 @@ export function makeCard_AllCaps() {
 		}
 
 		// Latin-1 Supplement range
-		/** @type {HTMLInputElement} */
-		const allCapsSupplementBox = document.querySelector('#allCapsSupplement');
-		if (allCapsSupplementBox.checked) {
+		if (options.supplement) {
 			// log(`Converting range: allCapsSupplement`);
 			let range = getUnicodeBlockByName('Latin-1 Supplement');
 			if (range) {
@@ -818,9 +831,7 @@ export function makeCard_AllCaps() {
 		}
 
 		// Latin Extended-A range
-		/** @type {HTMLInputElement} */
-		const allCapsLatinABox = document.querySelector('#allCapsLatinA');
-		if (allCapsLatinABox.checked) {
+		if (options.latinA) {
 			// log(`Converting range: allCapsLatinA`);
 			let range = getUnicodeBlockByName('Latin Extended-A');
 			if (range) {
@@ -832,9 +843,7 @@ export function makeCard_AllCaps() {
 		}
 
 		// Latin Extended-B range
-		/** @type {HTMLInputElement} */
-		const allCapsLatinBBox = document.querySelector('#allCapsLatinB');
-		if (allCapsLatinBBox.checked) {
+		if (options.latinB) {
 			// log(`Converting range: allCapsLatinB`);
 			let range = getUnicodeBlockByName('Latin Extended-B');
 			if (range) {

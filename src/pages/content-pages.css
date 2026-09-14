@@ -539,9 +539,25 @@ span.spacer {
 	width: 100px;
 }
 
-.global-actions__card input[type='checkbox'] {
-	width: 20px;
-	height: 20px;
+/*
+	An option inside a card: the switch, then what it switches. Reads the way
+	the checkbox and its label did, without the checkbox.
+*/
+.global-actions__option {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	min-height: var(--row-h);
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+/* Four of them in the All caps card, so they are a list. */
+.global-actions__option-list {
+	display: grid;
+	gap: var(--sp-1);
+	width: 100%;
 }
 
 .global-actions__card fancy-button {
