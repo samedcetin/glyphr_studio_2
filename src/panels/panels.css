@@ -1665,14 +1665,33 @@ nav .item-chooser__wrapper--compact {
 	white-space: nowrap;
 }
 
-/* Show, name, place, turn, delete - one row per custom guide. */
+/*
+	One custom guide, on two rows.
+
+	Five controls in 235px left 63px for the name - three characters, holding
+	`Horizontal guide`. The name gets a row with the two controls that act on
+	the guide as a whole; which way it runs and where it sits get the other.
+*/
 .guides-card__custom-row {
 	grid-column: 1 / -1;
 	display: grid;
-	grid-template-columns: max-content minmax(0, 1fr) 72px max-content max-content;
+	gap: var(--sp-1);
+	width: 100%;
+}
+
+.guides-card__custom-head {
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr) max-content;
 	align-items: center;
 	gap: var(--sp-2);
-	width: 100%;
+	min-height: var(--row-h);
+}
+
+.guides-card__custom-place {
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr);
+	align-items: center;
+	gap: var(--sp-2);
 	min-height: var(--row-h);
 }
 
@@ -1682,6 +1701,42 @@ nav .item-chooser__wrapper--compact {
 	min-width: 0;
 }
 
+/*
+	The two orientations, side by side, with the one it has held down. It was
+	a single button showing the orientation the guide would become, in a row
+	whose other bar icon showed the orientation it has - so the same mark
+	meant the state in one place and the verb in the other.
+
+	They touch, and only the outer corners are rounded: two buttons drawn as
+	one control is what says they are two states of one thing rather than two
+	separate actions.
+*/
+.guides-card__orientation {
+	display: flex;
+}
+
+.guides-card__orientation-button {
+	border-radius: 0;
+	border-color: var(--border-subtle);
+}
+
+.guides-card__orientation-button:first-child {
+	border-radius: var(--r-lg) 0 0 var(--r-lg);
+	corner-shape: var(--corner-smooth);
+}
+
+.guides-card__orientation-button:last-child {
+	border-radius: 0 var(--r-lg) var(--r-lg) 0;
+	corner-shape: var(--corner-smooth);
+	margin-left: -1px;
+}
+
+.guides-card__orientation-button[aria-pressed='true'] {
+	background-color: var(--bg-selected);
+	border-color: transparent;
+	color: var(--text-accent);
+	z-index: 1;
+}
 /*
 	The guide's colour, on its switch. --toggle-on-color is set inline by
 	makeDirectToggle; without one a toggle looks like every other toggle.

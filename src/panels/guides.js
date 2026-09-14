@@ -240,15 +240,17 @@ function fillCustomGuides(card, guides) {
 }
 
 /**
- * One custom guide, on one row: show it, name it, place it, delete it.
+ * One custom guide, on two rows.
  *
- * It used to return six children into a card that collapses to a single
- * column in a sidebar this narrow, so one guide stacked six deep.
+ * It was one row of five controls in 235px, which left 63px for the name -
+ * three characters, holding `Horizontal guide`. And two of those five were
+ * bar icons meaning opposite things: the switch on the left showed the
+ * orientation the guide has, the button on the right showed the orientation
+ * it would become. Nothing said which was the state and which was the verb.
  *
- * The colour well is gone from the row. A custom guide gets a colour when it
- * is made, and changing it is a once-in-a-while thing that was taking a slot
- * on every row forever - the switch carries the colour instead, which is
- * what the row actually needed it for: telling one guide from another.
+ * So: the name gets a row with the two controls that act on the guide as a
+ * whole, and the orientation becomes a pair of buttons side by side with the
+ * current one held down - a state you read rather than a verb you decode.
  *
  * @param {Object} guide
  * @param {Number} number - its index, for delete
@@ -256,42 +258,29 @@ function fillCustomGuides(card, guides) {
  */
 function makeCustomGuideRow(guide, number) {
 	const horizontal = guide.angle === 90;
+	const row = makeElement({ className: 'guides-card__custom-row' });
 
-	const toggle = makeDirectToggle(guide, 'visible', () => {
+	// --------------------------------------------------------------
+	// Whether it is drawn, what it is called, and getting rid of it
+	// --------------------------------------------------------------
+
+	/*
+		An eye, like every other show-and-hide in the app. It used to be the
+		orientation mark, which is what put two bar icons in one row. It keeps
+		the guide's colour, which is the part that was doing real work: it is
+		how you tell one guide from another.
+	*/
+	const showToggle = makeDirectToggle(guide, 'visible', () => {
 		getCurrentProjectEditor().editCanvas.redraw('guides custom view toggle');
 	}, {
-		icon: horizontal ? 'command_horizontalBar' : 'command_verticalBar',
+		icon: 'eye',
 		name: guide.name || 'Guide',
-		body: 'Click the name to rename it, the arrow to turn it.',
+		body: 'Show this guide on the canvas.',
 		color: guide.color,
 	});
 
 	const nameInput = makeSingleInput(guide, 'name', 'editCanvasView', 'input');
 	nameInput.classList.add('guides-card__custom-name');
-
-	const valueInput = makeSingleInput(guide, 'location', 'editCanvasView', 'input-number');
-	valueInput.classList.add('guides-card__custom-value');
-
-	/*
-		Turning a guide and deleting it are both one button, both --control-h,
-		both the corner every other button in the sidebar takes. They were an
-		action button and a bare <button> with a hand-coloured icon in it.
-	*/
-	const angleButton = makeIconButton({
-		icon: horizontal ? 'command_verticalBar' : 'command_horizontalBar',
-		name: horizontal ? 'Make it vertical' : 'Make it horizontal',
-		onClick: () => {
-			const target = getCurrentProject().settings.app.guides.custom[number];
-			if (target.angle === 90) {
-				target.angle = 0;
-				target.name = target.name.replace('Horizontal', 'Vertical');
-			} else {
-				target.angle = 90;
-				target.name = target.name.replace('Vertical', 'Horizontal');
-			}
-			refreshGuideChange();
-		},
-	});
 
 	const deleteButton = makeIconButton({
 		icon: 'delete',
@@ -302,7 +291,58 @@ function makeCustomGuideRow(guide, number) {
 		},
 	});
 
-	const row = makeElement({ className: 'guides-card__custom-row' });
-	addAsChildren(row, [toggle, nameInput, valueInput, angleButton, deleteButton]);
+	const head = makeElement({ className: 'guides-card__custom-head' });
+	addAsChildren(head, [showToggle, nameInput, deleteButton]);
+	row.appendChild(head);
+
+	// --------------------------------------------------------------
+	// Which way it runs, and where
+	// --------------------------------------------------------------
+
+	/**
+	 * @param {Boolean} wantsHorizontal
+	 * @param {String} icon
+	 * @param {String} name
+	 * @returns {HTMLElement}
+	 */
+	const orientationButton = (wantsHorizontal, icon, name) => {
+		const button = makeIconButton({
+			icon: icon,
+			name: name,
+			className: 'guides-card__orientation-button',
+			onClick: () => {
+				const target = getCurrentProject().settings.app.guides.custom[number];
+				if (wantsHorizontal === (target.angle === 90)) return;
+				target.angle = wantsHorizontal ? 90 : 0;
+				target.name = wantsHorizontal
+					? target.name.replace('Vertical', 'Horizontal')
+					: target.name.replace('Horizontal', 'Vertical');
+				refreshGuideChange();
+			},
+		});
+		button.setAttribute('aria-pressed', `${wantsHorizontal === horizontal}`);
+		return button;
+	};
+
+	const orientation = makeElement({ className: 'guides-card__orientation' });
+	addAsChildren(orientation, [
+		orientationButton(true, 'command_horizontalBar', 'Horizontal'),
+		orientationButton(false, 'command_verticalBar', 'Vertical'),
+	]);
+
+	/*
+		The axis, on the field. A horizontal guide sits at a y, a vertical one
+		at an x - so the prefix says which number this is, and it changes when
+		the orientation does.
+	*/
+	const valueInput = makeSingleInput(guide, 'location', 'editCanvasView', 'input-number');
+	valueInput.classList.add('guides-card__custom-value');
+	valueInput.setAttribute('prefix', horizontal ? 'Y' : 'X');
+	valueInput.setAttribute('suffix', 'em');
+
+	const place = makeElement({ className: 'guides-card__custom-place' });
+	addAsChildren(place, [orientation, valueInput]);
+	row.appendChild(place);
+
 	return row;
 }
