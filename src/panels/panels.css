@@ -187,7 +187,13 @@
 */
 .panel__card .doubleInput:has(> button),
 .panel__card .doubleInput:has(> fancy-button) {
-	grid-template-columns: minmax(0, 1fr) var(--sp-2) max-content;
+	/*
+		The middle track was --sp-2 and the button carried its own 2px left
+		margin on top of it, which is how the gap came out at two pixels in
+		one row and four in the next. One column-gap, one number.
+	*/
+	grid-template-columns: minmax(0, 1fr) 0 max-content;
+	column-gap: var(--sp-2);
 
 	/*
 		And it is the height of that field. A fancy-button is 32 on its own,
@@ -207,10 +213,16 @@
 	from the inside - X and Y, W and H, L and R. The 16px track in the middle
 	held a slash that repeated what the label above the pair already said; both
 	are gone. See the affix note in input-number.
+
+	The seam between them is --sp-4, not --sp-2. Four pixels between two 130px
+	fields is narrower than the gap between the rows above and below, so the
+	pair read as one wide control that happened to have a line down it. Eight
+	is the first step that reads as "two things", and it costs two pixels of
+	each field.
 */
 .panel__card .doubleInput--pair {
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	column-gap: var(--sp-2);
+	column-gap: var(--sp-4);
 }
 
 /*
@@ -245,7 +257,8 @@
 	width: var(--control-h);
 	height: var(--control-h);
 	padding: 2px;
-	margin: 0px 0px 0px 2px;
+	/* The row it sits in owns the gap now - see .doubleInput:has(> button). */
+	margin: 0;
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 }
@@ -304,6 +317,15 @@
 .panel__card .doubleInput:has(> .ratio-lock),
 .panel__card .doubleInput:has(> .ratio-lock__gap) {
 	grid-template-columns: minmax(0, 1fr) var(--control-h) minmax(0, 1fr);
+
+	/*
+		The lock sat flush against both fields - zero pixels either side - so
+		the three read as one welded control rather than as a button between
+		two numbers. --sp-2 either side is half the seam an unlocked pair
+		gets, which is right: this button belongs to the two fields it ties
+		together, and should sit closer to them than they sit to each other.
+	*/
+	column-gap: var(--sp-2);
 }
 
 .ratio-lock {

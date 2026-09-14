@@ -264,7 +264,14 @@
 	*/
 	.sidebar__section-body .panel__card {
 		grid-template-columns: minmax(0, 1fr);
-		row-gap: var(--sp-2);
+		/*
+			--sp-3, with the label carrying --sp-3 of its own above it. That
+			makes twelve pixels between a field and the next group label and
+			six between a label and the field it names, so the eye groups them
+			correctly. At --sp-2 both gaps were four and the column read as one
+			undifferentiated stack.
+		*/
+		row-gap: var(--sp-3);
 		/*
 			Collapsed, a label sits on its own row above its control. Holding it
 			to --row-h would spend 28px on one line of 12px text, so rows hug
