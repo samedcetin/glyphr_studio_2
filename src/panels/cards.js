@@ -61,7 +61,14 @@ export function makeInputs_size(item, disabled = false) {
 	// Width and Height
 	let dimensionInputs = makeElement({
 		tag: 'div',
-		className: 'doubleInput doubleInput--full',
+		/*
+			With no lock to hold, this is an ordinary pair and takes the ordinary
+			seam. It used to keep the lock’s 28px slot open so the disabled row
+			would line up with the live one - but they sit in different cards with
+			a rule between them, so nothing was gained, and a 36px hole between two
+			fields reads as a control that failed to render.
+		*/
+		className: `doubleInput doubleInput--full${disabled ? ' doubleInput--pair' : ''}`,
 	});
 	let wInput = makeSingleInput(item, 'width', thisTopic, 'input-number');
 	let hInput = makeSingleInput(item, 'height', thisTopic, 'input-number');
@@ -82,17 +89,7 @@ export function makeInputs_size(item, disabled = false) {
 		slash was already using.
 	*/
 	dimensionInputs.appendChild(wInput);
-	/*
-		A spacer rather than a slash when there is no lock to show. The slash
-		used to separate "width" from "height"; W and H do that from inside the
-		fields now, and a slash between two disabled fields only said that this
-		row is different from the one above it.
-	*/
-	dimensionInputs.appendChild(
-		disabled
-			? makeElement({ tag: 'span', className: 'ratio-lock__gap' })
-			: makeRatioLockToggle(item, thisTopic)
-	);
+	if (!disabled) dimensionInputs.appendChild(makeRatioLockToggle(item, thisTopic));
 	dimensionInputs.appendChild(hInput);
 
 	returnControls.push(dimensionInputs);

@@ -314,8 +314,7 @@
 	stood four pixels short of them, so the row read as a control with a
 	smaller thing wedged in the middle rather than as three parts of one row.
 */
-.panel__card .doubleInput:has(> .ratio-lock),
-.panel__card .doubleInput:has(> .ratio-lock__gap) {
+.panel__card .doubleInput:has(> .ratio-lock) {
 	grid-template-columns: minmax(0, 1fr) var(--control-h) minmax(0, 1fr);
 
 	/*
