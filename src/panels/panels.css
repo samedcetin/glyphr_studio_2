@@ -1239,7 +1239,13 @@ nav .item-chooser__wrapper--compact {
 		Was 58px tall with a 10px gutter and its own box - roughly twice the
 		height of any comparable layers list. Tightened to 40px flat rows.
 	*/
-	border: 1px solid transparent;
+	/*
+		No border. It used to carry a 1px transparent one, and a border is part
+		of the box: it moved the content a pixel in from the column every other
+		row in the sidebar starts on. The marker below draws itself without
+		taking any space, so there is nothing left for a border to do here.
+	*/
+	border: none;
 	padding: var(--sp-1) var(--sp-2);
 	background-color: transparent;
 	border-radius: var(--r-md);
@@ -1260,7 +1266,6 @@ nav .item-chooser__wrapper--compact {
 .item-link__row:hover,
 .item-link__row:active {
 	background-color: var(--bg-hover);
-	border-color: transparent;
 	cursor: pointer;
 }
 
@@ -1311,27 +1316,28 @@ nav .item-chooser__wrapper--compact {
 	font-style: italic;
 }
 
-.layer-panel__path-row {
-	/*
-		Paths and Component Instances are genuinely different things, so the
-		distinction survives - but as a 2px leading edge marker rather than a
-		tinted row, which is what keeps the list readable at this density.
-	*/
-	border-left: 2px solid var(--accent);
-}
+/*
+	Paths and Component Instances are genuinely different things, so the
+	distinction survives - but as a 2px leading edge marker rather than a
+	tinted row, which is what keeps the list readable at this density.
 
-.layer-panel__path-row.layer-panel__selected {
-	background-color: var(--bg-selected);
-	border-left-color: var(--accent);
+	An inset shadow, not a border. As a border it was 2px of the box, so every
+	layer row started its content 2px right of the column and ended 1px left of
+	it - the one list in the left panel that did not line up. A shadow paints
+	in the same place, follows the same corner, and costs no layout. It also
+	leaves both pseudo-elements free for the drop indicators.
+*/
+.layer-panel__path-row {
+	box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .layer-panel__component-row {
-	border-left: 2px solid var(--ok);
+	box-shadow: inset 2px 0 0 var(--ok);
 }
 
+.layer-panel__path-row.layer-panel__selected,
 .layer-panel__component-row.layer-panel__selected {
 	background-color: var(--bg-selected);
-	border-left-color: var(--ok);
 }
 
 .layer-panel__path-row:hover,
