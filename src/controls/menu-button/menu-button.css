@@ -278,3 +278,75 @@
 	color: var(--text-disabled);
 	border-color: var(--border-subtle);
 }
+
+/* --------------------------------------------------------------
+	Popover variant
+	--------------------------------------------------------------
+	One button rather than a face and a chevron, and a menu that holds
+	whatever the caller built rather than a list of rows. Everything about
+	where it opens and how it closes is shared with the menus above.
+	------------------------------------------------------------ */
+
+.menu-button--popover .menu-button__face {
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+}
+
+/*
+	Sized by its content. The row menus hold a floor open so a tool name is
+	never clipped; a grid of 28px squares wants to be exactly as wide as the
+	widest grid in it and no wider.
+*/
+.menu-button__menu--popover {
+	min-width: 0;
+	max-width: min(360px, 80vw);
+	padding: var(--sp-4);
+	gap: 0;
+}
+
+/*
+	Right-aligned: this is the last control in the bar, so a left-aligned
+	popover would open off the edge of the canvas.
+*/
+.menu-button__menu--popover {
+	left: auto;
+	right: 0;
+}
+
+.quick-actions__content {
+	display: grid;
+	gap: var(--sp-2);
+}
+
+/* The group name, in the app's eyebrow. */
+.quick-actions__content h3 {
+	margin: 0;
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+}
+
+/* A heading that follows a grid needs air above it; the first does not. */
+.quick-actions__content h3:not(:first-child) {
+	margin-top: var(--sp-3);
+}
+
+/*
+	The grids keep the shape they had in the panel, but a popover is not a
+	260px column - they lay out to six across rather than to whatever the
+	sidebar had been dragged to.
+*/
+.quick-actions__content .panel__actions-area {
+	grid-template-columns: repeat(6, var(--action-icon-size));
+	margin-bottom: 0;
+	width: max-content;
+}
+
+.quick-actions__empty {
+	max-width: 30ch;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}

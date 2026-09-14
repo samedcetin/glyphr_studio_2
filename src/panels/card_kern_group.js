@@ -37,7 +37,9 @@ export function makeCard_kernGroup(kernGroup) {
 	]);
 
 	addAsChildren(kernGroupCard, rowPad());
-	addAsChildren(kernGroupCard, makeActionsArea_KernGroup());
+	/*
+		The action grid moved to the toolbar - see edit_canvas/quick_actions.js.
+	*/
 
 	// log(`makeCard_kernGroup`, 'end');
 	return kernGroupCard;

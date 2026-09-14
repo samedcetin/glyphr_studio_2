@@ -1,3 +1,4 @@
+import { makeQuickActionsButton } from '../quick_actions.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
 import { addAsChildren, makeElement } from '../../common/dom.js';
 import { makeLineIcon } from '../../common/icons.js';
@@ -226,6 +227,15 @@ export function fillEditorToolBar(content, toolButtons = []) {
 		children.push(makeElement({ className: 'editor-page__strip-divider' }));
 	}
 	children = children.concat(makeViewToolsButtons());
+
+	/*
+		The action grids that used to sit under the Properties fields. Last in
+		the bar because it acts on the selection, where everything before it
+		changes how the canvas is read.
+	*/
+	children.push(makeElement({ className: 'editor-page__strip-divider' }));
+	children.push(makeQuickActionsButton().element);
+
 	addAsChildren(bar, children);
 	return true;
 }

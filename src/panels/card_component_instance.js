@@ -1,5 +1,4 @@
 import { addAsChildren, makeElement } from '../common/dom.js';
-import { makeActionsArea_ComponentInstance } from './actions.js';
 import {
 	makeLinkReferenceRow,
 	makeSingleCheckbox,
@@ -117,7 +116,11 @@ export function makeCard_componentInstanceAttributes(componentInstance) {
 	}
 	addAsChildren(componentInstanceCard, [rowPad(), linkLabel, linkRow]);
 	addAsChildren(componentInstanceCard, rowPad());
-	addAsChildren(componentInstanceCard, makeActionsArea_ComponentInstance());
+	/*
+		The action grid moved to the toolbar - see edit_canvas/quick_actions.js.
+		Thirty-one icon buttons at the foot of a 260px column was a lot of the
+		panel spent on things reached for occasionally, in a panel for properties.
+	*/
 
 	// log(`makeCard_componentInstanceAttributes`, 'end');
 	return componentInstanceCard;

@@ -281,3 +281,124 @@ export function makeMenuButton({
 		getActiveID: () => currentID,
 	};
 }
+
+/**
+ * The same popover, opened by one button, holding whatever the caller builds.
+ *
+ * makeMenuButton above is a split control over a list of items - right for a
+ * family of tools, wrong for a panel of buttons. This shares its machinery
+ * rather than growing a second one: the same open set, so Escape and an
+ * outside click still close everything at once; the same `.menu-button__menu`
+ * box, so it is positioned by CSS and sits where a tool menu sits.
+ *
+ * Content is built on open rather than once, because what these popovers hold
+ * depends on what is selected at the moment they are asked for.
+ *
+ * @param {Object} args
+ * @param {String} args.icon - SVG markup for the face
+ * @param {String} args.label - accessible name and tooltip
+ * @param {Function} args.buildContent - returns the element to show
+ * @param {String =} args.className - extra class on the wrapper
+ * @param {Boolean =} args.openUp - open above the button
+ * @param {Function =} args.isDisabled - asked on every open
+ * @returns {Object} - { element, refresh, close }
+ */
+export function makePopoverButton({
+	icon = '',
+	label = '',
+	buildContent = () => makeElement(),
+	className = '',
+	openUp = false,
+	isDisabled = () => false,
+}) {
+	attachGlobalListeners();
+
+	let isOpen = false;
+
+	const wrapper = makeElement({
+		className: `menu-button menu-button--popover${className ? ' ' + className : ''}`,
+	});
+
+	const face = makeElement({
+		tag: 'button',
+		className: 'menu-button__face',
+		innerHTML: icon,
+		attributes: {
+			type: 'button',
+			title: label,
+			'aria-label': label,
+			'aria-haspopup': 'dialog',
+			'aria-expanded': 'false',
+		},
+	});
+
+	const menu = makeElement({
+		className: `menu-button__menu menu-button__menu--popover${
+			openUp ? ' menu-button__menu--up' : ''
+		}`,
+		attributes: { role: 'group', 'aria-label': label },
+	});
+	menu.hidden = true;
+
+	function open() {
+		if (isOpen || isDisabled()) return;
+		closeAllMenuButtons();
+
+		menu.innerHTML = '';
+		menu.appendChild(buildContent());
+
+		menu.hidden = false;
+		isOpen = true;
+		wrapper.classList.add('menu-button--open');
+		face.setAttribute('aria-expanded', 'true');
+		openMenus.add(close);
+
+		/** @type {HTMLElement} */ (menu.querySelector('button:not([disabled])'))?.focus();
+	}
+
+	function close({ returnFocus = false } = {}) {
+		if (!isOpen) return;
+		menu.hidden = true;
+		isOpen = false;
+		wrapper.classList.remove('menu-button--open');
+		face.setAttribute('aria-expanded', 'false');
+		openMenus.delete(close);
+		if (returnFocus) face.focus();
+	}
+
+	face.addEventListener('click', () => {
+		if (isOpen) close({ returnFocus: true });
+		else open();
+	});
+
+	/* Acting on something in here is the end of the errand. */
+	menu.addEventListener('click', (event) => {
+		if (/** @type {Element} */ (event.target).closest('button')) close();
+	});
+
+	menu.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			event.stopPropagation();
+			close({ returnFocus: true });
+		} else if (event.key === 'Tab' && !event.shiftKey) {
+			const buttons = [...menu.querySelectorAll('button:not([disabled])')];
+			if (document.activeElement === buttons.at(-1)) close();
+		}
+	});
+
+	wrapper.appendChild(face);
+	wrapper.appendChild(menu);
+
+	return {
+		element: wrapper,
+		/** Reflects a changed disabled state without rebuilding the button. */
+		refresh() {
+			const off = isDisabled();
+			if (off) face.setAttribute('disabled', 'disabled');
+			else face.removeAttribute('disabled');
+			if (off) close();
+		},
+		close,
+	};
+}
