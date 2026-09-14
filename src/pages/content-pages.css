@@ -1849,14 +1849,21 @@ span.spacer {
 	tabs instead of styling the selected tab is what makes it slide: the
 	selected tab only changes its text, and the thumb travels to meet it.
 
-	Both radii carry the app's corner smoothing. The thumb's radius is the
-	track's less the inset, so the two curves stay concentric - a thumb with
-	the same radius as its track looks pinched at the corners.
+	Both radii carry the app's corner smoothing. The track takes the same
+	radius as the settings card under it, so the two read as one family; the
+	thumb's radius is the track's less the inset, so the two curves stay
+	concentric - a thumb with the same radius as its track looks pinched at
+	the corners.
+
+	Sized up from the default control height: this is the page's one control
+	and it sits alone on a row, so it can afford to be as tall as a toolbar
+	segment on the desktop rather than a form field.
 */
 
 .settings__tabs .tab-control__tab-container {
-	--seg-inset: 3px;
-	--seg-radius: var(--r-lg);
+	--seg-inset: 4px;
+	--seg-radius: var(--r-3xl);
+	--seg-tab-h: 36px;
 	position: relative;
 	display: inline-flex;
 	align-items: center;
@@ -1907,14 +1914,15 @@ span.spacer {
 	position: relative;
 	z-index: 1;
 	width: auto;
-	height: calc(var(--control-h-lg) - var(--seg-inset) * 2);
-	padding: 0 var(--sp-4);
+	height: var(--seg-tab-h);
+	padding: 0 var(--sp-6);
+	gap: var(--sp-3);
 	border: none;
 	border-radius: calc(var(--seg-radius) - var(--seg-inset));
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--text-secondary);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-md);
 	font-weight: var(--fw-medium);
 	transition: color var(--dur-fast) ease;
 }
@@ -1933,6 +1941,11 @@ span.spacer {
 .settings__tabs .tab-control__tab .tab-control__icon {
 	color: var(--icon-default);
 	transition: color var(--dur-fast) ease;
+}
+
+.settings__tabs .tab-control__tab .tab-control__icon svg {
+	width: 18px;
+	height: 18px;
 }
 
 .settings__tabs .tab-control__tab[selected] .tab-control__icon,
