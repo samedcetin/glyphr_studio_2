@@ -1064,9 +1064,10 @@ nav .item-chooser__wrapper--compact {
 }
 
 /*
-	A row grows with its groups rather than clipping them. A kern class in a
-	real font runs to twenty characters; `overflow: hidden` on a 40px row
-	answered that by hiding the half you had not seen yet.
+	One line per row, always. Letting a row grow with its members made the
+	list ragged - 62px against 34 - and a kern class of twenty characters
+	would have made it four lines deep. The members scroll instead, so the
+	row height is constant and nothing is dropped: see the two cells below.
 */
 .kern-group-chooser__row {
 	display: grid;
@@ -1110,14 +1111,49 @@ nav .item-chooser__wrapper--compact {
 	color: var(--text-accent);
 }
 
-/* Each side pushed up against the rule, so the pair reads inwards. */
+/*
+	Each side pushed up against the rule, so the pair reads inwards, and each
+	on one line that scrolls rather than wrapping or clipping.
+
+	The scrollbar is hidden because a thin one under a 24px chip would not fit
+	in a 34px row - the fade at the outer edge is what says there is more, and
+	when the members fit, that edge is empty and the fade shows nothing.
+*/
 .kern-group-chooser__left-members,
 .kern-group-chooser__right-members {
 	min-width: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.kern-group-chooser__left-members::-webkit-scrollbar,
+.kern-group-chooser__right-members::-webkit-scrollbar {
+	display: none;
+}
+
+.kern-group-chooser__left-members .kern-chips,
+.kern-group-chooser__right-members .kern-chips {
+	flex-wrap: nowrap;
+	width: max-content;
+}
+
+/*
+	The left side is laid out right to left, so its overflow runs away from
+	the rule instead of over it: the characters nearest the pair stay put and
+	the rest scroll off the outside. The chips themselves are read left to
+	right, hence the inner direction.
+*/
+.kern-group-chooser__left-members {
+	direction: rtl;
+	mask-image: linear-gradient(to right, transparent 0, #000 var(--sp-6), #000 100%);
 }
 
 .kern-group-chooser__left-members .kern-chips {
-	justify-content: flex-end;
+	direction: ltr;
+}
+
+.kern-group-chooser__right-members {
+	mask-image: linear-gradient(to left, transparent 0, #000 var(--sp-6), #000 100%);
 }
 
 .kern-group-chooser__members-divider {
