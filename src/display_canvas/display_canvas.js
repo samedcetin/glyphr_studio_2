@@ -19,6 +19,34 @@ import { TextBlockOptions } from './text_block_options.js';
 // textarea (which uses pagePadding only), keeping the previews aligned.
 const EXTRA_TOP_PADDING = 0;
 
+/*
+	The attributes this element answers to, at module scope.
+
+	They used to be built in the constructor, as this.observedAttrs - and the
+	static observedAttributes getter returned `this.observedAttrs`, where
+	`this` is the class rather than an instance. So it returned undefined, the
+	browser observed nothing, and attributeChangedCallback never once fired:
+	setting text or font-size on a canvas that was already on the page did
+	nothing at all.
+
+	It looked like it worked because connectedCallback walks the same list by
+	hand and applies whatever attributes are already there, so the first draw
+	was always right. Only later changes were dropped - which is every live
+	control anything has ever tried to put on one of these.
+*/
+const OBSERVED_ATTRIBUTES = [
+	'text',
+	'font-size',
+	'line-gap',
+	'page-padding',
+	'page-width',
+	'show-page-extras',
+	'show-line-extras',
+	'show-character-extras',
+	'show-placeholder-message',
+	'width-adjustment',
+];
+
 /**
  * DisplayCanvas takes a string of glyphs and displays them on the canvas
  * No editing involved
@@ -37,17 +65,7 @@ export class DisplayCanvas extends HTMLElement {
 
 		this.isSetUp = false;
 		this.initialAttributes = attributes;
-		this.observedAttrs = [
-			'text',
-			'font-size',
-			'line-gap',
-			'page-padding',
-			'show-page-extras',
-			'show-line-extras',
-			'show-character-extras',
-			'show-placeholder-message',
-			'width-adjustment',
-		];
+		this.observedAttrs = OBSERVED_ATTRIBUTES;
 
 		// log(`DisplayCanvas.constructor`, 'end');
 	}
@@ -105,7 +123,13 @@ export class DisplayCanvas extends HTMLElement {
 				if (key.startsWith('show')) {
 					if (value === 'false') value = false;
 					else value = true;
-				} else if (key !== 'text') {
+				} else if (key !== 'text' && key !== 'page-width') {
+					/*
+						page-width is left a string: it takes the keywords 'fit'
+						and 'auto' as well as a number, and updateCanvasSize
+						parses it itself. Run through parseFloat here, 'auto'
+						arrived as NaN and the canvas came out 1000px wide.
+					*/
 					value = parseFloat(value);
 				}
 
@@ -190,6 +214,15 @@ export class DisplayCanvas extends HTMLElement {
 		// Widths
 		if (pageWidth === 'fit') {
 			newWidth = clientRect.width;
+		} else if (pageWidth === 'auto') {
+			/*
+				As wide as the text, the way 'auto' already works for height.
+				A canvas sized to its container draws from the container's left
+				edge and there is nowhere for CSS to move the pixels, so this is
+				what lets a caller centre one: size it to its contents and let
+				the box be centred instead.
+			*/
+			newWidth = this.textBlock.pixelWidth + this.textBlockOptions.pagePadding * 2;
 		} else if (!isNaN(parseInt(pageWidth))) {
 			newWidth = parseInt(pageWidth);
 		}
@@ -282,8 +315,7 @@ export class DisplayCanvas extends HTMLElement {
 	 * Specify which attributes are observed and trigger attributeChangedCallback
 	 */
 	static get observedAttributes() {
-		// @ts-expect-error 'property does exist'
-		return this.observedAttrs;
+		return OBSERVED_ATTRIBUTES;
 	}
 
 	/**
@@ -298,6 +330,19 @@ export class DisplayCanvas extends HTMLElement {
 		// log(this);
 
 		if (this.constructor.name !== 'DisplayCanvas') return;
+
+		/*
+			Nothing to change yet. Attributes set before the element is in the
+			document - which is every one of them, since makeElement sets them
+			on a freshly constructed node - land here before connectedCallback
+			has made this.textBlockOptions, and every branch below writes to it.
+			connectedCallback reads the attributes off the element itself, so
+			there is nothing lost by sitting these out.
+
+			It never came up while observedAttributes was returning undefined
+			and this method was dead.
+		*/
+		if (!this.isSetUp) return;
 
 		if (attributeName === 'text') {
 			this.textBlockOptions.text = newValue;
@@ -316,6 +361,11 @@ export class DisplayCanvas extends HTMLElement {
 
 		if (attributeName === 'page-padding') {
 			this.textBlockOptions.pagePadding = Math.max(parseInt(newValue), 0);
+			this.resizeAndRedraw();
+		}
+
+		if (attributeName === 'page-width') {
+			this.textBlockOptions.pageWidth = newValue;
 			this.resizeAndRedraw();
 		}
 

@@ -2,54 +2,81 @@ import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { addAsChildren, makeElement, textToNode } from '../common/dom.js';
 import { showToast } from '../controls/dialogs/dialogs.js';
 import { TabControl } from '../controls/tabs/tab_control.js';
-import { makeDirectCheckbox } from '../panels/cards.js';
-import { makeNavButton, toggleNavDropdown } from '../project_editor/navigator.js';
+import { makeDirectToggle } from '../panels/cards.js';
 import { makeSettingsTabContentApp } from './settings_app.js';
 import settingsMap from './settings_data.js';
 import { makeSettingsTabContentFont } from './settings_font.js';
 import { makeSettingsTabContentProject } from './settings_project.js';
 
 /**
+	PAGE > SETTINGS
+	---------------
+	One place to edit all the settings for Blue Rain Type.
+
+	WHAT THIS PAGE WAS. The content-page shell: a 450px column holding a
+	dropdown repeating the page you were already on, and under it the three
+	tab names as a vertical list - 450 pixels wide to hold the words Project,
+	Font and App - beside the settings themselves.
+
+	It is the same shape as the other content pages now: the shared shell, the
+	tabs as a row of three under the head, and the settings in one card that
+	scrolls. See .studio-page and .studio-card in content-pages.css.
+ */
+
+/**
  * Page > Settings
- * One place to edit all the settings for Glyphr Studio.
  * @returns {Element} - page content
  */
 export function makePage_Settings() {
-	const content = makeElement({
-		tag: 'div',
-		id: 'app__page',
-		innerHTML: `
-		<div class="content__page">
-			<div class="content-page__left-area">
-				<div class="content-page__nav-area">
-					${makeNavButton({ level: 'l1', superTitle: 'PAGE', title: 'Settings' })}
-				</div>
-				<div id="content-page__panel">
-				</div>
-			</div>
-			<div class="content-page__right-area">
-			</div>
-		</div>
-		`,
-	});
+	const project = getCurrentProject();
 
-	let panelArea = content.querySelector('#content-page__panel');
-	let rightArea = content.querySelector('.content-page__right-area');
+	const content = makeElement({ tag: 'div', id: 'app__page' });
+	const page = makeElement({ className: 'studio-page settings' });
+	content.appendChild(page);
 
-	const tabControl = new TabControl(rightArea);
+	// --- Head ----------------------------------------------------
+	const head = makeElement({ className: 'studio-page__head' });
+	const titles = makeElement({ className: 'studio-page__titles' });
+	titles.appendChild(
+		makeElement({ tag: 'h1', className: 'studio-page__title', content: 'Settings' })
+	);
+	titles.appendChild(
+		makeElement({
+			className: 'studio-page__subtitle',
+			content: 'How this project, this font, and the app behave.',
+		})
+	);
+	head.appendChild(titles);
+
+	const context = makeElement({ className: 'studio-page__context' });
+	context.appendChild(makeElement({ tag: 'span', content: project.settings.font.family }));
+	context.appendChild(makeElement({ tag: 'span', className: 'studio-page__dot' }));
+	context.appendChild(
+		makeElement({ tag: 'span', content: project.settings.font.style || 'Regular' })
+	);
+	head.appendChild(context);
+	page.appendChild(head);
+
+	// --- Tabs, and what they switch ------------------------------
+	const body = makeElement({ className: 'studio-card settings__body' });
+	const tabControl = new TabControl(body);
 
 	tabControl.registerTab('Project', makeSettingsTabContentProject);
 	tabControl.registerTab('Font', makeSettingsTabContentFont);
 	tabControl.registerTab('App', makeSettingsTabContentApp);
 
-	addAsChildren(panelArea, tabControl.makeTabs());
-	tabControl.selectTab('Project');
+	/*
+		A row rather than a column. The control builds a stack of full-width
+		tabs, which is right in a narrow panel and was what put three words in
+		a 450px column; the row treatment is scoped to this page, so About and
+		Help - the other two callers - keep theirs.
+	*/
+	const tabs = makeElement({ className: 'settings__tabs' });
+	addAsChildren(tabs, tabControl.makeTabs());
+	page.appendChild(tabs);
 
-	// Page Selector
-	let l1 = content.querySelector('#nav-button-l1');
-	l1.addEventListener('click', function () {
-		toggleNavDropdown(l1);
-	});
+	page.appendChild(body);
+	tabControl.selectTab('Project');
 
 	return content;
 }
@@ -123,19 +150,32 @@ export function makeOneSettingsRow(groupName, propertyName, callback, inputFirst
 	}
 
 	if (settingType === 'Boolean') {
-		input = makeDirectCheckbox(settings[groupName], propertyName, callback);
-		if (propertyName === 'showNonCharPoints') {
-			input.addEventListener('change', () => {
-				const project = getCurrentProject();
-				// log(`Clearing all Character Range Caches`);
-				// log(`\n⮟project.settings.project.characterRanges⮟`);
-				// log(project.settings.project.characterRanges);
-				project.settings.project.characterRanges.forEach((range) => {
-					range.cachedArray = false;
-				});
-				getCurrentProjectEditor().selectedCharacterRange.cachedArray = false;
+		/*
+			A toggle, like every other on-or-off control in the app. It was a
+			native checkbox, and the one thing that had to change with it is how
+			the extra work below attaches: a checkbox fires `change` and a button
+			does not, so what was a second listener is part of the callback now.
+
+			No description on the switch. Every row already carries one in the
+			info bubble beside its label, and these run to paragraphs.
+		*/
+		const clearRangeCaches = () => {
+			const project = getCurrentProject();
+			project.settings.project.characterRanges.forEach((range) => {
+				range.cachedArray = false;
 			});
-		}
+			getCurrentProjectEditor().selectedCharacterRange.cachedArray = false;
+		};
+
+		input = makeDirectToggle(
+			settings[groupName],
+			propertyName,
+			(newValue) => {
+				if (propertyName === 'showNonCharPoints') clearRangeCaches();
+				if (callback) callback(newValue);
+			},
+			{ icon: 'check', name: thisSetting.label }
+		);
 	} else {
 		type = makeElement({
 			tag: 'pre',

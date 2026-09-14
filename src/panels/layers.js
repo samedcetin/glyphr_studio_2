@@ -1,7 +1,6 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
-import { addAsChildren, makeElement } from '../common/dom.js';
+import { makeElement } from '../common/dom.js';
 import { eventHandlerData } from '../edit_canvas/events.js';
-import { addChildActions, getActionData } from './actions.js';
 import { panelsEventHandlerData } from './panel_events.js';
 import { refreshPanel } from './panels.js';
 import { startRenamingInPlace } from './cards.js';
@@ -251,7 +250,19 @@ export function makePanel_Layers() {
 	});
 
 	// log(`makePanel_Layers`, 'end');
-	return [rowsArea, makeActionArea_Layers()];
+	/*
+		The list, and nothing under it.
+
+		An Actions card used to follow it: a grid of icon buttons for adding a
+		path, pulling paths in from another glyph or project, and the layer
+		arrangement commands. All of them are in the toolbar's quick actions -
+		the add and get commands under Edit, the arrangement ones under Shape -
+		and on a wider condition than the card used, which only offered the
+		layer group once a glyph had more than one path. It was a second place
+		to reach for the same buttons, in the panel that says what is in the
+		glyph rather than what you can do to it.
+	*/
+	return [rowsArea];
 }
 
 /**
@@ -310,28 +321,4 @@ function addLayerDragHandlers(row, shapeIndex, item) {
 
 		moveShapeToIndex(item, fromIndex, toIndex);
 	});
-}
-
-function makeActionArea_Layers() {
-	const editor = getCurrentProjectEditor();
-
-	let actionsCard = makeElement({
-		className: 'panel__card full-width',
-		content: '<h3>Actions</h3>',
-	});
-
-	let actionsArea = makeElement({
-		tag: 'div',
-		className: 'panel__actions-area',
-	});
-	addChildActions(actionsArea, getActionData('addShapeActions'));
-
-	let selectedPaths = editor.multiSelect.shapes.members;
-	let totalPaths = editor.selectedItem.shapes.length;
-	if (totalPaths > 1 && selectedPaths.length) {
-		addChildActions(actionsArea, getActionData('layerActions'));
-	}
-
-	addAsChildren(actionsCard, actionsArea);
-	return actionsCard;
 }

@@ -1,4 +1,3 @@
-import { SUPPORT_EMAIL } from '../app/brand.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { decToHex } from '../common/character_ids.js';
 import { addAsChildren, makeElement, textToNode } from '../common/dom.js';
@@ -9,9 +8,9 @@ import {
 	showModalDialog,
 	showToast,
 } from '../controls/dialogs/dialogs.js';
+import { makeDirectToggle } from '../panels/cards.js';
 import { CharacterRange } from '../project_data/character_range.js';
 import { glyphChanged } from '../project_editor/cross_item_actions.js';
-import { makeNavButton, toggleNavDropdown } from '../project_editor/navigator.js';
 import {
 	makeCard_AllCaps,
 	makeCard_Diacritics,
@@ -29,111 +28,180 @@ import {
 } from './global_actions_cards.js';
 import { updateAllCharacterRangeCounts } from './settings_project.js';
 /**
+	PAGE > GLOBAL ACTIONS
+	---------------------
+	Things you do to the whole font at once.
+
+	WHAT THIS PAGE WAS. The content-page shell: a 450px column holding a
+	dropdown repeating the page you were already on, the filters, a bulleted
+	wall of caveats, and an invitation to email in ideas - beside a single
+	column of thirteen action cards.
+
+	It is the same shape as the Overview and the Live preview now: the shared
+	page shell, one scope at the top because every action below obeys it, and
+	the actions themselves laid out in a grid rather than stacked one per
+	screen. See .studio-page and .studio-card in content-pages.css.
+
+	The caveats are one line under the scope. Three of the four were about the
+	selection - what it does not reach, and that it all undoes at once - which
+	is what the scope block is; the fourth is about component roots, and every
+	card that can hit that already says so in its own warning.
+ */
+
+/**
  * Page > Global Actions
- * Various actions that can be applied to all glyphs.
  * @returns {Element} - page content
  */
 export function makePage_GlobalActions() {
 	// Start things off by defaulting to selecting all ranges
 	selectAllRanges();
 
-	const content = makeElement({
-		tag: 'div',
-		id: 'app__page',
-		innerHTML: `
-		<div class="content__page">
-			<div class="content-page__left-area">
-				<div class="content-page__nav-area">
-					${makeNavButton({ level: 'l1', superTitle: 'PAGE', title: 'Global actions' })}
-				</div>
-				<div id="content-page__panel">
-				<span class="panel__card">
-					<h3>Filters</h3>
-					<p class="full-width">
-						By default, global actions affect all characters, ligatures, and components. The
-						filters below can be used to target more specific ranges.
-						<br><br>
-					</p>
-					<span id="globalActionsCharacterRangesDisplay">
-						${itemFilterInputs.characterRanges.length} ranges selected
-					</span>
-						<fancy-button id="showFilterDialogButton" secondary>Select character ranges</fancy-button>
-						<label for="globalActionsSelectLigaturesCheckbox">Ligatures</label>
-						<input type="checkbox" checked id="globalActionsSelectLigaturesCheckbox" />
-						<label for="globalActionsSelectComponentsCheckbox">Components</label>
-						<input type="checkbox" checked id="globalActionsSelectComponentsCheckbox" />
-					</span>
-					<span class="panel__card full-width">
-						<h3>Some notes</h3>
-						Global Actions are actions that affect many items at once.
-						<ul>
-							<li>Actions taken here will not carry forward to items that haven't been created yet.</li>
-							<li>Global actions to not affect hidden character ranges.</li>
-							<li>Changes will be grouped together in one History entry. Hitting 'Undo' will undo all changes made by the global action.</li>
-							<li>Components or Characters that are used as Component Roots in selected
-								ranges may be linked to Component Instances outside of selected ranges. Moving or scaling Component
-								Roots may have effects outside of selected ranges.</li>
-						</ul>
-					</span>
-					<span class="panel__card full-width">
-						Have an idea for a new global action?  They are easy for us to add - email us your idea!
-						<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
-					</span>
-				</div>
-			</div>
-			<div class="content-page__right-area">
-			</div>
-		</div>
-	`,
+	const content = makeElement({ tag: 'div', id: 'app__page' });
+	const page = makeElement({ className: 'studio-page global-actions' });
+	content.appendChild(page);
+
+	page.appendChild(makeGlobalActionsHead());
+	page.appendChild(makeScopeCard());
+
+	const groups = makeElement({ className: 'global-actions__groups' });
+	/** @type {Array<[String, Array<Element>]>} */
+	const sections = [
+		[
+			'Move and resize',
+			[
+				makeCard_Move(),
+				makeCard_ScaleHorizontal(),
+				makeCard_ScaleVertical(),
+				makeCard_Resize(),
+				makeCard_Skew(),
+				makeCard_SideBearings(),
+			],
+		],
+		['Project cleanup', [makeCard_Flatten(), makeCard_Round(), makeCard_RemoveItems()]],
+		['Font types', [makeCard_Monospace(), makeCard_AllCaps()]],
+		['Diacritics', [makeCard_Diacritics(), makeCard_DiacriticsAdvanced()]],
+	];
+
+	sections.forEach(([title, cards]) => {
+		groups.appendChild(
+			makeElement({ tag: 'h2', className: 'global-actions__group-title', content: title })
+		);
+		const grid = makeElement({ className: 'global-actions__grid' });
+		cards.forEach((card) => {
+			/* The cards build themselves - see global_actions_cards.js. All this
+				adds is the page's own card treatment. */
+			card.classList.add('studio-card');
+			grid.appendChild(card);
+		});
+		groups.appendChild(grid);
 	});
-
-	// Page Selector
-	let l1 = content.querySelector('#nav-button-l1');
-	l1.addEventListener('click', function () {
-		toggleNavDropdown(l1);
-	});
-
-	const rightArea = content.querySelector('.content-page__right-area');
-	rightArea.innerHTML += ``;
-
-	let showFilterDialogButton = content.querySelector('#showFilterDialogButton');
-	showFilterDialogButton.addEventListener('click', showFilterDialog);
-
-	/** @type {HTMLInputElement} */
-	let ligatureCheckbox = content.querySelector('#globalActionsSelectLigaturesCheckbox');
-	ligatureCheckbox.addEventListener('change', () => {
-		itemFilterInputs.ligatures = ligatureCheckbox.checked;
-		// log(`itemFilterInputs.ligatures is now ${itemFilterInputs.ligatures}`);
-	});
-
-	/** @type {HTMLInputElement} */
-	let componentCheckbox = content.querySelector('#globalActionsSelectComponentsCheckbox');
-	componentCheckbox.addEventListener('change', () => {
-		itemFilterInputs.components = componentCheckbox.checked;
-		// log(`itemFilterInputs.components is now ${itemFilterInputs.components}`);
-	});
-
-	addAsChildren(rightArea, [
-		makeElement({ tag: 'h1', content: 'Move and resize' }),
-		makeCard_Move(),
-		makeCard_ScaleHorizontal(),
-		makeCard_ScaleVertical(),
-		makeCard_Resize(),
-		makeCard_Skew(),
-		makeCard_SideBearings(),
-		makeElement({ tag: 'h1', content: 'Project cleanup' }),
-		makeCard_Flatten(),
-		makeCard_Round(),
-		makeCard_RemoveItems(),
-		makeElement({ tag: 'h1', content: 'Font types' }),
-		makeCard_Monospace(),
-		makeCard_AllCaps(),
-		makeElement({ tag: 'h1', content: 'Diacritics' }),
-		makeCard_Diacritics(),
-		makeCard_DiacriticsAdvanced(),
-	]);
+	page.appendChild(groups);
 
 	return content;
+}
+
+/**
+ * @returns {Element}
+ */
+function makeGlobalActionsHead() {
+	const project = getCurrentProject();
+	const head = makeElement({ className: 'studio-page__head' });
+
+	const titles = makeElement({ className: 'studio-page__titles' });
+	titles.appendChild(
+		makeElement({ tag: 'h1', className: 'studio-page__title', content: 'Global actions' })
+	);
+	titles.appendChild(
+		makeElement({
+			className: 'studio-page__subtitle',
+			content: 'Change every glyph in the font at once.',
+		})
+	);
+	head.appendChild(titles);
+
+	const context = makeElement({ className: 'studio-page__context' });
+	context.appendChild(makeElement({ tag: 'span', content: project.settings.font.family }));
+	context.appendChild(makeElement({ tag: 'span', className: 'studio-page__dot' }));
+	context.appendChild(
+		makeElement({ tag: 'span', content: project.settings.font.style || 'Regular' })
+	);
+	head.appendChild(context);
+
+	return head;
+}
+
+/**
+ * What the actions below will run on.
+ *
+ * At the top, full width, because it is not one more setting among the
+ * thirteen cards - it is the sentence every one of them finishes.
+ *
+ * @returns {Element}
+ */
+function makeScopeCard() {
+	const card = makeElement({ className: 'studio-card global-actions__scope' });
+	card.appendChild(makeElement({ className: 'studio-eyebrow', content: 'Scope' }));
+
+	const row = makeElement({ className: 'global-actions__scope-row' });
+
+	const ranges = makeElement({ className: 'global-actions__ranges' });
+	ranges.appendChild(
+		makeElement({
+			tag: 'span',
+			id: 'globalActionsCharacterRangesDisplay',
+			className: 'global-actions__range-count',
+			content: rangeCountLabel(),
+		})
+	);
+	const chooseButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		content: 'Select character ranges',
+	});
+	chooseButton.addEventListener('click', showFilterDialog);
+	ranges.appendChild(chooseButton);
+	row.appendChild(ranges);
+
+	/*
+		Ligatures and Components as toggles rather than checkboxes, which is
+		what the rest of the app switched to - and what these are: two things
+		that are either in the scope or out of it.
+	*/
+	const types = makeElement({ className: 'global-actions__types' });
+	[
+		['Ligatures', 'ligatures', 'page_ligatures'],
+		['Components', 'components', 'page_components'],
+	].forEach(([label, property, icon]) => {
+		const group = makeElement({ className: 'global-actions__type' });
+		group.appendChild(makeElement({ tag: 'span', content: label }));
+		group.appendChild(
+			makeDirectToggle(itemFilterInputs, property, () => {}, {
+				icon: icon,
+				name: label,
+				body: `Include ${label.toLowerCase()} in every action on this page.`,
+			})
+		);
+		types.appendChild(group);
+	});
+	row.appendChild(types);
+	card.appendChild(row);
+
+	card.appendChild(
+		makeElement({
+			className: 'global-actions__scope-note',
+			content: `Everything below runs on this selection and lands in one History entry, so one Undo takes all of it back. Characters that do not exist yet are not created, and hidden ranges are left alone.`,
+		})
+	);
+
+	return card;
+}
+
+/**
+ * @returns {String}
+ */
+function rangeCountLabel() {
+	const count = itemFilterInputs.characterRanges.length;
+	return `${count} range${count === 1 ? '' : 's'} selected`;
 }
 
 //	------------------
@@ -277,24 +345,17 @@ function getRangeById(id) {
 	return getCurrentProject().settings.project.characterRanges.find((range) => range.id === id);
 }
 
+/**
+ * The scope block, after the range dialog has changed the selection.
+ *
+ * Only the count now. The two type switches are bound straight to
+ * itemFilterInputs and keep their own state, which is what they did not do as
+ * checkboxes - this had to reach in and set a  attribute on each of
+ * them by id every time the dialog closed.
+ */
 function updateFilterCard() {
-	const ligatureCheckbox = document.getElementById('globalActionsSelectLigaturesCheckbox');
-	const componentsCheckbox = document.getElementById('globalActionsSelectComponentsCheckbox');
-	const characterRangesDisplay = document.getElementById('globalActionsCharacterRangesDisplay');
-
-	if (itemFilterInputs.ligatures) {
-		ligatureCheckbox.setAttribute('checked', '');
-	} else {
-		ligatureCheckbox.removeAttribute('checked');
-	}
-
-	if (itemFilterInputs.components) {
-		componentsCheckbox.setAttribute('checked', '');
-	} else {
-		componentsCheckbox.removeAttribute('checked');
-	}
-
-	characterRangesDisplay.innerHTML = `${itemFilterInputs.characterRanges.length} ranges selected`;
+	const display = document.getElementById('globalActionsCharacterRangesDisplay');
+	if (display) display.textContent = rangeCountLabel();
 }
 
 function showFilterDialog() {

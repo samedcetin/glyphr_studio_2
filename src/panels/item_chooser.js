@@ -12,20 +12,145 @@ import { showAddLigatureDialog } from '../pages/ligatures.js';
 
 let savedClickHandler;
 let savedRegisterSubscriptions;
+/*
+	Which size of tile this chooser is currently building, remembered the same
+	way the click handler is and for the same reason: changing range rebuilds
+	the grid from inside this module, with nothing of the caller's in hand.
+	See the `compact` and `large` blocks in glyph-tile.css.
+*/
+let savedTileSize = '';
 
+/**
+ * How many items are in the thing on screen, and how many of them are drawn.
+ *
+ * The first half answers "is this all of them", which a grid that scrolls
+ * cannot. The second half is the one number a font in progress is actually
+ * measured by, and it is not written anywhere else in the app - you could
+ * only get it by scrolling the grid and counting the empty tiles.
+ *
+ * Takes what is being shown rather than reading it back off the editor.
+ * Assigning 'Ligatures' to editor.selectedCharacterRange does not stick - the
+ * getter hands back the last real character range - so a count read from
+ * there reported the ninety-five letters of Basic Latin under a grid of five
+ * ligatures.
+ *
+ * @param {Object} editor - project editor
+ * @param {Object | String} target - a character range, 'Ligatures' or 'Components'
+ * @returns {String}
+ */
+export function rangeCountText(editor = getCurrentProjectEditor(), target = undefined) {
+	const showing = target === undefined ? editor.selectedCharacterRange : target;
+
+	const drawnOf = (items) => items.filter((item) => item?.shapes?.length).length;
+
+	if (showing === 'Ligatures') {
+		const items = editor.project.sortedLigatures || [];
+		return `${items.length} ligature${items.length === 1 ? '' : 's'} · ${drawnOf(items)} drawn`;
+	}
+
+	if (showing === 'Components') {
+		const items = Object.values(editor.project.components || {});
+		return `${items.length} component${items.length === 1 ? '' : 's'} · ${drawnOf(items)} drawn`;
+	}
+
+	const ids = showing?.getMemberIDs?.() || [];
+	if (!ids.length) return '';
+
+	const glyphs = editor.project.glyphs;
+	const drawn = ids.filter((id) => glyphs[`glyph-${id}`]?.shapes?.length).length;
+
+	return `${ids.length} character${ids.length === 1 ? '' : 's'} · ${drawn} drawn`;
+}
+
+/**
+ * Shows one range, or the ligatures, or the components, in whichever chooser
+ * is currently on screen.
+ *
+ * One function because there are two controls that do this now - the menu in
+ * the breadcrumb and the filter chips on the Overview page - and three cases
+ * inside it that had drifted apart: the range branch replaced the grid where
+ * it stood and updated the count, and the ligature and component branches
+ * removed the grid, appended a new one at the end of the wrapper, and left
+ * the count saying whatever the last range said.
+ *
+ * @param {Object} editor - project editor
+ * @param {Object | String} target - a character range, 'Ligatures' or 'Components'
+ */
+export function showItemRange(editor, target) {
+	editor.selectedCharacterRange = target;
+	editor.chooserPage.characters = 0;
+
+	const wrapper = document.querySelector('.item-chooser__wrapper');
+	const tileGrid = wrapper?.querySelector('.item-chooser__tile-grid');
+	if (!wrapper || !tileGrid) return;
+
+	/*
+		Replaced where it stood, not appended: the wrapper holds a footer on
+		some pages, and appending puts the grid below it.
+	*/
+	const isCompact = wrapper.classList.contains('item-chooser__wrapper--compact');
+	if (target === 'Ligatures') tileGrid.replaceWith(makeLigatureChooserTileGrid(editor));
+	else if (target === 'Components') tileGrid.replaceWith(makeComponentChooserTileGrid(editor));
+	else tileGrid.replaceWith(makeCharacterChooserTileGrid(editor, isCompact));
+
+	// The count belongs to the range, so it changes with it.
+	const count = wrapper.querySelector('.item-chooser__count');
+	if (count) count.textContent = rangeCountText(editor, target);
+
+	const name = typeof target === 'string' ? target : target.name;
+
+	// And so does which filter chip is the pressed one.
+	wrapper.querySelectorAll('.overview__filter').forEach((chip) => {
+		chip.setAttribute('aria-pressed', `${chip.dataset.rangeName === name}`);
+	});
+
+	/*
+		Announced rather than reached for. The page around the chooser has its
+		own things to update when the range changes - a heading that names it, a
+		search box whose text no longer applies - and this module knowing their
+		class names would make every page that mounts a chooser this module's
+		business.
+	*/
+	wrapper.dispatchEvent(
+		new CustomEvent('chooser-range-change', { bubbles: true, detail: { name: name } })
+	);
+}
+
+/**
+ * @param {Function} clickHandler - what a tile does when clicked
+ * @param {String} itemType - force a type rather than reading the page
+ * @param {Object} editor - project editor
+ * @param {Object} options - { tileSize: '' | 'large', filters: 'menu' | 'chips' }
+ * @returns {Element}
+ */
 export function makeAllItemTypeChooserContent(
 	clickHandler,
 	itemType = '',
-	editor = getCurrentProjectEditor()
+	editor = getCurrentProjectEditor(),
+	{ tileSize = '', filters = 'menu' } = {}
 ) {
 	// log(`makeAllItemTypeChooserContent`, 'start');
 	// log(`Project Name: ${editor.project.settings.project.name}`);
 	savedClickHandler = clickHandler;
 	savedRegisterSubscriptions = true;
+	savedTileSize = tileSize;
 
 	let wrapper = makeElement({ tag: 'div', className: 'item-chooser__wrapper' });
 	let header = makeElement({ tag: 'div', className: 'item-chooser__header' });
-	header.appendChild(makeRangeAndItemTypeChooser(editor, itemType));
+	header.appendChild(
+		filters === 'chips'
+			? makeRangeFilterChips(editor, itemType)
+			: makeRangeAndItemTypeChooser(editor, itemType)
+	);
+	/*
+		The same count the breadcrumb's dropdown carries. It was only in the
+		compact one, which is the smaller of the two places you need it: the
+		dropdown shows a range in a box you can see the end of, and the page
+		shows it in a grid that runs off the bottom of the screen.
+	*/
+	header.appendChild(
+		makeElement({ className: 'item-chooser__count', content: rangeCountText(editor) })
+	);
 	wrapper.appendChild(header);
 
 	let show = itemType || editor.nav.page;
@@ -48,6 +173,7 @@ export function makeSingleItemTypeChooserContent(itemPageName, clickHandler) {
 	// log(`makeSingleItemTypeChooserContent`, 'start');
 	savedClickHandler = clickHandler;
 	savedRegisterSubscriptions = true;
+	savedTileSize = '';
 	let wrapper = makeElement({ tag: 'div', className: 'item-chooser__wrapper' });
 
 	if (itemPageName === 'Ligatures') {
@@ -108,15 +234,11 @@ export function makeSingleItemTypeChooserContent(itemPageName, clickHandler) {
 		*/
 		wrapper.classList.add('item-chooser__wrapper--compact');
 		const editor = getCurrentProjectEditor();
-		const count = editor.selectedCharacterRange?.getMemberIDs()?.length || 0;
 
 		const header = makeElement({ tag: 'div', className: 'item-chooser__header' });
 		header.appendChild(makeRangeChooser());
 		header.appendChild(
-			makeElement({
-				className: 'item-chooser__count',
-				content: `${count} character${count === 1 ? '' : 's'}`,
-			})
+			makeElement({ className: 'item-chooser__count', content: rangeCountText(editor) })
 		);
 		wrapper.appendChild(header);
 		wrapper.appendChild(makeCharacterChooserTileGrid(editor, true));
@@ -130,6 +252,68 @@ export function makeSingleItemTypeChooserContent(itemPageName, clickHandler) {
 
 	// log(`makeSingleItemTypeChooserContent`, 'end');
 	return wrapper;
+}
+
+/**
+ * The same choice as the menu, laid out.
+ *
+ * A select is the right control when the options are many, or long, or you
+ * already know which one you want. Here there are four, they are two words
+ * each, and the whole point of the page is that you are browsing rather than
+ * looking something up - so a menu asked for a click to show you what a font
+ * even contains, and then hid it again. These are all on screen, each one
+ * carrying how many characters it holds, and switching is one click instead
+ * of two.
+ *
+ * One line that scrolls rather than a block that wraps: a project can enable
+ * a lot of Unicode ranges, and a filter bar four rows tall pushes the thing
+ * it filters off the screen. Same treatment as the kern group chooser's
+ * members row.
+ *
+ * @param {Object} editor - project editor
+ * @param {String} rangeName - force a selection rather than reading the editor
+ * @returns {Element}
+ */
+export function makeRangeFilterChips(editor = getCurrentProjectEditor(), rangeName = '') {
+	const bar = makeElement({ className: 'overview__filters', attributes: { role: 'group' } });
+
+	const selected = rangeName || editor.selectedCharacterRange?.name || '';
+
+	/**
+	 * @param {String} name - what it says
+	 * @param {Number} count - how many items it holds
+	 * @param {Object | String} target - what to show when pressed
+	 */
+	const addChip = (name, count, target) => {
+		const chip = makeElement({
+			tag: 'button',
+			className: 'overview__filter',
+			attributes: { type: 'button', 'aria-pressed': `${name === selected}` },
+		});
+		chip.dataset.rangeName = name;
+		chip.appendChild(makeElement({ tag: 'span', content: name }));
+		chip.appendChild(
+			makeElement({ tag: 'span', className: 'overview__filter-count', content: `${count}` })
+		);
+		chip.addEventListener('click', () => showItemRange(editor, target));
+		bar.appendChild(chip);
+	};
+
+	/*
+		Characters first, then the two made-up kinds. That is the order the
+		menu used in reverse, which put the five ligatures a project might have
+		above the ninety-five letters it is made of.
+	*/
+	editor.project.settings.project.characterRanges.forEach((range) => {
+		if (range.enabled) addChip(range.name, range.getMemberIDs?.()?.length || 0, range);
+	});
+
+	const ligatureCount = countItems(editor.project.ligatures);
+	const componentCount = countItems(editor.project.components);
+	if (ligatureCount) addChip('Ligatures', ligatureCount, 'Ligatures');
+	if (componentCount) addChip('Components', componentCount, 'Components');
+
+	return bar;
 }
 
 export function makeRangeAndItemTypeChooser(editor = getCurrentProjectEditor(), rangeName = '') {
@@ -172,13 +356,7 @@ export function makeRangeAndItemTypeChooser(editor = getCurrentProjectEditor(), 
 			attributes: { note: `${ligatureCount}&nbsp;items` },
 		});
 
-		option.addEventListener('click', () => {
-			editor.selectedCharacterRange = 'Ligatures';
-			let tileGrid = document.querySelector('.item-chooser__tile-grid');
-			tileGrid.remove();
-			let wrapper = document.querySelector('.item-chooser__wrapper');
-			wrapper.appendChild(makeLigatureChooserTileGrid(editor));
-		});
+		option.addEventListener('click', () => showItemRange(editor, 'Ligatures'));
 
 		optionChooser.appendChild(option);
 	}
@@ -191,13 +369,7 @@ export function makeRangeAndItemTypeChooser(editor = getCurrentProjectEditor(), 
 			attributes: { note: `${componentCount}&nbsp;items` },
 		});
 
-		option.addEventListener('click', () => {
-			editor.selectedCharacterRange = 'Components';
-			let tileGrid = document.querySelector('.item-chooser__tile-grid');
-			tileGrid.remove();
-			let wrapper = document.querySelector('.item-chooser__wrapper');
-			wrapper.appendChild(makeComponentChooserTileGrid(editor));
-		});
+		option.addEventListener('click', () => showItemRange(editor, 'Components'));
 
 		optionChooser.appendChild(option);
 	}
@@ -242,35 +414,7 @@ function addRangeOptionsToOptionChooser(optionChooser, editor = getCurrentProjec
 				attributes: { note: range.note },
 			});
 
-			option.addEventListener('click', () => {
-				// log(`OPTION.click - range: ${range.name}`);
-				editor.selectedCharacterRange = range;
-				editor.chooserPage.characters = 0;
-
-				/*
-					Replaced where it stood, not appended.
-
-					It used to remove the grid and append a fresh one to the end
-					of the wrapper - which was harmless while the wrapper held
-					nothing else, and put the grid below the footer the moment
-					one existed. The new grid also arrived without the compact
-					flag, so changing range in the breadcrumb's dropdown turned
-					every tile back into the full 52 by 75 one.
-				*/
-				const wrapper = document.querySelector('.item-chooser__wrapper');
-				const tileGrid = wrapper?.querySelector('.item-chooser__tile-grid');
-				if (!wrapper || !tileGrid) return;
-
-				const isCompact = wrapper.classList.contains('item-chooser__wrapper--compact');
-				tileGrid.replaceWith(makeCharacterChooserTileGrid(editor, isCompact));
-
-				// The count belongs to the range, so it changes with it.
-				const count = wrapper.querySelector('.item-chooser__count');
-				if (count) {
-					const total = editor.selectedCharacterRange?.getMemberIDs()?.length || 0;
-					count.textContent = `${total} character${total === 1 ? '' : 's'}`;
-				}
-			});
+			option.addEventListener('click', () => showItemRange(editor, range));
 
 			optionChooser.appendChild(option);
 		}
@@ -297,10 +441,14 @@ function makeCharacterChooserTileGrid(editor = getCurrentProjectEditor(), compac
 		pagedCharacters.forEach((charID) => {
 			const glyphID = `glyph-${charID}`;
 			// log(`glyphID: ${glyphID}`);
-			let oneTile = new GlyphTile({ 'displayed-item-id': glyphID, project: editor.project });
+			let oneTile = new GlyphTile({
+				'displayed-item-id': glyphID,
+				project: editor.project,
+				...(compact ? { compact: '' } : savedTileSize ? { [savedTileSize]: '' } : {}),
+			});
 			// In the breadcrumb's dropdown the tile is the letterform and nothing
-			// else - see :host([compact]) in glyph-tile.css.
-			if (compact) oneTile.setAttribute('compact', '');
+			// else; on the Overview page it is as large as the page can give it.
+			// See :host([compact]) and :host([large]) in glyph-tile.css.
 			if (isPrimaryProject && editor.selectedGlyphID === glyphID) {
 				oneTile.setAttribute('selected', '');
 			}
@@ -352,7 +500,11 @@ function makeLigatureChooserTileGrid(editor = getCurrentProjectEditor(), showSel
 	}
 
 	pagedLigatures.forEach((ligature) => {
-		let oneTile = new GlyphTile({ 'displayed-item-id': ligature.id, project: editor.project });
+		let oneTile = new GlyphTile({
+			'displayed-item-id': ligature.id,
+			project: editor.project,
+			...(savedTileSize ? { [savedTileSize]: '' } : {}),
+		});
 		if (showSelected && editor.selectedLigatureID === ligature.id) {
 			oneTile.setAttribute('selected', '');
 		}
@@ -396,7 +548,11 @@ function makeComponentChooserTileGrid(editor = getCurrentProjectEditor(), showSe
 	}
 
 	pagedComponents.forEach((component) => {
-		let oneTile = new GlyphTile({ 'displayed-item-id': component.id, project: editor.project });
+		let oneTile = new GlyphTile({
+			'displayed-item-id': component.id,
+			project: editor.project,
+			...(savedTileSize ? { [savedTileSize]: '' } : {}),
+		});
 		if (showSelected && editor.selectedComponentID === component.id) {
 			oneTile.setAttribute('selected', '');
 		}

@@ -18,6 +18,7 @@
 	padding: 0px;
 	box-shadow: none;
 	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	transition: opacity 500ms ease-in;
 }
 
@@ -27,6 +28,7 @@
 	margin: 0px;
 	padding: 1px;
 	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	height: 100%;
 	width: 52px;
 	height: 75px;
@@ -65,6 +67,7 @@
 	box-shadow: none;
 	border: 1px solid var(--border-subtle);
 	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
 }
 
 .wrapper:hover .thumbnail,
@@ -101,6 +104,7 @@
 	font-size: var(--fs-2xs);
 	color: var(--text-tertiary);
 	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
 }
 
 .wrapper[selected] .name,
@@ -225,3 +229,186 @@
 	background-color: transparent;
 	border: none;
 }
+
+/* --------------------------------------------------------------
+	Large
+
+	The tile as it appears on the Overview page's coverage grid. There the
+	grid is not a chooser standing beside the work - it is the page, and the
+	letterform is the thing you came to look at.
+
+	It is a card rather than a plate inside a plate. The small tile draws a
+	bordered white square for the drawing and sits it on a transparent
+	wrapper, which at this size reads as two boxes for one thing. Here the
+	card is the paper: one border, one ground, the letterform centred on it
+	and the code point centred underneath.
+	------------------------------------------------------------ */
+
+:host([large]),
+:host([large]) .wrapper {
+	width: 140px;
+	height: 104px;
+}
+
+:host([large]) .wrapper {
+	display: grid;
+	grid-template-rows: minmax(0, 1fr) min-content;
+	align-items: center;
+	justify-items: center;
+	padding: var(--sp-4) var(--sp-3) var(--sp-3) var(--sp-3);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-subtle);
+	/*
+			Concentric with the card it sits in: that card is --r-3xl and insets this
+		grid by --sp-6 of its own padding, so 28 - 16 = 12. A tile rounder than
+		that reads as loose in its container rather than fitted to it, and one
+		squarer reads as cut to fit.
+	*/
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	position: relative;
+}
+
+/*
+	Hovering changes nothing but the cursor. The card already stands off the
+	page on its own, and a grid of ninety-five of them lighting up one at a
+	time as the pointer crosses is motion with nothing to say - the one that
+	matters is the selected one, and that is a different treatment entirely.
+*/
+:host([large]) .wrapper:hover,
+:host([large]) .wrapper:focus {
+	background-color: var(--bg-surface);
+	border-color: var(--border-subtle);
+}
+
+/*
+	Where you are: the accent on the border and the accent's own tint behind
+	it. One border rather than a border plus the inset ring the small tile
+	draws, which at this size is two lines a pixel apart.
+*/
+:host([large]) .wrapper[selected],
+:host([large]) .wrapper[selected]:hover,
+:host([large]) .wrapper[selected]:focus {
+	background-color: var(--bg-selected);
+	border-color: var(--accent);
+	box-shadow: none;
+}
+
+/*
+	The drawing, with nothing under it. The plate, its border and the dimming
+	all belong to the small tile, where they separate one thumbnail from the
+	next; here the card does that.
+*/
+:host([large]) .thumbnail,
+:host([large]) .wrapper:hover .thumbnail,
+:host([large]) .wrapper:focus .thumbnail,
+:host([large]) .wrapper[selected] .thumbnail {
+	width: 64px;
+	height: 64px;
+	margin: 0;
+	padding-top: 0;
+	font-size: 44px;
+	line-height: 64px;
+	background-color: transparent;
+	border: none;
+	border-radius: 0;
+	opacity: 1;
+	color: var(--text-tertiary);
+}
+
+/* The drawing has a viewBox, so it scales to whatever box it is given - but
+	it has to be told, or it keeps the 50px the markup was written at. */
+:host([large]) .thumbnail svg {
+	display: block;
+	width: 64px;
+	height: 64px;
+}
+
+:host([large]) .whitespace-char-thumbnail {
+	width: 64px;
+	height: 64px;
+	padding-top: 20px;
+	font-size: 12px;
+	line-height: 12px;
+}
+
+/*
+	The code point, centred under the letterform.
+
+	The small tile's caption is a 300px box clipped by the tile, pulled a
+	pixel left - a way of left-aligning text in a box too narrow to hold it.
+	Here it is the width of the card and centred in it, which is what a label
+	under a centred drawing has to be.
+*/
+:host([large]) .name {
+	position: static;
+	left: auto;
+	width: 100%;
+	height: auto;
+	padding: 0;
+	text-align: center;
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+/*
+	And it keeps that colour in every state. It turns --text-accent on hover
+	and while selected, which is the small tile telling you which one you are
+	on in a grid where nothing else can. This card says it twice already.
+*/
+:host([large]) .wrapper:hover .name,
+:host([large]) .wrapper:focus .name,
+:host([large]) .wrapper[selected] .name,
+:host([large]) .wrapper[selected][session-state='notCreated'] .name,
+:host([large]) .wrapper[selected][session-state='new'] .name,
+:host([large]) .wrapper[selected][session-state='changed'] .name {
+	color: var(--text-tertiary);
+	font-weight: var(--fw-normal);
+}
+
+:host([large]) .wrapper[selected] .name {
+	color: var(--text-accent);
+}
+
+/* --------------------------------------------------------------
+	The coverage dot
+
+	Whether the font has this character yet, in the corner of the card. The
+	caption cannot say it - it is the code point - and the drawing cannot
+	either, because an undrawn slot still shows the character in the interface
+	font, which is exactly the thing you are trying to tell apart from a real
+	outline.
+
+	Large only. On a 40px tile in a menu it would be a speck on the
+	letterform, and on the 52px one the caption already carries the session
+	states.
+	------------------------------------------------------------ */
+
+.status {
+	display: none;
+}
+
+:host([large]) .status {
+	display: block;
+	position: absolute;
+	top: 9px;
+	right: 9px;
+	width: 6px;
+	height: 6px;
+	border-radius: var(--r-pill);
+	background-color: var(--accent);
+}
+
+/*
+	Nothing drawn: an outline of the same dot rather than no dot at all. An
+	empty corner reads as a card that forgot to draw one, and the pair -
+	filled against hollow - is the same language as the history timeline's
+	markers.
+*/
+:host([large]) .wrapper[drawn='false'] .status {
+	background-color: transparent;
+	box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+

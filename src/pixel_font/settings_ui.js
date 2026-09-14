@@ -1,7 +1,7 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeElement, textToNode } from '../common/dom.js';
 import { refreshEditToolsArea } from '../edit_canvas/tools/tools.js';
-import { makeDirectCheckbox } from '../panels/cards.js';
+import { makeDirectToggle } from '../panels/cards.js';
 import { getPixelMode, getUnitsPerPixel } from './pixel_grid.js';
 
 /**
@@ -94,8 +94,14 @@ export function makePixelFontSettings() {
 		}`;
 	}
 
-	const enabledCheckbox = makeDirectCheckbox(settings, 'enabled', () => {
-		refreshAfterChange();
+	/*
+		Toggles, like every other on-or-off control in the app. The row builder
+		beside them already carries each description in an info bubble, so the
+		switch only needs its name.
+	*/
+	const enabledCheckbox = makeDirectToggle(settings, 'enabled', () => refreshAfterChange(), {
+		icon: 'check',
+		name: 'Pixel font mode',
 	});
 
 	const pixelsPerEmInput = makeElement({
@@ -113,8 +119,14 @@ export function makePixelFontSettings() {
 		refreshAfterChange();
 	});
 
-	const showGridCheckbox = makeDirectCheckbox(settings, 'showGrid', refreshAfterChange);
-	const snapCheckbox = makeDirectCheckbox(settings, 'snapToGrid', refreshAfterChange);
+	const showGridCheckbox = makeDirectToggle(settings, 'showGrid', refreshAfterChange, {
+		icon: 'check',
+		name: 'Show the pixel grid',
+	});
+	const snapCheckbox = makeDirectToggle(settings, 'snapToGrid', refreshAfterChange, {
+		icon: 'check',
+		name: 'Snap new shapes to the grid',
+	});
 
 	updateSummary();
 

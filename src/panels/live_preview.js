@@ -359,7 +359,70 @@ function makeTextBlockOptions_pageOptions(textBlockOptions) {
 	];
 }
 
-function redrawAllLivePreviews() {
+/**
+ * Redraws every live preview there is - the page, and the popped-out window
+ * if one is open.
+ *
+ * Exported because the Live preview page builds its own settings card now and
+ * has to go through the same path: the pop-out is the half that is easy to
+ * forget, and a control that updates the page but not the second window is
+ * worse than one that updates neither.
+ */
+export function redrawAllLivePreviews() {
 	redrawLivePreviewPageDisplayCanvas();
 	if (getCurrentProjectEditor().popOutWindow) updatePopOutWindowContent();
 }
+
+/**
+ * The sample texts, in one place.
+ *
+ * The panel built these as rows of buttons and the page now offers them as a
+ * menu and a list, so the strings themselves are here rather than in either
+ * of them.
+ */
+export const PANGRAMS = [
+	{ name: 'English pangram', text: 'the quick brown fox jumps over a lazy dog' },
+	{ name: 'Boxing wizards', text: 'the five boxing wizards jump quickly' },
+	{ name: 'Liquor jugs', text: 'pack my box with five dozen liquor jugs' },
+	{ name: 'Discotheques', text: 'amazingly few discotheques provide jukeboxes' },
+	{ name: 'Gunboats', text: 'quick enemy movement will jeopardize six of the gunboats' },
+];
+
+/** The punctuation and symbols of Basic Latin, in code point order. */
+const SYMBOL_CODE_POINTS = [
+	0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x3a,
+	0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60, 0x7b, 0x7c, 0x7d, 0x7e,
+];
+
+/*
+	Not only glyph sets any more, which is why it is not called that: the first
+	one is running prose, and the rest are the character sets. They are the two
+	questions a preview answers - what does a paragraph of this look like, and
+	what does the set look like - so they belong in one list rather than two.
+*/
+export const SAMPLE_TEXTS = [
+	{
+		name: 'Lorem ipsum',
+		/*
+			No line breaks. The preview wraps to its own width, so a paragraph
+			written as one line reflows as you resize the window or change the
+			size - which is the whole point of looking at one.
+		*/
+		text:
+			'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod ' +
+			'tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim ' +
+			'veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea ' +
+			'commodo consequat. Duis aute irure dolor in reprehenderit in voluptate ' +
+			'velit esse cillum dolore eu fugiat nulla pariatur.',
+	},
+	{
+		name: 'Uppercase & lowercase',
+		text: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz',
+	},
+	{
+		name: 'Numbers & punctuation',
+		text: `0123456789\n${SYMBOL_CODE_POINTS.map((point) => String.fromCodePoint(point)).join('')}`,
+	},
+	{ name: 'Uppercase pairs', text: () => makePermutations(true) },
+	{ name: 'Lowercase pairs', text: () => makePermutations(false) },
+];
