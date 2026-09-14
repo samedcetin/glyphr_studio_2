@@ -209,6 +209,18 @@
 	border-top: 1px solid var(--border-subtle);
 }
 
+/*
+	Everything in a full-bleed list that is not a row - its heading, its
+	explanation - gets the bleed put back, so it starts where every other
+	heading in the panel starts. Only the rows are meant to run to the
+	edges; the Links card had its title and its paragraph out there too,
+	twelve pixels left of the column.
+*/
+.sidebar__section-body .item-links__rows-area > :not(.item-link__row) {
+	margin-left: var(--sp-4);
+	margin-right: var(--sp-4);
+}
+
 .sidebar__section-body .item-link__row {
 	padding-left: var(--sp-4);
 	padding-right: var(--sp-4);
@@ -352,6 +364,13 @@
 .editor-page__right-area .sidebar__section-body .item-links__rows-area {
 	margin-left: calc(var(--sp-5) * -1);
 	margin-right: calc(var(--sp-5) * -1);
+}
+
+.editor-page__left-area .sidebar__section-body .item-links__rows-area > :not(.item-link__row),
+.editor-page__right-area .sidebar__section-body .item-links__rows-area > :not(.item-link__row) {
+	/* Margin, not padding: the box has to move, not just its text. */
+	margin-left: var(--sp-5);
+	margin-right: var(--sp-5);
 }
 
 .editor-page__left-area .sidebar__section-body .item-link__row,

@@ -138,10 +138,18 @@ export function makeCard_glyphLinks(item) {
 	let linksCard = makeElement({
 		tag: 'div',
 		className: 'panel__card full-width item-links__rows-area',
+		/*
+			The explanation is in a <p>. It used to be a bare text node, which no
+			selector can reach - so while the heading and the rows were put back
+			on the sidebar column, the sentence between them stayed out at the
+			card's full-bleed edge, twelve pixels left of everything else.
+		*/
 		innerHTML: `
 		<h3>Links</h3>
-		This ${item.displayType} is linked to the following items.
-		It is used as a component root and will show up in these items as a component instance.
+		<p>
+			This ${item.displayType} is linked to the following items.
+			It is used as a component root and will show up in these items as a component instance.
+		</p>
 		`,
 	});
 

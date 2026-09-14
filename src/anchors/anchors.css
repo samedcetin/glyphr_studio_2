@@ -179,7 +179,8 @@
 	background-color: var(--bg-surface-sunken);
 	color: var(--text-primary);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-md);
+	/* The button corner, the same one the Compose button below takes. */
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);

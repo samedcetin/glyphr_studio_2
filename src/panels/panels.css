@@ -259,7 +259,8 @@
 	padding: 2px;
 	/* The row it sits in owns the gap now - see .doubleInput:has(> button). */
 	margin: 0;
-	border-radius: var(--r-md);
+	/* --r-lg: it is a button, and every button in the panel takes that. */
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 }
 
@@ -400,12 +401,13 @@
 	display: grid;
 	place-items: center;
 	flex-shrink: 0;
-	width: var(--control-h-sm);
-	height: var(--control-h-sm);
+	/* --control-h, the size of every other icon button in the sidebar. */
+	width: var(--control-h);
+	height: var(--control-h);
 	padding: 0;
 	background-color: transparent;
 	border: 1px solid transparent;
-	border-radius: var(--r-sm);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	color: var(--icon-default);
 	cursor: pointer;
@@ -548,8 +550,12 @@
 	padding: 0;
 	margin: 0;
 	border: 1px solid transparent;
-	/* --r-md, the corner the fields either side of it take. */
-	border-radius: var(--r-md);
+	/*
+		--r-lg. It reads as a field for a moment because it sits in a row of
+		them, but there are four pixels of gap on each side of it and it is a
+		button: it takes the button corner, like every other button here.
+	*/
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--icon-default);
@@ -632,7 +638,12 @@
 	box-shadow: none;
 	border-style: solid;
 	border-color: var(--enabled-restingLight-border);
-	border-radius: 4px;
+	/*
+		Was a raw 4px - the only hard-coded radius left in the right panel,
+		and not a value on the scale either: the tokens nearest it are 3 and 5.
+	*/
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 }
 
 .pointTypeButton[selected] {
