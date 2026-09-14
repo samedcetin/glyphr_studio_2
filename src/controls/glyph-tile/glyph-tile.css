@@ -254,6 +254,25 @@
 	corner-shape: var(--corner-smooth);
 }
 
+/*
+	Resting, this one looks the way the small tile looks under the cursor:
+	full opacity, the stronger border, the readable placeholder colour.
+
+	The dimming is there to tell a row of fifty thumbnails apart from the one
+	you are pointing at. On this page the grid is the content rather than a
+	chooser you are picking from, so ninety-five letters at 0.85 with the
+	faintest border is the whole page held slightly back for no reason. The
+	hover still reads - it is the wrapper that tints, not the plate.
+*/
+:host([large]) .thumbnail,
+:host([large]) .wrapper:hover .thumbnail,
+:host([large]) .wrapper:focus .thumbnail,
+:host([large]) .wrapper[selected] .thumbnail {
+	opacity: 1;
+	border-color: var(--border-default);
+	color: var(--text-tertiary);
+}
+
 :host([large]) .thumbnail {
 	width: 72px;
 	height: 72px;

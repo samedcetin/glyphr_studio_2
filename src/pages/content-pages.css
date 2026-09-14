@@ -932,11 +932,19 @@ span.spacer {
 		than the space inside a tile - otherwise the name sits as close to the
 		letter below it as to the one it belongs to.
 	*/
-	gap: var(--sp-6) var(--sp-5);
+	gap: var(--sp-4) var(--sp-2);
 	padding-bottom: var(--sp-8);
 	overflow-y: auto;
+	/* No bar. The grid is the page, and a rule down its right edge cut the
+		last column off the field of letters it is there to show. It still
+		scrolls - wheel, trackpad and keyboard all behave as before. */
+	scrollbar-width: none;
 	min-height: 0;
 	animation: none;
+}
+
+.overview .item-chooser__tile-grid::-webkit-scrollbar {
+	display: none;
 }
 
 .overview .item-chooser__tile-grid glyph-tile {
