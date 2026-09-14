@@ -469,6 +469,58 @@ export function dimSplitElement() {
  * @param {Function =} onChange - called after the write
  * @returns {HTMLElement}
  */
+/**
+ * Turn a piece of text in a list row into a field, in place.
+ *
+ * The Layers panel had this for renaming a path and it is the right
+ * behaviour for any named thing in a list: you click the name where it is
+ * rather than selecting the row and typing somewhere else. It also buys the
+ * row back the width an always-there input costs - which in a 235px sidebar
+ * is the difference between a readable name and three characters of one.
+ *
+ * Enter and blur commit, Escape abandons. Keydown is stopped so the app’s
+ * own shortcuts do not fire into a field someone is typing in.
+ *
+ * @param {Element} element - the span holding the text
+ * @param {Object} args - { value, onCommit, className }
+ */
+export function startRenamingInPlace(element, { value, onCommit, className = 'rename-in-place' }) {
+	const original = value;
+	const input = makeElement({
+		tag: 'input',
+		className: className,
+		attributes: { type: 'text', value: original, spellcheck: 'false' },
+	});
+
+	element.innerHTML = '';
+	element.appendChild(input);
+	input.focus();
+	/** @type {HTMLInputElement} */ (input).select();
+
+	let finished = false;
+	const commit = (save) => {
+		if (finished) return;
+		finished = true;
+		const next = String(/** @type {HTMLInputElement} */ (input).value).trim();
+		onCommit(save && next && next !== original ? next : false);
+	};
+
+	input.addEventListener('blur', () => commit(true));
+	input.addEventListener('keydown', (event) => {
+		event.stopPropagation();
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			commit(true);
+		}
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			commit(false);
+		}
+	});
+	input.addEventListener('click', (event) => event.stopPropagation());
+	input.addEventListener('dblclick', (event) => event.stopPropagation());
+}
+
 export function makeOpacitySlider(item, property, onChange) {
 	return makeFancySlider(
 		100 - item[property],

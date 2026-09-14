@@ -4,6 +4,7 @@ import { eventHandlerData } from '../edit_canvas/events.js';
 import { addChildActions, getActionData } from './actions.js';
 import { panelsEventHandlerData } from './panel_events.js';
 import { refreshPanel } from './panels.js';
+import { startRenamingInPlace } from './cards.js';
 
 // --------------------------------------------------------------
 // Layer panel
@@ -55,50 +56,18 @@ function makeLayerToggle({ className, icon, title, pressed, onClick }) {
  */
 function startRenamingLayer(titleElement, shape) {
 	const editor = getCurrentProjectEditor();
-	const originalName = shape.name;
-
-	const input = makeElement({
-		tag: 'input',
+	startRenamingInPlace(titleElement, {
+		value: shape.name,
 		className: 'layer-row__rename',
-		attributes: { type: 'text', value: originalName, spellcheck: 'false' },
+		onCommit: (newName) => {
+			if (newName) {
+				shape.name = newName;
+				editor.history.addState(`Renamed layer to ${newName}`);
+				editor.publish('currentItem', editor.selectedItem);
+			}
+			refreshPanel();
+		},
 	});
-
-	titleElement.innerHTML = '';
-	titleElement.appendChild(input);
-	input.focus();
-	// @ts-expect-error - input elements have select()
-	input.select();
-
-	let finished = false;
-
-	const commit = (save) => {
-		if (finished) return;
-		finished = true;
-
-		// @ts-expect-error - input elements have a value
-		const newName = String(input.value).trim();
-		if (save && newName && newName !== originalName) {
-			shape.name = newName;
-			editor.history.addState(`Renamed layer to ${newName}`);
-			editor.publish('currentItem', editor.selectedItem);
-		}
-		refreshPanel();
-	};
-
-	input.addEventListener('blur', () => commit(true));
-	input.addEventListener('keydown', (/** @type {KeyboardEvent} */ event) => {
-		event.stopPropagation();
-		if (event.key === 'Enter') {
-			event.preventDefault();
-			commit(true);
-		}
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			commit(false);
-		}
-	});
-	input.addEventListener('click', (event) => event.stopPropagation());
-	input.addEventListener('dblclick', (event) => event.stopPropagation());
 }
 
 /**
