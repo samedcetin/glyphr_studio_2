@@ -10,9 +10,16 @@
 }
 
 .tab-control__tab {
-	display: block;
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
 	width: 100%;
 	padding: var(--sp-3) var(--sp-5);
+	/* A button, for the keyboard and the screen reader - styled as a row. */
+	background: none;
+	border: none;
+	font: inherit;
+	text-align: left;
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	color: var(--text-primary);
@@ -38,4 +45,14 @@
 	background-color: var(--bg-selected);
 	color: var(--text-accent);
 	font-weight: var(--fw-semibold);
+}
+
+.tab-control__icon {
+	display: inline-flex;
+	flex: none;
+	color: currentColor;
+}
+
+.tab-control__label {
+	white-space: nowrap;
 }

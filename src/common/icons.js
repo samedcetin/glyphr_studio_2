@@ -426,6 +426,11 @@ lineIcons.page_settings = `<path d="M6 21v-6M6 11V3M12 21v-9M12 8V3M18 21v-4M18 
 
 lineIcons.page_help = lineIcons.command_help;
 
+// Settings tabs. Three things a project is: its file, its font, this app.
+lineIcons.settings_project = `<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h3.6a2 2 0 0 1 1.4.6l1.4 1.4h4.6A2.5 2.5 0 0 1 20 9.5v7A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z"/>`;
+lineIcons.settings_font = `<path d="M4.5 18L10 6l5.5 12"/><path d="M6.8 13.2h6.4"/><path d="M15.5 12.5c1.6-1.4 4-.9 4 1.3V18M19.5 15c-1.5-.5-4-.4-4 1.5s3 1.8 4 .4"/>`;
+lineIcons.settings_app = `<path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h12A2.5 2.5 0 0 1 20.5 7v10a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17V7Z"/><path d="M3.5 9.5h17"/><path d="M6.5 7h.01M9 7h.01"/>`;
+
 /*
 	Three sliders: the settings mark, wherever thresholds hide behind one.
 	Declared here rather than beside the panel icons - these are plain

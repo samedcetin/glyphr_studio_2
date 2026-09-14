@@ -61,15 +61,14 @@ export function makePage_Settings() {
 	const body = makeElement({ className: 'studio-card settings__body' });
 	const tabControl = new TabControl(body);
 
-	tabControl.registerTab('Project', makeSettingsTabContentProject);
-	tabControl.registerTab('Font', makeSettingsTabContentFont);
-	tabControl.registerTab('App', makeSettingsTabContentApp);
+	tabControl.registerTab('Project', makeSettingsTabContentProject, { icon: 'settings_project' });
+	tabControl.registerTab('Font', makeSettingsTabContentFont, { icon: 'settings_font' });
+	tabControl.registerTab('App', makeSettingsTabContentApp, { icon: 'settings_app' });
 
 	/*
-		A row rather than a column. The control builds a stack of full-width
-		tabs, which is right in a narrow panel and was what put three words in
-		a 450px column; the row treatment is scoped to this page, so About and
-		Help - the other two callers - keep theirs.
+		A segmented control - one track, the selected tab raised on a thumb
+		that slides between them - rather than three loose buttons. The
+		treatment is scoped to this page, so About and Help keep theirs.
 	*/
 	const tabs = makeElement({ className: 'settings__tabs' });
 	addAsChildren(tabs, tabControl.makeTabs());
