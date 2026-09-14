@@ -1,118 +1,94 @@
-import { emailLink } from '../app/app.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
-import { showModalDialog } from '../controls/dialogs/dialogs.js';
 import { makeAllItemTypeChooserContent } from '../panels/item_chooser.js';
-import { makeNavButton, toggleNavDropdown } from '../project_editor/navigator.js';
-import { makeContributeContent } from './about.js';
+
+/**
+	PAGE > OVERVIEW
+	---------------
+	The font, and every character in it.
+
+	WHAT THIS PAGE WAS. A 450px column of three cards beside the grid. The
+	first card repeated the page you were already on, in a dropdown that did
+	what the rail on the left does. The second welcomed you to the app and
+	linked to a blog, a tutorial and an email address - once useful, furniture
+	from the second visit on. The third asked you to contribute. Between them
+	they took 450 of every 1200 pixels, and the thing the page is named after
+	got what was left.
+
+	It is the grid now. What survived from those cards is the font's own
+	facts - family, style, the metrics - because this is the page where you
+	would look for them, and they fit on one line instead of seven.
+
+	The specimen stays for the same reason: on a page about a font, the font
+	showing itself is not decoration.
+ */
 
 /**
  * Page > Overview
- * The first page you land on, with project and glyph information.
  * @returns {Element} - page content
  */
 export function makePage_Overview() {
-	const content = makeElement({
-		tag: 'div',
-		id: 'app__page',
-		innerHTML: `
-		<div class="content__page">
-			<div class="content-page__left-area">
-				<div class="content-page__nav-area">
-					${makeNavButton({ level: 'l1', superTitle: 'PAGE', title: 'Overview' })}
-				</div>
-				<div id="content-page__panel"></div>
-			</div>
-			<div class="content-page__right-area"></div>
-		</div>
-	`,
-	});
-
-	// log(content);
-
-	let itemsContent = makeAllItemTypeChooserContent((itemID) => {
-		// log(`Overview page - Character Chooser tile click handler`, 'start');
-		// log(`itemID: ${itemID}`);
-
-		const editor = getCurrentProjectEditor();
-		editor.selectedItemID = itemID;
-		// log(`editor.selectedItemID: ${editor.selectedItemID}`);
-
-		if (itemID.startsWith('glyph-')) editor.nav.page = 'Characters';
-		else if (itemID.startsWith('liga-')) editor.nav.page = 'Ligatures';
-		else if (itemID.startsWith('comp-')) editor.nav.page = 'Components';
-		else if (itemID.startsWith('kern-')) editor.nav.page = 'Kerning';
-		// log(`editor.nav.page: ${editor.nav.page}`);
-		editor.navigate();
-
-		editor.history.addState(`Navigated to ${editor.project.getItemName(itemID, true)}`);
-		// log(`Overview page - Character Chooser tile click handler`, 'end');
-	});
-
 	const project = getCurrentProject();
-	const rightArea = content.querySelector('.content-page__right-area');
-	let previewText = project.settings.app.previewText || 'Aa Bb Cc Xx Yy Zz';
+	const font = project.settings.font;
 
-	rightArea.appendChild(
-		makeElement({
-			tag: 'display-canvas',
-			attributes: { text: previewText, 'font-size': '64', 'show-placeholder-message': 'true' },
-			title: 'You can customize the the project preview text from the Settings > App page.',
-		})
+	const content = makeElement({ tag: 'div', id: 'app__page' });
+	const page = makeElement({ className: 'overview' });
+	content.appendChild(page);
+
+	page.appendChild(makeOverviewHead(project, font));
+	page.appendChild(makeSpecimen(project));
+	page.appendChild(makeCharacterArea());
+
+	return content;
+}
+
+/**
+ * The font's name and its facts, on one line.
+ *
+ * The seven label-and-value rows of the old Project info card said family,
+ * style, count, UPM, ascent and descent - none of which needs a row of its
+ * own, and all of which are read at a glance rather than looked up one at a
+ * time. They are a sentence under the name now.
+ *
+ * @param {Object} project - the current project
+ * @param {Object} font - project.settings.font
+ * @returns {Element}
+ */
+function makeOverviewHead(project, font) {
+	const head = makeElement({ className: 'overview__head' });
+
+	const identity = makeElement({ className: 'overview__identity' });
+	identity.appendChild(
+		makeElement({ tag: 'h1', className: 'overview__family', content: font.family })
 	);
 
-	rightArea.appendChild(makeElement({ tag: 'hr', style: 'margin: 10px 0px 20px 0px;' }));
-	rightArea.appendChild(itemsContent);
-	// Page Selector
-	let l1 = content.querySelector('#nav-button-l1');
-	l1.addEventListener('click', function () {
-		toggleNavDropdown(l1);
-	});
+	/*
+		The project name only earns a place when it is not simply the family
+		name again, which is what it is in a project nobody has renamed - and
+		two lines saying "Oblegg" is worse than one.
+	*/
+	const facts = [];
+	if (project.settings.project.name && project.settings.project.name !== font.family) {
+		facts.push(project.settings.project.name);
+	}
+	facts.push(font.style);
+	facts.push(`${countItems(project.glyphs) + countItems(project.ligatures)} glyphs`);
+	facts.push(`${font.upm} UPM`);
+	facts.push(`${font.ascent} / ${font.descent}`);
 
-	const panelArea = content.querySelector('#content-page__panel');
-	const welcomeCard = makeElement({
-		className: 'panel__card full-width more-padding',
+	const meta = makeElement({ className: 'overview__meta' });
+	facts.forEach((fact, index) => {
+		if (index) meta.appendChild(makeElement({ tag: 'span', className: 'overview__meta-dot' }));
+		meta.appendChild(makeElement({ tag: 'span', content: fact }));
 	});
-	welcomeCard.appendChild(
-		makeElement({
-			innerHTML: `
-		<h2>Welcome to Blue Rain Type!</h2>
-		<p>
-			You can stay up to date on the latest news over at the
-			<a href="https://www.glyphrstudio.com/blog" target="_blank">Glyphr Studio blog</a>.
-			We also have a
-			<a href="https://www.glyphrstudio.com/help/tutorial" target="_blank">tutorial</a>
-			over on the Help and Docs site that will help you walk through some of the key steps
-			to designing your first font.
-			<br><br>
-			As always, if you find any bugs, or have an suggestions about functionality, please email us!
-			${emailLink()}
-		</p>
-	`,
-		})
-	);
+	identity.appendChild(meta);
+	head.appendChild(identity);
 
-	const projectSummaryCard = makeElement({
-		className: 'panel__card more-padding',
-		innerHTML: `
-			<h2>Project info</h2>
-			<label>Project name: </label><span>${project.settings.project.name}</span>
-			<label>Font family: </label><span>${project.settings.font.family}</span>
-			<label>Style: </label><span>${project.settings.font.style}</span>
-			<label>Glyph count: </label><span>${
-				countItems(project.glyphs) + countItems(project.ligatures)
-			}</span>
-			<label>UPM: </label><span>${project.settings.font.upm}</span>
-			<label>Ascent: </label><span>${project.settings.font.ascent}</span>
-			<label>Descent: </label><span>${project.settings.font.descent}</span>
-			<br><span></span>
-		`,
-	});
-	projectSummaryCard.appendChild(
+	head.appendChild(
 		makeElement({
 			tag: 'fancy-button',
-			innerHTML: 'Edit project and font info',
+			innerHTML: 'Font settings',
 			attributes: { secondary: '' },
 			onClick: () => {
 				const editor = getCurrentProjectEditor();
@@ -122,27 +98,57 @@ export function makePage_Overview() {
 		})
 	);
 
-	const contributeCard = makeElement({
-		className: 'panel__card full-width more-padding',
-		innerHTML: `
-			Blue Rain Type is open source and community supported.
-			<br>
-			`,
-	});
-	contributeCard.appendChild(
+	return head;
+}
+
+/**
+ * The font, set in itself.
+ *
+ * @param {Object} project - the current project
+ * @returns {Element}
+ */
+function makeSpecimen(project) {
+	const specimen = makeElement({ className: 'overview__specimen' });
+	specimen.appendChild(
 		makeElement({
-			tag: 'fancy-button',
-			innerHTML: 'Learn how you can help Blue Rain Type!',
-			attributes: { secondary: '' },
-			onClick: () => {
-				showModalDialog(makeContributeContent(), 500);
+			tag: 'display-canvas',
+			attributes: {
+				text: project.settings.app.previewText || 'Aa Bb Cc Xx Yy Zz',
+				'font-size': '64',
+				'show-placeholder-message': 'true',
 			},
+			title: 'Change this text on the Settings > App page.',
 		})
 	);
+	return specimen;
+}
 
-	panelArea.appendChild(projectSummaryCard);
-	panelArea.appendChild(welcomeCard);
-	panelArea.appendChild(contributeCard);
+/**
+ * The characters, from the chooser the rest of the app already uses.
+ *
+ * @returns {Element}
+ */
+function makeCharacterArea() {
+	const area = makeElement({ className: 'overview__characters' });
+	area.appendChild(
+		makeAllItemTypeChooserContent(
+			(itemID) => {
+				const editor = getCurrentProjectEditor();
+				editor.selectedItemID = itemID;
 
-	return content;
+				if (itemID.startsWith('glyph-')) editor.nav.page = 'Characters';
+				else if (itemID.startsWith('liga-')) editor.nav.page = 'Ligatures';
+				else if (itemID.startsWith('comp-')) editor.nav.page = 'Components';
+				else if (itemID.startsWith('kern-')) editor.nav.page = 'Kerning';
+				editor.navigate();
+
+				editor.history.addState(`Navigated to ${editor.project.getItemName(itemID, true)}`);
+			},
+			'',
+			getCurrentProjectEditor(),
+			/* The page is the grid here, so the tiles get the room. */
+			'large'
+		)
+	);
+	return area;
 }

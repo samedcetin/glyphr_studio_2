@@ -12,20 +12,61 @@ import { showAddLigatureDialog } from '../pages/ligatures.js';
 
 let savedClickHandler;
 let savedRegisterSubscriptions;
+/*
+	Which size of tile this chooser is currently building, remembered the same
+	way the click handler is and for the same reason: changing range rebuilds
+	the grid from inside this module, with nothing of the caller's in hand.
+	See the `compact` and `large` blocks in glyph-tile.css.
+*/
+let savedTileSize = '';
+
+/**
+ * How many characters are in the range on screen, and how many of them are
+ * drawn.
+ *
+ * The first half answers "is this all of them", which a grid that scrolls
+ * cannot. The second half is the one number a font in progress is actually
+ * measured by, and it is not written anywhere else in the app - you could
+ * only get it by scrolling the grid and counting the empty tiles.
+ *
+ * @param {Object} editor - project editor
+ * @returns {String}
+ */
+export function rangeCountText(editor = getCurrentProjectEditor()) {
+	const ids = editor.selectedCharacterRange?.getMemberIDs?.() || [];
+	const total = ids.length;
+	if (!total) return '';
+
+	const glyphs = editor.project.glyphs;
+	const drawn = ids.filter((id) => glyphs[`glyph-${id}`]?.shapes?.length).length;
+
+	return `${total} character${total === 1 ? '' : 's'} · ${drawn} drawn`;
+}
 
 export function makeAllItemTypeChooserContent(
 	clickHandler,
 	itemType = '',
-	editor = getCurrentProjectEditor()
+	editor = getCurrentProjectEditor(),
+	tileSize = ''
 ) {
 	// log(`makeAllItemTypeChooserContent`, 'start');
 	// log(`Project Name: ${editor.project.settings.project.name}`);
 	savedClickHandler = clickHandler;
 	savedRegisterSubscriptions = true;
+	savedTileSize = tileSize;
 
 	let wrapper = makeElement({ tag: 'div', className: 'item-chooser__wrapper' });
 	let header = makeElement({ tag: 'div', className: 'item-chooser__header' });
 	header.appendChild(makeRangeAndItemTypeChooser(editor, itemType));
+	/*
+		The same count the breadcrumb's dropdown carries. It was only in the
+		compact one, which is the smaller of the two places you need it: the
+		dropdown shows a range in a box you can see the end of, and the page
+		shows it in a grid that runs off the bottom of the screen.
+	*/
+	header.appendChild(
+		makeElement({ className: 'item-chooser__count', content: rangeCountText(editor) })
+	);
 	wrapper.appendChild(header);
 
 	let show = itemType || editor.nav.page;
@@ -48,6 +89,7 @@ export function makeSingleItemTypeChooserContent(itemPageName, clickHandler) {
 	// log(`makeSingleItemTypeChooserContent`, 'start');
 	savedClickHandler = clickHandler;
 	savedRegisterSubscriptions = true;
+	savedTileSize = '';
 	let wrapper = makeElement({ tag: 'div', className: 'item-chooser__wrapper' });
 
 	if (itemPageName === 'Ligatures') {
@@ -108,15 +150,11 @@ export function makeSingleItemTypeChooserContent(itemPageName, clickHandler) {
 		*/
 		wrapper.classList.add('item-chooser__wrapper--compact');
 		const editor = getCurrentProjectEditor();
-		const count = editor.selectedCharacterRange?.getMemberIDs()?.length || 0;
 
 		const header = makeElement({ tag: 'div', className: 'item-chooser__header' });
 		header.appendChild(makeRangeChooser());
 		header.appendChild(
-			makeElement({
-				className: 'item-chooser__count',
-				content: `${count} character${count === 1 ? '' : 's'}`,
-			})
+			makeElement({ className: 'item-chooser__count', content: rangeCountText(editor) })
 		);
 		wrapper.appendChild(header);
 		wrapper.appendChild(makeCharacterChooserTileGrid(editor, true));
@@ -266,10 +304,7 @@ function addRangeOptionsToOptionChooser(optionChooser, editor = getCurrentProjec
 
 				// The count belongs to the range, so it changes with it.
 				const count = wrapper.querySelector('.item-chooser__count');
-				if (count) {
-					const total = editor.selectedCharacterRange?.getMemberIDs()?.length || 0;
-					count.textContent = `${total} character${total === 1 ? '' : 's'}`;
-				}
+				if (count) count.textContent = rangeCountText(editor);
 			});
 
 			optionChooser.appendChild(option);
@@ -299,8 +334,10 @@ function makeCharacterChooserTileGrid(editor = getCurrentProjectEditor(), compac
 			// log(`glyphID: ${glyphID}`);
 			let oneTile = new GlyphTile({ 'displayed-item-id': glyphID, project: editor.project });
 			// In the breadcrumb's dropdown the tile is the letterform and nothing
-			// else - see :host([compact]) in glyph-tile.css.
+			// else; on the Overview page it is as large as the page can give it.
+			// See :host([compact]) and :host([large]) in glyph-tile.css.
 			if (compact) oneTile.setAttribute('compact', '');
+			else if (savedTileSize) oneTile.setAttribute(savedTileSize, '');
 			if (isPrimaryProject && editor.selectedGlyphID === glyphID) {
 				oneTile.setAttribute('selected', '');
 			}

@@ -693,3 +693,195 @@ span.spacer {
 	color: var(--text-secondary);
 	margin-bottom: 10px;
 }
+
+/* --------------------------------------------------------------
+	OVERVIEW PAGE
+
+	The font, and every character in it. It is one column rather than the
+	450px-of-cards-beside-a-grid the content pages share, because the grid is
+	the page - see makePage_Overview for what was in those cards and why none
+	of it outlived the first visit.
+	------------------------------------------------------------ */
+
+.overview {
+	display: grid;
+	grid-template-rows: min-content min-content minmax(0, 1fr);
+	gap: var(--sp-7);
+	/*
+		Capped and centred. The grid fills whatever it is given, and on a wide
+		monitor that is forty columns of 52px - a wall of letters with no line
+		to read along. This is about as wide as the specimen wants to be too.
+	*/
+	width: 100%;
+	max-width: 1280px;
+	margin: 0 auto;
+	height: 100%;
+	min-height: 0;
+	padding: var(--sp-8) var(--sp-8) 0 var(--sp-8);
+}
+
+/* --------------------------------------------------------------
+	Who this font is
+	------------------------------------------------------------ */
+
+.overview__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--sp-6);
+}
+
+.overview__family {
+	margin: 0;
+	font-size: var(--fs-3xl);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+/*
+	The facts, as a sentence. Seven label-and-value rows is a lookup table,
+	and nobody looks one of these up - they read all of them at once or none
+	of them.
+*/
+.overview__meta {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--sp-3);
+	margin-top: var(--sp-3);
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
+/* A dot, not a slash or a pipe: it separates without reading as a character
+	in the values on either side of it. */
+.overview__meta-dot {
+	width: 3px;
+	height: 3px;
+	border-radius: var(--r-pill);
+	background-color: var(--border-strong);
+}
+
+/* --------------------------------------------------------------
+	The font, set in itself
+	------------------------------------------------------------ */
+
+.overview__specimen {
+	display: flex;
+	align-items: center;
+	min-height: 132px;
+	padding: var(--sp-6) var(--sp-7);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	overflow: hidden;
+}
+
+.overview__specimen display-canvas {
+	display: block;
+	max-width: 100%;
+}
+
+/* --------------------------------------------------------------
+	Every character
+
+	The chooser the rest of the app uses, given the room to be a grid. On this
+	page it is the content, so it owns the scroll and its header stays put
+	above it.
+	------------------------------------------------------------ */
+
+.overview__characters {
+	display: grid;
+	grid-template-rows: minmax(0, 1fr);
+	min-height: 0;
+}
+
+.overview .item-chooser__wrapper {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr);
+	gap: 0;
+	padding: 0;
+	background-color: transparent;
+	border-radius: 0;
+	min-height: 0;
+}
+
+/*
+	Sticky, because this is the one thing you want while you are somewhere in
+	the middle of two hundred tiles: which range you are in, and how much of
+	it you have drawn. It carries the page's own ground so the tiles pass
+	under it rather than through it.
+*/
+.overview .item-chooser__header {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
+	padding: 0 0 var(--sp-5) 0;
+	background-color: var(--bg-app);
+}
+
+/*
+	A select is as wide as the longest thing it has to say, not as wide as the
+	page. It was min 177 and max 488, so on this page it ran half the width of
+	the window to hold the words "Basic Latin".
+*/
+.overview .item-chooser__header option-chooser {
+	display: block;
+	flex: 0 1 240px;
+	width: auto;
+	min-width: 0;
+	max-width: 240px;
+}
+
+.overview .item-chooser__count {
+	flex: 0 0 auto;
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/*
+	A grid, not a line of inline-blocks with margins on their right.
+
+	auto-fill at the tile's own width with space-between: the columns land in
+	the same places on every row, so the grid reads down as well as across,
+	and the leftover width goes into the gaps rather than into a ragged right
+	edge.
+*/
+.overview .item-chooser__tile-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 76px);
+	justify-content: space-between;
+	align-content: start;
+	/*
+		More between the rows than between the columns. A tile is a letterform
+		with its name written under it, so the row gap has to read as larger
+		than the space inside a tile - otherwise the name sits as close to the
+		letter below it as to the one it belongs to.
+	*/
+	gap: var(--sp-6) var(--sp-5);
+	padding-bottom: var(--sp-8);
+	overflow-y: auto;
+	min-height: 0;
+	animation: none;
+}
+
+.overview .item-chooser__tile-grid glyph-tile {
+	display: block;
+	margin: 0;
+}
+
+/* The pager, when a range is longer than one page of tiles, spans the grid
+	rather than sitting in the first column. */
+.overview .item-chooser__page-control {
+	grid-column: 1 / -1;
+	margin: 0 0 var(--sp-3) 0;
+}

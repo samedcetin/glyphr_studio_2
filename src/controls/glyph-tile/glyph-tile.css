@@ -18,6 +18,7 @@
 	padding: 0px;
 	box-shadow: none;
 	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	transition: opacity 500ms ease-in;
 }
 
@@ -27,6 +28,7 @@
 	margin: 0px;
 	padding: 1px;
 	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	height: 100%;
 	width: 52px;
 	height: 75px;
@@ -65,6 +67,7 @@
 	box-shadow: none;
 	border: 1px solid var(--border-subtle);
 	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
 }
 
 .wrapper:hover .thumbnail,
@@ -101,6 +104,7 @@
 	font-size: var(--fs-2xs);
 	color: var(--text-tertiary);
 	border-radius: var(--r-xs);
+	corner-shape: var(--corner-smooth);
 }
 
 .wrapper[selected] .name,
@@ -224,4 +228,53 @@
 :host([compact]) .wrapper[selected] .thumbnail {
 	background-color: transparent;
 	border: none;
+}
+
+/* --------------------------------------------------------------
+	Large
+
+	The tile as it appears on the Overview page. There the grid is not a
+	chooser standing beside the work - it is the page, and the letterform is
+	the thing you came to look at. At 50px you can tell an A from a B; at 72
+	you can tell whether you like it, which is the question that page asks.
+
+	Same parts as the full tile, including the caption: unlike the dropdown,
+	nothing here is competing for the height.
+	------------------------------------------------------------ */
+
+:host([large]),
+:host([large]) .wrapper {
+	width: 76px;
+	height: 104px;
+}
+
+:host([large]) .thumbnail {
+	width: 72px;
+	height: 72px;
+	padding-top: 0;
+	font-size: 48px;
+	line-height: 72px;
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+}
+
+/* The drawing has a viewBox, so it scales to whatever box it is given - but
+	it has to be told, or it keeps the 50px the markup was written at. */
+:host([large]) .thumbnail svg {
+	display: block;
+	width: 72px;
+	height: 72px;
+}
+
+:host([large]) .whitespace-char-thumbnail {
+	height: 72px;
+	padding-top: 24px;
+	font-size: 13px;
+	line-height: 13px;
+}
+
+:host([large]) .name {
+	height: 30px;
+	padding: var(--sp-2) 0 0 var(--sp-1);
+	font-size: var(--fs-xs);
 }
