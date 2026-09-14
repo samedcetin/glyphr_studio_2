@@ -1361,9 +1361,18 @@ nav .item-chooser__wrapper--compact {
 	what led here.
 	------------------------------------------------------------ */
 
+/*
+	One column, and its children fill it. panel__card justifies its items left
+	because most cards put a short control next to a label; here every child is
+	a full-width block, and inheriting that left was shrink-wrapping all of
+	them - the head to its text, so space-between had nothing to spread and the
+	undo and redo buttons sat against the summary instead of at the far edge,
+	and the list to its longest row, so the times stopped short of the margin.
+*/
 .history-list {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
+	justify-items: stretch;
 	gap: 0;
 	width: 100%;
 }
@@ -1385,6 +1394,7 @@ nav .item-chooser__wrapper--compact {
 .history-list__timeline {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
+	width: 100%;
 }
 
 .history-list__head-buttons {
