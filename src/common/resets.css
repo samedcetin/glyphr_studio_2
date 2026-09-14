@@ -369,8 +369,25 @@ textarea:focus::-webkit-resizer {
 	border: 2px outset var(--enabled-focus-background);
 }
 
+/*
+	A definite square, and one that contributes no leading.
+
+	It had a width and no height, and as an inline element the width did
+	nothing at all: its height came from the line-height it inherited, and
+	because resets.css sets font-size on the universal selector that was
+	--fs-md - 15.59px of it, inside a label whose own text is 14.4. So every
+	label carrying one of these stood 21.59px against 20.39 for every other
+	label in the same card, and the whole column below it sat a pixel low.
+
+	The mark was also 13px inside a 12px host, so it overhung its own box.
+	The host says the size now and the shadow fills it.
+*/
 info-bubble {
-	width: 12px;
+	display: inline-block;
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	line-height: 1;
+	vertical-align: middle;
 }
 
 /*

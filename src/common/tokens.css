@@ -273,6 +273,9 @@
 	--control-h-sm: 24px;
 	--control-h-lg: 32px;
 	--row-h: 28px;
+	/* 12px: an icon small enough to sit inside a line of --fs-sm text
+		without making the line taller than the text does. */
+	--icon-size-sm: 12px;
 	--icon-size: 16px;
 	--icon-size-lg: 20px;
 	--tool-size: 32px;

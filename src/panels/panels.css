@@ -100,6 +100,27 @@
 	min-width: 0;
 }
 
+/*
+	A span inside a label is the label, typographically.
+
+	makeSingleLabel puts its text straight on the <label> for a reason it
+	writes down: resets.css sets font-size on the universal selector, so a
+	span in there takes --fs-md and beats the --fs-sm the sidebar sets on the
+	label. Three labels are built by hand rather than through that helper -
+	bearings, winding, metric keys - and all three wrap their text in a span,
+	so all three were a step too large and stood 21.59px tall against 20.39
+	for every other label in the same card.
+
+	They cannot simply drop the span: those labels are grids, and a bare text
+	node in a grid is an anonymous item that takes `normal` leading instead
+	of the label's. So the rule goes here, and it covers whatever is written
+	next as well.
+*/
+.panel__card label span {
+	font-size: inherit;
+	line-height: inherit;
+}
+
 .panel__card label[disabled] {
 	color: var(--disabled-text);
 }
@@ -122,7 +143,7 @@
 */
 .panel__card .info {
 	display: grid !important;
-	gap: 8px;
+	gap: var(--sp-4);
 	grid-template-columns: minmax(0, max-content) min-content;
 	grid-template-rows: max-content;
 	align-items: center;

@@ -33,8 +33,9 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 13px;
-	height: 13px;
+	/* The host owns the size - see the info-bubble rule in resets.css. */
+	width: 100%;
+	height: 100%;
 	box-sizing: border-box;
 	border: 1px solid var(--icon-default);
 	border-radius: 50%;
