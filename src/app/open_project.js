@@ -1,3 +1,4 @@
+import { PRODUCT_URL } from './brand.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
 import logoHorizontal from '../common/graphics/logo-wordmark-horizontal-small.svg?raw';
@@ -298,7 +299,7 @@ function makeHubSidebar() {
 			<div class="hub-sidebar__legal">
 				Free and open source under the
 				<a href="https://www.gnu.org/licenses/gpl.html" target="_blank">GNU GPL</a>.
-				<a href="http://www.glyphrstudio.com" target="_blank">glyphrstudio.com</a>
+				<a href="${PRODUCT_URL}" target="_blank">bluerain.studio</a>
 			</div>
 		`,
 	});
@@ -815,7 +816,7 @@ function makeOpenFileView() {
 			<div class="hub-drop__icon">${hubIcons.upload}</div>
 			<div class="hub-drop__title">Drop a font file anywhere on this page</div>
 			<div class="hub-drop__formats">
-				<code>.gs2</code> <code>.txt</code> Glyphr Studio project<br>
+				<code>.gs2</code> <code>.txt</code> Blue Rain Type project<br>
 				<code>.otf</code> <code>.ttf</code> <code>.woff</code> OpenType, TrueType, WOFF<br>
 				<code>.svg</code> SVG font
 			</div>

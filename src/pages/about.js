@@ -1,18 +1,20 @@
 import { emailLink } from '../app/app.js';
+import {
+	PRODUCT_NAME,
+	PRODUCT_URL,
+	UPSTREAM_HELP,
+	UPSTREAM_URL,
+	VENDOR_NAME,
+} from '../app/brand.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
-import donateKofiSrc from '../common/graphics/donate-kofi.png';
-import donatePaypalSrc from '../common/graphics/donate-paypal.png';
-import fam_fd from '../common/graphics/fam_fd.png';
-import fam_ffjs from '../common/graphics/fam_ffjs.png';
-import fam_un from '../common/graphics/fam_un.png';
 import logoVertical from '../common/graphics/logo-wordmark-vertical.svg?raw';
 import { TabControl } from '../controls/tabs/tab_control.js';
 import { makeNavButton, toggleNavDropdown } from '../project_editor/navigator.js';
 
 /**
  * Page > About
- * Information about Glyphr Studio.
+ * Information about the app..
  * @returns {Element} - page content
  */
 export function makePage_About() {
@@ -43,7 +45,6 @@ export function makePage_About() {
 
 	tabControl.registerTab('Version', makeVersionInfo);
 	tabControl.registerTab('Contact and socials', makeContactInfo);
-	tabControl.registerTab('Family of products', makeFamilyInfo);
 	tabControl.registerTab('License', makeLicenseInfo);
 
 	tabControl.selectTab('Version');
@@ -62,31 +63,38 @@ function makeLicenseInfo() {
 	const content = makeElement({
 		innerHTML: `
 		<h1>License</h1>
-		<h2>The Glyphr Studio App</h2>
+		<h2>This app</h2>
 		<br>
 		<div class="page__card">
-			<h3>Glyphr Studio</h3>
-			<a href="https://www.glyphrstudio.com/" target="_blank">glyphrstudio.com</a>
+			<h3>${PRODUCT_NAME}</h3>
+			<a href="${PRODUCT_URL}" target="_blank">bluerain.studio</a>
 			<br><br>
-			The Glyphr Studio App is licensed under a
-			<a href='https://www.gnu.org/licenses/gpl.html' target='_blank'>GNU General Public License</a>,
-			which is a free / open source 'copyleft' license. You are free to use, distribute,
-			and modify Glyphr Studio as long as this license and its freeness stays intact.
+			${PRODUCT_NAME} is a modified version of
+			<a href="${UPSTREAM_URL}" target="_blank">Glyphr Studio</a>, and like it is
+			licensed under a
+			<a href='https://www.gnu.org/licenses/gpl.html' target='_blank'>GNU General
+			Public License</a>, version 3 or later - a free / open source 'copyleft'
+			license. You are free to use, distribute, and modify it as long as this
+			license and its freeness stays intact.
 			<br><br>
-			Copyright © 2010 - 2026 Matthew LaGrandeur
+			<a href="https://github.com/samedcetin/glyphr_studio_2" target="_blank">Source
+			code for this version</a>
+			<br><br>
+			Copyright © 2010 - 2026 Matthew LaGrandeur, for Glyphr Studio<br>
+			Copyright © 2026 ${VENDOR_NAME}, for the modifications in ${PRODUCT_NAME}
 		</div>
 
 		<br><br><br>
 		<h2>Fonts you create</h2>
 		<p>
 			Any font you create belongs 100% to you, and you must decide how to license it.<br>
-			You can find out <a href="https://www.glyphrstudio.com/help/about/licensing.html" target="_blank">
-			more about licensing on the Help site</a>.
+			You can find out <a href="${UPSTREAM_HELP}/about/licensing.html" target="_blank">
+			more about licensing on the Glyphr Studio help site</a>.
 		</p>
 
 		<br>
 		<h2>Libraries</h2>
-		<p>Glyphr Studio includes the following 3rd party libraries:</p>
+		<p>${PRODUCT_NAME} includes the following 3rd party libraries:</p>
 
 		<div class="page__card">
 			<h3>Font Flux JS</h3>
@@ -159,7 +167,7 @@ function makeVersionInfo() {
 			</div><br><br>
 			<h1>Version information</h1>
 			<div class="page__card">
-				<h3>Glyphr Studio App</h3>
+				<h3>${PRODUCT_NAME}</h3>
 				<label>Version name:</label> ${app.versionName}<br>
 				<label>Version number:</label> ${app.version}<br>
 				<label>Last updated on:</label> ${
@@ -168,7 +176,7 @@ function makeVersionInfo() {
 			</div>
 
 			<div class="page__card">
-				<h3>This Glyphr Studio Project</h3>
+				<h3>This project</h3>
 				<label>Project name:</label> ${editor.project.settings.project.name}<br>
 				<label>Unique project ID:</label> ${editor.project.settings.project.id}<br>
 				<label>Initially created with:</label> Version ${
@@ -180,7 +188,12 @@ function makeVersionInfo() {
 
 			<h2>More details</h2>
 			<p>
-				More information about this and past versions of the Glyphr Studio app can be found on the <a href="https://www.glyphrstudio.com/blog/" target="_blank">Glyphr Studio Blog</a>, the <a href="https://github.com/glyphr-studio/Glyphr-Studio-2/releases" target="_blank">Glyphr Studio 2 GitHub > Releases</a> page, or the <a href="https://www.glyphrstudio.com/help/about/updates.html" target="_blank">Glyphr Studio 2 Help > Updates</a> page.
+				${PRODUCT_NAME} is built on Glyphr Studio and its version numbers follow
+				that project. What changed in each of those versions is written up on the
+				<a href="https://github.com/glyphr-studio/Glyphr-Studio-2/releases"
+				target="_blank">Glyphr Studio releases</a> page and the
+				<a href="${UPSTREAM_HELP}/about/updates.html" target="_blank">Glyphr Studio
+				updates</a> page.
 			</p>
 
 
@@ -211,34 +224,21 @@ export function makeContributeContent() {
 		tag: 'div',
 		attributes: { style: 'margin: 20px;' },
 		innerHTML: `
-			<h2>Contribute!</h2>
-			If you want to give back to Glyphr Studio, there are two huge ways you can make it better!
-			<br>
-			<ul>
-				<li>
-					<strong>Send Feedback</strong> -
-					Use new features and let us know if you run into issues.  Follow us on
-					<a href="https://typo.social/@glyphrstudio" target="_blank">Mastodon</a>,
-					<a href="https://bsky.app/profile/glyphrstudio.com" target="_blank">Bluesky</a>, or
-					<a href="https://www.reddit.com/r/GlyphrStudio/" target="_blank">Reddit</a>.
-					Read the <a href="http://www.glyphrstudio.com/blog/" target="_blank">blog</a>,
-					and participate in discussions. Be vocal, and let us know what we should do next!
-					<br>
-				</li>
-				<li>
-					<strong>Make a Monetary Contribution</strong> -
-					Glyphr Studio will always be free, and we think that is very important.  But, it does take some
-					money to keep it going.	Contributions of even small amounts of money help keep the Glyphr Studio
-					effort going strong!
-					<br><br>
-				</li>
-			</ul>
-
-			<a href="https://ko-fi.com/glyphrstudio" target="_blank" class="donateLinkButton">
-				<img src="${donateKofiSrc}" alt="Support me on Ko-fi" /></a>
-
-			<a href="https://www.paypal.com/donate/?hosted_button_id=35R85K8X5MGFQ" target="_blank" class="donateLinkButton">
-				<img src="${donatePaypalSrc}" alt="PayPal - The safer, easier way to pay online!" /></a>
+			<h2>Built on Glyphr Studio</h2>
+			${PRODUCT_NAME} is a modified version of
+			<a href="${UPSTREAM_URL}" target="_blank">Glyphr Studio</a> by Matthew
+			LaGrandeur, released under the GPL. The years of work underneath this editor
+			are his.
+			<br><br>
+			The upstream project takes contributions at
+			<a href="${UPSTREAM_URL}" target="_blank">glyphrstudio.com</a>, and that is
+			where they belong - not with us.
+			<br><br>
+			<h2>Tell us what to fix</h2>
+			For anything specific to ${PRODUCT_NAME}, write to ${emailLink()}, or open an
+			issue on
+			<a href="https://github.com/samedcetin/glyphr_studio_2/issues"
+			target="_blank">GitHub</a>.
 			`,
 	});
 }
@@ -255,92 +255,28 @@ function makeContactInfo() {
 			<div class="about-page__contact-table">
 				<h2>Web</h2>
 				<span>Main site:</span>
-				<a href="https://www.glyphrstudio.com" target="_blank">glyphrstudio.com</a>
+				<a href="${PRODUCT_URL}" target="_blank">bluerain.studio</a>
 
 				<span>Email:</span>
 				${emailLink()}
 
-				<span>Help for Glyphr Studio v2:</span>
-				<a href="https://www.glyphrstudio.com/help" target="_blank">glyphrstudio.com/help</a>
+				<span>Source code:</span>
+				<a href="https://github.com/samedcetin/glyphr_studio_2" target="_blank">github.com/samedcetin/glyphr_studio_2</a>
 
-				<span>Blog:</span>
-				<a href="http://www.glyphrstudio.com/blog/" target="_blank">glyphrstudio.com/blog</a>
+				<h2>Glyphr Studio</h2>
+				The project this editor is built on. Its help still covers most of
+				what is here, and its channels are its own - not ours.
 
-				<h2>Socials</h2>
-				<span>Mastodon:</span>
-				<a href="https://typo.social/@glyphrstudio" target="_blank">@glyphrstudio@typo.social</a>
+				<span>Help:</span>
+				<a href="${UPSTREAM_HELP}" target="_blank">glyphrstudio.com/help</a>
 
-				<span>Bluesky:</span>
-				<a href="https://bsky.app/profile/glyphrstudio.com" target="_blank">@glyphrstudio.com</a>
+				<span>Site:</span>
+				<a href="${UPSTREAM_URL}" target="_blank">glyphrstudio.com</a>
 
-				<span>Reddit:</span>
-				<a href="https://www.reddit.com/r/GlyphrStudio/" target="_blank">reddit.com/r/GlyphrStudio</a>
-
-				<h2>Source code</h2>
-
-				<span>GitHub:</span>
+				<span>Source:</span>
 				<a href="https://github.com/glyphr-studio" target="_blank">github.com/glyphr-studio</a>
 			</div>
 		`,
-	});
-
-	return content;
-}
-
-/**
- * Makes content for family info
- * @returns {Element}
- */
-function makeFamilyInfo() {
-	const content = makeElement({
-		tag: 'div',
-		attributes: { style: 'margin: 20px;' },
-		innerHTML: `
-			<h1>Family of products</h1>
-			Check out these other tools that are part of the Glyphr Studio family of font-related products:
-			<br><br>
-
-			<div class="page__card family-card">
-				<h3 class="span-all">Font Flux JS</h3>
-				<img class="page__card__logo-image" src="${fam_ffjs}" />
-				<p>
-					Convert fonts to JSON, make edits, then convert them back!
-					Font Flux JS is a JavaScript library for parsing OpenType/TrueType font binaries into structured JSON, then exporting that JSON back into a valid font binary. Every table is fully parsed into human-readable fields!
-					<br/><br/>
-					<a href="https://www.glyprstudio.com/font-flux-js" target="_blank">glyphrstudio.com/font-flux-js</a>
-					<br/>
-					<a href="https://www.github.com/mattlag/font-flux-js" target="_blank">github.com/mattlag/font-flux-js</a>
-				</p>
-			</div>
-
-			<div class="page__card family-card">
-				<h3 class="span-all">Unicode Ninja</h3>
-				<img class="page__card__logo-image" src="${fam_un}" />
-				<p>
-					Easily explore Unicode characters and ranges. Now supporting Unicode planes 0, 1, 2, and 3!
-					Useful for typeface designers, or regular humans looking for funky glyphs.
-					Unicode Ninja provides quick access to information about characters you know about, and easily discover characters you don't know about.
-					<br/><br/>
-					<a href="https://www.glyprstudio.com/unicodeninja" target="_blank">glyphrstudio.com/unicodeninja</a>
-					<br/>
-					<a href="https://www.github.com/mattlag/unicodeninja" target="_blank">github.com/mattlag/unicodeninja</a>
-				</p>
-			</div>
-
-			<div class="page__card family-card">
-				<h3 class="span-all">FontDiff</h3>
-				<img class="page__card__logo-image" src="${fam_fd}" />
-				<p>
-					Drop two fonts to see their differences, both visually and data-ly.
-					Useful for comparing different versions of a font, trying to identify what exactly is
-					making it work (or not).
-					<br/><br/>
-					<a href="https://www.glyprstudio.com/fontdiff" target="_blank">glyphrstudio.com/fontdiff</a>
-					<br/>
-					<a href="https://www.github.com/mattlag/fontdiff" target="_blank">github.com/mattlag/fontdiff</a>
-				</p>
-			</div>
-			`,
 	});
 
 	return content;

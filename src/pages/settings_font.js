@@ -19,7 +19,7 @@ export function makeSettingsTabContentFont() {
 			<h1>Font metadata</h1>
 			<p>
 				These settings will be exported with any font you save,
-				and will be used around Glyphr Studio while you are making edits.
+				and will be used around Blue Rain Type while you are making edits.
 			</p>
 		`,
 	});

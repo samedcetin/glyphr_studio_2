@@ -5,11 +5,16 @@ import { showToast } from '../../controls/dialogs/dialogs.js';
 import { Glyph } from '../../project_data/glyph.js';
 import { Maxes, getOverallMaxes } from '../../project_data/maxes.js';
 import { makeFileDateString, saveTextFile } from '../../project_editor/file_io.js';
+import { PRODUCT_NAME, PRODUCT_URL } from '../../app/brand.js';
 import { shouldExportItem } from '../otf/font_export.js';
 /**
 	IO > Export > SVG Font
-	Converting a Glyphr Studio Project to XML in
-	a SVG Font format.
+	Converting a project to XML in a SVG Font format.
+
+	The metadata block here is the one place the app's own name leaves the app
+	and lands inside a file the user goes on to ship. It reads from brand.js
+	for that reason - a font someone sells should not credit the editor we
+	forked from rather than the one they used.
 **/
 
 /**
@@ -35,9 +40,9 @@ export function ioSVG_exportSVGfont() {
 	<metadata>
 		Project: ${project.settings.project.name}
 		Font exported on ${timeOutputString}
-		Created with Glyphr Studio - the free, web-based font editor
+		Created with ${PRODUCT_NAME} - the web-based font editor for game and type work
 		Version: ${app.version}
-		Find out more at www.glyphrstudio.com
+		Find out more at ${PRODUCT_URL}
 	</metadata>
 	<defs>
 		<font id="${familyID}" horiz-adv-x="${fontSettings.upm}">

@@ -251,7 +251,7 @@ export function getActionData(name) {
 			},
 			{
 				iconName: 'exportGlyphSVG',
-				title: `Export glyph SVG File\nGenerate a SVG file that only includes the SVG outline for this glyph. This file can be dragged and dropped directly to another Glyphr Studio project edit canvas, allowing for copying glyph paths between projects.`,
+				title: `Export glyph SVG File\nGenerate a SVG file that only includes the SVG outline for this glyph. This file can be dragged and dropped directly to another Blue Rain Type project edit canvas, allowing for copying glyph paths between projects.`,
 				onClick: () => {
 					const editor = getCurrentProjectEditor();
 					let content = makeGlyphSVGforExport(editor.selectedItem);
