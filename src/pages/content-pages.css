@@ -1814,3 +1814,173 @@ span.spacer {
 
 
 
+
+/* --------------------------------------------------------------
+	SETTINGS PAGE
+
+	The head, the three tabs as a row, and whichever one is open in a card
+	that scrolls. See makePage_Settings for what the 450px column of tab names
+	became.
+	------------------------------------------------------------ */
+
+.settings {
+	display: grid;
+	grid-template-rows: min-content min-content minmax(0, 1fr);
+	gap: var(--sp-6);
+}
+
+/*
+	A row of three. The control builds a stack of full-width tabs, which is
+	right in a narrow panel and is where the old page spent 450 pixels on the
+	words Project, Font and App - so the row is scoped here, and About and Help
+	keep the stack.
+
+	The container arrives carrying panel__card and full-width, which is the
+	card treatment it needed while it was one; those are answered rather than
+	removed at the source, since the other two pages still want them.
+*/
+.settings__tabs .tab-control__tab-container {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	width: auto;
+	padding: 0;
+	margin: 0;
+	background-color: transparent;
+	border: none;
+	box-shadow: none;
+}
+
+.settings__tabs .tab-control__tab {
+	width: auto;
+	height: var(--control-h-lg);
+	display: flex;
+	align-items: center;
+	padding: 0 var(--sp-5);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface);
+	font-size: var(--fs-sm);
+}
+
+.settings__tabs .tab-control__tab[selected] {
+	border-color: var(--accent);
+}
+
+/* --------------------------------------------------------------
+	The open tab
+
+	One card, because one tab is one panel of settings. It owns the scroll, so
+	the head and the tabs stay put while a long tab moves under them.
+	------------------------------------------------------------ */
+
+.settings__body {
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+.settings__body::-webkit-scrollbar {
+	display: none;
+}
+
+.settings .settings-page__tab-content {
+	width: auto;
+	max-width: 900px;
+}
+
+/*
+	The tab's own heading, which is the card's title - so it takes the card
+	title's size rather than an h1's, and the sentence under it steps back.
+*/
+.settings .settings-page__tab-content h1 {
+	margin: 0;
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	color: var(--text-primary);
+}
+
+.settings .settings-page__tab-content h2 {
+	margin: var(--sp-8) 0 var(--sp-2) 0;
+	font-size: var(--fs-md);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+.settings .settings-page__tab-content p {
+	margin: var(--sp-2) 0 var(--sp-5) 0;
+	max-width: 80ch;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+/*
+	The rows. Label, its info bubble, the control, and what kind of value it
+	takes - four columns, aligned down the page, at the row height the rest of
+	the app uses rather than a flat 24px.
+*/
+.settings .settings-table {
+	grid-template-columns: max-content min-content minmax(min-content, 320px) min-content;
+	grid-template-rows: auto;
+	align-items: center;
+	row-gap: var(--sp-3);
+	column-gap: var(--sp-4);
+}
+
+.settings .settings-page__tab-content .settings__label {
+	padding-top: 0;
+	line-height: 1;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.settings .settings-page__tab-content span {
+	height: auto;
+	line-height: inherit;
+}
+
+/*
+	Fields sit on the surface here, the way they do on the other content
+	pages: this is a card on a ground, and a sunken field in a raised card is
+	two directions at once.
+*/
+.settings .settings-page__tab-content input[type='text'],
+.settings .settings-page__tab-content input:not([type]) {
+	height: var(--control-h);
+	width: 100%;
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+	transition: var(--transition-color);
+}
+
+.settings .settings-page__tab-content input[type='text']:hover,
+.settings .settings-page__tab-content input:not([type]):hover {
+	border-color: var(--accent);
+}
+
+.settings .settings-page__tab-content .settings_read-only-value {
+	padding-left: 0;
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/*
+	The range tables. Concentric inside the card - --r-3xl less its --sp-6 of
+	padding - and no longer carrying their own frame colour.
+*/
+.settings .range-table__list-area {
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	overflow: hidden;
+}
+

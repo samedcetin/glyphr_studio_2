@@ -83,7 +83,9 @@ describe('Navigator: Page Navigation', () => {
 		navigator.navigate(true);
 		const pageContent = navigator.makePageContent();
 		expect(pageContent.id).toBe('app__main-content');
-		expect(pageContent.querySelector('.nav-button__title').innerHTML).toBe('Settings');
+		// Named in its own heading, not in a page-selector button - see the
+		// Global actions test above.
+		expect(pageContent.querySelector('.studio-page__title').innerHTML).toBe('Settings');
 	});
 
 	it('Navigate to page: Help', () => {
