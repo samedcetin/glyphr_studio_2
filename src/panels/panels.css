@@ -1036,11 +1036,11 @@ nav .item-chooser__wrapper--compact {
 	padding, a 10px gap, a 4px corner, a 100px column overridden to max-content
 	two lines later - and its own greys. Every value here is a token now.
 
-	THE COLUMNS HOLD STILL. They were all content-sized, so the divider landed
-	at a different x on every row: measured, 34px, 146px and 62px into three
-	rows of the same list. The two halves of a kern pair are a mirror, and a
-	mirror only reads as one if its line does not move. Left side right-aligned
-	against the rule, right side left-aligned away from it, equal tracks.
+	THE ROW FITS. Its five tracks are sized so that the members of a group are
+	all on screen at once: the left side takes its content, the right side
+	takes what is left, and the value stays pinned to the right edge. Both
+	member tracks can still shrink and scroll, but only for a kern class too
+	long for any width.
 */
 
 /*
@@ -1066,12 +1066,26 @@ nav .item-chooser__wrapper--compact {
 /*
 	One line per row, always. Letting a row grow with its members made the
 	list ragged - 62px against 34 - and a kern class of twenty characters
-	would have made it four lines deep. The members scroll instead, so the
-	row height is constant and nothing is dropped: see the two cells below.
+	would have made it four lines deep. The tracks above are sized so that a
+	normal group fits on that line; a very long one scrolls.
 */
 .kern-group-chooser__row {
 	display: grid;
-	grid-template-columns: max-content minmax(0, 1fr) 1px minmax(0, 1fr) max-content;
+	/*
+		The left side takes what it needs and the right side takes the rest, so
+		the row fits on one line instead of hiding the end of it.
+
+		Equal halves were the wrong trade. They held the rule at one x down the
+		whole list, which reads well - but a group of one character against a
+		group of eight then left 134px empty on the left while 60px of the right
+		ran off the edge. Nothing in a list of eight-character kern classes
+		should need scrolling to be seen, and a still rule is not worth paying
+		for with the thing the row is there to show.
+
+		minmax(0, ...) on both, so a kern class too long for any layout shrinks
+		and scrolls rather than bursting the popover.
+		*/
+	grid-template-columns: max-content minmax(0, auto) 1px minmax(0, 1fr) max-content;
 	align-items: center;
 	gap: var(--sp-3);
 	width: 100%;
