@@ -6,6 +6,7 @@ import {
 	makeActionsArea_ComponentInstance,
 	makeActionsArea_Glyph,
 	makeActionsArea_KernGroup,
+	makeActionsArea_OtherKernGroups,
 	makeActionsArea_Path,
 	makeActionsArea_PathPoint,
 	makeActionsArea_Universal,
@@ -60,6 +61,12 @@ const quickActionGroups = [
 		name: 'Kern group',
 		isAvailable: isKerningPage,
 		make: () => makeActionsArea_KernGroup(),
+	},
+	{
+		/* Its own heading because it searches the project, not the selection. */
+		name: 'All kern groups',
+		isAvailable: isKerningPage,
+		make: () => makeActionsArea_OtherKernGroups(),
 	},
 	{
 		name: 'Edit',

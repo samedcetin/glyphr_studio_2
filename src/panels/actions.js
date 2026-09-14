@@ -942,6 +942,21 @@ export function makeActionsArea_KernGroup() {
 }
 
 /**
+ * Find and delete a letter pair across every kern group.
+ *
+ * These two search the project rather than acting on what is selected, which
+ * is why they carry their own heading in the quick actions popover instead
+ * of joining the kern group above.
+ *
+ * @returns {Element}
+ */
+export function makeActionsArea_OtherKernGroups() {
+	let actionsArea = makeElement({ tag: 'div', className: 'panel__actions-area' });
+	addChildActions(actionsArea, getActionData('otherKernGroupActions'));
+	return actionsArea;
+}
+
+/**
  * Redraws the selected item as whole pixels.
  *
  * Destructive by design, and reported as such: the toast says how many shapes
