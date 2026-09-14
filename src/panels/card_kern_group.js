@@ -29,9 +29,17 @@ import { makeSingleInput, makeSingleLabel } from './cards.js';
  */
 function makeGroupLabel(text, count) {
 	const label = makeSingleLabel(text);
+
+	/*
+		The count goes straight on the label, with no span around the name.
+		makeSingleLabel says why: resets.css sets font-size on the universal
+		selector, so a span in here takes --fs-md directly and beats the
+		--fs-sm the sidebar sets on the label.
+	*/
 	const countElement = makeElement({ className: 'kern-chips__count' });
 	countElement.textContent = `${count}`;
 	label.appendChild(countElement);
+
 	return label;
 }
 

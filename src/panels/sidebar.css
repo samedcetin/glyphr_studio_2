@@ -145,6 +145,20 @@
 	grid-template-columns: var(--panel-label-col) minmax(0, 1fr);
 }
 
+/*
+	A section that ends with one action - Create a new ligature, component or
+	kern group - separates it from the card above.
+
+	It had nothing on the Kerning page, so the button sat flush against the
+	right group and read as part of it, and an inline 10px margin on the
+	other two, which is not a step on the scale. --sp-6 puts it a rung
+	above the --sp-5 between two cards and the --sp-3 between rows inside one,
+	so the ladder says how far apart things are.
+*/
+.sidebar__section-body > fancy-button {
+	margin-top: var(--sp-6);
+}
+
 /* Hairline between stacked cards within one section. */
 .sidebar__section-body .panel__card + .panel__card {
 	margin-top: var(--sp-5);

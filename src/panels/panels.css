@@ -1006,8 +1006,16 @@ nav .item-chooser__wrapper--compact {
 	color: var(--text-danger);
 }
 
-/* How many are on this side, beside the label that names it. */
+/*
+	How many are on this side, beside the label that names it.
+
+	line-height: 0 so it contributes no leading of its own. A second font in
+	an inline box grows the line box, and that made these two labels 21px
+	against every other label in the card at 20 - a pixel of drift down the
+	rest of the column. Its baseline is untouched; only the half-leading is.
+*/
 .kern-chips__count {
+	line-height: 0;
 	margin-left: var(--sp-2);
 	font-family: var(--font-mono);
 	font-size: var(--fs-2xs);
