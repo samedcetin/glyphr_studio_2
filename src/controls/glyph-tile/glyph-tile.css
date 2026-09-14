@@ -233,104 +233,124 @@
 /* --------------------------------------------------------------
 	Large
 
-	The tile as it appears on the Overview page. There the grid is not a
-	chooser standing beside the work - it is the page, and the letterform is
-	the thing you came to look at. At 50px you can tell an A from a B; at 72
-	you can tell whether you like it, which is the question that page asks.
+	The tile as it appears on the Overview page's coverage grid. There the
+	grid is not a chooser standing beside the work - it is the page, and the
+	letterform is the thing you came to look at.
 
-	Same parts as the full tile, including the caption: unlike the dropdown,
-	nothing here is competing for the height.
+	It is a card rather than a plate inside a plate. The small tile draws a
+	bordered white square for the drawing and sits it on a transparent
+	wrapper, which at this size reads as two boxes for one thing. Here the
+	card is the paper: one border, one ground, the letterform centred on it
+	and the code point centred underneath.
 	------------------------------------------------------------ */
 
 :host([large]),
 :host([large]) .wrapper {
-	width: 76px;
+	width: 140px;
 	height: 104px;
 }
 
 :host([large]) .wrapper {
-	padding: 2px;
-	border-radius: var(--r-xl);
+	display: grid;
+	grid-template-rows: minmax(0, 1fr) min-content;
+	align-items: center;
+	justify-items: center;
+	padding: var(--sp-4) var(--sp-3) var(--sp-3) var(--sp-3);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
+	position: relative;
 }
 
 /*
-	The card is always there.
-
-	The wrapper ground is the last thing that was only drawn under the cursor.
-	On a chooser that is right - it is how you tell which of fifty you are on.
-	Here the tiles are the page, and letterforms floating on the app background
-	with nothing under them are not a set of cards until you point at one. So
-	every one of them has the ground now.
-
-	:not([selected]) so this does not reach past the selected tile, which
-	carries its own. It is also what holds the hover identical: it is one
-	selector more specific than .wrapper:hover, so pointing at a tile changes
-	nothing but the cursor.
+	Hovering changes nothing but the cursor. The card already stands off the
+	page on its own, and a grid of ninety-five of them lighting up one at a
+	time as the pointer crosses is motion with nothing to say - the one that
+	matters is the selected one, and that is a different treatment entirely.
 */
-:host([large]) .wrapper:not([selected]) {
-	background-color: var(--bg-hover);
+:host([large]) .wrapper:hover,
+:host([large]) .wrapper:focus {
+	background-color: var(--bg-surface);
+	border-color: var(--border-subtle);
 }
 
 /*
-	Resting, this one looks the way the small tile looks under the cursor:
-	full opacity, the stronger border, the readable placeholder colour.
+	Where you are: the accent on the border and the accent's own tint behind
+	it. One border rather than a border plus the inset ring the small tile
+	draws, which at this size is two lines a pixel apart.
+*/
+:host([large]) .wrapper[selected],
+:host([large]) .wrapper[selected]:hover,
+:host([large]) .wrapper[selected]:focus {
+	background-color: var(--bg-selected);
+	border-color: var(--accent);
+	box-shadow: none;
+}
 
-	The dimming is there to tell a row of fifty thumbnails apart from the one
-	you are pointing at. On this page the grid is the content rather than a
-	chooser you are picking from, so ninety-five letters at 0.85 with the
-	faintest border is the whole page held slightly back for no reason. The
-	hover still reads - it is the wrapper that tints, not the plate.
+/*
+	The drawing, with nothing under it. The plate, its border and the dimming
+	all belong to the small tile, where they separate one thumbnail from the
+	next; here the card does that.
 */
 :host([large]) .thumbnail,
 :host([large]) .wrapper:hover .thumbnail,
 :host([large]) .wrapper:focus .thumbnail,
 :host([large]) .wrapper[selected] .thumbnail {
-	opacity: 1;
-	border-color: var(--border-default);
-	color: var(--text-tertiary);
-}
-
-:host([large]) .thumbnail {
-	width: 72px;
-	height: 72px;
+	width: 64px;
+	height: 64px;
+	margin: 0;
 	padding-top: 0;
-	font-size: 48px;
-	line-height: 72px;
-	/*
-		A rounder plate than the small tile. At 50px --r-xs is already visible
-		as a corner; at 72 it reads as a square with the corners nicked off, so
-		this takes --r-lg, and the hover and selected surface around it takes
-		--r-xl to stay concentric with it across the 2px of tile padding.
-	*/
-	border-radius: var(--r-lg);
-	corner-shape: var(--corner-smooth);
+	font-size: 44px;
+	line-height: 64px;
+	background-color: transparent;
+	border: none;
+	border-radius: 0;
+	opacity: 1;
+	color: var(--text-tertiary);
 }
 
 /* The drawing has a viewBox, so it scales to whatever box it is given - but
 	it has to be told, or it keeps the 50px the markup was written at. */
 :host([large]) .thumbnail svg {
 	display: block;
-	width: 72px;
-	height: 72px;
+	width: 64px;
+	height: 64px;
 }
 
 :host([large]) .whitespace-char-thumbnail {
-	height: 72px;
-	padding-top: 24px;
-	font-size: 13px;
-	line-height: 13px;
+	width: 64px;
+	height: 64px;
+	padding-top: 20px;
+	font-size: 12px;
+	line-height: 12px;
 }
 
 /*
-	The caption keeps its own colour in every state.
+	The code point, centred under the letterform.
 
-	It turns --text-accent on hover and while selected, which is the small
-	tile telling you which one you are on in a grid where nothing else can.
-	Here the tile already says it twice - the surround tints, and the plate is
-	the brightest thing on the page - so a third blue mark under the letter is
-	the same news a third time, and it is the one piece of the tile that is a
-	label rather than a state.
+	The small tile's caption is a 300px box clipped by the tile, pulled a
+	pixel left - a way of left-aligning text in a box too narrow to hold it.
+	Here it is the width of the card and centred in it, which is what a label
+	under a centred drawing has to be.
+*/
+:host([large]) .name {
+	position: static;
+	left: auto;
+	width: 100%;
+	height: auto;
+	padding: 0;
+	text-align: center;
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+/*
+	And it keeps that colour in every state. It turns --text-accent on hover
+	and while selected, which is the small tile telling you which one you are
+	on in a grid where nothing else can. This card says it twice already.
 */
 :host([large]) .wrapper:hover .name,
 :host([large]) .wrapper:focus .name,
@@ -339,25 +359,25 @@
 :host([large]) .wrapper[selected][session-state='new'] .name,
 :host([large]) .wrapper[selected][session-state='changed'] .name {
 	color: var(--text-tertiary);
+	font-weight: var(--fw-normal);
 }
 
-:host([large]) .name {
-	height: 30px;
-	padding: var(--sp-2) 0 0 var(--sp-1);
-	font-size: var(--fs-xs);
+:host([large]) .wrapper[selected] .name {
+	color: var(--text-accent);
 }
 
 /* --------------------------------------------------------------
 	The coverage dot
 
-	Whether the font has this character yet, in the corner of the tile. The
+	Whether the font has this character yet, in the corner of the card. The
 	caption cannot say it - it is the code point - and the drawing cannot
 	either, because an undrawn slot still shows the character in the interface
 	font, which is exactly the thing you are trying to tell apart from a real
 	outline.
 
-	Large only. On a 40px tile in a menu it would be a speck on the letterform,
-	and on the 52px one the caption already carries the session states.
+	Large only. On a 40px tile in a menu it would be a speck on the
+	letterform, and on the 52px one the caption already carries the session
+	states.
 	------------------------------------------------------------ */
 
 .status {
@@ -367,24 +387,22 @@
 :host([large]) .status {
 	display: block;
 	position: absolute;
-	top: 8px;
-	right: 8px;
-	width: 5px;
-	height: 5px;
+	top: 9px;
+	right: 9px;
+	width: 6px;
+	height: 6px;
 	border-radius: var(--r-pill);
 	background-color: var(--accent);
 }
 
 /*
 	Nothing drawn: an outline of the same dot rather than no dot at all. An
-	empty corner reads as a tile that forgot to draw one, and the pair - filled
-	against hollow - is the same language as the history timeline's markers.
+	empty corner reads as a card that forgot to draw one, and the pair -
+	filled against hollow - is the same language as the history timeline's
+	markers.
 */
 :host([large]) .wrapper[drawn='false'] .status {
 	background-color: transparent;
 	box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
-:host([large]) .wrapper {
-	position: relative;
-}

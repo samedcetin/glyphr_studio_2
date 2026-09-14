@@ -1006,7 +1006,8 @@ span.spacer {
 .overview__coverage-head {
 	display: flex;
 	align-items: center;
-	gap: var(--sp-5);
+	flex-wrap: wrap;
+	gap: var(--sp-4) var(--sp-5);
 	margin-bottom: var(--sp-6);
 }
 
@@ -1094,7 +1095,7 @@ span.spacer {
 /* The chooser, given the room to be a grid. */
 .overview .item-chooser__wrapper {
 	display: grid;
-	grid-template-rows: min-content minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr);
 	gap: 0;
 	padding: 0;
 	background-color: transparent;
@@ -1102,11 +1103,13 @@ span.spacer {
 	min-height: 0;
 }
 
+/* Pushed to the far end of the heading row - see makeCoverageCard. */
 .overview .item-chooser__header {
 	display: flex;
 	align-items: center;
 	gap: var(--sp-3);
-	padding: 0 0 var(--sp-5) 0;
+	padding: 0;
+	margin-left: auto;
 }
 
 /*
@@ -1128,7 +1131,7 @@ span.spacer {
 */
 .overview .item-chooser__tile-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, 76px);
+	grid-template-columns: repeat(auto-fill, 140px);
 	justify-content: space-between;
 	align-content: start;
 	/*
@@ -1136,7 +1139,7 @@ span.spacer {
 		with its code point written under it, so the row gap has to read as
 		larger than the space inside a tile.
 	*/
-	gap: var(--sp-5) var(--sp-2);
+	gap: var(--sp-4) var(--sp-3);
 	overflow-y: auto;
 	/* No bar down the right edge of the one thing this card exists to show. */
 	scrollbar-width: none;

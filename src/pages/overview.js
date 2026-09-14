@@ -378,9 +378,20 @@ function makeCoverageCard() {
 	if (header) {
 		/* In front of the range select, because you reach for it first. */
 		header.insertBefore(makeSearchField(), header.firstChild);
-		/* The count is in the heading above now, as a fraction and a bar. */
+		/* The count is in the heading now, as a fraction and a bar. */
 		const count = header.querySelector('.item-chooser__count');
 		if (count) count.remove();
+		/*
+			Moved up beside the heading, so the row reads as one line: what this
+			is, how far through it you are, and the two controls that change
+			which part of it you are looking at. Left where the chooser built
+			it, they were a second row of controls under a row of numbers.
+
+			Safe to move: nothing in item_chooser reaches for the header again -
+			it replaces the tile grid, and it announces a range change as an
+			event that bubbles past here either way.
+		*/
+		head.appendChild(header);
 	}
 	card.appendChild(chooser);
 
