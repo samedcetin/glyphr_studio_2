@@ -18,9 +18,9 @@
 	in one panel - 1332, 1336, 1345 - where the app has one. Hairlines
 	separate the three parts instead, and they cost no horizontal space.
 
-	CORNERS. --r-md, which is the radius every input in the app carries, so
-	the buttons and the rows in here are the same shape as the controls
-	everywhere else.
+	CORNERS. --r-lg, the corner the toolbar and the Compose button take. The
+	rows and the two buttons are the only rounded surfaces left in the panel
+	and they carry one radius between them, on one control height.
 */
 
 .quality-checks {
@@ -94,19 +94,21 @@
 }
 
 /*
-	The same square as the Layers panel's row toggles, and the same radius
-	as an input. Their right edge is the panel's, so they end where the
+	--control-h square, so the two buttons are the height of the rows under
+	them and --r-lg reads on them the way it reads there. At --control-h-sm
+	the same corner made them circles, which is a different shape, not a
+	smaller one. Their right edge is the panel's, so they end where the
 	counts below them end.
 */
 .quality-checks__action {
 	display: grid;
 	place-items: center;
-	width: var(--control-h-sm);
-	height: var(--control-h-sm);
+	width: var(--control-h);
+	height: var(--control-h);
 	padding: 0;
 	background-color: transparent;
 	border: 1px solid transparent;
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	color: var(--icon-default);
 	cursor: pointer;
@@ -171,8 +173,12 @@
 		the only thing in the panel that had one. The band carries the state.
 	*/
 	border: none;
-	/* --r-md, the radius of every input, and of the Anchors and Layers rows. */
-	border-radius: var(--r-md);
+	/*
+		--r-lg. The Compose button and the toolbar carry it, and a 28px band is
+		close enough to their 32 that a smaller corner here would read as a
+		different family rather than as a smaller member of the same one.
+	*/
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	text-align: left;
 	cursor: default;
