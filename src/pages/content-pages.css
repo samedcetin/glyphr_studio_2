@@ -884,7 +884,7 @@ span.spacer {
 	min-width: 0;
 	height: var(--control-h);
 	padding: 0 var(--sp-3);
-	background-color: var(--bg-surface-sunken);
+	background-color: var(--bg-surface);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
@@ -912,7 +912,7 @@ span.spacer {
 .overview__select {
 	height: var(--control-h);
 	padding: 0 var(--sp-7) 0 var(--sp-3);
-	background-color: var(--bg-surface-sunken);
+	background-color: var(--bg-surface);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
@@ -1079,7 +1079,7 @@ span.spacer {
 	max-width: 320px;
 	height: var(--control-h);
 	padding: 0 var(--sp-3);
-	background-color: var(--bg-surface-sunken);
+	background-color: var(--bg-surface);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
@@ -1143,7 +1143,19 @@ span.spacer {
 	A select is as wide as the longest thing it has to say, not as wide as the
 	card it sits in.
 */
+/*
+	Fields on this page sit on the surface rather than in it.
+
+	Everywhere else an input takes --bg-surface-sunken, which reads as a well
+	cut into a panel. This page is cards on a ground, and a sunken field in a
+	raised card is two directions at once - so they take the card's own white
+	and keep the border to say they are fields.
+
+	The range select is a shared control with its own shadow tree, so it is
+	handed the token rather than a rule it cannot see.
+*/
 .overview .item-chooser__header option-chooser {
+	--bg-surface-sunken: var(--bg-surface);
 	display: block;
 	flex: 0 1 200px;
 	width: auto;

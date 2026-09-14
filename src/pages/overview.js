@@ -178,13 +178,22 @@ function makeSpecimenCard() {
 		attributes: {
 			text: startingText,
 			'font-size': `${startingSize}`,
+			/* Sized to the text rather than to the card, so the box can be
+				centred - a canvas sized to its container draws from the
+				container's left edge and no CSS can move the pixels. */
+			'page-width': 'auto',
 			'show-placeholder-message': 'true',
 		},
 	});
 	const line = makeElement({
 		tag: 'display-canvas',
 		className: 'overview__specimen-line',
-		attributes: { text: PANGRAM, 'font-size': '28', 'show-placeholder-message': 'false' },
+		attributes: {
+			text: PANGRAM,
+			'font-size': '28',
+			'page-width': 'auto',
+			'show-placeholder-message': 'false',
+		},
 	});
 	stage.appendChild(headline);
 	stage.appendChild(line);

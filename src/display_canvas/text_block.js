@@ -21,6 +21,14 @@ export class TextBlock {
 		this.lineBreakers = oa.lineBreakers || ['\u0020', '\u2002', '\u2003'];
 		this.data = [];
 		this.pixelHeight = 0;
+		/*
+			How wide the drawn text is, which the block has always known and never
+			said: every character carries a running widths.aggregate in em units,
+			so the widest line times the scale is the answer. Without it a caller
+			can only size a canvas to its container, which is why the specimen on
+			the Overview page could not be centred.
+		*/
+		this.pixelWidth = 0;
 		this.canvasMaxes = oa.canvasMaxes;
 		this.ctx = oa.ctx;
 		this.project = oa.project || getCurrentProject();
@@ -298,6 +306,8 @@ export class TextBlock {
 		// log('========================== LOOP 2: CALCULATING DATA PER CHAR');
 		currentX = upmMaxes.xMin;
 		currentBaselineY = upmMaxes.yMin + firstBaselineOffset;
+		// Recomputed from nothing on every pass, since it is a running maximum.
+		this.pixelWidth = 0;
 		for (textBlockNumber = 0; textBlockNumber < this.data.length; textBlockNumber++) {
 			currentBlock = this.data[textBlockNumber];
 			// log(`================ START textBlockNumber: ${textBlockNumber}`);
@@ -363,6 +373,8 @@ export class TextBlock {
 						dz: scale,
 					};
 					currentX += charData.widths.advance + charData.widths.kern;
+					// The widest line is how wide the text is.
+					this.pixelWidth = Math.max(this.pixelWidth, currentX * scale);
 				}
 
 				if (charData.isLineBreaker) checkForBreak = true;
