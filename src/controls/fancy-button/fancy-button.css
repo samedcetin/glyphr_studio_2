@@ -45,7 +45,12 @@
 	margin: 0;
 	padding: 0 var(--sp-5);
 	border: 1px solid var(--accent);
-	border-radius: var(--r-md);
+	/*
+		--r-lg, the corner the toolbar and the Compose button take. At --r-md
+		this button and the Compose button - both 32px, both a panel’s one
+		primary action - sat next to each other with different corners.
+	*/
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	background-color: var(--accent);
 	color: var(--text-on-accent);

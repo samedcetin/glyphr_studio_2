@@ -64,13 +64,46 @@
 	corner-shape: var(--corner-smooth);
 }
 
+/*
+	Dragging the field sideways changes the number - see scrubStart in
+	input_number.js. Nothing marks it on hover, on purpose: the field is still
+	a field, a click still puts the caret in it, and the gesture only takes
+	over after three pixels of movement.
+
+	Once it has, the whole control says so. The resize cursor is on :host so it
+	holds while the pointer is outside the field, which it will be within half
+	a second of starting.
+*/
+:host([scrubbing]) {
+	cursor: ew-resize;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+:host([scrubbing]) .field {
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
+}
+
+:host([scrubbing]) .numberInput {
+	cursor: ew-resize;
+}
+
 .field:hover,
 .field:focus-within {
 	background-color: var(--bg-surface);
 	border-color: var(--accent);
 }
 
-/* Number input */
+/*
+	Number input.
+
+	Left, not right. Right-aligning digits is for a column of them you read
+	down to compare magnitudes, and this app has no such column: its fields
+	sit side by side in pairs, so right alignment only pushed the value away
+	from the prefix that names it and left a gap in the middle of the field.
+	Reading starts at the left edge, and now so does the value.
+*/
 .numberInput {
 	background-color: transparent;
 	color: var(--text-primary);
@@ -79,7 +112,7 @@
 	min-width: 0;
 	height: 100%;
 	padding: 0 var(--sp-3);
-	text-align: right;
+	text-align: left;
 	font-family: var(--font-mono);
 	font-variant-numeric: tabular-nums;
 	font-size: var(--fs-sm);
@@ -110,11 +143,32 @@
 	display: block;
 }
 
+/*
+	Placed, not auto-placed.
+
+	The field has three columns and between one and three children, so
+	auto-placement fills them in order: with no prefix, the input landed in
+	column 1 - an "auto" track, which an input sizes to its own intrinsic
+	width - and the suffix landed in the 1fr track, which was then whatever
+	was left of a field the input had already overflowed. Nothing. So an "em"
+	sat on top of its own number and hung out under the stepper.
+
+	It only showed on a suffix with no prefix, which the Quality checks
+	thresholds were the first to use: every other field in the app carries a
+	prefix, which happened to fill column 1 and push the other two into
+	place.
+*/
 .prefix {
+	grid-column: 1;
 	padding-left: var(--sp-3);
 }
 
+.numberInput {
+	grid-column: 2;
+}
+
 .suffix {
+	grid-column: 3;
 	padding-right: var(--sp-3);
 }
 

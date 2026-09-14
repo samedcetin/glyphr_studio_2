@@ -53,7 +53,7 @@ export function glyphrStudioOnLoad() {
 		}
 		// log(`glyphrStudioOnLoad`, 'end');
 	} catch (e) {
-		showAppErrorPage('Glyphr Studio failed to load!', e);
+		showAppErrorPage('Blue Rain Type failed to load!', e);
 		console.error(e);
 	}
 }

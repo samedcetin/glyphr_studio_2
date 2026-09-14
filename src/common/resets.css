@@ -17,11 +17,46 @@
 	--l3-shadow-down: var(--shadow-3);
 }
 
+/*
+	THE TYPEFACE
+	------------
+	Geist and Geist Mono, SIL OFL 1.1 - see fonts/OFL.txt.
+
+	Shipped rather than taken from system-ui, because system-ui is a different
+	typeface on every machine: SF Pro on macOS, Segoe UI Variable on Windows,
+	whatever the distribution picked on Linux. Their metrics differ, so the
+	vertical rhythm this app is tuned to - 28px rows, 6px gaps, labels that
+	measure the same as each other - landed somewhere slightly different on
+	each of them. A tool whose subject is letterforms should not be guessing
+	about its own.
+
+	Geist because the arrangement here needs a matched pair: half of this UI
+	is a sans label beside a mono number in the same 28px row, and a sans and
+	a mono drawn together share an x-height and a cap-height, so that row
+	reads as composed rather than assembled.
+
+	Both are the variable files, and neither is subset. This app puts
+	arbitrary characters in its own chrome - the character chips, the
+	breadcrumb, the item chooser - so cutting the font down to Latin would
+	blank out the name of anything outside it.
+
+	swap, not the default: the previous face had no font-display, so the UI
+	was invisible until the file arrived.
+*/
 @font-face {
-	font-family: 'FiraGo';
+	font-family: 'Geist';
 	font-style: normal;
-	font-weight: 400;
-	src: url('./FiraGO-Regular.woff2');
+	font-weight: 100 900;
+	font-display: swap;
+	src: url('./fonts/Geist-Variable.woff2') format('woff2-variations');
+}
+
+@font-face {
+	font-family: 'Geist Mono';
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url('./fonts/GeistMono-Variable.woff2') format('woff2-variations');
 }
 
 /*
@@ -58,6 +93,17 @@ html {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	text-rendering: optimizeLegibility;
+
+	/*
+		Tabular figures everywhere, not component by component.
+
+		Nearly every number this app shows is one you read against another: an x
+		against a y, a width against a height, a column of kern values, a count
+		that ticks from 9 to 10 while you watch. Proportional figures make those
+		shift sideways. Six places had already turned this on for themselves;
+		it belongs to the app.
+	*/
+	font-variant-numeric: tabular-nums;
 }
 
 body {
@@ -323,8 +369,25 @@ textarea:focus::-webkit-resizer {
 	border: 2px outset var(--enabled-focus-background);
 }
 
+/*
+	A definite square, and one that contributes no leading.
+
+	It had a width and no height, and as an inline element the width did
+	nothing at all: its height came from the line-height it inherited, and
+	because resets.css sets font-size on the universal selector that was
+	--fs-md - 15.59px of it, inside a label whose own text is 14.4. So every
+	label carrying one of these stood 21.59px against 20.39 for every other
+	label in the same card, and the whole column below it sat a pixel low.
+
+	The mark was also 13px inside a 12px host, so it overhung its own box.
+	The host says the size now and the shadow fills it.
+*/
 info-bubble {
-	width: 12px;
+	display: inline-block;
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	line-height: 1;
+	vertical-align: middle;
 }
 
 /*

@@ -1,8 +1,7 @@
 import { addAsChildren, makeElement } from '../common/dom.js';
-import { makeActionsArea_ComponentInstance } from './actions.js';
 import {
 	makeLinkReferenceRow,
-	makeSingleCheckbox,
+	makePropertyToggle,
 	makeSingleInput,
 	makeSingleLabel,
 	rowPad,
@@ -37,10 +36,11 @@ export function makeCard_componentInstanceAttributes(componentInstance) {
 		that this Component Instance is linked to.
 	`
 	);
-	let isFlippedNSInput = makeSingleCheckbox(
+	let isFlippedNSInput = makePropertyToggle(
 		componentInstance,
 		'isFlippedNS',
-		'currentComponentInstance'
+		'currentComponentInstance',
+		{ icon: 'flipVertical', name: 'Flip vertical' }
 	);
 
 	// isFlippedEW
@@ -52,10 +52,11 @@ export function makeCard_componentInstanceAttributes(componentInstance) {
 		that this Component Instance is linked to.
 	`
 	);
-	let isFlippedEWInput = makeSingleCheckbox(
+	let isFlippedEWInput = makePropertyToggle(
 		componentInstance,
 		'isFlippedEW',
-		'currentComponentInstance'
+		'currentComponentInstance',
+		{ icon: 'flipHorizontal', name: 'Flip horizontal' }
 	);
 
 	// reverseWinding
@@ -67,10 +68,11 @@ export function makeCard_componentInstanceAttributes(componentInstance) {
 		that this Component Instance is linked to.
 	`
 	);
-	let reverseWindingInput = makeSingleCheckbox(
+	let reverseWindingInput = makePropertyToggle(
 		componentInstance,
 		'reverseWinding',
-		'currentComponentInstance'
+		'currentComponentInstance',
+		{ name: 'Reverse winding' }
 	);
 
 	// rotation
@@ -87,10 +89,11 @@ export function makeCard_componentInstanceAttributes(componentInstance) {
 	// rotateFirst
 	let rotateFirstLabel = makeSingleLabel('rotate first', makeRotationHelpInfoContent());
 	rotateFirstLabel.querySelector('info-bubble').setAttribute('bubble-width', '540px');
-	let rotateFirstInput = makeSingleCheckbox(
+	let rotateFirstInput = makePropertyToggle(
 		componentInstance,
 		'rotateFirst',
-		'currentComponentInstance'
+		'currentComponentInstance',
+		{ name: 'Rotate first' }
 	);
 
 	let linkLabel = makeElement({ tag: 'h3', innerHTML: 'Component root' });
@@ -117,7 +120,11 @@ export function makeCard_componentInstanceAttributes(componentInstance) {
 	}
 	addAsChildren(componentInstanceCard, [rowPad(), linkLabel, linkRow]);
 	addAsChildren(componentInstanceCard, rowPad());
-	addAsChildren(componentInstanceCard, makeActionsArea_ComponentInstance());
+	/*
+		The action grid moved to the toolbar - see edit_canvas/quick_actions.js.
+		Thirty-one icon buttons at the foot of a 260px column was a lot of the
+		panel spent on things reached for occasionally, in a panel for properties.
+	*/
 
 	// log(`makeCard_componentInstanceAttributes`, 'end');
 	return componentInstanceCard;
@@ -183,7 +190,15 @@ function makeComponentInstanceInputs_size(item) {
 	`
 	);
 
-	let ratioLockCheckbox = makeSingleCheckbox(item, 'ratioLock', 'currentComponentInstance');
+	/*
+		The same padlock the width and height fields carry in the Properties
+		panel. It was a checkbox here and an icon button there, for the one
+		idea, two panels apart.
+	*/
+	let ratioLockCheckbox = makePropertyToggle(item, 'ratioLock', 'currentComponentInstance', {
+		icon: 'linked',
+		name: 'Maintain aspect ratio',
+	});
 
 	// log(`makeComponentInstanceInputs_size`, 'end');
 	return [inputLabel, doubleInput, ratioLockLabel, ratioLockCheckbox];

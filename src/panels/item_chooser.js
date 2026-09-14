@@ -73,18 +73,26 @@ export function makeSingleItemTypeChooserContent(itemPageName, clickHandler) {
 			})
 		);
 	} else if (itemPageName === 'Kerning') {
-		// Component Chooser
+		/*
+			The same three-row shell the character chooser uses: a header, the
+			list, and one action at the foot, spaced by the wrapper rather than
+			by each part carrying its own margin. It was the uncompacted
+			wrapper before - 20px of padding, a 20px header inset, 20 under the
+			list and 10 more on the button, four numbers for one rhythm.
+		*/
+		wrapper.classList.add('item-chooser__wrapper--compact');
 		wrapper.appendChild(makeKernSortControl());
 		wrapper.appendChild(makeKernGroupChooserList());
-		wrapper.appendChild(
+		const kernFooter = makeElement({ className: 'item-chooser__footer' });
+		kernFooter.appendChild(
 			makeElement({
 				tag: 'fancy-button',
 				innerHTML: 'Create a new kern group',
 				attributes: { secondary: '' },
 				onClick: () => showAddEditKernGroupDialog(false),
-				style: 'margin-top: 10px;',
 			})
 		);
+		wrapper.appendChild(kernFooter);
 	} else {
 		/*
 			Character chooser, as it appears in the breadcrumb's dropdown.
@@ -425,7 +433,9 @@ function makeComponentChooserTileGrid(editor = getCurrentProjectEditor(), showSe
 // --------------------------------------------------------------
 
 function makeKernSortControl() {
-	const sortBy = getCurrentProjectEditor().kernGroupListSortBy || 'ID';
+	const editor = getCurrentProjectEditor();
+	const sortBy = editor.kernGroupListSortBy || 'ID';
+	const count = countItems(editor.project.kerning);
 	const sortControl = makeElement({
 		tag: 'div',
 		className: 'item-chooser__header',
@@ -434,7 +444,8 @@ function makeKernSortControl() {
 			<option>ID</option>
 			<option selected>Left Group</option>
 			<option>Right Group</option>
-		</option-chooser>`,
+		</option-chooser>
+		<span class="item-chooser__count">${count} group${count === 1 ? '' : 's'}</span>`,
 	});
 
 	sortControl.addEventListener('click', () => {
@@ -525,12 +536,28 @@ export function makeOneKernGroupRow(kernID, project = getCurrentProject()) {
 	});
 	rightMembers.appendChild(makeKernGroupCharChips(kernGroup.rightGroupSorted));
 
-	addAsChildren(rowWrapper, [
-		makeElement({ content: kernID }),
-		leftMembers,
-		makeElement({ className: 'kern-group-chooser__members-divider', content: '&emsp;|&emsp;' }),
-		rightMembers,
-	]);
+	/*
+		A hairline, not `&emsp;|&emsp;`. The divider used to be a pipe
+		between two em spaces, so it was as wide as whatever font happened
+		to render it - measured at 28.69px - and it sat in a content-sized
+		column, which put it at a different x on every row. The two sides of
+		a kern pair mirror each other; they can only read that way if the
+		line between them holds still.
+	*/
+	const divider = makeElement({ className: 'kern-group-chooser__members-divider' });
+
+	/*
+		The value. It is what the group does, and the list left it out - so
+		picking between two groups meant opening each one to find out which
+		was the tight one.
+	*/
+	const value = makeElement({ className: 'kern-group-chooser__value' });
+	value.textContent = `${kernGroup.value}`;
+
+	const id = makeElement({ className: 'kern-group-chooser__id' });
+	id.textContent = kernID;
+
+	addAsChildren(rowWrapper, [id, leftMembers, divider, rightMembers, value]);
 
 	// log(rowWrapper);
 	// log(`makeOneKernGroupRow`, 'end');

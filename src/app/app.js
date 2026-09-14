@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from './brand.js';
 import { makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
 import { closeEveryTypeOfDialog, showToast } from '../controls/dialogs/dialogs.js';
@@ -389,12 +390,12 @@ export function showAppErrorPage(friendlyMessage = '', errorObject = { message: 
 		<div id="app__landing-page">
 		<div class="error-page__wrapper">
 			<div class="error-page__table-flip">(╯°▢°）╯︵ ┻━┻</div>
-				<h1>${friendlyMessage || 'Glyphr Studio ran into a problem'}</h1>
+				<h1>${friendlyMessage || 'Blue Rain Type ran into a problem'}</h1>
 				<br>
 				Please send us an email, hopefully we'll be able to help:
 				<a
-					href="mailto:mail@glyphrstudio.com&subject=[${getGlyphrStudioApp().version}] Feedback"
-					>mail@glyphrstudio.com</a>
+					href="mailto:${SUPPORT_EMAIL}&subject=[${getGlyphrStudioApp().version}] Feedback"
+					>${SUPPORT_EMAIL}</a>
 				<br><br><br>
 				<pre>${errorObject.stack.replaceAll('<', '&lt;')}</pre>
 			</div>
@@ -409,10 +410,10 @@ export function showAppErrorPage(friendlyMessage = '', errorObject = { message: 
  * @param {String} displayText - what text to show
  * @returns {String} - mailto link
  */
-export function emailLink(displayText = 'mail@glyphrstudio.com') {
+export function emailLink(displayText = SUPPORT_EMAIL) {
 	let app = getGlyphrStudioApp();
 	return `
-		<a class="mailto" href="mailto:mail@glyphrstudio.com?subject=[${app.version}] Feedback">${displayText}</a>
+		<a class="mailto" href="mailto:${SUPPORT_EMAIL}?subject=[${app.version}] Feedback">${displayText}</a>
 	`;
 }
 
@@ -423,7 +424,7 @@ export function emailLink(displayText = 'mail@glyphrstudio.com') {
 export function makeEmailContent() {
 	const con = `Have a feature idea or ran into an issue%3F We'd be happy to help!
 	%0A%0A%0A%0A___________________________________________%0A
-	version %09Glyphr Studio  ${getGlyphrStudioApp().version} %0A
+	version %09Blue Rain Type  ${getGlyphrStudioApp().version} %0A
 	user agent %09 ${encodeURIComponent(navigator.userAgent)} %0A`;
 
 	// log(con);

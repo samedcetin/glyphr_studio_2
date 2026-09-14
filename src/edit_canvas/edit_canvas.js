@@ -1,14 +1,13 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { accentColors, getColorFromRGBA, transparencyToAlpha } from '../common/colors.js';
 import { makeElement } from '../common/dom.js';
-import { getCanvasColors, onThemeChange } from '../common/theme.js';
+import { getCanvasColors, getCanvasFonts, onThemeChange } from '../common/theme.js';
 import { clone } from '../common/functions.js';
 import { drawGlyph, drawGlyphOutlineMode } from '../display_canvas/draw_paths.js';
 import { drawAnchors } from '../anchors/anchor_canvas.js';
 import { drawPixelGrid } from '../pixel_font/draw_pixel_grid.js';
 import { kernGroupSideMaxWidth } from '../project_editor/cross_item_actions.js';
 import { guideColorDark, guideColorLight, guideColorMedium } from '../project_editor/guide.js';
-import { runQualityChecksForItem } from '../project_editor/quality_checks.js';
 import { drawCharacterKernExtra, drawContextCharacters } from './context_characters.js';
 import {
 	computeAndDrawBoundingBox,
@@ -294,7 +293,6 @@ export class EditCanvas extends HTMLElement {
 		const height = Number(this.height);
 		const currentItemID = this.editingItemID;
 		const currentItem = project.getItem(currentItemID);
-		runQualityChecksForItem(currentItem);
 		// log(`currentItemID: ${currentItemID}`);
 		const advanceWidth = currentItem?.advanceWidth || 0;
 		const itemXMax = Math.max(advanceWidth, currentItem?.maxes?.xMax || 0);
@@ -597,7 +595,7 @@ export class EditCanvas extends HTMLElement {
 				y = 12;
 				ctx.fillRect(x - deltaX, 0, 1, 20);
 			}
-			ctx.font = '10px Tahoma, Verdana, sans-serif';
+			ctx.font = `10px ${getCanvasFonts().ui}`;
 			ctx.fillText(name, x, y);
 		}
 	}

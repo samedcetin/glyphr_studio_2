@@ -1,6 +1,7 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { charToHex, charsToHexArray, hexesToChars } from '../common/character_ids.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
+import { attachTooltip } from '../controls/tooltip/tooltip.js';
 import { countItems } from '../common/functions.js';
 import {
 	closeAllInfoBubbles,
@@ -149,7 +150,7 @@ function makeKerningFirstRunContent() {
 			<p>
 				Font files encode kerning values as three pieces of information: a left character, a right
 				character, and a horizontal adjustment value. Fonts with many characters can end up having
-				a huge amount of kern pairs. Glyphr Studio uses a system called Class-based Kerning, where
+				a huge amount of kern pairs. Blue Rain Type uses a system called Class-based Kerning, where
 				groups of characters with similar edges (like
 					<code>V</code><code>v</code><code>W</code><code>w</code>
 					)
@@ -630,21 +631,19 @@ function deleteLetterPair(leftLetter = '', rightLetter = '', kernID = '') {
 }
 
 /**
- * Makes a small collection of character 'chips' for half
- * of a kern group's membership (left or right).
- * @param {Array} group - list of character IDs
- * @returns {Element}
+ * The characters on one side of a kern group, as a wrapped row of chips.
+ *
+ * The wrapper used to be a bare span, so the chips were inline boxes with
+ * nothing between them: eight of them measured 160px across in a 160px span,
+ * touching edge to edge. A row of twenty read as a brick wall rather than as
+ * twenty characters, which is the one thing this row exists to tell you.
+ *
+ * @param {Array} group - char IDs
+ * @returns {HTMLElement}
  */
 export function makeKernGroupCharChips(group) {
-	// log(`makeKernGroupCharChips`, 'start');
-	// log(`group: ${group}`);
-
-	const wrapper = makeElement();
-	group.forEach((charID) => {
-		// log(`charID: ${charID}`);
-		wrapper.appendChild(makeCharChip(charID));
-	});
-	// log(`makeKernGroupCharChips`, 'end');
+	const wrapper = makeElement({ className: 'kern-chips' });
+	group.forEach((charID) => wrapper.appendChild(makeCharChip(charID)));
 	return wrapper;
 }
 
@@ -654,29 +653,26 @@ export function makeKernGroupCharChips(group) {
  * @returns {Element}
  */
 export function makeCharChip(charID) {
-	// log(`makeCharChip`, 'start');
-	// log(`charID: ${charID}`);
-
-	let char = hexesToChars(charID) || '';
-	let name = getUnicodeName(charID);
-	let title = charID;
+	const char = hexesToChars(charID) || '';
+	const name = getUnicodeName(charID);
 	const exists = !!getCurrentProject().getItem(`glyph-${charID}`, false);
-	if (name) title = `${name}\n${charID}`;
-	// log(`char: ${char}`);
-	// log(`name: ${name}`);
-	// log(`title: ${title}`);
 
-	let chip = makeElement({
+	const chip = makeElement({
 		tag: 'code',
-		innerHTML: char,
-		attributes: { title: title },
+		className: `kern-chips__chip${exists ? '' : ' kern-chips__chip--missing'}`,
+	});
+	/* textContent: a kern group can hold `<` and `&` like any other range. */
+	chip.textContent = char;
+
+	/*
+		The app's tooltip rather than the OS one, like every other surface. A
+		missing character is the thing worth saying here: the group still holds
+		it, and the pair it is part of does nothing.
+	*/
+	attachTooltip(chip, {
+		name: name || charID,
+		body: exists ? charID : `${charID} \u2014 not in this project, so this pair does nothing.`,
 	});
 
-	if(!exists) {
-		chip.classList.add('warning');
-		chip.setAttribute('title', `${title}\nWarning: This character does not exist in the project.`);
-	}
-
-	// log(`makeCharChip`, 'end');
 	return chip;
 }

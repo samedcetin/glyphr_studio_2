@@ -1,0 +1,280 @@
+/*
+	QUALITY CHECKS PANEL
+	--------------------
+	A verdict, four rows with counts, and the thresholds behind a disclosure.
+
+	It opts out of the card grid entirely, the way the Anchors list does. The
+	card grid is a label column plus a control column, and none of this is a
+	label beside a control: it is a list of findings.
+
+	ONE LEFT EDGE. Everything in the panel starts at the card edge, which is
+	where every label and every input in every other panel starts. Nothing
+	in here is inset from it and nothing bleeds past it.
+
+	That is why the verdict and the thresholds are not sunken boxes. A box
+	insets its contents by its own padding, so the verdict text began nine
+	pixels to the right of the sidebar column; and the rows bled four pixels
+	to the left of it so their hover would reach the gutter. Three left edges
+	in one panel - 1332, 1336, 1345 - where the app has one. Hairlines
+	separate the three parts instead, and they cost no horizontal space.
+
+	CORNERS. --r-lg, the corner the toolbar and the Compose button take. The
+	rows and the two buttons are the only rounded surfaces left in the panel
+	and they carry one radius between them, on one control height.
+*/
+
+.quality-checks {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--sp-3);
+}
+
+/* --------------------------------------------------------------
+	The verdict, and the two controls inside it
+	------------------------------------------------------------ */
+
+.quality-checks__verdict {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	width: 100%;
+	min-width: 0;
+	padding-bottom: var(--sp-3);
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.quality-checks__verdict-body {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--sp-3);
+	flex: 1;
+	min-width: 0;
+}
+
+.quality-checks__verdict-body > svg {
+	flex-shrink: 0;
+	/* The icon is 16px in a 19px line: nudged to sit on the headline. */
+	margin-top: 1px;
+}
+
+/*
+	Green for clean, amber for findings - and nothing red. A quality check
+	finding is not an error: an SVG import always has some, and half of them
+	are fine once you look. Red would make a normal state read as a failure.
+*/
+.quality-checks__verdict--clean .quality-checks__verdict-body > svg {
+	color: var(--canvas-anchor);
+}
+
+.quality-checks__verdict--problems .quality-checks__verdict-body > svg {
+	color: var(--canvas-check-short-handle);
+}
+
+.quality-checks__verdict-text {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+.quality-checks__verdict-headline {
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+}
+
+.quality-checks__verdict-detail {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.quality-checks__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-1);
+	flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------
+	The four rows
+	------------------------------------------------------------ */
+
+.quality-checks__list {
+	display: grid;
+	gap: var(--sp-1);
+	width: 100%;
+}
+
+/*
+	A row is a button whether or not it has anything to select, so the one
+	that found nothing can still say what it checks on hover. When it has
+	nothing it just does not look or behave like a target.
+
+	The count track is last and flush with the row's own right edge, so the
+	four numbers line up on one edge and read as a column - the same edge
+	the thresholds fields and the two buttons above end on.
+*/
+.quality-checks__row {
+	display: grid;
+	grid-template-columns: 8px minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-3);
+	height: var(--row-h);
+	/*
+		The bleed the Anchors rows and the Layers rows use: four pixels of
+		padding, four pixels of negative margin, so the hover band has air
+		around its contents without moving them. Content lands back on the
+		card edge - dot at the left of the column, count at the right - and
+		the band reaches four pixels past it on each side.
+	*/
+	padding: 0 var(--sp-2);
+	margin: 0 calc(var(--sp-2) * -1);
+	width: calc(100% + var(--sp-4));
+	background-color: transparent;
+	/*
+		No border, not even a transparent one. That was the pixel that put the
+		dot off the column - a border insets the content box, and this row is
+		the only thing in the panel that had one. The band carries the state.
+	*/
+	border: none;
+	/*
+		--r-lg. The Compose button and the toolbar carry it, and a 28px band is
+		close enough to their 32 that a smaller corner here would read as a
+		different family rather than as a smaller member of the same one.
+	*/
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	text-align: left;
+	cursor: default;
+}
+
+.quality-checks__row--found {
+	cursor: pointer;
+}
+
+.quality-checks__row--found:hover,
+.quality-checks__row--found:focus {
+	background-color: var(--bg-hover);
+	color: var(--text-primary);
+}
+
+/*
+	The dot is the check's colour, and the same colour rings its points on
+	the canvas. That is the only thing tying a row to a mark out there, so it
+	is a filled disc rather than an outline - at 8px an outline is a smudge.
+*/
+.quality-checks__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: var(--r-pill);
+	background-color: var(--dot, var(--icon-default));
+}
+
+/* A check with nothing to report keeps its colour but stops asserting it. */
+.quality-checks__row:not(.quality-checks__row--found) .quality-checks__dot {
+	opacity: 0.3;
+}
+
+.quality-checks__name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.quality-checks__row--found .quality-checks__name {
+	color: var(--text-primary);
+}
+
+/*
+	Tabular figures so a column of counts lines up on its digits, and so the
+	row does not shift a pixel when 9 becomes 10. Two characters wide at a
+	minimum, so a single digit still lands on the same edge as a double.
+*/
+.quality-checks__count {
+	min-width: 2ch;
+	text-align: right;
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+.quality-checks__row--found .quality-checks__count {
+	color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------
+	Thresholds and the rest
+	------------------------------------------------------------ */
+
+/*
+	display:grid beats the [hidden] rule in the shell reset, which is
+	display:none at one tag of specificity. Stated here so the disclosure
+	actually closes.
+*/
+.quality-checks__thresholds[hidden] {
+	display: none;
+}
+
+/*
+	A band between two hairlines rather than a box, for the same reason as
+	the verdict: its labels have to start where the row names start.
+*/
+.quality-checks__thresholds {
+	display: grid;
+	gap: var(--sp-2);
+	width: 100%;
+	padding-bottom: var(--sp-3);
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.quality-checks__thresholds-intro {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+/*
+	Label beside field. At 265px the field takes 84 and the longest name -
+	`Points near other points` - needs 123, which is exactly what is left.
+*/
+.quality-checks__threshold {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 84px;
+	align-items: center;
+	gap: var(--sp-2);
+}
+
+/*
+	input-number carries its own 120px width, which would burst an 84px
+	track rather than shrink to it.
+*/
+.quality-checks__threshold input-number {
+	width: 100%;
+}
+
+.quality-checks__threshold-label {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.quality-checks__note {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}
+
+/*
+	The explanation, last and quiet. It was the first thing in the panel and
+	a third of its height, on every glyph, forever - which is right once and
+	furniture after that.
+*/
+.quality-checks__help {
+	padding-top: var(--sp-3);
+	border-top: 1px solid var(--border-subtle);
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}

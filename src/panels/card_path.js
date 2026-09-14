@@ -1,6 +1,5 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
-import { makeActionsArea_Path } from './actions.js';
 import {
 	makeInputs_position,
 	makeInputs_size,
@@ -101,7 +100,11 @@ export function makeCard_pathAttributes(path) {
 		sizeInputs,
 	]);
 	addAsChildren(pathCard, rowPad());
-	addAsChildren(pathCard, makeActionsArea_Path());
+	/*
+		The action grid moved to the toolbar - see edit_canvas/quick_actions.js.
+		Thirty-one icon buttons at the foot of a 260px column was a lot of the
+		panel spent on things reached for occasionally, in a panel for properties.
+	*/
 
 	// log(`makeCard_pathAttributes`, 'end');
 	return pathCard;
@@ -127,7 +130,6 @@ export function makeCard_multiSelectPathAttributes(virtualGlyph) {
 
 	addAsChildren(multiPathCard, makeInputs_position(virtualGlyph));
 	addAsChildren(multiPathCard, makeInputs_size(virtualGlyph));
-	addAsChildren(multiPathCard, makeActionsArea_Path());
 
 	return multiPathCard;
 }

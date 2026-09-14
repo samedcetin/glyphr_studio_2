@@ -77,10 +77,19 @@
 	overflow-y: auto;
 	overflow-x: hidden;
 	/*
-		Room for the scrollbar whether or not it is there, so the controls do
-		not shift sideways the moment a section is expanded.
+		No scrollbar. These columns are panels, not documents: what is in them
+		is a stack of sections you open and close, and a bar down the inside of
+		each one framed the artwork with two grey lines it did not need.
+
+		They still scroll - wheel, trackpad, keyboard, and the focus ring pulling
+		a control into view all work exactly as before. Nothing is unreachable.
+
+		This also gives the width back. The bar was taking it whether or not it
+		was there, because a stable gutter reserved the space even on the left
+		column, which does its scrolling one element further in and so kept an
+		empty gutter open permanently.
 	*/
-	scrollbar-gutter: stable;
+	scrollbar-width: none;
 	background-color: var(--bg-surface);
 	border-radius: 0;
 	box-shadow: none;
@@ -130,8 +139,18 @@
 	min-height: 0;
 	overflow-y: auto;
 	overflow-x: hidden;
+	/* The element that actually scrolls in each column. Same reasoning. */
+	scrollbar-width: none;
 	width: 100%;
 	padding: var(--sp-4) 0 var(--sp-6) 0;
+}
+
+/* scrollbar-width is Firefox and modern Chrome; this is the rest of them. */
+.editor-page__left-area::-webkit-scrollbar,
+.editor-page__right-area::-webkit-scrollbar,
+#editor-page__panel::-webkit-scrollbar,
+.editor-page__right-area > .sidebar__sections::-webkit-scrollbar {
+	display: none;
 }
 
 /*
@@ -503,13 +522,6 @@ body.is-resizing-sidebar * {
 	row-gap: 10px;
 }
 
-code.warning {
-	color: var(--red);
-	border-top-right-radius: 0px;
-	border-bottom-left-radius: 0px;
-	/* background-color: var(--lightRed); */
-	/* border-color: var(--darkRed); */
-}
 
 /* --------------------------------------------------------------
 	Responsive

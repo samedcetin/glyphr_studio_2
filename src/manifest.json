@@ -1,5 +1,5 @@
 {
-  "name": "Glyphr Studio v2",
+  "name": "Blue Rain Type",
   "icons": [
     {
       "src": "common/graphics/logo-icon-color.svg",
@@ -8,7 +8,7 @@
       "purpose": "any"
     }
   ],
-  "start_url": "https://www.glyphrstudio.com/app/",
+  "start_url": "https://bluerain.studio/type/",
   "display": "standalone",
   "theme_color": "#29b7ff",
   "background_color": "white"

@@ -4,18 +4,25 @@
 	the same plan-then-do shape as the icon import and the atlas export.
 */
 
-.anchors-card {
+/*
+	A stack: the marks, what they are for, and the one button that uses them.
+	Two classes because it has to beat the generic label-and-control pair on
+	.panel__card - without that the card is only a stack while the sidebar is
+	narrow enough for the container query to flatten everything, and dragging
+	the panel wider put the marks and the button in the 96px label track.
+*/
+.panel__card.anchors-card {
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: var(--sp-3);
 }
 
-.anchors__intro {
-	font-size: var(--fs-xs);
-	line-height: var(--lh-normal);
-	color: var(--text-tertiary);
-}
-
-.anchors__intro code {
+/*
+	The explanation moved into the empty state. It was above the list on
+	every glyph forever, which is right the first time and furniture after
+	that - and the empty panel was already saying a shorter version of it.
+*/
+.anchors__empty code {
 	font-family: var(--font-mono);
 	font-size: var(--fs-2xs);
 	background-color: var(--bg-surface-sunken);
@@ -30,29 +37,125 @@
 
 .anchors__row {
 	display: grid;
-	/* Name, x, y, delete - the delete button sized to itself so the three
-	   editable fields share whatever is left. */
-	grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+	/*
+		Kind, name, x, y, delete. The mark and the delete button are sized to
+		themselves so the three editable fields share whatever is left.
+	*/
+	grid-template-columns: 10px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto;
 	gap: var(--sp-2);
 	align-items: center;
+	padding: 0 var(--sp-2);
+	margin: 0 calc(var(--sp-2) * -1);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
 }
 
-.anchors__name,
-.anchors__number {
-	width: 100%;
+/* Pointing at a row lights its anchor on the canvas, so the row says so. */
+.anchors__row:hover,
+.anchors__row:focus-within {
+	background-color: var(--bg-hover);
+}
+
+/*
+	The two shapes the canvas draws: a ring is a place something can land,
+	a filled dot is the thing that lands. Same distinction, same glance.
+*/
+.anchors__kind {
+	width: 8px;
+	height: 8px;
+	border: 1.5px solid var(--icon-default);
+	border-radius: var(--r-pill);
+}
+
+.anchors__row--mark .anchors__kind {
+	background-color: var(--icon-default);
+}
+
+/*
+	A field box holding the axis mark and the number, so the two read as one
+	control - the shape input-number has, without the component, which does
+	not fit in sixty pixels.
+*/
+.anchors__field {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: center;
 	height: var(--control-h);
-	padding: 0 var(--sp-2);
+	min-width: 0;
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
+}
+
+.anchors__field:hover,
+.anchors__field:focus-within {
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
+}
+
+.anchors__axis {
+	padding-left: var(--sp-3);
+	font-size: var(--fs-xs);
+	line-height: 1;
+	color: var(--text-tertiary);
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+/* The name is an ordinary field, and carries its own plate. */
+.anchors__name {
+	width: 100%;
+	min-width: 0;
+	height: var(--control-h);
+	padding: 0 var(--sp-3);
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
 }
 
-.anchors__number {
+/*
+	The number draws nothing of its own - the box around it is the control.
+
+	Scoped through .anchors__field on purpose. resets.css carries
+	`input[type='number']` with a border, a width and a radius, and that is
+	specificity 0,1,1 - so a bare `.anchors__number` at 0,1,0 loses to it no
+	matter how late this file loads, and the input kept drawing a second
+	bordered box inside the first one.
+*/
+.anchors__field .anchors__number {
+	width: 100%;
+	min-width: 0;
+	height: 100%;
+	background-color: transparent;
+	border: 0;
+	border-radius: 0;
+	outline: none;
+	padding: 0 var(--sp-3) 0 var(--sp-2);
 	font-variant-numeric: tabular-nums;
+	text-align: right;
+	cursor: text;
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+
+/*
+	The browser’s own spinners, hidden. They are a different shape and size
+	from the ones input-number draws four rows up, and two spinner designs in
+	one panel is worse than none: these are nudged with the arrow keys, or
+	dragged on the canvas.
+*/
+.anchors__field .anchors__number::-webkit-outer-spin-button,
+.anchors__field .anchors__number::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
 }
 
 .anchors__delete {
-	width: 22px;
-	height: 22px;
+	/* --control-h-sm, not 22: the row around it is built of 28s. */
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
 	padding: 3px;
 	background: none;
 	border: none;
@@ -67,6 +170,7 @@
 
 .anchors__empty {
 	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
 	color: var(--text-tertiary);
 	padding: var(--sp-2) 0;
 }
@@ -83,7 +187,8 @@
 	background-color: var(--bg-surface-sunken);
 	color: var(--text-primary);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-md);
+	/* The button corner, the same one the Compose button below takes. */
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
@@ -100,21 +205,48 @@
 	cursor: default;
 }
 
+/*
+	The panel’s one primary button.
+
+	--r-lg, the corner the toolbar takes: both are 32px tall, and a control
+	that height reads as a different family at 8. Radius is a density signal,
+	so two of them on one screen say the two things are unrelated.
+
+	The 32px is a floor rather than a height. The label is a sentence, and in
+	a sidebar dragged down towards its minimum it needs two lines - against a
+	fixed height those had no room and sat on the button’s edges. At every
+	width where the label fits on one line it is the same 32px it was.
+*/
 .anchors__compose {
-	height: var(--control-h-lg);
+	min-height: var(--control-h-lg);
+	padding: var(--sp-2) var(--sp-4);
+	line-height: var(--lh-tight);
 	margin-top: var(--sp-2);
 	background-color: var(--accent);
 	color: var(--text-on-accent);
-	border: none;
-	border-radius: var(--r-md);
+	border: 1px solid var(--accent);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	font-family: var(--font-ui);
 	font-size: var(--fs-sm);
 	cursor: pointer;
 }
 
-.anchors__compose:hover {
+/*
+	Every state stated, not just the background.
+
+	resets.css carries `button:hover` with a background, a border colour and
+	`color: var(--text-primary)`, and `button:active` with another background.
+	The old rule set the hover background and nothing else, so the text on this
+	blue button turned dark the moment the pointer touched it - white on blue
+	until hover, then near-black on blue.
+*/
+.anchors__compose:hover,
+.anchors__compose:focus,
+.anchors__compose:active {
 	background-color: var(--accent-hover);
+	border-color: var(--accent-hover);
+	color: var(--text-on-accent);
 }
 
 /* --------------------------------------------------------

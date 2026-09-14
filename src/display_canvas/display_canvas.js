@@ -9,7 +9,7 @@ import {
 	round,
 } from '../common/functions.js';
 import style from './display-canvas.css?inline';
-import { onThemeChange } from '../common/theme.js';
+import { getCanvasFonts, onThemeChange } from '../common/theme.js';
 import { drawGlyph } from './draw_paths.js';
 import { TextBlock } from './text_block.js';
 import { TextBlockOptions } from './text_block_options.js';
@@ -380,7 +380,7 @@ export class DisplayCanvas extends HTMLElement {
 		} else {
 			if (this.textBlockOptions.showPlaceholderMessage) {
 				this.ctx.fillStyle = uiColors.disabled.text;
-				this.ctx.font = '14px sans-serif';
+				this.ctx.font = `14px ${getCanvasFonts().ui}`;
 				this.ctx.textBaseline = 'middle';
 				let x = this.textBlock.canvasMaxes.xMin;
 				let y = this.height / 2;

@@ -249,6 +249,12 @@ lineIcons.pathAddPoint = `<path d="M3.5 18.5C4.5 10 10 4.5 18.5 3.5"/><path d="M
 
 lineIcons.pathRemovePoint = `<path d="M3.5 18.5C4.5 10 10 4.5 18.5 3.5"/><path d="M13.5 18.5h7"/>`;
 
+/*
+	A control handle: the arm off an anchor, with the round grip on its end.
+	The same round anchor pathEdit uses, so the two read as one idea.
+*/
+lineIcons.handle = `<circle cx="5" cy="19" r="2.5"/><path d="M6.8 17.2L15 9"/><circle cx="17.5" cy="6.5" r="2.5"/>`;
+
 /* A selection frame and the corner you pull. */
 lineIcons.pathResize = squirclePath(3, 3, 18, 18, 4) + `<path d="M10 17h4a3 3 0 0 0 3-3v-4"/>`;
 
@@ -338,6 +344,9 @@ lineIcons.closeLivePreview = `<path d="M19 13.5V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3
 
 lineIcons.livePreview = lineIcons.openLivePreview;
 
+/* The same box-with-an-arrow-out: it is the external-link glyph. */
+lineIcons.externalLink = lineIcons.openLivePreview;
+
 // --------------------------------------------------------------
 // Sidebar panel sections
 // --------------------------------------------------------------
@@ -360,7 +369,14 @@ lineIcons.panel_qualityChecks = `<circle cx="12" cy="12" r="8.5"/><path d="M8.5 
 
 lineIcons.panel_characterInfo = `<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.7v.3"/>`;
 
+/* The same circle as the info mark, with the bar and the dot swapped. */
+lineIcons.alert = `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.3v.3"/>`;
+
+
 lineIcons.panel_view = `<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>`;
+
+/* The same eye, wherever something is a show-or-hide rather than a panel. */
+lineIcons.eye = lineIcons.panel_view;
 
 // --------------------------------------------------------------
 // Commands
@@ -410,6 +426,13 @@ lineIcons.page_settings = `<path d="M6 21v-6M6 11V3M12 21v-9M12 8V3M18 21v-4M18 
 
 lineIcons.page_help = lineIcons.command_help;
 
+/*
+	Three sliders: the settings mark, wherever thresholds hide behind one.
+	Declared here rather than beside the panel icons - these are plain
+	assignments, so an alias placed above its source gets undefined.
+*/
+lineIcons.settings = lineIcons.page_settings;
+
 lineIcons.page_about = lineIcons.panel_characterInfo;
 
 lineIcons.page_exportFont = `<path d="M4 15L8.5 5l4.5 10M5.7 12h5.6"/><path d="M18 4v10M15 11l3 3 3-3"/>`;
@@ -437,6 +460,9 @@ lineIcons.selected = `<path d="M5 12.6l4.6 4.6L19 6.8"/>`;
 lineIcons.notSelected = `<path d="M12 12h.01" stroke="none"/>`;
 
 lineIcons.keyboard = squirclePath(2.5, 6, 19, 12, 3) + `<path d="M7 10.5h.3M11 10.5h.3M15 10.5h.3M8.5 14.5h7"/>`;
+
+/* A tag on a string: the name hung off a thing, which is what a label is. */
+lineIcons.label = `<path d="M11.5 3.5H5.5A2 2 0 0 0 3.5 5.5v6a2 2 0 0 0 .6 1.4l7 7a2 2 0 0 0 2.8 0l6-6a2 2 0 0 0 0-2.8l-7-7a2 2 0 0 0-1.4-.6Z"/><path d="M7.5 7.5h.01"/>`;
 
 // --------------------------------------------------------------
 // Panel actions - clipboard and history

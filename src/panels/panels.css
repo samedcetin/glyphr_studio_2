@@ -100,6 +100,27 @@
 	min-width: 0;
 }
 
+/*
+	A span inside a label is the label, typographically.
+
+	makeSingleLabel puts its text straight on the <label> for a reason it
+	writes down: resets.css sets font-size on the universal selector, so a
+	span in there takes --fs-md and beats the --fs-sm the sidebar sets on the
+	label. Three labels are built by hand rather than through that helper -
+	bearings, winding, metric keys - and all three wrap their text in a span,
+	so all three were a step too large and stood 21.59px tall against 20.39
+	for every other label in the same card.
+
+	They cannot simply drop the span: those labels are grids, and a bare text
+	node in a grid is an anonymous item that takes `normal` leading instead
+	of the label's. So the rule goes here, and it covers whatever is written
+	next as well.
+*/
+.panel__card label span {
+	font-size: inherit;
+	line-height: inherit;
+}
+
 .panel__card label[disabled] {
 	color: var(--disabled-text);
 }
@@ -122,7 +143,7 @@
 */
 .panel__card .info {
 	display: grid !important;
-	gap: 8px;
+	gap: var(--sp-4);
 	grid-template-columns: minmax(0, max-content) min-content;
 	grid-template-rows: max-content;
 	align-items: center;
@@ -187,7 +208,13 @@
 */
 .panel__card .doubleInput:has(> button),
 .panel__card .doubleInput:has(> fancy-button) {
-	grid-template-columns: minmax(0, 1fr) var(--sp-2) max-content;
+	/*
+		The middle track was --sp-2 and the button carried its own 2px left
+		margin on top of it, which is how the gap came out at two pixels in
+		one row and four in the next. One column-gap, one number.
+	*/
+	grid-template-columns: minmax(0, 1fr) 0 max-content;
+	column-gap: var(--sp-2);
 
 	/*
 		And it is the height of that field. A fancy-button is 32 on its own,
@@ -207,10 +234,16 @@
 	from the inside - X and Y, W and H, L and R. The 16px track in the middle
 	held a slash that repeated what the label above the pair already said; both
 	are gone. See the affix note in input-number.
+
+	The seam between them is --sp-4, not --sp-2. Four pixels between two 130px
+	fields is narrower than the gap between the rows above and below, so the
+	pair read as one wide control that happened to have a line down it. Eight
+	is the first step that reads as "two things", and it costs two pixels of
+	each field.
 */
 .panel__card .doubleInput--pair {
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	column-gap: var(--sp-2);
+	column-gap: var(--sp-4);
 }
 
 /*
@@ -245,8 +278,10 @@
 	width: var(--control-h);
 	height: var(--control-h);
 	padding: 2px;
-	margin: 0px 0px 0px 2px;
-	border-radius: var(--r-md);
+	/* The row it sits in owns the gap now - see .doubleInput:has(> button). */
+	margin: 0;
+	/* --r-lg: it is a button, and every button in the panel takes that. */
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 }
 
@@ -270,14 +305,252 @@
 }
 
 /*
-	Character info used to override the card grid with `max-content 1fr
-	!important`, which is why its labels ended at a different x from every other
-	card in the same sidebar. It uses the shared track now and overrides nothing.
+	CHARACTER INFO
+	--------------
+	A reference card: a thing to look at and a set of things to copy. Nothing in
+	it is editable, so nothing in it is allowed to look editable - which is what
+	the four read-only fields it used to hold got wrong. They carried the well,
+	the border and the text cursor of a real field, in a sidebar whose other
+	panels are full of real fields.
+
+	So the values sit on the card with no plate at all. The copy button is the
+	only affordance in the row, and it means the one thing you actually do here.
+
+	It uses the shared card grid and overrides nothing. It used to force
+	`max-content 1fr !important`, which is why its labels ended at a different x
+	from every other card in the same sidebar.
 */
-.char-info input {
+
+/*
+	The character itself, at a size you identify rather than read.
+
+	--control-h-lg x 1.5, so the tile is still on the 4px grid and still tied to
+	the control scale: 48. It grows past that for a ligature, which is two or
+	three characters wide and would otherwise be cropped by its own frame.
+*/
+.char-info__hero {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
+	width: 100%;
+	min-width: 0;
+	padding-bottom: var(--sp-2);
+}
+
+.char-info__sample {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	min-width: calc(var(--control-h-lg) * 1.5);
+	height: calc(var(--control-h-lg) * 1.5);
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-size: var(--fs-3xl);
+	line-height: 1;
+}
+
+.char-info__identity {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+/*
+	Both lines truncate rather than wrap. A character name runs to forty-odd
+	characters - LATIN SMALL LETTER O WITH DIAERESIS - and wrapping it makes the
+	hero three lines tall on some characters and one on others, so the card
+	changes height as you step through the range. The hero carries a tooltip
+	with the whole of both.
+*/
+.char-info__name,
+.char-info__points {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.char-info__name {
+	font-size: var(--fs-md);
+	color: var(--text-primary);
+}
+
+.char-info__points {
 	font-family: var(--font-mono);
-	padding: 4px 8px;
-	height: var(--control-h-lg);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+/*
+	A copy row: the value, and the button that takes it.
+
+	`user-select: all` so one click selects the whole value - people who reach
+	for the mouse rather than the button still get it in one go, instead of
+	dragging across a string with no word breaks in it.
+*/
+.char-info__value {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	width: 100%;
+	min-width: 0;
+	height: var(--row-h);
+}
+
+.char-info__text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	user-select: all;
+}
+
+/*
+	Resting, not hidden. Revealing it on hover would be quieter and would also
+	mean the panel's only action is invisible until you happen to point at the
+	right row.
+*/
+.char-info__copy {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	/* --control-h, the size of every other icon button in the sidebar. */
+	width: var(--control-h);
+	height: var(--control-h);
+	padding: 0;
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	color: var(--icon-default);
+	cursor: pointer;
+}
+
+.char-info__value:hover .char-info__copy {
+	color: var(--icon-strong);
+}
+
+/* Every state stated: resets.css `button:hover` also sets a colour. */
+.char-info__copy:hover,
+.char-info__copy:focus,
+.char-info__copy:active {
+	background-color: var(--bg-hover);
+	border-color: var(--border-subtle);
+	color: var(--icon-strong);
+}
+
+.char-info__rule {
+	grid-column: 1 / -1;
+	/* The card is justify-items: left, so an empty span is 0 wide. */
+	width: 100%;
+	height: 1px;
+	margin: var(--sp-3) 0;
+	background-color: var(--border-subtle);
+}
+
+/*
+	Range name and range span on one line, where they used to be two cards and
+	four rows. The name gives way first, because `Basic…` beside a complete
+	`U+0020-007F` is more use than a complete name beside a cut-off span.
+*/
+.char-info__range {
+	display: flex;
+	align-items: baseline;
+	gap: var(--sp-2);
+	width: 100%;
+	min-width: 0;
+}
+
+.char-info__range-name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+}
+
+.char-info__range-span {
+	flex-shrink: 0;
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+}
+
+/*
+	Links as chips, not as their own URLs.
+
+	The old pair printed the full address of each - one of them with an inline
+	`width: 420px` inside a 265px card. A URL is not a label: it is the thing
+	the label stands for, and it belongs in the tooltip.
+*/
+.char-info__links {
+	grid-column: 1 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
+	margin-top: var(--sp-3);
+}
+
+.char-info__link {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sp-2);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-secondary);
+	font-size: var(--fs-xs);
+	text-decoration: none;
+}
+
+/* resets.css underlines every `a:hover`, which on a chip underlines the chip. */
+.char-info__link:hover,
+.char-info__link:focus {
+	background-color: var(--bg-hover);
+	border-color: var(--border-strong);
+	color: var(--text-primary);
+	text-decoration: none;
+}
+
+.char-info__link svg {
+	flex-shrink: 0;
+}
+
+/*
+	A group heading with the switch that owns the group, on one row.
+
+	The same shape as the Quality checks verdict: the eyebrow on the left, the
+	control that applies to everything under it on the right, both ending on
+	the card edge. The h4 already spans both columns, so this only has to put
+	the two on a line and push them apart.
+*/
+.handle-group {
+	grid-column: 1 / -1;
+	width: 100%;
+}
+
+.handle-group__head {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	width: 100%;
+}
+
+.handle-group__head h4 {
+	margin: 0;
 }
 
 .rowPad {
@@ -301,9 +574,17 @@
 	stood four pixels short of them, so the row read as a control with a
 	smaller thing wedged in the middle rather than as three parts of one row.
 */
-.panel__card .doubleInput:has(> .ratio-lock),
-.panel__card .doubleInput:has(> .ratio-lock__gap) {
+.panel__card .doubleInput:has(> .ratio-lock) {
 	grid-template-columns: minmax(0, 1fr) var(--control-h) minmax(0, 1fr);
+
+	/*
+		The lock sat flush against both fields - zero pixels either side - so
+		the three read as one welded control rather than as a button between
+		two numbers. --sp-2 either side is half the seam an unlocked pair
+		gets, which is right: this button belongs to the two fields it ties
+		together, and should sit closer to them than they sit to each other.
+	*/
+	column-gap: var(--sp-2);
 }
 
 .ratio-lock {
@@ -316,8 +597,12 @@
 	padding: 0;
 	margin: 0;
 	border: 1px solid transparent;
-	/* --r-md, the corner the fields either side of it take. */
-	border-radius: var(--r-md);
+	/*
+		--r-lg. It reads as a field for a moment because it sits in a row of
+		them, but there are four pixels of gap on each side of it and it is a
+		button: it takes the button corner, like every other button here.
+	*/
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	color: var(--icon-default);
@@ -400,7 +685,12 @@
 	box-shadow: none;
 	border-style: solid;
 	border-color: var(--enabled-restingLight-border);
-	border-radius: 4px;
+	/*
+		Was a raw 4px - the only hard-coded radius left in the right panel,
+		and not a value on the scale either: the tokens nearest it are 3 and 5.
+	*/
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 }
 
 .pointTypeButton[selected] {
@@ -476,7 +766,12 @@
 	Actions
 */
 :root {
-	--action-icon-size: 30px;
+	/*
+		--control-h, like every other icon button in a sidebar. It was 30, which
+		is not on the scale and is two pixels taller than the buttons it sits
+		beside in the Guides rows below it.
+	*/
+	--action-icon-size: var(--control-h);
 }
 
 /*
@@ -527,29 +822,6 @@
 	box-shadow: none;
 	opacity: 0.2;
 	filter: contrast(60%);
-}
-
-/*
-	Quality checks
-*/
-.quality-check__points-and-handles {
-	width: 100%;
-	display: grid;
-	grid-template-columns: 20px 1fr 80px;
-	column-gap: 10px;
-}
-
-.quality-check__points-and-handles input[type='checkbox'] {
-	grid-column: 1;
-}
-
-.quality-check__points-and-handles label {
-	grid-column: 2;
-}
-
-.quality-check__points-and-handles input-number {
-	grid-column: 3;
-	max-width: 80px;
 }
 
 /*
@@ -647,6 +919,12 @@ nav .item-chooser__wrapper--compact {
 	color: var(--text-secondary);
 }
 
+/* The kerning chooser puts its one action in the footer instead of a
+	sentence, so the footer stops being a line of text and becomes a bar. */
+.item-chooser__wrapper--compact .item-chooser__footer:has(fancy-button) {
+	padding: var(--sp-3);
+}
+
 .item-chooser__footer code {
 	min-width: 20px;
 	height: 20px;
@@ -700,59 +978,250 @@ nav .item-chooser__wrapper--compact {
 	width: 240px;
 }
 
-.kern-group-chooser__list {
+/*
+	KERN GROUP CHIPS
+	The characters on one side of a kern group. Used by the Kern group card,
+	the kern group chooser and the cross-project import dialog.
+
+	A wrapped flex row, because the wrapper was a bare span and the chips were
+	inline boxes touching edge to edge: measured, eight of them filled exactly
+	160px in a 160px span. A row of twenty read as a wall.
+*/
+.kern-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
 	width: 100%;
-	margin-bottom: 20px;
-	display: grid;
-	row-gap: 10px;
+	min-width: 0;
 }
 
+/*
+	--control-h-sm, so a character is legible. It was 20px at --fs-2xs, which
+	is small for the one thing on this row you actually have to read - and
+	this is the page where which characters are in which group is the work.
+*/
+.kern-chips__chip {
+	display: grid;
+	place-items: center;
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-2);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	line-height: 1;
+}
+
+/*
+	A character the project does not have. The whole pair it belongs to does
+	nothing, so this is worth seeing across the row rather than reading one
+	tooltip at a time: it used to be the text turned red and two of the four
+	corners squared off, which at 10px was a smudge.
+
+	Dashed, because the character is in the group and not in the font - a
+	slot with nothing in it, which is what a dashed border has always meant.
+*/
+.kern-chips__chip--missing {
+	background-color: transparent;
+	border-style: dashed;
+	border-color: var(--text-danger);
+	color: var(--text-danger);
+}
+
+/*
+	How many are on this side, beside the label that names it.
+
+	line-height: 0 so it contributes no leading of its own. A second font in
+	an inline box grows the line box, and that made these two labels 21px
+	against every other label in the card at 20 - a pixel of drift down the
+	rest of the column. Its baseline is untouched; only the half-leading is.
+*/
+.kern-chips__count {
+	line-height: 0;
+	margin-left: var(--sp-2);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+/* Heading and its edit button on one row. See .handle-group__head. */
+.kern-group__head {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	width: 100%;
+}
+
+.kern-group__head h3 {
+	margin: 0;
+}
+
+/*
+	KERN GROUP CHOOSER
+	------------------
+	The list behind the breadcrumb. It was built out of raw numbers - 20px of
+	padding, a 10px gap, a 4px corner, a 100px column overridden to max-content
+	two lines later - and its own greys. Every value here is a token now.
+
+	THE ROW FITS. Its five tracks are sized so that the members of a group are
+	all on screen at once: the left side takes its content, the right side
+	takes what is left, and the value stays pinned to the right edge. Both
+	member tracks can still shrink and scroll, but only for a kern class too
+	long for any width.
+*/
+
+/*
+	Told its width rather than growing to its widest row. With two equal
+	tracks and nothing holding them, one twenty-character group stretched the
+	whole popover to 571px - wider than the character chooser that opens from
+	the same breadcrumb.
+*/
+.item-chooser__wrapper--compact:has(.kern-group-chooser__list) {
+	width: var(--chooser-w);
+}
+
+.kern-group-chooser__list {
+	display: grid;
+	gap: var(--sp-1);
+	width: 100%;
+	padding: 0 var(--sp-3);
+	overflow-y: auto;
+	min-height: 0;
+	scrollbar-gutter: stable;
+}
+
+/*
+	One line per row, always. Letting a row grow with its members made the
+	list ragged - 62px against 34 - and a kern class of twenty characters
+	would have made it four lines deep. The tracks above are sized so that a
+	normal group fits on that line; a very long one scrolls.
+*/
 .kern-group-chooser__row {
 	display: grid;
-	grid-template-columns: max-content max-content min-content max-content;
-	column-gap: 0px;
-	transition: none;
-	border: 1px solid var(--gray-l90);
-	padding-left: 20px;
-	background-color: var(--gray-l95);
-	border-radius: 4px;
-	width: 100%;
-	height: 40px;
-	overflow: hidden;
+	/*
+		The left side takes what it needs and the right side takes the rest, so
+		the row fits on one line instead of hiding the end of it.
+
+		Equal halves were the wrong trade. They held the rule at one x down the
+		whole list, which reads well - but a group of one character against a
+		group of eight then left 134px empty on the left while 60px of the right
+		ran off the edge. Nothing in a list of eight-character kern classes
+		should need scrolling to be seen, and a still rule is not worth paying
+		for with the thing the row is there to show.
+
+		minmax(0, ...) on both, so a kern class too long for any layout shrinks
+		and scrolls rather than bursting the popover.
+		*/
+	grid-template-columns: max-content minmax(0, auto) 1px minmax(0, 1fr) max-content;
 	align-items: center;
-}
-
-.kern-group-chooser__members-divider {
-	color: var(--gray-l80);
-}
-
-.kern-group-chooser__right-members {
-	width: 100px;
-	text-align: left;
-	width: max-content;
-	margin-right: 10px;
-}
-
-.kern-group-chooser__left-members {
-	width: 100px;
-	text-align: right;
-	width: max-content;
-	margin-left: 10px;
-}
-
-.kern-group-chooser__row:hover,
-.kern-group-chooser__row:active {
-	transition: none;
-	border-left-width: 10px;
-	border-color: var(--gray-l80);
-	padding-left: 11px;
+	gap: var(--sp-3);
+	width: 100%;
+	min-height: var(--control-h-lg);
+	padding: var(--sp-2) var(--sp-3);
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	cursor: pointer;
 }
 
+/*
+	Hover and selection are a background and a colour, not a border that grows
+	from 1px to 10 while the padding shrinks from 20 to 11 to hide the reflow.
+*/
+.kern-group-chooser__row:hover,
+.kern-group-chooser__row:focus {
+	background-color: var(--bg-hover);
+}
+
 .kern-group-chooser__row[selected] {
-	border-left-width: 10px;
-	border-color: var(--blue-l70);
-	padding-left: 11px;
+	background-color: var(--bg-selected);
+}
+
+/* The internal handle. It is how a group is addressed and how the list sorts,
+	and it is never the thing you are looking for, so it is quiet. */
+.kern-group-chooser__id {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+.kern-group-chooser__row[selected] .kern-group-chooser__id {
+	color: var(--text-accent);
+}
+
+/*
+	Each side pushed up against the rule, so the pair reads inwards, and each
+	on one line that scrolls rather than wrapping or clipping.
+
+	The scrollbar is hidden because a thin one under a 24px chip would not fit
+	in a 34px row - the fade at the outer edge is what says there is more, and
+	when the members fit, that edge is empty and the fade shows nothing.
+*/
+.kern-group-chooser__left-members,
+.kern-group-chooser__right-members {
+	min-width: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.kern-group-chooser__left-members::-webkit-scrollbar,
+.kern-group-chooser__right-members::-webkit-scrollbar {
+	display: none;
+}
+
+.kern-group-chooser__left-members .kern-chips,
+.kern-group-chooser__right-members .kern-chips {
+	flex-wrap: nowrap;
+	width: max-content;
+}
+
+/*
+	The left side is laid out right to left, so its overflow runs away from
+	the rule instead of over it: the characters nearest the pair stay put and
+	the rest scroll off the outside. The chips themselves are read left to
+	right, hence the inner direction.
+*/
+.kern-group-chooser__left-members {
+	direction: rtl;
+	mask-image: linear-gradient(to right, transparent 0, #000 var(--sp-6), #000 100%);
+}
+
+.kern-group-chooser__left-members .kern-chips {
+	direction: ltr;
+}
+
+.kern-group-chooser__right-members {
+	mask-image: linear-gradient(to left, transparent 0, #000 var(--sp-6), #000 100%);
+}
+
+.kern-group-chooser__members-divider {
+	justify-self: center;
+	width: 1px;
+	height: var(--control-h-sm);
+	background-color: var(--border-default);
+}
+
+/* Tabular, so a column of kern values lines up on its digits and its sign. */
+.kern-group-chooser__value {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+.kern-group-chooser__row[selected] .kern-group-chooser__value {
+	color: var(--text-primary);
 }
 
 /*
@@ -770,7 +1239,13 @@ nav .item-chooser__wrapper--compact {
 		Was 58px tall with a 10px gutter and its own box - roughly twice the
 		height of any comparable layers list. Tightened to 40px flat rows.
 	*/
-	border: 1px solid transparent;
+	/*
+		No border. It used to carry a 1px transparent one, and a border is part
+		of the box: it moved the content a pixel in from the column every other
+		row in the sidebar starts on. The marker below draws itself without
+		taking any space, so there is nothing left for a border to do here.
+	*/
+	border: none;
 	padding: var(--sp-1) var(--sp-2);
 	background-color: transparent;
 	border-radius: var(--r-md);
@@ -791,7 +1266,6 @@ nav .item-chooser__wrapper--compact {
 .item-link__row:hover,
 .item-link__row:active {
 	background-color: var(--bg-hover);
-	border-color: transparent;
 	cursor: pointer;
 }
 
@@ -842,27 +1316,28 @@ nav .item-chooser__wrapper--compact {
 	font-style: italic;
 }
 
-.layer-panel__path-row {
-	/*
-		Paths and Component Instances are genuinely different things, so the
-		distinction survives - but as a 2px leading edge marker rather than a
-		tinted row, which is what keeps the list readable at this density.
-	*/
-	border-left: 2px solid var(--accent);
-}
+/*
+	Paths and Component Instances are genuinely different things, so the
+	distinction survives - but as a 2px leading edge marker rather than a
+	tinted row, which is what keeps the list readable at this density.
 
-.layer-panel__path-row.layer-panel__selected {
-	background-color: var(--bg-selected);
-	border-left-color: var(--accent);
+	An inset shadow, not a border. As a border it was 2px of the box, so every
+	layer row started its content 2px right of the column and ended 1px left of
+	it - the one list in the left panel that did not line up. A shadow paints
+	in the same place, follows the same corner, and costs no layout. It also
+	leaves both pseudo-elements free for the drop indicators.
+*/
+.layer-panel__path-row {
+	box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .layer-panel__component-row {
-	border-left: 2px solid var(--ok);
+	box-shadow: inset 2px 0 0 var(--ok);
 }
 
+.layer-panel__path-row.layer-panel__selected,
 .layer-panel__component-row.layer-panel__selected {
 	background-color: var(--bg-selected);
-	border-left-color: var(--ok);
 }
 
 .layer-panel__path-row:hover,
@@ -883,78 +1358,208 @@ nav .item-chooser__wrapper--compact {
 	color: var(--text-tertiary);
 }
 
+/* --------------------------------------------------------------
+	HISTORY PANEL
+
+	A timeline with a position on it, not a list of sentences. The marker
+	column is what makes it read that way: a filled dot where you are, hollow
+	above it for what you undid and can go back to, small and quiet below for
+	what led here.
+	------------------------------------------------------------ */
+
 /*
-	History Panel
+	One column, and its children fill it. panel__card justifies its items left
+	because most cards put a short control next to a label; here every child is
+	a full-width block, and inheriting that left was shrink-wrapping all of
+	them - the head to its text, so space-between had nothing to spread and the
+	undo and redo buttons sat against the summary instead of at the far edge,
+	and the list to its longest row, so the times stopped short of the margin.
 */
 .history-list {
-	width: 100%;
 	display: grid;
-	grid-template-columns: 1fr max-content;
-	gap: 10px;
-	padding-right: 10px;
-}
-
-.history-list h3,
-.history-list hr {
-	grid-column: 1 / -1;
-}
-
-.history-list hr {
+	grid-template-columns: minmax(0, 1fr);
+	justify-items: stretch;
+	gap: 0;
 	width: 100%;
-	border-width: 0px 0px 1px 0px;
-	border-color: var(--gray-l80);
-	/* margin-top: 20px; */
 }
 
-.history-list__date {
-	width: 100%;
-	text-align: right;
-	color: var(--enabled-restingLight-lightText);
-}
-
-.history-list__initial-entry {
-	opacity: 0.6;
-}
-
-.history-list__button-row {
-	grid-column: 1 / -1;
+.history-list__head {
 	display: flex;
-	gap: 8px;
 	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	margin-bottom: var(--sp-2);
 }
 
-.history-list__button-row button {
-	flex: 0 0 auto;
+.history-list__summary {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
 }
 
-.history-list__title--clickable {
+/* The rows, so the two ends of the rail are the ends of the list. */
+.history-list__timeline {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	width: 100%;
+}
+
+.history-list__head-buttons {
+	display: flex;
+	gap: var(--sp-1);
+}
+
+/*
+	Rows touch, so the rail running through their dots is continuous. The
+	bleed is the one the other row lists use, so a hover reaches the gutter.
+*/
+.history-list__row {
+	position: relative;
+	display: grid;
+	grid-template-columns: 14px minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-2);
+	width: calc(100% + var(--sp-4));
+	margin: 0 calc(var(--sp-2) * -1);
+	padding: var(--sp-1) var(--sp-2);
+	min-height: var(--row-h);
+	background-color: transparent;
+	border: none;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	text-align: left;
+}
+
+button.history-list__row {
 	cursor: pointer;
-	border-radius: 3px;
-	padding: 1px 4px;
-	margin: -1px -4px;
-	transition: background-color 0.1s ease;
 }
 
-.history-list__title--clickable:hover {
-	background-color: var(--gray-l90);
-	color: var(--royal-l25);
+button.history-list__row:hover,
+button.history-list__row:focus {
+	background-color: var(--bg-hover);
 }
 
-.history-list__title--current {
-	font-weight: 600;
+/*
+	The rail. A line down the dot column, drawn by each row so it is continuous
+	however many rows there are, and stopped at the two ends of the list.
+
+	Centred on the dot rather than beside it. The dot column is 14px starting
+	at the row padding, so its centre is --sp-2 + 7; the rail sat at --sp-2 + 6
+	and ran half a pixel to the left of every dot it passed through.
+*/
+.history-list__row::before {
+	content: '';
+	position: absolute;
+	left: calc(var(--sp-2) + 7px);
+	transform: translateX(-50%);
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background-color: var(--border-subtle);
 }
 
-.history-list__current-tag {
-	display: inline-block;
-	margin-left: 6px;
-	padding: 0 5px;
-	font-size: 10px;
-	font-weight: 400;
-	border-radius: 3px;
-	background-color: var(--royal-l85);
-	color: var(--royal-l25);
-	vertical-align: middle;
+/* first-child, not first-of-type: half these rows are buttons and half are
+	not, so per-type matching found several starts and one row that was both. */
+.history-list__timeline > .history-list__row:first-child::before {
+	top: 50%;
 }
+
+.history-list__timeline > .history-list__row:last-child::before {
+	bottom: 50%;
+}
+
+.history-list__dot {
+	position: relative;
+	justify-self: center;
+	width: 7px;
+	height: 7px;
+	border-radius: var(--r-pill);
+	background-color: var(--border-strong);
+}
+
+/*
+	Where you are, and it says so on its own: a ring that grows out of the dot
+	and fades, once every few seconds.
+
+	This marker is the one thing in the panel that is not a record of something
+	finished - it is the live position, and it moves when you undo. A still dot
+	the same size as the others relies on colour alone to say that. The app-wide
+	reduced-motion block in tokens.css stops it.
+*/
+.history-list__row--now .history-list__dot {
+	width: 9px;
+	height: 9px;
+	background-color: var(--accent);
+	box-shadow: 0 0 0 3px var(--bg-selected);
+}
+
+.history-list__row--now .history-list__dot::after {
+	content: '';
+	position: absolute;
+	inset: -1px;
+	border: 1px solid var(--accent);
+	border-radius: var(--r-pill);
+	animation: history-now-pulse 2.6s var(--ease-out) infinite;
+}
+
+@keyframes history-now-pulse {
+	0% {
+		transform: scale(0.8);
+		opacity: 0.55;
+	}
+	60% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+	100% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+}
+
+/* What you undid: an outline, because it is a place rather than a step taken. */
+.history-list__row--ahead .history-list__dot {
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-strong);
+}
+
+.history-list__title {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.history-list__row--now .history-list__title {
+	color: var(--text-primary);
+	font-weight: var(--fw-medium);
+}
+
+/* Ahead of you: still there, visibly not where you are. */
+.history-list__row--ahead .history-list__title,
+.history-list__row--ahead .history-list__date {
+	color: var(--text-tertiary);
+}
+
+/* Moving between items is not an edit, and reads as the quieter thing it is. */
+.history-list__row--navigation .history-list__title {
+	font-style: italic;
+	color: var(--text-tertiary);
+}
+
+/* Tabular, so a column of times lines up on its digits. */
+.history-list__date {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+.history-list__row--now .history-list__date {
+	color: var(--text-accent);
+}
+
 
 /*
 		Content Pages
@@ -969,145 +1574,360 @@ nav .item-chooser__wrapper--compact {
 	resize: vertical;
 }
 
-/*
-	Guides
-*/
-.guides-card__view-options {
-	grid-template-columns: 20px min-content 1fr;
-}
+/* --------------------------------------------------------------
+	CONTEXT CHARACTERS PANEL
+	Same shape as the guides options below: a name, and the control for it
+	against the right edge. Each of these was two children of a card that
+	collapses to one column, so the label appeared and its control appeared
+	on the line under it, a panel width away from the thing it named.
+	------------------------------------------------------------ */
 
-.guides-card__view-options h3,
-.guides-card__system h3,
-.guides-card__custom h3 {
-	margin-bottom: 4px;
-}
-
-.guides-card__view-options h4 {
-	position: relative;
-	top: -2px;
-	grid-column: 2 / -1;
-	column-span: 2 / 3;
-}
-
-.guides-card__view-options label {
-	grid-column: auto;
-}
-
-.guides-card__view-options .guide-transparency-input {
-	width: 90px;
-	grid-column: auto;
-}
-
-.guides-card__system {
+.context-card__option {
+	grid-column: 1 / -1;
 	display: grid;
-	grid-template-columns: 20px 1fr 20px 85px;
-}
-
-.guides-card__custom {
-	display: grid;
-	grid-template-columns: 20px 1fr 22px 22px 22px 90px;
-	column-gap: 4px;
-}
-
-.guides-card__custom input[type='checkbox'] {
-	margin: 0px 0px 0px 0px;
-}
-
-.guides-card__custom button {
-	height: 22px;
-	width: 22px;
-	padding: 0;
-}
-
-.guides-card__custom .guide-delete-button,
-.guides-card__custom .guide-angle-button {
-	background-color: transparent;
-	border-color: transparent;
-	box-shadow: none;
-}
-
-.guides-card__custom .guide-color-button {
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;
-	height: 20px;
-	width: 20px;
-	background-color: transparent;
-	border-color: var(--offWhite);
-	border-radius: 5px 10px 5px 5px;
-	padding: 9px 13px 11px 7px;
-	border-image-width: 700px;
-	border-width: 2px;
-}
-
-.guide-color-button::-webkit-color-swatch {
-	border: none;
-}
-
-.guide-color-button::-moz-color-swatch {
-	border: none;
-}
-
-.guides-card__custom .guide-color-button:hover {
-	cursor: pointer;
-	border-color: white;
-}
-
-.guides-card__custom .guide-delete-button {
-	opacity: 0.4;
-}
-
-.guides-card__custom .guide-angle-button {
-	opacity: 1;
-}
-
-.guides-card__custom .guide-delete-button:hover,
-.guides-card__custom .guide-color-button:hover,
-.guides-card__custom .guide-angle-button:hover {
-	background-color: var(--enabled-focus-background);
-	border-color: inherit;
-	box-shadow: inherit;
-	opacity: 1;
-}
-
-.guides-card__custom .guide-color-button:hover {
-	border-color: white;
-}
-
-.guides-card__custom .guide-delete-button svg {
-	height: 10px;
-	width: 10px;
-}
-
-.guides-card__custom .guide-angle-button svg,
-.guides-card__system .guide-system-angle svg {
-	position: relative;
-	top: 2px;
-	width: 14px;
-	height: 14px;
-}
-
-.guides-card__custom input-number {
-	width: 90px;
-}
-
-.guides-card__system label {
-	grid-column: auto;
-}
-
-.guide-system-angle {
-	width: 20px;
-	height: 20px;
-	text-align: center;
-}
-
-.guide-system-value {
-	font-family: monospace;
-	color: var(--enabled-restingLight-lightText);
-	text-align: right;
+	grid-template-columns: minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-3);
 	width: 100%;
-	padding-right: 30px;
+	min-height: var(--row-h);
 }
+
+.context-card__option label {
+	padding-top: 0;
+}
+
+/*
+	The slider is capped so the label beside it keeps one line.
+
+	A fancy-slider is as wide as it likes, and in a max-content track that
+	left 105px for the name - so `Character opacity` and `Guide opacity` both
+	broke across two lines and those two rows stood taller than the two
+	switches between them.
+*/
+.context-card__option .fancy-slider__wrapper,
+.guides-card__option .fancy-slider__wrapper {
+	width: 130px;
+}
+
+/*
+	The slider drops under its label once the two stop fitting side by side.
+
+	Its 130px is a fixed width, and the label track next to it is what gives
+	way - so dragging a sidebar down towards its 220px minimum left 59px for
+	a label needing 103, and "Character opacity" broke across two lines while
+	the slider kept every pixel of its own. Stacked, the label has the whole
+	row and the slider is wider than it was.
+
+	250px: the label, the gap and the slider come to 239 at their smallest
+	comfortable sizes, so this is the first step on the scale that clears it.
+*/
+@container sidebar-body (max-width: 250px) {
+	/*
+		Prefixed, like the other container rules in this file: a query adds no
+		specificity of its own, and .guides-card__option is declared further
+		down the file than this. Without the prefix the slider went full width
+		here while the row kept two columns, which starved the label to 13px -
+		worse than what it started with.
+	*/
+	/*
+		Only the rows whose control is a slider. A toggle is a 24px square and
+		sits beside any label these cards have; dropping it onto a line of its
+		own spent a whole row on one icon and left the label pointing at
+		nothing.
+		*/
+	.sidebar__section-body .context-card__option:has(.fancy-slider__wrapper),
+	.sidebar__section-body .guides-card__option:has(.fancy-slider__wrapper) {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: var(--sp-1);
+		padding-block: var(--sp-1);
+	}
+
+	.sidebar__section-body .context-card__option .fancy-slider__wrapper,
+	.sidebar__section-body .guides-card__option .fancy-slider__wrapper {
+		width: 100%;
+	}
+}
+
+.context-card__field-label {
+	grid-column: 1 / -1;
+	padding-top: 0;
+}
+
+.context-card input.context-card__input {
+	grid-column: 1 / -1;
+	width: 100%;
+}
+
+/*
+	What the string will do, drawn the way the canvas will draw it.
+
+	The rule this panel exists to teach - the character you are editing splits
+	the string, and everything before it goes left and everything after goes
+	right - was nowhere on the surface. It is a line under the field now, live
+	as you type, so the panel explains itself instead of needing a paragraph.
+*/
+.context-card__split {
+	grid-column: 1 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--sp-1);
+	width: 100%;
+	min-height: var(--row-h);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.context-card__split--empty {
+	align-items: center;
+}
+
+.context-card__split-part {
+	padding: 0 var(--sp-2);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	line-height: calc(var(--control-h-sm) - 2px);
+}
+
+/* The context: what will be drawn in grey, shown in grey. */
+.context-card__split-side {
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	color: var(--text-tertiary);
+}
+
+/* The one you are editing, the one drawn in full ink. */
+.context-card__split-current {
+	background-color: var(--bg-selected);
+	border: 1px solid transparent;
+	color: var(--text-accent);
+}
+
+/* The case nobody finds on purpose, said only when it happens. */
+.context-card__split-note {
+	flex-basis: 100%;
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------
+	GUIDES PANEL
+
+	Every part of this panel used to return four to six separate children into
+	a card that collapses to one column in a sidebar this narrow, so each
+	setting became a tower rather than a row: seven key metrics made a 777px
+	card, and the left panel came to 2516px against a 910px window. Each one
+	is a row now, and the tracks that tried to hold them - 20px 1fr 20px 85px,
+	20px 1fr 22px 22px 22px 90px - are gone with them.
+	------------------------------------------------------------ */
+
+/* Heading on the left, the switch for the whole group on the right. */
+.guides-card__group-head {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	width: 100%;
+}
+
+.guides-card__group-head h3,
+.guides-card__group-head h4 {
+	margin: 0;
+}
+
+/* One setting: its name, and the control for it against the right edge. */
+.guides-card__option {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-3);
+	width: 100%;
+	min-height: var(--row-h);
+}
+
+.guides-card__option label {
+	padding-top: 0;
+}
+
+/*
+	Switch, name, position - one row per metric.
+
+	The switch is the orientation mark as well: it says which way the line
+	runs, being pressed says the line is on, and it carries the line's own
+	colour. So the control in here and the line out there are recognisably
+	one thing, the way the quality check dots match their rings.
+*/
+.guides-card__metric {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-3);
+	width: 100%;
+	height: var(--row-h);
+}
+
+/*
+	The rule between the five that come from the font and the two that come
+	from this glyph. No second heading: the mark on each switch already says
+	which is which - horizontal for a font metric, vertical for a bearing -
+	and a heading would cost a row to repeat it.
+*/
+.guides-card__metric:not(.guides-card__metric--glyph) + .guides-card__metric--glyph {
+	margin-top: var(--sp-3);
+	padding-top: var(--sp-3);
+	border-top: 1px solid var(--border-subtle);
+	height: auto;
+	min-height: var(--row-h);
+}
+
+.guides-card__metric-name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/*
+	Not editable here, and no longer dressed as if it were. It was monospace
+	in --enabled-restingLight-lightText with 30px of right padding to fake
+	its alignment; the track does that now.
+*/
+/* The unit, quieter than the number it belongs to. */
+.guides-card__metric-unit {
+	margin-left: var(--sp-1);
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+	opacity: 0.75;
+}
+
+.guides-card__metric-value {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+/*
+	CUSTOM GUIDES: a list, not a form.
+
+	Its controls sit at the two ends of the row and nowhere else - show on the
+	left, delete on the right - which is what the Layers rows and the Anchors
+	rows already do, and what makes five guides scan as five of one thing.
+	Between them the row is what the guide IS: which way it runs, what it is
+	called, where it sits.
+*/
+.guides-card__custom-row {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: max-content 10px minmax(0, 1fr) 76px max-content;
+	align-items: center;
+	gap: var(--sp-2);
+	height: var(--row-h);
+	/* The bleed the other row lists use, so the hover reaches the gutter. */
+	padding: 0 var(--sp-2);
+	margin: 0 calc(var(--sp-2) * -1);
+	width: calc(100% + var(--sp-4));
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+}
+
+.guides-card__custom-row:hover {
+	background-color: var(--bg-hover);
+}
+
+/*
+	Which way it runs: a mark, not a button. It is the only bar in the row now,
+	so it cannot be read as a verb the way the old pair could - one showed the
+	orientation the guide had and the other the one it would become.
+*/
+.guides-card__mark {
+	justify-self: center;
+	background-color: var(--mark, var(--icon-default));
+	border-radius: var(--r-pill);
+}
+
+.guides-card__mark--horizontal {
+	width: 10px;
+	height: 2px;
+}
+
+.guides-card__mark--vertical {
+	width: 2px;
+	height: 10px;
+}
+
+/* Text until you click it - see startRenamingInPlace. */
+.guides-card__custom-name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	cursor: text;
+}
+
+/* Not a name yet: an invitation to write one. */
+.guides-card__custom-name--default {
+	color: var(--text-tertiary);
+	font-style: italic;
+}
+
+.guides-card__rename {
+	width: 100%;
+	min-width: 0;
+	height: var(--control-h-sm);
+}
+
+.guides-card__custom-row input-number.guides-card__custom-value {
+	width: 100%;
+	min-width: 0;
+	--number-input-min-w: 0;
+}
+
+/* Two ways in, because orientation is chosen once rather than flipped. */
+.guides-card__add {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--sp-2);
+	width: 100%;
+	margin-top: var(--sp-3);
+}
+
+/*
+	Stacked once the halves stop holding their labels. Side by side in a
+	sidebar dragged down to its 220px minimum each button is 96px, which is
+	not enough for "Add horizontal" - it broke across two lines inside a 32px
+	button, and only one of the pair did, so they did not even break
+	symmetrically. Full width, they each fit on one line again.
+
+	240px of container is where the wider of the two labels stops fitting,
+	measured rather than guessed.
+*/
+@container sidebar-body (max-width: 240px) {
+	.guides-card__add {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.guides-card__add fancy-button {
+	width: 100%;
+}
+/*
+	The guide's colour, on its switch. --toggle-on-color is set inline by
+	makeDirectToggle; without one a toggle looks like every other toggle.
+*/
+.icon-toggle[aria-pressed='true'][style*='--toggle-on-color'] {
+	background-color: transparent;
+	color: var(--toggle-on-color, var(--text-accent));
+}
+
 
 /* A label that sits beside a checkbox rather than in the label column. */
 .panel__card-label--wide {
@@ -1279,7 +2099,6 @@ nav .item-chooser__wrapper--compact {
 .transform-card__body {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 92px;
-	align-items: start;
 	gap: var(--sp-3);
 	width: 100%;
 }
@@ -1289,6 +2108,16 @@ nav .item-chooser__wrapper--compact {
 	display: grid;
 	gap: var(--sp-3);
 	min-width: 0;
+}
+
+/*
+	The right column is divided the way the left one is: the grid takes the
+	height of the three fields beside it, and the icon row takes the fourth.
+	So the icons sit on the last field rather than floating above it, and the
+	two columns end on the same line.
+*/
+.transform-card__aside {
+	grid-template-rows: minmax(0, 1fr) var(--control-h);
 }
 
 /*
@@ -1328,7 +2157,7 @@ nav .item-chooser__wrapper--compact {
 	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: repeat(4, 1fr);
 	width: 100%;
-	aspect-ratio: 1;
+	height: 100%;
 	border: 1px solid var(--border-strong);
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);

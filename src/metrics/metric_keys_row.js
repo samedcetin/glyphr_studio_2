@@ -43,13 +43,19 @@ export function makeMetricKeyRow(glyph) {
 		`,
 	});
 
-	const wrapper = makeElement({ tag: 'div', className: 'doubleInput' });
+	/*
+		The same two-column pair as the bearings directly above, so the two
+		rows break in the same place. This was the older three-track split with
+		a spacer in the middle, which left these fields narrower than the
+		numbers they belong to and the seam between them in a different spot.
+	*/
+	const wrapper = makeElement({ tag: 'div', className: 'doubleInput doubleInput--pair' });
 	const message = makeElement({ className: 'metric-key__message' });
 
 	const leftInput = makeKeyInput(glyph, 'left', message);
 	const rightInput = makeKeyInput(glyph, 'right', message);
 
-	addAsChildren(wrapper, [leftInput, makeElement({ className: 'metric-key__split' }), rightInput]);
+	addAsChildren(wrapper, [leftInput, rightInput]);
 
 	updateMessage(glyph, message);
 

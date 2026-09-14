@@ -752,3 +752,44 @@ export function niceAngleToRadians(angle) {
 	// log(`niceAngleToRadians`, 'end');
 	return radians;
 }
+
+/**
+ * Put a string on the system clipboard.
+ *
+ * The async Clipboard API is the one to use, and it is only there in a secure
+ * context - which this app is not when someone opens the built index.html off
+ * their own disk, which is a supported way to run it. The old execCommand path
+ * is the fallback for exactly that case: deprecated, still implemented
+ * everywhere, and the only thing that works over file://.
+ *
+ * @param {String} text - what to copy
+ * @returns {Promise<Boolean>} - whether it landed
+ */
+export async function copyToClipboard(text) {
+	if (navigator.clipboard?.writeText) {
+		try {
+			await navigator.clipboard.writeText(text);
+			return true;
+		} catch (error) {
+			/* Fall through - a denied permission looks the same as no API here. */
+		}
+	}
+
+	/* Off-screen rather than hidden: a display:none field cannot be selected. */
+	const field = document.createElement('textarea');
+	field.value = text;
+	field.setAttribute('readonly', '');
+	field.style.cssText = 'position: fixed; top: -1000px; opacity: 0;';
+	document.body.appendChild(field);
+	field.select();
+
+	let copied = false;
+	try {
+		copied = document.execCommand('copy');
+	} catch (error) {
+		copied = false;
+	}
+
+	field.remove();
+	return copied;
+}

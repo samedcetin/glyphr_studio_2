@@ -48,7 +48,7 @@ const shortLabels = {
 	'Align Path Points: Bottom': 'Align points bottom',
 	'Add Component Instance': 'Add component instance',
 	'Get Paths From Another Project': 'Get paths from another project',
-	'Clear Glyphr Studio Clipboard': 'Clear clipboard',
+	'Clear Blue Rain Type Clipboard': 'Clear clipboard',
 	'Import paths from a SVG File': 'Import paths from SVG',
 	'Export glyph SVG File': 'Export glyph as SVG',
 };

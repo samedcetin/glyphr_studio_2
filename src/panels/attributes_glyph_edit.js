@@ -79,7 +79,6 @@ export function makePanel_GlyphAttributes() {
 				content: 'Create a new ligature',
 				attributes: { secondary: '' },
 				onClick: showAddLigatureDialog,
-				style: 'margin-top: 10px;',
 			})
 		);
 	}
@@ -90,7 +89,6 @@ export function makePanel_GlyphAttributes() {
 				content: 'Create a new component',
 				attributes: { secondary: '' },
 				onClick: showAddComponentDialog,
-				style: 'margin-top: 10px;',
 			})
 		);
 	}

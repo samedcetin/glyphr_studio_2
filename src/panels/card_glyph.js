@@ -2,7 +2,6 @@ import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { makeIcon } from '../common/graphics.js';
 import { makeMetricKeyRow } from '../metrics/metric_keys_row.js';
-import { makeActionsArea_Glyph, makeActionsArea_Universal } from './actions.js';
 import {
 	makeInputs_position,
 	makeInputs_size,
@@ -116,9 +115,11 @@ export function makeCard_glyphAttributes(glyph) {
 		addAsChildren(glyphCard, makeInputs_position(glyph, '', [], showAsDisabled));
 		addAsChildren(glyphCard, makeInputs_size(glyph, showAsDisabled));
 	}
-	addAsChildren(glyphCard, rowPad());
-	addAsChildren(glyphCard, makeActionsArea_Universal());
-	addAsChildren(glyphCard, makeActionsArea_Glyph());
+	/*
+		The action grid moved to the toolbar - see edit_canvas/quick_actions.js.
+		Thirty-one icon buttons at the foot of a 260px column was a lot of the
+		panel spent on things reached for occasionally, in a panel for properties.
+	*/
 	// log(`returning:`);
 	// log(glyphCard);
 	// log(`makeCard_glyphAttributes`, 'end');
@@ -137,10 +138,18 @@ export function makeCard_glyphLinks(item) {
 	let linksCard = makeElement({
 		tag: 'div',
 		className: 'panel__card full-width item-links__rows-area',
+		/*
+			The explanation is in a <p>. It used to be a bare text node, which no
+			selector can reach - so while the heading and the rows were put back
+			on the sidebar column, the sentence between them stayed out at the
+			card's full-bleed edge, twelve pixels left of everything else.
+		*/
 		innerHTML: `
 		<h3>Links</h3>
-		This ${item.displayType} is linked to the following items.
-		It is used as a component root and will show up in these items as a component instance.
+		<p>
+			This ${item.displayType} is linked to the following items.
+			It is used as a component root and will show up in these items as a component instance.
+		</p>
 		`,
 	});
 

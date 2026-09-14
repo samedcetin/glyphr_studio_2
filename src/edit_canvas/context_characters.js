@@ -12,6 +12,7 @@ import { Maxes } from '../project_data/maxes';
 import { guideColorDark } from '../project_editor/guide';
 import { setCursor } from './cursors';
 import { cXsX, drawEmVerticalLine, sYcY } from './edit_canvas';
+import { getCanvasFonts } from '../common/theme.js';
 
 const contextCharacters = {
 	chars: '',
@@ -417,7 +418,7 @@ function drawCharacterNameExtra(ctx, text, currentX, advanceWidth, color, hotspo
 	// log(`textWidth: ${textWidth}`);
 
 	// Item label
-	ctx.font = '12px Tahoma, Verdana, sans-serif';
+	ctx.font = `12px ${getCanvasFonts().ui}`;
 	ctx.strokeStyle = 'white';
 	ctx.lineWidth = 4;
 	ctx.strokeText(text, textX, textY);
@@ -460,7 +461,7 @@ export function drawCharacterKernExtra(ctx, kern, rightX, scale) {
 	// const offset = barHeight * -1;
 	const offset = 0;
 
-	ctx.font = '12px Tahoma, Verdana, sans-serif';
+	ctx.font = `12px ${getCanvasFonts().ui}`;
 	ctx.fillStyle = color;
 	ctx.fillRect(Math.floor(rightX), topY + offset, Math.ceil(kern * scale), barHeight);
 

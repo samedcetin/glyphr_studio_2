@@ -1,5 +1,7 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
+import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
+import { makeIconToggle } from '../controls/icon-toggle/icon_toggle.js';
 import { round, transformOrigins } from '../common/functions.js';
 import { makeTransformOriginIcon } from '../common/graphics.js';
 import { makeLineIcon } from '../common/icons.js';
@@ -61,7 +63,14 @@ export function makeInputs_size(item, disabled = false) {
 	// Width and Height
 	let dimensionInputs = makeElement({
 		tag: 'div',
-		className: 'doubleInput doubleInput--full',
+		/*
+			With no lock to hold, this is an ordinary pair and takes the ordinary
+			seam. It used to keep the lock’s 28px slot open so the disabled row
+			would line up with the live one - but they sit in different cards with
+			a rule between them, so nothing was gained, and a 36px hole between two
+			fields reads as a control that failed to render.
+		*/
+		className: `doubleInput doubleInput--full${disabled ? ' doubleInput--pair' : ''}`,
 	});
 	let wInput = makeSingleInput(item, 'width', thisTopic, 'input-number');
 	let hInput = makeSingleInput(item, 'height', thisTopic, 'input-number');
@@ -82,17 +91,7 @@ export function makeInputs_size(item, disabled = false) {
 		slash was already using.
 	*/
 	dimensionInputs.appendChild(wInput);
-	/*
-		A spacer rather than a slash when there is no lock to show. The slash
-		used to separate "width" from "height"; W and H do that from inside the
-		fields now, and a slash between two disabled fields only said that this
-		row is different from the one above it.
-	*/
-	dimensionInputs.appendChild(
-		disabled
-			? makeElement({ tag: 'span', className: 'ratio-lock__gap' })
-			: makeRatioLockToggle(item, thisTopic)
-	);
+	if (!disabled) dimensionInputs.appendChild(makeRatioLockToggle(item, thisTopic));
 	dimensionInputs.appendChild(hInput);
 
 	returnControls.push(dimensionInputs);
@@ -295,34 +294,39 @@ export function addAttributeListener(element, listenFor = [], callback) {
 	// observer.observe(element, { attributes: true, subtree: true });
 }
 
-export function makeSingleCheckbox(item, property, thisTopic) {
-	// log(`makeSingleCheckbox`, 'start');
-	// log(`item.type: ${item.type}`);
-	// log(`property: ${property}`);
-	// log(`thisTopic: ${thisTopic}`);
+/**
+ * A boolean property of the selected item, as a toggle rather than a tick.
+ *
+ * It replaces makeSingleCheckbox, which produced a browser checkbox: the
+ * largest control on any panel that had one, at a size the app never picks
+ * itself, in a shape nothing else here has. A checkbox is right for a list
+ * of things you tick; these are states of the thing you are editing, and a
+ * switch is what says that.
+ *
+ * Every row here has its label beside it, so the icon supports the label
+ * rather than carrying it: it is the picture of what turning this on does
+ * where the set has one - a flip, a link - and a plain tick where it does
+ * not. The control is the same either way, which is the part that matters.
+ *
+ * @param {Object} item - the object holding the property
+ * @param {String} property - the boolean to read and write
+ * @param {String} thisTopic - what to publish, and what to listen to
+ * @param {Object} args - { icon, name, body }
+ * @returns {HTMLElement}
+ */
+export function makePropertyToggle(item, property, thisTopic, args = {}) {
+	const icon = args.icon || 'check';
+	const name = args.name || property;
 
-	let newCheckbox = makeElement({
-		tag: 'input',
-		attributes: {
-			type: 'checkbox',
+	const toggle = makeIconToggle({
+		icon: icon,
+		name: name,
+		body: args.body || '',
+		pressed: !!item[property],
+		onToggle: (on) => {
+			item[property] = on;
+			if (thisTopic) getCurrentProjectEditor().publish(thisTopic, item);
 		},
-	});
-	// @ts-expect-error 'property does exist'
-	if (item[property]) newCheckbox.checked = true;
-
-	newCheckbox.addEventListener('change', (event) => {
-		// log(`makeSingleCheckbox CHANGE event listener`, 'start');
-		// @ts-expect-error 'property does exist'
-		let newValue = event.target.checked;
-		item[property] = !!newValue;
-		if (thisTopic) {
-			getCurrentProjectEditor().publish(thisTopic, item);
-			if (property === 'use') {
-				toggleHandleInputs(item.type, !!newValue);
-				item.parent.reconcileHandle(item.type);
-			}
-		}
-		// log(`makeSingleCheckbox CHANGE event listener`, 'end');
 	});
 
 	if (thisTopic) {
@@ -330,33 +334,12 @@ export function makeSingleCheckbox(item, property, thisTopic) {
 			topic: thisTopic,
 			subscriberID: `attributesPanel.${thisTopic}.${property}`,
 			callback: (changedItem) => {
-				// log(`makeSingleCheckbox SUBSCRIBER callback`, 'start');
-				if (changedItem[property]) {
-					// @ts-expect-error 'property does exist'
-					newCheckbox.checked = true;
-					if (property === 'use') toggleHandleInputs(item.type, true);
-				} else {
-					// @ts-expect-error 'property does exist'
-					newCheckbox.checked = false;
-					if (property === 'use') toggleHandleInputs(item.type, false);
-				}
-				// log(`makeSingleCheckbox SUBSCRIBER callback`, 'end');
+				toggle.setAttribute('aria-pressed', `${!!changedItem[property]}`);
 			},
 		});
 	}
 
-	// log(`makeSingleCheckbox`, 'end');
-	return newCheckbox;
-}
-
-function toggleHandleInputs(handle, show) {
-	// log(`toggleHandleInputs`, 'start');
-	// log(`handle: ${handle}`);
-	// log(`show: ${show}`);
-	let group = document.getElementById(`${handle}InputGroup`);
-	// log(group);
-	if (group) group.style.display = show ? 'grid' : 'none';
-	// log(`toggleHandleInputs`, 'end');
+	return toggle;
 }
 
 /**
@@ -454,6 +437,126 @@ export function dimSplitElement() {
 // --------------------------------------------------------------
 // 'direct' controls that don't use pub/sub
 // --------------------------------------------------------------
+
+/**
+ * A boolean that is written straight back to the object it came from.
+ *
+ * makePropertyToggle is for a property the editor publishes about;. this one
+ * is for the view settings, which nothing subscribes to - they just redraw.
+ * Same control, so the sidebar has one switch rather than two.
+ *
+ * @param {Object} item - the object holding the property
+ * @param {String} property - the boolean to read and write
+ * @param {Function =} callback - called with the new value
+ * @param {Object =} args - { icon, name, body, className, color }
+ * @returns {HTMLElement}
+ */
+/**
+ * Opacity, over a setting that stores transparency.
+ *
+ * transparencyToAlpha reads these as transparency - 0 is opaque, 100 is
+ * invisible - and every slider in the app that drives one was labelled
+ * Transparency because of it. Which is accurate, and backwards from every
+ * other design tool: Figma, Sketch and Photoshop all show opacity, and a
+ * type designer reading 70 next to a faint line will read it as 70% there.
+ *
+ * So the control shows opacity and the setting keeps storing transparency.
+ * The inversion lives here and only here, because a conversion applied at
+ * some call sites and not others is worse than either convention.
+ *
+ * @param {Object} item - the object holding the property
+ * @param {String} property - the transparency to read and write
+ * @param {Function =} onChange - called after the write
+ * @returns {HTMLElement}
+ */
+/**
+ * Turn a piece of text in a list row into a field, in place.
+ *
+ * The Layers panel had this for renaming a path and it is the right
+ * behaviour for any named thing in a list: you click the name where it is
+ * rather than selecting the row and typing somewhere else. It also buys the
+ * row back the width an always-there input costs - which in a 235px sidebar
+ * is the difference between a readable name and three characters of one.
+ *
+ * Enter and blur commit, Escape abandons. Keydown is stopped so the app’s
+ * own shortcuts do not fire into a field someone is typing in.
+ *
+ * @param {Element} element - the span holding the text
+ * @param {Object} args - { value, onCommit, className }
+ */
+export function startRenamingInPlace(element, { value, onCommit, className = 'rename-in-place' }) {
+	const original = value;
+	const input = makeElement({
+		tag: 'input',
+		className: className,
+		attributes: { type: 'text', value: original, spellcheck: 'false' },
+	});
+
+	element.innerHTML = '';
+	element.appendChild(input);
+	input.focus();
+	/** @type {HTMLInputElement} */ (input).select();
+
+	let finished = false;
+	const commit = (save) => {
+		if (finished) return;
+		finished = true;
+		const next = String(/** @type {HTMLInputElement} */ (input).value).trim();
+		onCommit(save && next && next !== original ? next : false);
+	};
+
+	input.addEventListener('blur', () => commit(true));
+	input.addEventListener('keydown', (event) => {
+		event.stopPropagation();
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			commit(true);
+		}
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			commit(false);
+		}
+	});
+	input.addEventListener('click', (event) => event.stopPropagation());
+	input.addEventListener('dblclick', (event) => event.stopPropagation());
+}
+
+export function makeOpacitySlider(item, property, onChange) {
+	return makeFancySlider(
+		100 - item[property],
+		(shownOpacity) => {
+			item[property] = 100 - shownOpacity;
+			if (onChange) onChange();
+		},
+		0,
+		100,
+		1,
+		'%',
+	);
+}
+
+export function makeDirectToggle(item, property, callback, args = {}) {
+	const toggle = makeIconToggle({
+		icon: args.icon || 'check',
+		name: args.name || property,
+		body: args.body || '',
+		className: args.className || '',
+		pressed: !!item[property],
+		onToggle: (on) => {
+			item[property] = on;
+			if (callback) callback(on);
+		},
+	});
+
+	/*
+		A guide toggle carries the colour of the line it draws, so the switch in
+		the panel and the line on the canvas are the same thing - the way the
+		quality check dots match their rings.
+	*/
+	if (args.color) toggle.style.setProperty('--toggle-on-color', args.color);
+
+	return toggle;
+}
 
 export function makeDirectCheckbox(item, property, callback, id = false) {
 	let newCheckbox = makeElement({

@@ -1,3 +1,4 @@
+import { PRODUCT_URL } from '../app/brand.js';
 import { getCurrentProject, getCurrentProjectEditor, getGlyphrStudioApp } from '../app/main.js';
 import { isPixelModeOn } from '../pixel_font/pixel_grid.js';
 import { makeElement } from '../common/dom.js';
@@ -75,7 +76,7 @@ export function handleKeyPress(event) {
 	// o
 	if (ehd.isCtrlDown && key === 'o') {
 		cancelDefaultEventActions(event);
-		window.open('http://glyphrstudio.com/app', '_blank');
+		window.open(PRODUCT_URL, '_blank');
 	}
 
 	// q

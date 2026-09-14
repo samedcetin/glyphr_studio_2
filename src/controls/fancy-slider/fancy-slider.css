@@ -24,6 +24,12 @@
 	text-align: right;
 }
 
+/*
+	The accent, not a hue ramp. The bar used to set its own accent-color from
+	the value - hsl(value + 200, 100%, 40%) - so it walked from blue to purple
+	as you dragged it, which is a colour saying something the number beside it
+	already says, in a hue the app does not own.
+*/
 .fancy-slider__bar {
 	display: block;
 	width: 100%;

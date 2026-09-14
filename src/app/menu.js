@@ -1,3 +1,4 @@
+import { PRODUCT_URL, SUPPORT_EMAIL } from './brand.js';
 import { insertAfter, makeElement } from '../common/dom.js';
 import {
 	closeEveryTypeOfDialog,
@@ -130,7 +131,7 @@ export function makeMenu(menuName) {
 
 			This menu used to head three of its four groups with a file name and
 			the fourth with a category, all in the same style - so the first line
-			a user read was "Oblegg - Glyphr Studio Project - 2026.9.13.gs2", and
+			a user read was "Oblegg - Blue Rain Type Project - 2026.9.13.gs2", and
 			nothing said what the group was for. Worse, the font group's heading
 			named one file while the four rows under it wrote four different ones.
 
@@ -139,7 +140,7 @@ export function makeMenu(menuName) {
 			is the thing you ship. The descriptions say so once, here.
 		*/
 		if (typeof editor.loadedFileHandle === 'object') {
-			let projectDisplayName = `${editor.project.settings.project.name} - Glyphr Studio Project.gs2`;
+			let projectDisplayName = `${editor.project.settings.project.name} - Blue Rain Type Project.gs2`;
 
 			// @ts-expect-error 'property does exist'
 			if (typeof editor?.loadedFileHandle?.name === 'string') {
@@ -345,7 +346,7 @@ export function makeMenu(menuName) {
 						description: 'A separate copy of the app, with its own projects',
 						icon: 'command_newTab',
 						onClick: () => {
-							window.open('https://glyphrstudio.com/app/', '_blank');
+							window.open(PRODUCT_URL, '_blank');
 						},
 					},
 					{
@@ -415,7 +416,7 @@ export function makeMenu(menuName) {
 						{ name: 'hr' },
 						{ type: 'heading', name: 'About' },
 						{
-							name: 'About Glyphr Studio',
+							name: 'About Blue Rain Type',
 							description: 'Version, credits and licence',
 							icon: 'command_info',
 							onClick: () => {
@@ -432,12 +433,12 @@ export function makeMenu(menuName) {
 						*/
 						{
 							name: 'Send feedback',
-							description: 'mail@glyphrstudio.com',
+							description: SUPPORT_EMAIL,
 							icon: 'mail',
 							onClick: () => {
 								const app = getGlyphrStudioApp();
 								window.open(
-									`mailto:mail@glyphrstudio.com?subject=[${app.version}] Feedback`,
+									`mailto:${SUPPORT_EMAIL}?subject=[${app.version}] Feedback`,
 									'_blank'
 								);
 							},

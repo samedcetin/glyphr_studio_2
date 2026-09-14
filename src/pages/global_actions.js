@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from '../app/brand.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { decToHex } from '../common/character_ids.js';
 import { addAsChildren, makeElement, textToNode } from '../common/dom.js';
@@ -76,7 +77,7 @@ export function makePage_GlobalActions() {
 					</span>
 					<span class="panel__card full-width">
 						Have an idea for a new global action?  They are easy for us to add - email us your idea!
-						<a href="mailto:mail@glyphrstudio.com">mail@glyphrstudio.com</a>
+						<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
 					</span>
 				</div>
 			</div>

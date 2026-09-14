@@ -1,90 +1,112 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
-import { makeRandomSaturatedColor, parseColorString, rgbToHex } from '../common/colors.js';
+import { makeRandomSaturatedColor } from '../common/colors.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
-import { makeIcon } from '../common/graphics.js';
-import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
+import { round } from '../common/functions.js';
+import { makeIconButton } from '../controls/icon-toggle/icon_toggle.js';
+import { attachTooltip } from '../controls/tooltip/tooltip.js';
+
 import {
 	Guide,
 	guideColorDark,
 	guideColorLight,
 	guideColorMedium,
 } from '../project_editor/guide.js';
-import { makeActionButton } from './action_buttons.js';
-import { makeDirectCheckbox, makeSingleInput, makeSingleLabel, rowPad } from './cards.js';
+import { makeDirectToggle, makeOpacitySlider, makeSingleInput, makeSingleLabel, startRenamingInPlace } from './cards.js';
 import { refreshPanel } from './panels.js';
 
 // --------------------------------------------------------------
 // Guides panel
 // --------------------------------------------------------------
 
+/**
+ * One setting: what it is on the left, the control for it on the right.
+ *
+ * @param {String} title
+ * @param {HTMLElement} control
+ * @returns {HTMLElement}
+ */
+function makeOptionRow(title, control) {
+	const row = makeElement({ className: 'guides-card__option' });
+	row.appendChild(makeSingleLabel(title));
+	row.appendChild(control);
+	return row;
+}
+
+/**
+ * A group of guides: what it is called, the switch that shows the lot, and
+ * the two settings that apply to all of them.
+ *
+ * Each group used to be named twice - once in a "View options" card holding
+ * its switch and its settings, and again two hundred pixels down as the
+ * heading of the card listing its members. One name, one place.
+ *
+ * @param {String} title
+ * @param {String} prefix - `system` or `custom`
+ * @param {Object} guides - settings.app.guides
+ * @returns {HTMLElement} - the card to fill with the group’s members
+ */
+function makeGuideGroupCard(title, prefix, guides) {
+	const card = makeElement({ className: `panel__card guides-card__${prefix}` });
+
+	const head = makeElement({ className: 'guides-card__group-head' });
+	head.appendChild(makeElement({ tag: 'h3', content: title }));
+	head.appendChild(
+		makeDirectToggle(guides, `${prefix}ShowGuides`, () => getCurrentProjectEditor().navigate(), {
+			icon: 'eye',
+			name: `Show ${title.toLowerCase()}`,
+		})
+	);
+	card.appendChild(head);
+
+	if (!guides[`${prefix}ShowGuides`]) return card;
+
+	addAsChildren(card, [
+		makeOptionRow(
+			'Opacity',
+			makeOpacitySlider(guides, `${prefix}Transparency`, () =>
+				getCurrentProjectEditor().editCanvas.redraw(`guides ${prefix} opacity`)
+			)
+		),
+		makeOptionRow(
+			'Show labels',
+			makeDirectToggle(guides, `${prefix}ShowLabels`, refreshGuideChange, {
+				icon: 'label',
+				name: 'Show labels',
+				body: 'Name each guide where it meets the edge of the canvas.',
+			})
+		),
+	]);
+
+	return card;
+}
+
 export function makePanel_Guides() {
-	let viewOptionsCard = makeElement({
-		className: 'panel__card guides-card__view-options',
-		innerHTML: '<h3>View options</h3>',
-	});
 	const guides = getCurrentProject().settings.app.guides;
-	const showSystem = guides.systemShowGuides;
-	const showCustom = guides.customShowGuides;
-	addAsChildren(viewOptionsCard, [
-		makeDirectCheckbox(guides, 'drawGuidesOnTop', refreshGuideChange),
-		makeElement({
-			tag: 'label',
-			// A class, not an inline style: inline styles cannot be overridden by
-			// the narrow-sidebar layout without !important.
-			className: 'panel__card-label--wide',
-			content: 'Draw guides over shapes',
-		}),
-	]);
 
-	const systemShowGuidesCheckbox = makeDirectCheckbox(guides, 'systemShowGuides');
-	systemShowGuidesCheckbox.addEventListener('change', () => {
-		getCurrentProjectEditor().navigate();
-	});
-	addAsChildren(viewOptionsCard, [
-		systemShowGuidesCheckbox,
-		makeElement({ tag: 'h4', content: 'Key metrics guides' }),
-	]);
-	if (showSystem) {
-		addAsChildren(viewOptionsCard, [
-			makeElement(),
-			makeSingleLabel('Transparency'),
-			makeFancySlider(guides.systemTransparency, (newValue) => {
-				guides.systemTransparency = newValue;
-				getCurrentProjectEditor().editCanvas.redraw('guides system transparency');
-			}),
-			makeElement(),
-			makeSingleLabel('Show labels'),
-			makeDirectCheckbox(guides, 'systemShowLabels', refreshGuideChange),
-			rowPad(),
-		]);
-	}
+	/*
+		One row, so it does not need a card or a heading over it. It was a
+		"View options" card whose entire contents were this line and the two
+		group switches - and the section header already says Guides.
+	*/
+	const topCard = makeElement({ className: 'panel__card guides-card__view-options' });
+	topCard.appendChild(
+		makeOptionRow(
+			'Draw guides over shapes',
+			makeDirectToggle(guides, 'drawGuidesOnTop', refreshGuideChange, {
+				icon: 'panel_guides',
+				name: 'Draw guides over shapes',
+				body: 'Off, the outline covers them.',
+			})
+		)
+	);
 
-	const customShowGuidesCheckbox = makeDirectCheckbox(guides, 'customShowGuides');
-	customShowGuidesCheckbox.addEventListener('change', () => {
-		getCurrentProjectEditor().navigate();
-	});
-	addAsChildren(viewOptionsCard, [
-		customShowGuidesCheckbox,
-		makeElement({ tag: 'h4', content: 'Custom guides' }),
-	]);
-	if (showCustom) {
-		addAsChildren(viewOptionsCard, [
-			makeElement(),
-			makeSingleLabel('Transparency'),
-			makeFancySlider(guides.customTransparency, (newValue) => {
-				guides.customTransparency = newValue;
-				getCurrentProjectEditor().editCanvas.redraw('guides custom transparency');
-			}),
-			makeElement(),
-			makeSingleLabel('Show labels'),
-			makeDirectCheckbox(guides, 'customShowLabels', refreshGuideChange),
-		]);
-	}
+	const systemCard = makeGuideGroupCard('Key metrics guides', 'system', guides);
+	if (guides.systemShowGuides) fillSystemGuides(systemCard);
 
-	let result = [viewOptionsCard];
-	if (showSystem) result.push(makeSystemGuidesCard());
-	if (showCustom) result.push(makeCustomGuidesCard());
-	return result;
+	const customCard = makeGuideGroupCard('Custom guides', 'custom', guides);
+	fillCustomGuides(customCard, guides);
+
+	return [topCard, systemCard, customCard];
 }
 
 function refreshGuideChange() {
@@ -92,15 +114,14 @@ function refreshGuideChange() {
 	getCurrentProjectEditor().editCanvas.redraw('guides refresh');
 }
 
-export function makeSystemGuidesCard() {
-	let systemCard = makeElement({
-		className: 'panel__card guides-card__system',
-		innerHTML: '<h3>Key metrics guides</h3>',
-	});
-
+/**
+ * The seven lines the font's key metrics draw.
+ * @param {HTMLElement} card
+ */
+function fillSystemGuides(card) {
 	const metrics = getCurrentProject().settings.font;
 	const advanceWidth = getCurrentProjectEditor().selectedItem.advanceWidth;
-	addAsChildren(systemCard, [
+	addAsChildren(card, [
 		makeSystemGuideRow('ascent', 'Ascent', metrics.ascent, guideColorMedium),
 		makeSystemGuideRow('capHeight', 'Cap height', metrics.capHeight, guideColorLight),
 		makeSystemGuideRow('xHeight', 'X height', metrics.xHeight, guideColorLight),
@@ -109,14 +130,53 @@ export function makeSystemGuidesCard() {
 		makeSystemGuideRow('leftSide', 'Left side', '0', guideColorDark),
 		makeSystemGuideRow('rightSide', 'Right side', advanceWidth, guideColorDark),
 	]);
-	return systemCard;
 }
 
+/**
+ * One key metric, on one row: its switch, its name, its position.
+ *
+ * It used to be four separate children pushed into a card that collapses to
+ * a single column in a sidebar this narrow, so each metric stacked into a
+ * 107px tower - checkbox, label, an empty span, value - and seven of them
+ * made a 777px card. Measured; the whole panel was 2516px against a 910px
+ * window.
+ *
+ * The orientation mark and the switch are the same control now. The mark
+ * says which way the line runs, being pressed says the line is on, and it
+ * carries the line’s own colour - so the switch here and the line out there
+ * are recognisably one thing.
+ *
+ * @param {String} property - the key in systemGuides
+ * @param {String} title - what it is called
+ * @param {String | Number} value - where it sits
+ * @param {String} color - the colour the line is drawn in
+ * @returns {HTMLElement}
+ */
 function makeSystemGuideRow(property, title, value = '0000', color) {
 	const systemGuides = getCurrentProjectEditor().systemGuides;
+	const vertical = property === 'leftSide' || property === 'rightSide';
 
-	// Checkbox
-	const viewCheckbox = makeDirectCheckbox(systemGuides, property, (newValue) => {
+	/*
+		Rounded, because one of these is not a round number. Five come from the
+		font and are whole; the two that follow the glyph's advance width are
+		whatever the outline works out to, and 1283.7171065122461 is not a
+		reading of anything. It also took the row apart once the sidebar was
+		dragged narrow - a 132px value in a 195px row left 23px for the name,
+		so "Right side" showed as "R".
+	*/
+	const shown = round(parseFloat(`${value}`) || 0, 2);
+
+	/*
+		Five of these come from the font and never change as you work; two
+		come from this glyph's own advance width and move as you edit it.
+		They happen to be exactly the horizontal ones and the vertical ones,
+		so the mark on the switch already separates them - the tooltip says
+		which is which, and a rule in the list groups them.
+	*/
+	const fromGlyph = vertical;
+	const fromOrigin = property === 'leftSide';
+
+	const toggle = makeDirectToggle(systemGuides, property, (newValue) => {
 		const editor = getCurrentProjectEditor();
 		let shownGuides = editor.project.settings.app.guides.systemGuides;
 		if (newValue) {
@@ -129,149 +189,196 @@ function makeSystemGuideRow(property, title, value = '0000', color) {
 			}
 		}
 		editor.editCanvas.redraw('guides system view toggle');
+	}, {
+		icon: vertical ? 'command_verticalBar' : 'command_horizontalBar',
+		name: title,
+		body: fromGlyph
+			? `A vertical line at ${shown} em, ${fromOrigin ? 'at the glyph origin' : 'at the advance width'}.`
+			: `A horizontal line at ${shown} em, from the font’s key metrics.`,
+		color: color,
 	});
-	viewCheckbox.setAttribute('title', 'Show / hide guide');
-	viewCheckbox.setAttribute('style', `accent-color: ${color};`);
 
-	// Angle icon
-	let angleDisplay = makeElement({
-		className: 'guide-system-angle',
-		innerHTML: makeIcon({
-			name: 'command_horizontalBar',
-			color: color,
-		}),
+	const row = makeElement({
+		className: `guides-card__metric${fromGlyph ? ' guides-card__metric--glyph' : ''}`,
 	});
-	angleDisplay.setAttribute('title', 'Horizontal guideline');
-	if (property === 'leftSide' || property === 'rightSide') {
-		angleDisplay.innerHTML = makeIcon({
-			name: 'command_verticalBar',
-			color: color,
-		});
-		angleDisplay.setAttribute('title', 'Vertical guideline');
-	}
+	row.appendChild(toggle);
 
-	// Value
-	const valueDisplay = makeElement({ className: 'guide-system-value', content: value });
-	valueDisplay.setAttribute(
-		'title',
-		`Guide line position\nThese are based on this font's key metrics,\nwhich you can edit on the Font Settings page.`
-	);
+	const name = makeElement({ className: 'guides-card__metric-name' });
+	name.textContent = title;
+	row.appendChild(name);
 
-	return [viewCheckbox, makeSingleLabel(title), angleDisplay, valueDisplay];
+	/*
+		Not editable here, and it no longer looks it. The unit is written out
+		because every other distance in this app carries one, and a bare 1490
+		beside a name is as easily a count of something.
+	*/
+	const valueDisplay = makeElement({ className: 'guides-card__metric-value' });
+	valueDisplay.innerHTML = `${shown}<span class='guides-card__metric-unit'>em</span>`;
+	attachTooltip(valueDisplay, {
+		name: 'Guide position',
+		body: fromGlyph
+			? (fromOrigin ? 'Always zero: it is where the glyph starts.' : 'Follows this glyph’s advance width.')
+			: 'Set on the Font settings page.',
+	});
+	row.appendChild(valueDisplay);
+
+	return row;
 }
 
-function makeCustomGuidesCard() {
-	let customCard = makeElement({
-		className: 'panel__card guides-card__custom',
-		innerHTML: '<h3>Custom guides</h3>',
-	});
-
-	const guides = getCurrentProject().settings.app.guides.custom;
-
-	if (guides.length) {
-		guides.forEach((guide, number) => {
-			addAsChildren(customCard, makeCustomGuideRow(guide, number));
-		});
-
-		customCard.appendChild(rowPad());
+/**
+ * The guides you have added yourself, and the two ways to add another.
+ *
+ * A list, not a form. Every row is the same 28px shape with its controls at
+ * the two ends - show it on the left, delete it on the right - which is what
+ * the Layers rows and the Anchors rows already do, and what makes five of
+ * them scan as five of one thing instead of a wall.
+ *
+ * @param {HTMLElement} card
+ * @param {Object} guides - settings.app.guides
+ */
+function fillCustomGuides(card, guides) {
+	if (guides.customShowGuides) {
+		guides.custom.forEach((guide, number) => card.appendChild(makeCustomGuideRow(guide, number)));
 	}
 
-	const addGuideButton = makeElement({
+	/*
+		Two ways in, because orientation is a decision you make once, when you
+		add the guide - not a state you flip afterwards. It used to be a button
+		on every row forever, showing the orientation the guide would become
+		next to a mark showing the one it had; moving it here takes a control
+		off every row and removes the thing that made two marks ambiguous.
+	*/
+	const adders = makeElement({ className: 'guides-card__add' });
+	addAsChildren(adders, [
+		makeAddGuideButton('Horizontal', 90, guides),
+		makeAddGuideButton('Vertical', 0, guides),
+	]);
+	card.appendChild(adders);
+}
+
+/**
+ * @param {String} label
+ * @param {Number} angle - 90 horizontal, 0 vertical
+ * @param {Object} guides - settings.app.guides
+ * @returns {HTMLElement}
+ */
+function makeAddGuideButton(label, angle, guides) {
+	const button = makeElement({
 		tag: 'fancy-button',
 		attributes: { secondary: '' },
-		innerHTML: 'Add a custom guide',
+		innerHTML: `Add ${label.toLowerCase()}`,
 	});
-	addGuideButton.addEventListener('click', () => {
-		getCurrentProject().settings.app.guides.custom.push(
-			new Guide({ visible: true, color: makeRandomSaturatedColor() })
+
+	button.addEventListener('click', () => {
+		guides.custom.push(
+			new Guide({ visible: true, color: makeRandomSaturatedColor(), angle: angle })
 		);
+		/* Adding one and not seeing it is the wrong first impression. */
+		guides.customShowGuides = true;
 		refreshGuideChange();
 	});
 
-	customCard.appendChild(addGuideButton);
-	return customCard;
+	attachTooltip(button, {
+		name: `Add a ${label.toLowerCase()} guide`,
+		body:
+			angle === 90
+				? 'A line across the glyph, at a y position.'
+				: 'A line down the glyph, at an x position.',
+	});
+
+	return button;
 }
 
+/**
+ * One custom guide, on one row.
+ *
+ * Its controls sit at the two ends and nowhere else: the eye on the left,
+ * carrying the guide’s own colour so you can tell one from another, and
+ * delete on the right. Between them the row is what the guide IS - which way
+ * it runs, what it is called, where it sits.
+ *
+ * The name is text until you click it, which is how the Layers rows work and
+ * is what buys the row its width back: an always-there field left 63px for a
+ * name, and the same row without one leaves twice that.
+ *
+ * @param {Object} guide
+ * @param {Number} number - its index, for delete
+ * @returns {HTMLElement}
+ */
 function makeCustomGuideRow(guide, number) {
-	// Checkbox
-	const viewCheckbox = makeDirectCheckbox(guide, 'visible', () => {
-		const editor = getCurrentProjectEditor();
-		editor.editCanvas.redraw('guides custom view toggle');
-	});
-	viewCheckbox.setAttribute('style', `accent-color: ${guide.color}`);
-	viewCheckbox.setAttribute('title', 'Show / hide guide');
+	const horizontal = guide.angle === 90;
+	const row = makeElement({ className: 'guides-card__custom-row' });
 
-	// Name
-	const nameInput = makeSingleInput(guide, 'name', 'editCanvasView', 'input');
-
-	// Delete
-	const deleteButton = makeActionButton({ iconName: 'delete', title: 'Delete guide' });
-	deleteButton.setAttribute('class', 'guide-delete-button');
-	deleteButton.addEventListener('click', () => {
-		const guides = getCurrentProject().settings.app.guides.custom;
-		guides.splice(number, 1);
-		refreshGuideChange();
-	});
-
-	const colorButton = makeElement({
-		tag: 'input',
-		className: 'guide-color-button',
-		title: 'Change guide color',
-		attributes: {
-			type: 'color',
-			style: `background-color: ${guide.color};`,
-			value: rgbToHex(guide.color),
-		},
-	});
-	colorButton.addEventListener('input', (event) => {
-		// Get new color
-		// @ts-expect-error 'property does exist'
-		let rgb = parseColorString(event.target.value);
-		let rgbString = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
-
-		// Row accents
-		colorButton.setAttribute('value', rgbToHex(rgbString));
-		colorButton.style.backgroundColor = rgbString;
-		viewCheckbox.style.accentColor = rgbString;
-		angleButton.querySelector('g').setAttribute('fill', rgbString);
-
-		// Update guide
-		const guide = getCurrentProject().settings.app.guides.custom[number];
-		guide.color = rgbString;
-		getCurrentProjectEditor().editCanvas.redraw('guides custom color change');
-	});
-
-	// Angle button
-	const angleButton = makeElement({
-		tag: 'button',
-		title: 'Toggle vertical / horizontal',
-		className: 'guide-angle-button',
-		innerHTML: makeIcon({
-			name: 'command_verticalBar',
+	/* Show it. Carries the colour, which is how one guide is told from the
+		next once there are several. */
+	row.appendChild(
+		makeDirectToggle(guide, 'visible', () => {
+			getCurrentProjectEditor().editCanvas.redraw('guides custom view toggle');
+		}, {
+			icon: 'eye',
+			name: guide.name,
+			body: `${horizontal ? `Horizontal, at y ${guide.location}` : `Vertical, at x ${guide.location}`} em.`,
 			color: guide.color,
-		}),
-	});
-	if (guide.angle === 90) {
-		angleButton.innerHTML = makeIcon({
-			name: 'command_horizontalBar',
-			color: guide.color,
-		});
-	}
-	angleButton.addEventListener('click', () => {
-		const guide = getCurrentProject().settings.app.guides.custom[number];
-		if (guide.angle === 90) {
-			guide.angle = 0;
-			guide.name = guide.name.replace('Horizontal', 'Vertical');
-		} else {
-			guide.angle = 90;
-			guide.name = guide.name.replace('Vertical', 'Horizontal');
-		}
-		refreshGuideChange();
-	});
+		})
+	);
 
-	// Value
+	/* Which way it runs: a mark, not a button. The only bar in the row now,
+		so it cannot be read as the verb the old one was. */
+	const mark = makeElement({
+		className: `guides-card__mark guides-card__mark--${horizontal ? 'horizontal' : 'vertical'}`,
+	});
+	mark.style.setProperty('--mark', guide.color);
+	row.appendChild(mark);
+
+	// Its name, until you click it.
+	const isDefaultName =
+		guide.name === 'Horizontal guide' ||
+		guide.name === 'Vertical guide' ||
+		guide.name === 'Guide';
+	const name = makeElement({
+		className: `guides-card__custom-name${isDefaultName ? ' guides-card__custom-name--default' : ''}`,
+	});
+	/*
+		An unnamed guide shows the invitation, not its default name. That default
+		is the orientation - 'Horizontal guide' - which the mark two pixels to its
+		left already says, so printing it spent the widest slot in the row on a
+		repetition. The slot is a prompt until it holds something only you know.
+	*/
+	name.textContent = isDefaultName ? 'Name it' : guide.name;
+	attachTooltip(name, {
+		name: isDefaultName ? 'Name this guide' : guide.name,
+		body: isDefaultName ? 'So you can tell it from the others on the canvas.' : 'Click to rename it.',
+	});
+	name.addEventListener('click', () =>
+		startRenamingInPlace(name, {
+			value: isDefaultName ? `` : guide.name,
+			className: 'guides-card__rename',
+			onCommit: (newName) => {
+				const target = getCurrentProject().settings.app.guides.custom[number];
+				if (newName && target) target.name = newName;
+				refreshGuideChange();
+			},
+		})
+	);
+	row.appendChild(name);
+
+	/* Where it sits. The prefix says which number this is: a horizontal
+		guide is at a y, a vertical one at an x. */
 	const valueInput = makeSingleInput(guide, 'location', 'editCanvasView', 'input-number');
-	valueInput.setAttribute('title', 'Guide line position');
+	valueInput.classList.add('guides-card__custom-value');
+	valueInput.setAttribute('prefix', horizontal ? 'Y' : 'X');
+	row.appendChild(valueInput);
 
-	return [viewCheckbox, nameInput, deleteButton, colorButton, angleButton, valueInput];
+	row.appendChild(
+		makeIconButton({
+			icon: 'delete',
+			name: `Delete ${guide.name}`,
+			onClick: () => {
+				getCurrentProject().settings.app.guides.custom.splice(number, 1);
+				refreshGuideChange();
+			},
+		})
+	);
+
+	return row;
 }

@@ -1,4 +1,5 @@
 import { makeElement } from '../common/dom.js';
+import { attachTooltip } from '../controls/tooltip/tooltip.js';
 
 // --------------------------------------------------------------
 // Transform origin
@@ -19,6 +20,28 @@ const yNames = ['top', 'middle', 'baseline', 'bottom'];
 
 /** Left to right. */
 const xNames = ['left', 'center', 'right'];
+
+/**
+ * What each row and column actually points at.
+ *
+ * The grid is twelve identical dots in a box, and three of the four rows are
+ * self-evident from where they sit. `baseline` is the one that is not: it is
+ * the em baseline, y = 0, which a glyph with a descender hangs below - so the
+ * third row and the fourth row are different points and the drawing alone
+ * cannot say so. That is what the rule across the grid marks, and this is
+ * what says it in words.
+ */
+const originGloss = {
+	/* Which column: the phrase the sentence starts on. */
+	left: 'Left edge',
+	center: 'Horizontal centre',
+	right: 'Right edge',
+	/* Which row: the phrase it ends on. */
+	top: 'at the top of the selection',
+	middle: 'halfway up the selection',
+	baseline: 'on the baseline — y = 0, not the bottom of the shape',
+	bottom: 'at the bottom of the selection',
+};
 
 /**
  * "baseline-left" as "baseline left".
@@ -73,7 +96,6 @@ export function makeTransformOriginGrid(onPick) {
 			const cell = makeElement({
 				tag: 'button',
 				className: 'origin-grid__cell',
-				title: transformOriginName(origin),
 				attributes: {
 					'data-origin': origin,
 					role: 'radio',
@@ -83,6 +105,11 @@ export function makeTransformOriginGrid(onPick) {
 			});
 
 			cell.addEventListener('click', () => onPick(origin));
+			/* Pointer and keyboard both, so tabbing the grid explains itself too. */
+			attachTooltip(cell, {
+				name: transformOriginName(origin),
+				body: `${originGloss[x]}, ${originGloss[y]}.`,
+			});
 			grid.appendChild(cell);
 		});
 	});

@@ -262,6 +262,24 @@ export class History {
 	}
 
 	/**
+	 * Step forward N redos at once, used when the History panel shows what you
+	 * undid and you click one of those entries to go back to it.
+	 *
+	 * The panel used to show only what led to now, so undoing made those changes
+	 * vanish from it - the only trace left was a count on the redo button, and
+	 * the only way back was to press it and watch. They are entries in a list
+	 * like any other now, which needs a way to reach one directly.
+	 *
+	 * @param {Number} steps - How many redo steps to apply
+	 */
+	jumpForward(steps) {
+		for (let i = 0; i < steps; i++) {
+			if (this.redoQueue.length === 0) break;
+			this.redoState();
+		}
+	}
+
+	/**
 	 * Re-apply the most recently undone change. Reverses restoreState.
 	 */
 	redoState() {

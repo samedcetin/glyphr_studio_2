@@ -200,7 +200,7 @@ function makeTextBlockOptions_basicOptions(textBlockOptions, onFlavorChange) {
 		'Render flavor:',
 		`Choose how the live preview is rendered:
 		<br><br>
-		<b>Glyphr Studio</b> &ndash; draws your glyph outlines directly to a
+		<b>Blue Rain Type</b> &ndash; draws your glyph outlines directly to a
 		canvas, exactly as you've designed them. Best for inspecting your work
 		with bounding boxes, baselines, and other guides.
 		<br><br>
@@ -295,7 +295,7 @@ function makeTextBlockOptions_basicOptions(textBlockOptions, onFlavorChange) {
 // Render flavor IDs map to the previewFlavor stored in TextBlockOptions.
 // 'gs' uses the display-canvas renderer; 'otf' / 'ttf' use the native
 // font-preview renderer (FontFlux-generated font binary).
-const RENDER_FLAVOR_NAMES = { gs: 'Glyphr Studio', otf: 'OTF', ttf: 'TTF' };
+const RENDER_FLAVOR_NAMES = { gs: 'Blue Rain Type', otf: 'OTF', ttf: 'TTF' };
 
 function makeRenderFlavorChooser(textBlockOptions, onFlavorChange) {
 	const currentFlavor = textBlockOptions.previewFlavor || 'gs';
