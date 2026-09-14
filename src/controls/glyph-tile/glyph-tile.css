@@ -304,6 +304,25 @@
 	line-height: 13px;
 }
 
+/*
+	The caption keeps its own colour in every state.
+
+	It turns --text-accent on hover and while selected, which is the small
+	tile telling you which one you are on in a grid where nothing else can.
+	Here the tile already says it twice - the surround tints, and the plate is
+	the brightest thing on the page - so a third blue mark under the letter is
+	the same news a third time, and it is the one piece of the tile that is a
+	label rather than a state.
+*/
+:host([large]) .wrapper:hover .name,
+:host([large]) .wrapper:focus .name,
+:host([large]) .wrapper[selected] .name,
+:host([large]) .wrapper[selected][session-state='notCreated'] .name,
+:host([large]) .wrapper[selected][session-state='new'] .name,
+:host([large]) .wrapper[selected][session-state='changed'] .name {
+	color: var(--text-tertiary);
+}
+
 :host([large]) .name {
 	height: 30px;
 	padding: var(--sp-2) 0 0 var(--sp-1);
