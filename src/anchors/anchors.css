@@ -97,9 +97,10 @@
 	-webkit-user-select: none;
 }
 
-.anchors__name,
-.anchors__number {
+/* The name is an ordinary field, and carries its own plate. */
+.anchors__name {
 	width: 100%;
+	min-width: 0;
 	height: var(--control-h);
 	padding: 0 var(--sp-3);
 	font-family: var(--font-mono);
@@ -107,24 +108,38 @@
 }
 
 /*
-	The browser’s own spinners, hidden. They are a different shape and a
-	different size from the ones input-number draws four rows further up,
-	and two spinner designs in one panel is worse than none: these fields
-	are nudged with the arrow keys or dragged on the canvas.
+	The number draws nothing of its own - the box around it is the control.
+
+	Scoped through .anchors__field on purpose. resets.css carries
+	`input[type='number']` with a border, a width and a radius, and that is
+	specificity 0,1,1 - so a bare `.anchors__number` at 0,1,0 loses to it no
+	matter how late this file loads, and the input kept drawing a second
+	bordered box inside the first one.
 */
-.anchors__number {
+.anchors__field .anchors__number {
+	width: 100%;
+	min-width: 0;
+	height: 100%;
 	background-color: transparent;
 	border: 0;
+	border-radius: 0;
 	outline: none;
 	padding: 0 var(--sp-3) 0 var(--sp-2);
 	font-variant-numeric: tabular-nums;
 	text-align: right;
+	cursor: text;
 	-moz-appearance: textfield;
 	appearance: textfield;
 }
 
-.anchors__number::-webkit-outer-spin-button,
-.anchors__number::-webkit-inner-spin-button {
+/*
+	The browser’s own spinners, hidden. They are a different shape and size
+	from the ones input-number draws four rows up, and two spinner designs in
+	one panel is worse than none: these are nudged with the arrow keys, or
+	dragged on the canvas.
+*/
+.anchors__field .anchors__number::-webkit-outer-spin-button,
+.anchors__field .anchors__number::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
 }
