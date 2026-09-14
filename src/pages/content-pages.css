@@ -735,16 +735,15 @@ span.spacer {
 /*
 	The card. One shape for all of the blocks, so the page reads as a set.
 
-	--r-2xl, up from --r-xl. The corner smoothing was on the whole time -
-	squircle, which computes to superellipse(2) - but at 16px on a card this
-	size the arc is too short a run for the shape of it to show. At 20 it
-	reads, and the cards stop looking like rectangles with the corners taken
-	off.
+	--r-3xl. The corner smoothing was on the whole time - squircle, which
+	computes to superellipse(2) - but the shape of it only shows when the
+	corner is a long enough run of edge, and on a card this wide neither 16
+	nor 20 was. See the token, which exists for panels this size.
 */
 .overview__card {
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-2xl);
+	border-radius: var(--r-3xl);
 	corner-shape: var(--corner-smooth);
 	padding: var(--sp-7);
 	min-width: 0;

@@ -254,6 +254,15 @@
 		against the wall of the menu.
 	*/
 	--r-2xl: 20px;
+	/*
+		Page-sized panels - the blocks the Overview is built from. The step
+		above --r-2xl exists because a corner has to be a long enough run of
+		edge for the smoothing to show, and on a card several hundred pixels
+		across twenty is not: it reads as a rectangle with the corners taken
+		off rather than as a shape. Nothing smaller than a panel should take
+		this; on a control it swallows the control.
+	*/
+	--r-3xl: 28px;
 	--r-pill: 999px;
 
 	/*
