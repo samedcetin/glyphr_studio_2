@@ -369,71 +369,170 @@ span.spacer {
 .settings-page__panose-builder-table options-chooser {
 	width: 100%;
 }
+/* --------------------------------------------------------------
+	GLOBAL ACTIONS PAGE
 
-/* Global Actions */
-.global-actions__card {
-	max-width: 800px;
+	The scope at the top, because every action below finishes its sentence,
+	and the actions themselves in a grid. See makePage_GlobalActions for what
+	the 450px column of filters, caveats and an email address became.
+	------------------------------------------------------------ */
+
+.global-actions {
 	display: grid;
-	/* align with buttons at the bottom of cards */
-	grid-template-columns: 1fr;
+	grid-template-rows: min-content min-content minmax(0, 1fr);
+	gap: var(--sp-6);
+}
+
+/* --------------------------------------------------------------
+	Scope
+	------------------------------------------------------------ */
+
+.global-actions__scope-row {
+	display: flex;
 	align-items: center;
-	justify-items: left;
-	row-gap: 10px;
-	column-gap: 10px;
-	margin-bottom: 20px;
-	margin-right: 0px;
-	margin-top: 20px;
-	border: 1px solid var(--border-subtle);
-	padding: 10px 20px 10px 10px;
-	background-color: var(--bg-surface);
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	box-shadow: var(--shadow-1);
-	animation: var(--animate-fade-in-slide-down);
+	flex-wrap: wrap;
+	gap: var(--sp-5) var(--sp-8);
+	margin-top: var(--sp-3);
 }
 
-.global-actions__description {
-	line-height: 1.3em;
+.global-actions__ranges {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
 }
 
-.global-actions__effect-description {
-	line-height: 1.3em;
-	padding: 10px;
+.global-actions__range-count {
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+.global-actions__types {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-6);
+	margin-left: auto;
+}
+
+.global-actions__type {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+.global-actions__scope-note {
+	margin-top: var(--sp-5);
+	max-width: 88ch;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------
+	The actions
+
+	A grid rather than one column of 800px cards. Thirteen of them stacked is
+	four screens of scrolling to find the one you want, and every card is
+	shorter than it is wide.
+	------------------------------------------------------------ */
+
+.global-actions__groups {
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+.global-actions__groups::-webkit-scrollbar {
+	display: none;
+}
+
+.global-actions__group-title {
+	margin: var(--sp-8) 0 var(--sp-5) 0;
+	font-size: var(--fs-xl);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	color: var(--text-primary);
+}
+
+.global-actions__group-title:first-child {
+	margin-top: 0;
+}
+
+.global-actions__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+	gap: var(--sp-6);
+	align-items: start;
+}
+
+/*
+	The card. It takes the page's own card treatment from .studio-card - this
+	only says how the parts inside it stack, and drops the margins and the
+	800px cap it carried while it was one item in a single column.
+*/
+.global-actions__card {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	justify-items: start;
+	gap: var(--sp-5);
+	max-width: none;
+	margin: 0;
+	animation: none;
+}
+
+.global-actions__card h2 {
+	margin: 0;
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	color: var(--text-primary);
+}
+
+.global-actions__card .global-actions__description {
+	margin: 0;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+/*
+	What the action will actually touch, and what it will skip. Amber because
+	it is a caveat rather than a failure - the same reading the quality checks
+	take - and it is concentric with the card: --r-3xl less the --sp-6 of
+	padding between them.
+*/
+.global-actions__card .global-actions__effect-description {
+	margin: 0;
+	padding: var(--sp-4) var(--sp-5);
 	background-color: var(--warn-bg);
 	color: var(--warn);
+	border: none;
 	border-left: 3px solid var(--warn);
-}
-
-.global-actions__card .global-actions__effect-description,
-.global-actions__card .global-actions__description,
-.global-actions__card h1,
-.global-actions__card h2,
-.global-actions__card h3,
-.global-actions__card h4,
-.global-actions__card h5,
-.global-actions__card h6 {
-	display: inline-block;
-	grid-column: 1 / -1;
-	margin-bottom: 0;
-}
-
-.global-actions__card fancy-button {
-	grid-column: 1;
-	margin: 10px 0px 10px 0px;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
 }
 
 .global-actions__card .settings-table {
-	width: 200px;
+	width: auto;
 	display: grid;
-	grid-template-columns: min-content min-content min-content;
-	grid-template-rows: 24px;
-	row-gap: 10px;
-	column-gap: 10px;
+	grid-template-columns: max-content max-content max-content;
+	grid-template-rows: auto;
+	align-items: center;
+	row-gap: var(--sp-3);
+	column-gap: var(--sp-4);
 }
 
 .global-actions__card label {
-	line-height: 24px;
 	width: max-content;
+	font-size: var(--fs-sm);
+	line-height: 1;
+	color: var(--text-secondary);
 }
 
 .global-actions__card input-number {
@@ -445,15 +544,19 @@ span.spacer {
 	height: 20px;
 }
 
-.textAction {
-	color: var(--text-accent);
-	text-decoration: none;
+.global-actions__card fancy-button {
+	margin: 0;
 }
 
 .global-actions__card code {
 	line-height: 12px;
 	padding: 1px 4px;
 	font-size: 0.9em;
+}
+
+.textAction {
+	color: var(--text-accent);
+	text-decoration: none;
 }
 
 .textAction:hover {
@@ -1666,4 +1769,6 @@ span.spacer {
 	flex: 0 0 auto;
 	color: var(--icon-default);
 }
+
+
 

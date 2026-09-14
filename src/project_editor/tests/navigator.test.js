@@ -57,20 +57,25 @@ describe('Navigator: Page Navigation', () => {
 		expect(pageContent.querySelector('.editor__page')).toBeTruthy();
 	});
 
-	// it('Navigate to page: Live preview', () => {
-	// 	navigator.page = 'Live preview';
-	// 	navigator.navigate(true);
-	// 	const pageContent = navigator.makePageContent();
-	// 	expect(pageContent.id).toBe('app__main-content');
-	// 	expect(pageContent.querySelector('.nav-button__title').innerHTML).toBe('Live preview');
-	// });
+	/*
+		Overview and Live preview are not here, and cannot be until the suite
+		registers the custom elements. Both pages construct one directly - a
+		GlyphTile, a DisplayCanvas - and jsdom throws "the constructor is not
+		part of the custom element registry" the moment they call super().
+
+		Tried enabling them; that is the wall. Whoever registers those in the
+		test setup gets two more pages covered for free, asserting
+		.studio-page__title the way the Global actions one does.
+	*/
 
 	it('Navigate to page: Global actions', () => {
 		navigator.page = 'Global actions';
 		navigator.navigate(true);
 		const pageContent = navigator.makePageContent();
 		expect(pageContent.id).toBe('app__main-content');
-		expect(pageContent.querySelector('.nav-button__title').innerHTML).toBe('Global actions');
+		// This page names itself in its own heading rather than in a page-selector
+		// button, the way Kerning leaves it to the top bar breadcrumb.
+		expect(pageContent.querySelector('.studio-page__title').innerHTML).toBe('Global actions');
 	});
 
 	it('Navigate to page: Settings', () => {
