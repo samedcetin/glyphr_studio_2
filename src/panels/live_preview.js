@@ -394,7 +394,27 @@ const SYMBOL_CODE_POINTS = [
 	0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60, 0x7b, 0x7c, 0x7d, 0x7e,
 ];
 
-export const GLYPH_SETS = [
+/*
+	Not only glyph sets any more, which is why it is not called that: the first
+	one is running prose, and the rest are the character sets. They are the two
+	questions a preview answers - what does a paragraph of this look like, and
+	what does the set look like - so they belong in one list rather than two.
+*/
+export const SAMPLE_TEXTS = [
+	{
+		name: 'Lorem ipsum',
+		/*
+			No line breaks. The preview wraps to its own width, so a paragraph
+			written as one line reflows as you resize the window or change the
+			size - which is the whole point of looking at one.
+		*/
+		text:
+			'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod ' +
+			'tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim ' +
+			'veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea ' +
+			'commodo consequat. Duis aute irure dolor in reprehenderit in voluptate ' +
+			'velit esse cillum dolore eu fugiat nulla pariatur.',
+	},
 	{
 		name: 'Uppercase & lowercase',
 		text: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz',

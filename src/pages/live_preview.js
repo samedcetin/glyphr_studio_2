@@ -5,7 +5,7 @@ import { FontPreview } from '../controls/font-preview/font_preview.js';
 import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
 import { DisplayCanvas } from '../display_canvas/display_canvas.js';
 import { makeDirectToggle } from '../panels/cards.js';
-import { GLYPH_SETS, PANGRAMS, redrawAllLivePreviews } from '../panels/live_preview.js';
+import { SAMPLE_TEXTS, PANGRAMS, redrawAllLivePreviews } from '../panels/live_preview.js';
 import { openPopOutWindow } from '../project_editor/pop_out_window.js';
 
 /**
@@ -303,7 +303,7 @@ function makeSettingsCard(options) {
 	);
 
 	const samples = makeElement({ className: 'live-preview__samples' });
-	GLYPH_SETS.forEach((entry) => {
+	SAMPLE_TEXTS.forEach((entry) => {
 		const row = makeElement({
 			tag: 'button',
 			className: 'live-preview__sample-row',
