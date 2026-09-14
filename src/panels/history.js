@@ -161,6 +161,17 @@ export function makePanel_History() {
 	head.appendChild(headButtons);
 	historyArea.appendChild(head);
 
+	/*
+		The rows go in a container of their own. The rail is drawn by each row and
+		trimmed at the two ends of the list - and the ends were being found with
+		:first-of-type, which matches per element type. Half these rows are
+		buttons and half are not, so the first DIV and the first BUTTON both
+		counted as a start; the current row, being the only DIV, was both the
+		first and the last of its type and had its rail trimmed away entirely.
+	*/
+	const timeline = makeElement({ className: 'history-list__timeline' });
+	historyArea.appendChild(timeline);
+
 	// --------------------------------------------------------------
 	// What you undid, furthest ahead first
 	// --------------------------------------------------------------
@@ -175,7 +186,7 @@ export function makePanel_History() {
 		const entry = entries[0];
 		if (!entry) return;
 		const stepsForward = history.redoQueue.length - reverseIndex;
-		historyArea.appendChild(
+		timeline.appendChild(
 			makeHistoryRow({
 				title: entry.title,
 				state: 'ahead',
@@ -198,7 +209,7 @@ export function makePanel_History() {
 		if (entry.title === '_whole_project_change_post_state_') return;
 
 		const steps = visibleIndex;
-		historyArea.appendChild(
+		timeline.appendChild(
 			makeHistoryRow({
 				title: entry.title,
 				state: steps === 0 ? 'now' : 'past',
@@ -213,7 +224,7 @@ export function makePanel_History() {
 		visibleIndex++;
 	});
 
-	historyArea.appendChild(
+	timeline.appendChild(
 		makeHistoryRow({
 			title: 'Opened this project',
 			state: history.queue.length ? 'past' : 'now',

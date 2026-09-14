@@ -1381,6 +1381,12 @@ nav .item-chooser__wrapper--compact {
 	color: var(--text-tertiary);
 }
 
+/* The rows, so the two ends of the rail are the ends of the list. */
+.history-list__timeline {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+}
+
 .history-list__head-buttons {
 	display: flex;
 	gap: var(--sp-1);
@@ -1418,23 +1424,30 @@ button.history-list__row:focus {
 
 /*
 	The rail. A line down the dot column, drawn by each row so it is continuous
-	however many rows there are - and stopped at the two ends of the list.
+	however many rows there are, and stopped at the two ends of the list.
+
+	Centred on the dot rather than beside it. The dot column is 14px starting
+	at the row padding, so its centre is --sp-2 + 7; the rail sat at --sp-2 + 6
+	and ran half a pixel to the left of every dot it passed through.
 */
 .history-list__row::before {
 	content: '';
 	position: absolute;
-	left: calc(var(--sp-2) + 6px);
+	left: calc(var(--sp-2) + 7px);
+	transform: translateX(-50%);
 	top: 0;
 	bottom: 0;
 	width: 1px;
 	background-color: var(--border-subtle);
 }
 
-.history-list__row:first-of-type::before {
+/* first-child, not first-of-type: half these rows are buttons and half are
+	not, so per-type matching found several starts and one row that was both. */
+.history-list__timeline > .history-list__row:first-child::before {
 	top: 50%;
 }
 
-.history-list__row:last-of-type::before {
+.history-list__timeline > .history-list__row:last-child::before {
 	bottom: 50%;
 }
 
@@ -1447,12 +1460,44 @@ button.history-list__row:focus {
 	background-color: var(--border-strong);
 }
 
-/* Where you are. */
+/*
+	Where you are, and it says so on its own: a ring that grows out of the dot
+	and fades, once every few seconds.
+
+	This marker is the one thing in the panel that is not a record of something
+	finished - it is the live position, and it moves when you undo. A still dot
+	the same size as the others relies on colour alone to say that. The app-wide
+	reduced-motion block in tokens.css stops it.
+*/
 .history-list__row--now .history-list__dot {
 	width: 9px;
 	height: 9px;
 	background-color: var(--accent);
 	box-shadow: 0 0 0 3px var(--bg-selected);
+}
+
+.history-list__row--now .history-list__dot::after {
+	content: '';
+	position: absolute;
+	inset: -1px;
+	border: 1px solid var(--accent);
+	border-radius: var(--r-pill);
+	animation: history-now-pulse 2.6s var(--ease-out) infinite;
+}
+
+@keyframes history-now-pulse {
+	0% {
+		transform: scale(0.8);
+		opacity: 0.55;
+	}
+	60% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+	100% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
 }
 
 /* What you undid: an outline, because it is a place rather than a step taken. */
