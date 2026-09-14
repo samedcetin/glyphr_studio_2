@@ -1279,7 +1279,6 @@ nav .item-chooser__wrapper--compact {
 .transform-card__body {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 92px;
-	align-items: start;
 	gap: var(--sp-3);
 	width: 100%;
 }
@@ -1289,6 +1288,16 @@ nav .item-chooser__wrapper--compact {
 	display: grid;
 	gap: var(--sp-3);
 	min-width: 0;
+}
+
+/*
+	The right column is divided the way the left one is: the grid takes the
+	height of the three fields beside it, and the icon row takes the fourth.
+	So the icons sit on the last field rather than floating above it, and the
+	two columns end on the same line.
+*/
+.transform-card__aside {
+	grid-template-rows: minmax(0, 1fr) var(--control-h);
 }
 
 /*
@@ -1328,7 +1337,7 @@ nav .item-chooser__wrapper--compact {
 	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: repeat(4, 1fr);
 	width: 100%;
-	aspect-ratio: 1;
+	height: 100%;
 	border: 1px solid var(--border-strong);
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
