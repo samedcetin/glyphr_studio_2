@@ -1,49 +1,56 @@
 import { addAsChildren, makeElement } from '../../common/dom.js';
 
 /**
- * Makes a styled slider element
- * @param {Number} initialValue - what the slider value should be
- * @param {Function | false} callback - what to do when it changes
- * @param {Number} min - min value for the slider
- * @param {Number} max - max value for the slider
- * @param {Number} step - how big each step is
- * @returns {Element}
+ * A range input with its value beside it.
+ *
+ * @param {Number =} initialValue
+ * @param {Function =} callback - called with the new value
+ * @param {Number =} min
+ * @param {Number =} max
+ * @param {Number =} step
+ * @param {String =} suffix - the unit, written after the number
+ * @returns {HTMLElement}
  */
-export function makeFancySlider(initialValue = 50, callback, min = 0, max = 100, step = 1) {
-	// log('makeFancySlider', 'start');
-
+export function makeFancySlider(
+	initialValue = 50,
+	callback,
+	min = 0,
+	max = 100,
+	step = 1,
+	suffix = ''
+) {
 	let wrapper = makeElement({ className: 'fancy-slider__wrapper' });
+
+	/*
+		The readout says its unit. Every one of these in the app is a
+		percentage, and read as a bare `67` next to a bar it could as easily
+		have been a count of something.
+	*/
+	const readoutText = (value) => `${value}${suffix}`;
 	let sliderReadout = makeElement({
 		className: 'fancy-slider__slider-readout',
-		innerHTML: '' + initialValue,
+		innerHTML: readoutText(initialValue),
 	});
-
-	const normalizedCurrentValue = (initialValue / (max - min)) * 100;
 
 	let bar = makeElement({
 		tag: 'input',
 		attributes: {
 			type: 'range',
-			value: initialValue,
-			style: `accent-color: hsl(${normalizedCurrentValue + 200}, 100%, 40%);`,
-			min: min,
-			max: max,
-			step: step,
+			value: `${initialValue}`,
+			min: `${min}`,
+			max: `${max}`,
+			step: `${step}`,
 		},
 		className: 'fancy-slider__bar',
 	});
+
 	bar.addEventListener('input', (event) => {
 		// @ts-expect-error 'property does exist'
 		const value = parseInt(event.target.value);
-		sliderReadout.innerHTML = '' + value;
-
-		const normalizedCurrentValue = (value / (max - min)) * 100;
-		bar.setAttribute('style', `accent-color: hsl(${normalizedCurrentValue + 200}, 100%, 40%);`);
+		sliderReadout.innerHTML = readoutText(value);
 		if (callback) callback(value);
 	});
 
 	addAsChildren(wrapper, [bar, sliderReadout]);
-
-	// log('makeFancySlider', 'end');
 	return wrapper;
 }

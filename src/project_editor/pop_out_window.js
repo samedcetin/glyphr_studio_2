@@ -252,7 +252,6 @@ function redrawPopOutWindow() {
  * @returns {HTMLElement}
  */
 export function makeLivePreviewPopOutCard() {
-	const card = makeElement({ tag: 'div', className: 'panel__card full-width' });
 
 	const button = makeElement({
 		tag: 'fancy-button',
@@ -265,8 +264,7 @@ export function makeLivePreviewPopOutCard() {
 		body: 'A full-screen preview in a new window, for sentence and paragraph scale.',
 	});
 
-	card.appendChild(button);
-	return card;
+	return button;
 }
 
 export function livePreviewPopOutWindowResize() {

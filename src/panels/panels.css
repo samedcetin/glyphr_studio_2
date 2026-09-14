@@ -1487,9 +1487,81 @@ nav .item-chooser__wrapper--compact {
 	padding-top: 0;
 }
 
+/*
+	The slider is capped so the label beside it keeps one line.
+
+	A fancy-slider is as wide as it likes, and in a max-content track that
+	left 105px for the name - so `Character opacity` and `Guide opacity` both
+	broke across two lines and those two rows stood taller than the two
+	switches between them.
+*/
+.context-card__option .fancy-slider__wrapper,
+.guides-card__option .fancy-slider__wrapper {
+	width: 130px;
+}
+
+.context-card__field-label {
+	grid-column: 1 / -1;
+	padding-top: 0;
+}
+
 .context-card input.context-card__input {
 	grid-column: 1 / -1;
 	width: 100%;
+}
+
+/*
+	What the string will do, drawn the way the canvas will draw it.
+
+	The rule this panel exists to teach - the character you are editing splits
+	the string, and everything before it goes left and everything after goes
+	right - was nowhere on the surface. It is a line under the field now, live
+	as you type, so the panel explains itself instead of needing a paragraph.
+*/
+.context-card__split {
+	grid-column: 1 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--sp-1);
+	width: 100%;
+	min-height: var(--row-h);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.context-card__split--empty {
+	align-items: center;
+}
+
+.context-card__split-part {
+	padding: 0 var(--sp-2);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	line-height: calc(var(--control-h-sm) - 2px);
+}
+
+/* The context: what will be drawn in grey, shown in grey. */
+.context-card__split-side {
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	color: var(--text-tertiary);
+}
+
+/* The one you are editing, the one drawn in full ink. */
+.context-card__split-current {
+	background-color: var(--bg-selected);
+	border: 1px solid transparent;
+	color: var(--text-accent);
+}
+
+/* The case nobody finds on purpose, said only when it happens. */
+.context-card__split-note {
+	flex-basis: 100%;
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
 }
 
 /* --------------------------------------------------------------
