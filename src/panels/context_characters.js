@@ -1,9 +1,9 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
-import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
+
 import { attachTooltip } from '../controls/tooltip/tooltip.js';
 import { makeLivePreviewPopOutCard } from '../project_editor/pop_out_window.js';
-import { makeDirectToggle, makeSingleInput, makeSingleLabel } from './cards.js';
+import { makeDirectToggle, makeOpacitySlider, makeSingleInput, makeSingleLabel } from './cards.js';
 
 /**
 	CONTEXT CHARACTERS PANEL
@@ -166,16 +166,8 @@ export function makePanel_ContextCharacters() {
 		),
 		makeOptionRow(
 			'Character opacity',
-			makeFancySlider(
-				ccOptions.characterTransparency,
-				(newValue) => {
-					ccOptions.characterTransparency = newValue;
-					getCurrentProjectEditor().editCanvas.redraw('context characters transparency slider');
-				},
-				0,
-				100,
-				1,
-				'%'
+			makeOpacitySlider(ccOptions, 'characterTransparency', () =>
+				getCurrentProjectEditor().editCanvas.redraw('context characters opacity slider')
 			)
 		),
 		makeOptionRow(
@@ -188,16 +180,8 @@ export function makePanel_ContextCharacters() {
 		),
 		makeOptionRow(
 			'Guide opacity',
-			makeFancySlider(
-				ccOptions.guidesTransparency,
-				(newValue) => {
-					ccOptions.guidesTransparency = newValue;
-					getCurrentProjectEditor().editCanvas.redraw('guides transparency slider');
-				},
-				0,
-				100,
-				1,
-				'%'
+			makeOpacitySlider(ccOptions, 'guidesTransparency', () =>
+				getCurrentProjectEditor().editCanvas.redraw('guides opacity slider')
 			)
 		),
 	]);

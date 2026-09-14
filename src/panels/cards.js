@@ -1,5 +1,6 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
+import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
 import { makeIconToggle } from '../controls/icon-toggle/icon_toggle.js';
 import { round, transformOrigins } from '../common/functions.js';
 import { makeTransformOriginIcon } from '../common/graphics.js';
@@ -450,6 +451,38 @@ export function dimSplitElement() {
  * @param {Object =} args - { icon, name, body, className, color }
  * @returns {HTMLElement}
  */
+/**
+ * Opacity, over a setting that stores transparency.
+ *
+ * transparencyToAlpha reads these as transparency - 0 is opaque, 100 is
+ * invisible - and every slider in the app that drives one was labelled
+ * Transparency because of it. Which is accurate, and backwards from every
+ * other design tool: Figma, Sketch and Photoshop all show opacity, and a
+ * type designer reading 70 next to a faint line will read it as 70% there.
+ *
+ * So the control shows opacity and the setting keeps storing transparency.
+ * The inversion lives here and only here, because a conversion applied at
+ * some call sites and not others is worse than either convention.
+ *
+ * @param {Object} item - the object holding the property
+ * @param {String} property - the transparency to read and write
+ * @param {Function =} onChange - called after the write
+ * @returns {HTMLElement}
+ */
+export function makeOpacitySlider(item, property, onChange) {
+	return makeFancySlider(
+		100 - item[property],
+		(shownOpacity) => {
+			item[property] = 100 - shownOpacity;
+			if (onChange) onChange();
+		},
+		0,
+		100,
+		1,
+		'%',
+	);
+}
+
 export function makeDirectToggle(item, property, callback, args = {}) {
 	const toggle = makeIconToggle({
 		icon: args.icon || 'check',

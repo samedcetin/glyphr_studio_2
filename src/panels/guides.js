@@ -3,14 +3,14 @@ import { makeRandomSaturatedColor } from '../common/colors.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { makeIconButton } from '../controls/icon-toggle/icon_toggle.js';
 import { attachTooltip } from '../controls/tooltip/tooltip.js';
-import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
+
 import {
 	Guide,
 	guideColorDark,
 	guideColorLight,
 	guideColorMedium,
 } from '../project_editor/guide.js';
-import { makeDirectToggle, makeSingleInput, makeSingleLabel } from './cards.js';
+import { makeDirectToggle, makeOpacitySlider, makeSingleInput, makeSingleLabel } from './cards.js';
 import { refreshPanel } from './panels.js';
 
 // --------------------------------------------------------------
@@ -61,16 +61,15 @@ function makeGuideGroupCard(title, prefix, guides) {
 
 	addAsChildren(card, [
 		makeOptionRow(
-			'Transparency',
-			makeFancySlider(guides[`${prefix}Transparency`], (newValue) => {
-				guides[`${prefix}Transparency`] = newValue;
-				getCurrentProjectEditor().editCanvas.redraw(`guides ${prefix} transparency`);
-			})
+			'Opacity',
+			makeOpacitySlider(guides, `${prefix}Transparency`, () =>
+				getCurrentProjectEditor().editCanvas.redraw(`guides ${prefix} opacity`)
+			)
 		),
 		makeOptionRow(
 			'Show labels',
 			makeDirectToggle(guides, `${prefix}ShowLabels`, refreshGuideChange, {
-				icon: 'keyboard',
+				icon: 'label',
 				name: 'Show labels',
 				body: 'Name each guide where it meets the edge of the canvas.',
 			})
@@ -156,6 +155,16 @@ function makeSystemGuideRow(property, title, value = '0000', color) {
 	const systemGuides = getCurrentProjectEditor().systemGuides;
 	const vertical = property === 'leftSide' || property === 'rightSide';
 
+	/*
+		Five of these come from the font and never change as you work; two
+		come from this glyph's own advance width and move as you edit it.
+		They happen to be exactly the horizontal ones and the vertical ones,
+		so the mark on the switch already separates them - the tooltip says
+		which is which, and a rule in the list groups them.
+	*/
+	const fromGlyph = vertical;
+	const fromOrigin = property === 'leftSide';
+
 	const toggle = makeDirectToggle(systemGuides, property, (newValue) => {
 		const editor = getCurrentProjectEditor();
 		let shownGuides = editor.project.settings.app.guides.systemGuides;
@@ -172,11 +181,15 @@ function makeSystemGuideRow(property, title, value = '0000', color) {
 	}, {
 		icon: vertical ? 'command_verticalBar' : 'command_horizontalBar',
 		name: title,
-		body: `${vertical ? 'Vertical' : 'Horizontal'} guide at ${value}.`,
+		body: fromGlyph
+			? `A vertical line at ${value} em, ${fromOrigin ? 'at the glyph origin' : 'at the advance width'}.`
+			: `A horizontal line at ${value} em, from the font’s key metrics.`,
 		color: color,
 	});
 
-	const row = makeElement({ className: 'guides-card__metric' });
+	const row = makeElement({
+		className: `guides-card__metric${fromGlyph ? ' guides-card__metric--glyph' : ''}`,
+	});
 	row.appendChild(toggle);
 
 	const name = makeElement({ className: 'guides-card__metric-name' });
@@ -184,14 +197,17 @@ function makeSystemGuideRow(property, title, value = '0000', color) {
 	row.appendChild(name);
 
 	/*
-		Not editable here, and it no longer looks it. These come from the
-		font's key metrics, which are edited on the Font Settings page.
+		Not editable here, and it no longer looks it. The unit is written out
+		because every other distance in this app carries one, and a bare 1490
+		beside a name is as easily a count of something.
 	*/
 	const valueDisplay = makeElement({ className: 'guides-card__metric-value' });
-	valueDisplay.textContent = `${value}`;
+	valueDisplay.innerHTML = `${value}<span class='guides-card__metric-unit'>em</span>`;
 	attachTooltip(valueDisplay, {
 		name: 'Guide position',
-		body: 'Set by the font’s key metrics, on the Font Settings page.',
+		body: fromGlyph
+			? (fromOrigin ? 'Always zero: it is where the glyph starts.' : 'Follows this glyph’s advance width.')
+			: 'Set on the Font settings page.',
 	});
 	row.appendChild(valueDisplay);
 

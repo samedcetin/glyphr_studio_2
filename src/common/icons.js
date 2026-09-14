@@ -461,6 +461,9 @@ lineIcons.notSelected = `<path d="M12 12h.01" stroke="none"/>`;
 
 lineIcons.keyboard = squirclePath(2.5, 6, 19, 12, 3) + `<path d="M7 10.5h.3M11 10.5h.3M15 10.5h.3M8.5 14.5h7"/>`;
 
+/* A tag on a string: the name hung off a thing, which is what a label is. */
+lineIcons.label = `<path d="M11.5 3.5H5.5A2 2 0 0 0 3.5 5.5v6a2 2 0 0 0 .6 1.4l7 7a2 2 0 0 0 2.8 0l6-6a2 2 0 0 0 0-2.8l-7-7a2 2 0 0 0-1.4-.6Z"/><path d="M7.5 7.5h.01"/>`;
+
 // --------------------------------------------------------------
 // Panel actions - clipboard and history
 // --------------------------------------------------------------

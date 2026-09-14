@@ -1623,6 +1623,20 @@ nav .item-chooser__wrapper--compact {
 	height: var(--row-h);
 }
 
+/*
+	The rule between the five that come from the font and the two that come
+	from this glyph. No second heading: the mark on each switch already says
+	which is which - horizontal for a font metric, vertical for a bearing -
+	and a heading would cost a row to repeat it.
+*/
+.guides-card__metric:not(.guides-card__metric--glyph) + .guides-card__metric--glyph {
+	margin-top: var(--sp-3);
+	padding-top: var(--sp-3);
+	border-top: 1px solid var(--border-subtle);
+	height: auto;
+	min-height: var(--row-h);
+}
+
 .guides-card__metric-name {
 	overflow: hidden;
 	white-space: nowrap;
@@ -1636,6 +1650,14 @@ nav .item-chooser__wrapper--compact {
 	in --enabled-restingLight-lightText with 30px of right padding to fake
 	its alignment; the track does that now.
 */
+/* The unit, quieter than the number it belongs to. */
+.guides-card__metric-unit {
+	margin-left: var(--sp-1);
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+	opacity: 0.75;
+}
+
 .guides-card__metric-value {
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
