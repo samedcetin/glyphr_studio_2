@@ -255,6 +255,24 @@
 }
 
 /*
+	The card is always there.
+
+	The wrapper ground is the last thing that was only drawn under the cursor.
+	On a chooser that is right - it is how you tell which of fifty you are on.
+	Here the tiles are the page, and letterforms floating on the app background
+	with nothing under them are not a set of cards until you point at one. So
+	every one of them has the ground now.
+
+	:not([selected]) so this does not reach past the selected tile, which
+	carries its own. It is also what holds the hover identical: it is one
+	selector more specific than .wrapper:hover, so pointing at a tile changes
+	nothing but the cursor.
+*/
+:host([large]) .wrapper:not([selected]) {
+	background-color: var(--bg-hover);
+}
+
+/*
 	Resting, this one looks the way the small tile looks under the cursor:
 	full opacity, the stronger border, the readable placeholder colour.
 
