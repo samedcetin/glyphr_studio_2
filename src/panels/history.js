@@ -1,148 +1,212 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
+import { makeIconButton } from '../controls/icon-toggle/icon_toggle.js';
 import { attachTooltip } from '../controls/tooltip/tooltip.js';
 
 /**
 	HISTORY PANEL
 	-------------
-	What you have done, newest first, and the way back to any of it.
+	Everything you have done, with where you are marked, and every point on
+	it one click away.
 
-	Every entry used to be two separate children of a card that collapses to
-	one column in a sidebar this narrow - the description, and then the time
-	on the line below it - so one change took two rows and the times ran down
-	the left edge under the text rather than lining up in a column of their
-	own. Each entry is a row now: what happened, and when.
+	THE THING THIS PANEL GOT WRONG. Undoing removed those changes from the
+	list. They still existed - they were sitting in the redo queue - but the
+	only trace of them on screen was a number on a `redo 0` pill, and the
+	only way back to one was to press it and watch. So the panel answered
+	"what led to here" when the question people open it with is "where can I
+	get back to".
+
+	The undone changes are entries now, above the current one and dimmed,
+	and clicking one goes there - see History.jumpForward. One list, one
+	position marked on it, both directions reachable.
+
+	Two other things were in the way. The item headings repeated what the
+	`Navigated to X` entries already say, twice on screen for one fact. And
+	the times were wall clocks: three changes made in the same second all
+	read 16:07:08, which is three rows of a column carrying no information.
+	They are relative now, which is the only form that distinguishes them.
  */
 
 /**
- * One change: what it was, when it was, and the way back to it.
+ * How long ago, in the shortest form that still distinguishes two entries.
+ *
+ * @param {Number} timeStamp
+ * @param {Number} now
+ * @returns {String}
+ */
+function timeAgo(timeStamp, now) {
+	const seconds = Math.max(0, Math.round((now - timeStamp) / 1000));
+	if (seconds < 45) return 'just now';
+	const minutes = Math.round(seconds / 60);
+	if (minutes < 60) return `${minutes}m`;
+	const hours = Math.round(minutes / 60);
+	if (hours < 24) return `${hours}h`;
+	return `${Math.round(hours / 24)}d`;
+}
+
+/**
+ * One point on the timeline.
  *
  * @param {Object} args
  * @param {String} args.title - what happened
- * @param {Boolean} args.strong - whether it was a whole-project change
+ * @param {String} args.state - 'ahead' | 'now' | 'past'
+ * @param {Boolean} args.isNavigation - a move between items rather than an edit
  * @param {Number | false} args.timeStamp
- * @param {Boolean} args.isCurrent - whether this is where you are now
- * @param {Number | false} args.stepsToUndo - false if it cannot be jumped to
- * @param {String =} args.className - an extra class
+ * @param {Number} args.now
+ * @param {String} args.itemName - which item it happened to
+ * @param {Function | false} args.onClick
  * @returns {HTMLElement}
  */
 function makeHistoryRow({
 	title,
-	strong = false,
+	state,
+	isNavigation = false,
 	timeStamp = false,
-	isCurrent = false,
-	stepsToUndo = false,
-	className = '',
+	now,
+	itemName = '',
+	onClick = false,
 }) {
-	const editor = getCurrentProjectEditor();
-	const clickable = stepsToUndo !== false && !isCurrent;
-
 	const row = makeElement({
+		tag: onClick ? 'button' : 'div',
 		className:
-			'history-list__row' +
-			(isCurrent ? ' history-list__row--current' : '') +
-			(clickable ? ' history-list__row--clickable' : '') +
-			(className ? ' ' + className : ''),
+			`history-list__row history-list__row--${state}` +
+			(isNavigation ? ' history-list__row--navigation' : ''),
+		attributes: onClick ? { type: 'button' } : {},
 	});
 
+	/*
+		The marker column is what makes this read as a timeline rather than as
+		a list of sentences: one filled dot at where you are, hollow above it
+		for what you undid, small and quiet below for what led here.
+	*/
+	row.appendChild(makeElement({ className: 'history-list__dot' }));
+
+	/*
+		A navigation entry says the item and nothing else. 'Navigated to Latin
+		Capital Letter A' does not fit the column and the first two words are the
+		part that is the same on every one of them - what it marks is the item.
+		The full sentence stays in the tooltip.
+	*/
 	const text = makeElement({ className: 'history-list__title' });
-	text.innerHTML = strong ? `<strong>${title}</strong>` : title;
+	text.textContent = isNavigation ? title.replace(/^Navigated to /, '') : title;
 	row.appendChild(text);
 
-	if (isCurrent) {
-		row.appendChild(
-			makeElement({ className: 'history-list__current-tag', content: 'now' })
-		);
-	} else if (timeStamp !== false) {
-		const time = makeElement({ className: 'history-list__date' });
-		time.textContent = new Date(timeStamp).toLocaleTimeString();
-		attachTooltip(time, { name: new Date(timeStamp).toLocaleString() });
-		row.appendChild(time);
-	}
+	const when = makeElement({ className: 'history-list__date' });
+	when.textContent = state === 'now' ? 'now' : timeStamp ? timeAgo(timeStamp, now) : '';
+	row.appendChild(when);
 
-	if (clickable) {
-		const steps = /** @type {Number} */ (stepsToUndo);
-		attachTooltip(row, {
-			name: 'Revert to here',
-			body: `Undoes ${steps} step${steps === 1 ? '' : 's'}.`,
-		});
-		row.addEventListener('click', () => editor.history.jumpToState(steps));
-	}
+	/*
+		The item and the wall clock go in the tooltip. Both matter when you are
+		looking for one particular point and neither is worth a column: the
+		item is usually the same as the row above, and the clock is usually the
+		same second.
+	*/
+	const detail = [itemName, timeStamp ? new Date(timeStamp).toLocaleTimeString() : '']
+		.filter(Boolean)
+		.join(' · ');
+	attachTooltip(row, {
+		name: title,
+		body: [detail, onClick ? (state === 'ahead' ? 'Click to go forward to here.' : 'Click to go back to here.') : '']
+			.filter(Boolean)
+			.join(' '),
+	});
 
+	if (onClick) row.addEventListener('click', onClick);
 	return row;
 }
 
 export function makePanel_History() {
 	const editor = getCurrentProjectEditor();
+	const history = editor.history;
 	const historyArea = makeElement({ className: 'panel__card history-list' });
+	const now = Date.now();
 
-	const length = editor.history.length;
-	const redoLength = editor.history.redoQueue.length;
+	const nameOf = (itemID) =>
+		(itemID && editor.project.getItemName(itemID, true)) || '';
+	const isNavigation = (title) => `${title}`.startsWith('Navigated to');
 
 	// --------------------------------------------------------------
-	// Undo and redo
+	// Undo and redo, as the two ends of the same line
 	// --------------------------------------------------------------
 
-	const buttonRow = makeElement({ className: 'history-list__button-row' });
-	historyArea.appendChild(buttonRow);
+	const undoCount = history.length;
+	const redoCount = history.redoQueue.length;
 
-	const undoButton = makeElement({
-		tag: 'button',
-		className: length > 0 ? 'button__call-to-action number' : 'number',
-		innerHTML: `undo ${length}`,
+	const head = makeElement({ className: 'history-list__head' });
+	const summary = makeElement({ className: 'history-list__summary' });
+	summary.textContent = undoCount
+		? `${undoCount} change${undoCount === 1 ? '' : 's'}`
+		: 'Nothing yet';
+	head.appendChild(summary);
+
+	const undoButton = makeIconButton({
+		icon: 'undo',
+		name: 'Undo',
+		body: undoCount ? `${undoCount} to go back through.` : 'Nothing to undo.',
+		onClick: () => history.restoreState(),
 	});
-	buttonRow.appendChild(undoButton);
+	if (!undoCount) undoButton.setAttribute('disabled', 'disabled');
 
-	const redoButton = makeElement({
-		tag: 'button',
-		className: redoLength > 0 ? 'button__call-to-action number' : 'number',
-		innerHTML: `redo ${redoLength}`,
+	const redoButton = makeIconButton({
+		icon: 'redo',
+		name: 'Redo',
+		body: redoCount ? `${redoCount} to go forward through.` : 'Nothing to redo.',
+		onClick: () => history.redoState(),
 	});
-	buttonRow.appendChild(redoButton);
+	if (!redoCount) redoButton.setAttribute('disabled', 'disabled');
 
-	if (length > 0) undoButton.addEventListener('click', () => editor.history.restoreState());
-	else undoButton.setAttribute('disabled', '');
-
-	if (redoLength > 0) redoButton.addEventListener('click', () => editor.history.redoState());
-	else redoButton.setAttribute('disabled', '');
+	const headButtons = makeElement({ className: 'history-list__head-buttons' });
+	headButtons.appendChild(undoButton);
+	headButtons.appendChild(redoButton);
+	head.appendChild(headButtons);
+	historyArea.appendChild(head);
 
 	// --------------------------------------------------------------
-	// The list
+	// What you undid, furthest ahead first
 	// --------------------------------------------------------------
 
-	if (length === 0) {
-		historyArea.appendChild(
-			makeElement({
-				tag: 'h3',
-				innerHTML: editor.project.getItemName(editor.selectedItemID || '', true) || '',
-			})
-		);
-	}
-
-	let currentItemID = 'initial';
-	let visibleIndex = 0;
-
-	editor.history.queue.forEach((entry) => {
-		if (entry.title === '_whole_project_change_post_state_') return;
-
-		/* One heading per run of changes to the same item. */
-		if (entry.itemID && entry.itemID !== currentItemID) {
-			historyArea.appendChild(
-				makeElement({
-					tag: 'h3',
-					innerHTML: editor.project.getItemName(entry.itemID, true) || '',
-				})
-			);
-			currentItemID = entry.itemID;
-		}
-
+	/*
+		Reversed. redoQueue[0] is the next redo - the nearest future - and the
+		list runs newest first, so it belongs at the bottom of this section,
+		touching the row that says where you are. Rendered in queue order the
+		section read backwards in time against the rest of the panel.
+	*/
+	[...history.redoQueue].reverse().forEach((entries, reverseIndex) => {
+		const entry = entries[0];
+		if (!entry) return;
+		const stepsForward = history.redoQueue.length - reverseIndex;
 		historyArea.appendChild(
 			makeHistoryRow({
 				title: entry.title,
-				strong: !!entry.wholeProjectSave,
+				state: 'ahead',
+				isNavigation: isNavigation(entry.title),
 				timeStamp: entry.timeStamp,
-				isCurrent: visibleIndex === 0,
-				stepsToUndo: visibleIndex,
+				now: now,
+				itemName: nameOf(entry.itemID),
+				onClick: () => history.jumpForward(stepsForward),
+			})
+		);
+	});
+
+	// --------------------------------------------------------------
+	// Where you are, and what led here
+	// --------------------------------------------------------------
+
+	let visibleIndex = 0;
+
+	history.queue.forEach((entry) => {
+		if (entry.title === '_whole_project_change_post_state_') return;
+
+		const steps = visibleIndex;
+		historyArea.appendChild(
+			makeHistoryRow({
+				title: entry.title,
+				state: steps === 0 ? 'now' : 'past',
+				isNavigation: isNavigation(entry.title),
+				timeStamp: entry.timeStamp,
+				now: now,
+				itemName: nameOf(entry.itemID),
+				onClick: steps === 0 ? false : () => history.jumpToState(steps),
 			})
 		);
 
@@ -151,10 +215,11 @@ export function makePanel_History() {
 
 	historyArea.appendChild(
 		makeHistoryRow({
-			title: 'Initial state',
-			timeStamp: editor.history.initialTimeStamp,
-			stepsToUndo: editor.history.queue.length > 0 ? editor.history.queue.length : false,
-			className: 'history-list__initial-entry',
+			title: 'Opened this project',
+			state: history.queue.length ? 'past' : 'now',
+			timeStamp: history.initialTimeStamp,
+			now: now,
+			onClick: history.queue.length ? () => history.jumpToState(history.queue.length) : false,
 		})
 	);
 

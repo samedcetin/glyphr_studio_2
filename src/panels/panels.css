@@ -1355,100 +1355,148 @@ nav .item-chooser__wrapper--compact {
 /* --------------------------------------------------------------
 	HISTORY PANEL
 
-	One change, one row. Each entry used to be two separate children of a card
-	that collapses to one column in a sidebar this narrow, so a change took
-	two rows and its time ran along under the text instead of lining up in a
-	column with the others.
+	A timeline with a position on it, not a list of sentences. The marker
+	column is what makes it read that way: a filled dot where you are, hollow
+	above it for what you undid and can go back to, small and quiet below for
+	what led here.
 	------------------------------------------------------------ */
 
 .history-list {
-	width: 100%;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: var(--sp-1);
+	gap: 0;
+	width: 100%;
 }
 
-.history-list h3 {
-	margin-top: var(--sp-3);
-}
-
-.history-list > :first-child + h3 {
-	margin-top: 0;
-}
-
-.history-list__button-row {
+.history-list__head {
 	display: flex;
-	gap: var(--sp-4);
 	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
 	margin-bottom: var(--sp-2);
 }
 
-.history-list__button-row button {
-	flex: 0 0 auto;
+.history-list__summary {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.history-list__head-buttons {
+	display: flex;
+	gap: var(--sp-1);
 }
 
 /*
-	What happened on the left, when on the right - and the bleed the other
-	row lists in this app use, so the hover reaches the panel gutter without
-	moving the text.
+	Rows touch, so the rail running through their dots is continuous. The
+	bleed is the one the other row lists use, so a hover reaches the gutter.
 */
 .history-list__row {
+	position: relative;
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) max-content;
-	align-items: baseline;
-	gap: var(--sp-3);
-	min-height: var(--row-h);
-	padding: var(--sp-1) var(--sp-2);
-	margin: 0 calc(var(--sp-2) * -1);
+	grid-template-columns: 14px minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-2);
 	width: calc(100% + var(--sp-4));
+	margin: 0 calc(var(--sp-2) * -1);
+	padding: var(--sp-1) var(--sp-2);
+	min-height: var(--row-h);
+	background-color: transparent;
+	border: none;
 	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
+	text-align: left;
 }
 
-.history-list__row--clickable {
+button.history-list__row {
 	cursor: pointer;
 }
 
-.history-list__row--clickable:hover {
+button.history-list__row:hover,
+button.history-list__row:focus {
 	background-color: var(--bg-hover);
 }
 
+/*
+	The rail. A line down the dot column, drawn by each row so it is continuous
+	however many rows there are - and stopped at the two ends of the list.
+*/
+.history-list__row::before {
+	content: '';
+	position: absolute;
+	left: calc(var(--sp-2) + 6px);
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background-color: var(--border-subtle);
+}
+
+.history-list__row:first-of-type::before {
+	top: 50%;
+}
+
+.history-list__row:last-of-type::before {
+	bottom: 50%;
+}
+
+.history-list__dot {
+	position: relative;
+	justify-self: center;
+	width: 7px;
+	height: 7px;
+	border-radius: var(--r-pill);
+	background-color: var(--border-strong);
+}
+
+/* Where you are. */
+.history-list__row--now .history-list__dot {
+	width: 9px;
+	height: 9px;
+	background-color: var(--accent);
+	box-shadow: 0 0 0 3px var(--bg-selected);
+}
+
+/* What you undid: an outline, because it is a place rather than a step taken. */
+.history-list__row--ahead .history-list__dot {
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-strong);
+}
+
 .history-list__title {
-	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 	font-size: var(--fs-sm);
-	line-height: var(--lh-normal);
 	color: var(--text-secondary);
 }
 
-.history-list__row--current .history-list__title {
+.history-list__row--now .history-list__title {
 	color: var(--text-primary);
 	font-weight: var(--fw-medium);
+}
+
+/* Ahead of you: still there, visibly not where you are. */
+.history-list__row--ahead .history-list__title,
+.history-list__row--ahead .history-list__date {
+	color: var(--text-tertiary);
+}
+
+/* Moving between items is not an edit, and reads as the quieter thing it is. */
+.history-list__row--navigation .history-list__title {
+	font-style: italic;
+	color: var(--text-tertiary);
 }
 
 /* Tabular, so a column of times lines up on its digits. */
 .history-list__date {
 	font-family: var(--font-mono);
 	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
 	color: var(--text-tertiary);
 	white-space: nowrap;
 }
 
-/*
-	Where you are. It was --royal-l85 on --royal-l25 - two fixed values from
-	the old ramp, which did not follow the theme.
-*/
-.history-list__current-tag {
-	padding: 0 var(--sp-2);
-	background-color: var(--bg-selected);
-	border-radius: var(--r-pill);
-	font-size: var(--fs-2xs);
+.history-list__row--now .history-list__date {
 	color: var(--text-accent);
-	white-space: nowrap;
-}
-
-/* The far end of the queue, still reachable, visibly further away. */
-.history-list__initial-entry .history-list__title {
-	color: var(--text-tertiary);
 }
 
 
