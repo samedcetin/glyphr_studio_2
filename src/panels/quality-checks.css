@@ -155,20 +155,23 @@
 	gap: var(--sp-3);
 	height: var(--row-h);
 	/*
-		No padding and no negative margin. The row used to bleed four pixels
-		either side so its hover would reach the gutter, which put its dot
-		four pixels left of the column everything else in the sidebar sits on.
-		The hover is a little tighter now and the panel has one left edge.
+		The bleed the Anchors rows and the Layers rows use: four pixels of
+		padding, four pixels of negative margin, so the hover band has air
+		around its contents without moving them. Content lands back on the
+		card edge - dot at the left of the column, count at the right - and
+		the band reaches four pixels past it on each side.
 	*/
-	padding: 0;
-	width: 100%;
+	padding: 0 var(--sp-2);
+	margin: 0 calc(var(--sp-2) * -1);
+	width: calc(100% + var(--sp-4));
 	background-color: transparent;
 	/*
-		No border, not even a transparent one. A 1px border insets the content
-		box by a pixel, which is enough to put the dot off the column the
-		verdict icon above it sits on. The hover background carries the state.
+		No border, not even a transparent one. That was the pixel that put the
+		dot off the column - a border insets the content box, and this row is
+		the only thing in the panel that had one. The band carries the state.
 	*/
 	border: none;
+	/* --r-md, the radius of every input, and of the Anchors and Layers rows. */
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	text-align: left;
