@@ -258,7 +258,13 @@
 	padding: var(--sp-4) var(--sp-3) var(--sp-3) var(--sp-3);
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-lg);
+	/*
+		Concentric with the card it sits in: that card is --r-3xl and insets this
+		grid by --sp-7 of its own padding, so 28 - 20 = 8. It was --r-lg, which
+		is rounder than the corner it nests inside allows - and a tile rounder
+		than its container reads as loose in it rather than fitted to it.
+	*/
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	position: relative;
 }
