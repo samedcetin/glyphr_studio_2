@@ -697,34 +697,54 @@ span.spacer {
 /* --------------------------------------------------------------
 	OVERVIEW PAGE
 
-	The font, and every character in it. It is one column rather than the
-	450px-of-cards-beside-a-grid the content pages share, because the grid is
-	the page - see makePage_Overview for what was in those cards and why none
-	of it outlived the first visit.
+	The font, and every character in it: a head, the specimen, and then the
+	coverage grid beside the project's own numbers.
+
+	It is one column of its own rather than the 450px-of-cards-beside-a-grid
+	the other content pages share - see makePage_Overview for what was in
+	those cards and why none of it outlived the first visit.
 	------------------------------------------------------------ */
 
 .overview {
 	display: grid;
 	grid-template-rows: min-content min-content minmax(0, 1fr);
 	gap: var(--sp-7);
-	/*
-		The whole window. This was capped at 1280 and centred, on the reasoning
-		that a very wide grid is a wall of letters with no line to read along -
-		but a cap on a page whose only content is that grid leaves the monitor
-		empty down both sides and makes the page scroll sooner than it needs to.
-	*/
 	width: 100%;
 	height: 100%;
 	min-height: 0;
 	/*
-		A page edge rather than a container. Enough that the font name and the
-		first tile are not against the glass, and nothing held back beyond that.
+		A page edge rather than a container. The page used to cap itself at
+		1280 and centre, which on a wide monitor left the thing the page is
+		named after in the middle of two empty margins.
 	*/
-	padding: var(--sp-7) var(--sp-6) 0 var(--sp-6);
+	padding: var(--sp-8) var(--sp-8) 0 var(--sp-8);
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+.overview::-webkit-scrollbar {
+	display: none;
+}
+
+/* The card. One shape for all of the blocks, so the page reads as a set. */
+.overview__card {
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	padding: var(--sp-7);
+	min-width: 0;
+}
+
+/* A hairline between two parts of one card. */
+.overview__rule {
+	height: 1px;
+	background-color: var(--border-subtle);
+	margin: var(--sp-6) 0;
 }
 
 /* --------------------------------------------------------------
-	Who this font is
+	Head
 	------------------------------------------------------------ */
 
 .overview__head {
@@ -734,7 +754,7 @@ span.spacer {
 	gap: var(--sp-6);
 }
 
-.overview__family {
+.overview__title {
 	margin: 0;
 	font-size: var(--fs-3xl);
 	font-weight: var(--fw-semibold);
@@ -743,25 +763,28 @@ span.spacer {
 	color: var(--text-primary);
 }
 
-/*
-	The facts, as a sentence. Seven label-and-value rows is a lookup table,
-	and nobody looks one of these up - they read all of them at once or none
-	of them.
-*/
-.overview__meta {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: var(--sp-3);
-	margin-top: var(--sp-3);
-	font-size: var(--fs-sm);
-	font-variant-numeric: tabular-nums;
+.overview__subtitle {
+	margin-top: var(--sp-2);
+	font-size: var(--fs-md);
 	color: var(--text-secondary);
 }
 
-/* A dot, not a slash or a pipe: it separates without reading as a character
-	in the values on either side of it. */
-.overview__meta-dot {
+/* Which slice of the font is on screen. */
+.overview__context {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	flex: 0 0 auto;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/*
+	A dot, not a slash: it separates without reading as a character in the
+	words on either side of it.
+*/
+.overview__dot {
 	width: 3px;
 	height: 3px;
 	border-radius: var(--r-pill);
@@ -769,40 +792,306 @@ span.spacer {
 }
 
 /* --------------------------------------------------------------
-	The font, set in itself
+	Specimen
 	------------------------------------------------------------ */
 
 .overview__specimen {
-	display: flex;
-	align-items: center;
-	min-height: 132px;
-	padding: var(--sp-6) var(--sp-7);
-	background-color: var(--bg-surface);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xl);
-	corner-shape: var(--corner-smooth);
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr) min-content min-content;
+}
+
+/* The small caps line that names a block without spending a heading on it. */
+.overview__eyebrow {
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-wide);
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+}
+
+.overview__specimen-stage {
+	display: grid;
+	justify-items: center;
+	align-content: center;
+	gap: var(--sp-4);
+	padding: var(--sp-6) 0 var(--sp-7) 0;
+	min-width: 0;
 	overflow: hidden;
 }
 
-.overview__specimen display-canvas {
+.overview__specimen-stage display-canvas {
 	display: block;
 	max-width: 100%;
 }
 
 /* --------------------------------------------------------------
-	Every character
+	Specimen controls
 
-	The chooser the rest of the app uses, given the room to be a grid. On this
-	page it is the content, so it owns the scroll and its header stays put
-	above it.
+	One row of label-and-control groups, with the size slider pushed to the far
+	end. They wrap rather than scroll: this is a row of separate controls, not
+	one list, so a second line is the right answer when the page narrows.
 	------------------------------------------------------------ */
 
-.overview__characters {
+.overview__controls {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--sp-5) var(--sp-6);
+}
+
+.overview__control {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	min-width: 0;
+}
+
+.overview__control label {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/* Sample text is the one that earns room to grow. */
+.overview__control--text {
+	flex: 1 1 260px;
+	min-width: 180px;
+}
+
+.overview__text-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: var(--control-h);
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+	transition: var(--transition-color);
+}
+
+.overview__text-input:hover {
+	border-color: var(--accent);
+}
+
+.overview__text-input:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+	border-color: var(--accent);
+}
+
+/*
+	The select. A native one, taking what every other input in the app takes -
+	the sunken ground, --border-strong, --r-md and the smoothed corner - so it
+	sits in the row as a field rather than as a browser control.
+*/
+.overview__select {
+	height: var(--control-h);
+	padding: 0 var(--sp-7) 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+	cursor: pointer;
+	transition: var(--transition-color);
+
+	/*
+		The arrow, drawn rather than left to the platform: the native one is a
+		different shape, size and colour on every OS, and this row is four
+		controls that have to look like one family.
+	*/
+	appearance: none;
+	background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+		linear-gradient(135deg, currentColor 50%, transparent 50%);
+	background-position: right 14px center, right 10px center;
+	background-size: 5px 5px, 5px 5px;
+	background-repeat: no-repeat;
+}
+
+.overview__select:hover {
+	border-color: var(--accent);
+}
+
+.overview__select:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+	border-color: var(--accent);
+}
+
+/*
+	The slider, between a small A and a large one - which is the scale it sets,
+	said without a second number arguing with the one in the Size field.
+*/
+.overview__size-row {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	flex: 1 1 200px;
+	min-width: 160px;
+	margin-left: auto;
+}
+
+.overview__size-a {
+	flex: 0 0 auto;
+	color: var(--text-tertiary);
+	font-size: var(--fs-sm);
+	line-height: 1;
+}
+
+.overview__size-a--large {
+	font-size: var(--fs-xl);
+}
+
+.overview__size-slider {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+/*
+	No readout. The Size field beside it is already the number, and two of them
+	disagreeing by a pixel as you drag is worse than one.
+*/
+.overview__size-slider .fancy-slider__slider-readout {
+	display: none;
+}
+
+.overview__size-slider.fancy-slider__wrapper {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+/* --------------------------------------------------------------
+	The two columns
+	------------------------------------------------------------ */
+
+.overview__columns {
 	display: grid;
-	grid-template-rows: minmax(0, 1fr);
+	grid-template-columns: minmax(0, 1fr) 320px;
+	gap: var(--sp-6);
+	align-items: start;
+	min-height: 0;
+	padding-bottom: var(--sp-8);
+}
+
+/* One column once the snapshot's 320px stops being a third of the width. */
+@media (max-width: 1100px) {
+	.overview__columns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.overview__card-title {
+	margin: 0;
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------
+	Character coverage
+	------------------------------------------------------------ */
+
+.overview__coverage {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
 	min-height: 0;
 }
 
+.overview__coverage-head {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-5);
+	margin-bottom: var(--sp-6);
+}
+
+.overview__coverage-count {
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/*
+	How far through the font you are. The fraction beside it is the exact
+	answer; this is the one you read without counting, and between them they
+	are the only place in the app that says it at all.
+*/
+.overview__progress {
+	flex: 1 1 120px;
+	max-width: 340px;
+	height: 6px;
+	background-color: var(--bg-surface-sunken);
+	border-radius: var(--r-pill);
+	overflow: hidden;
+}
+
+/* block, because makeElement builds a span unless told otherwise, and a width
+	on an inline box does nothing at all. */
+.overview__progress-fill {
+	display: block;
+	height: 100%;
+	background-color: var(--accent);
+	border-radius: var(--r-pill);
+	transition: width var(--dur-slow) var(--ease-out);
+}
+
+/* Search, in front of the range select. */
+.overview__search {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	flex: 1 1 220px;
+	min-width: 0;
+	max-width: 320px;
+	height: var(--control-h);
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
+}
+
+.overview__search:focus-within {
+	border-color: var(--accent);
+}
+
+.overview__search-icon {
+	display: flex;
+	flex: 0 0 auto;
+	color: var(--icon-default);
+}
+
+.overview__search input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 100%;
+	padding: 0;
+	margin: 0;
+	background-color: transparent;
+	border: none;
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+}
+
+.overview__search input:focus,
+.overview__search input:focus-visible {
+	outline: none;
+	border: none;
+}
+
+.overview__search input::-webkit-search-cancel-button {
+	appearance: none;
+}
+
+/* The chooser, given the room to be a grid. */
 .overview .item-chooser__wrapper {
 	display: grid;
 	grid-template-rows: min-content minmax(0, 1fr);
@@ -813,116 +1102,29 @@ span.spacer {
 	min-height: 0;
 }
 
-/*
-	Sticky, because this is the one thing you want while you are somewhere in
-	the middle of two hundred tiles: which range you are in, and how much of
-	it you have drawn. It carries the page's own ground so the tiles pass
-	under it rather than through it.
-*/
 .overview .item-chooser__header {
-	position: sticky;
-	top: 0;
-	z-index: 1;
 	display: flex;
 	align-items: center;
-	gap: var(--sp-4);
+	gap: var(--sp-3);
 	padding: 0 0 var(--sp-5) 0;
-	background-color: var(--bg-app);
 }
 
 /*
-	The filter bar.
-
-	A select is the right control when the options are many, or long, or you
-	already know which one you want. None of that is true here: four options,
-	two words each, on the page whose whole job is browsing - so the menu was
-	asking for a click to show you what the font even contains, then hiding it
-	again.
-
-	One line that scrolls rather than a block that wraps. A project can enable
-	a lot of Unicode ranges, and a filter bar four rows deep pushes the thing
-	it filters off the screen. Same treatment as the kern chooser members row:
-	no bar, because a thin one under a 28px chip does not fit the row.
+	A select is as wide as the longest thing it has to say, not as wide as the
+	card it sits in.
 */
-.overview__filters {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-2);
-	flex: 1 1 auto;
+.overview .item-chooser__header option-chooser {
+	display: block;
+	flex: 0 1 200px;
+	width: auto;
 	min-width: 0;
-	overflow-x: auto;
-	scrollbar-width: none;
-}
-
-.overview__filters::-webkit-scrollbar {
-	display: none;
-}
-
-.overview__filter {
-	flex: 0 0 auto;
-	display: inline-flex;
-	align-items: center;
-	gap: var(--sp-2);
-	height: var(--control-h);
-	padding: 0 var(--sp-4);
-	margin: 0;
-	background-color: transparent;
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-lg);
-	corner-shape: var(--corner-smooth);
-	color: var(--text-secondary);
-	font-family: var(--font-ui);
-	font-size: var(--fs-sm);
-	line-height: 1;
-	white-space: nowrap;
-	cursor: pointer;
-	box-shadow: none;
-	transition: var(--transition-color);
-}
-
-/* resets.css states a background, a border colour and a text colour on
-	button:hover, so all three have to be answered or one of them leaks. */
-.overview__filter:hover {
-	background-color: var(--bg-hover);
-	border-color: var(--border-default);
-	color: var(--text-primary);
-}
-
-.overview__filter[aria-pressed='true'] {
-	background-color: var(--bg-selected);
-	border-color: var(--border-selected);
-	color: var(--text-accent);
-	font-weight: var(--fw-medium);
-}
-
-/* How many characters are behind this chip. Tabular, so a row of them does
-	not jitter as the numbers change width. */
-.overview__filter-count {
-	font-variant-numeric: tabular-nums;
-	font-size: var(--fs-xs);
-	color: var(--text-tertiary);
-}
-
-.overview__filter[aria-pressed='true'] .overview__filter-count {
-	color: var(--text-accent);
-	opacity: 0.7;
-}
-
-.overview .item-chooser__count {
-	flex: 0 0 auto;
-	font-size: var(--fs-sm);
-	font-variant-numeric: tabular-nums;
-	color: var(--text-secondary);
-	white-space: nowrap;
+	max-width: 200px;
 }
 
 /*
-	A grid, not a line of inline-blocks with margins on their right.
-
 	auto-fill at the tile's own width with space-between: the columns land in
-	the same places on every row, so the grid reads down as well as across,
-	and the leftover width goes into the gaps rather than into a ragged right
-	edge.
+	the same place on every row, so the grid reads down as well as across, and
+	the leftover width goes into the gaps rather than a ragged right edge.
 */
 .overview .item-chooser__tile-grid {
 	display: grid;
@@ -931,16 +1133,12 @@ span.spacer {
 	align-content: start;
 	/*
 		More between the rows than between the columns. A tile is a letterform
-		with its name written under it, so the row gap has to read as larger
-		than the space inside a tile - otherwise the name sits as close to the
-		letter below it as to the one it belongs to.
+		with its code point written under it, so the row gap has to read as
+		larger than the space inside a tile.
 	*/
-	gap: var(--sp-4) var(--sp-2);
-	padding-bottom: var(--sp-8);
+	gap: var(--sp-5) var(--sp-2);
 	overflow-y: auto;
-	/* No bar. The grid is the page, and a rule down its right edge cut the
-		last column off the field of letters it is there to show. It still
-		scrolls - wheel, trackpad and keyboard all behave as before. */
+	/* No bar down the right edge of the one thing this card exists to show. */
 	scrollbar-width: none;
 	min-height: 0;
 	animation: none;
@@ -955,9 +1153,184 @@ span.spacer {
 	margin: 0;
 }
 
-/* The pager, when a range is longer than one page of tiles, spans the grid
-	rather than sitting in the first column. */
+/* The pager, when a range runs longer than one page of tiles. */
 .overview .item-chooser__page-control {
 	grid-column: 1 / -1;
 	margin: 0 0 var(--sp-3) 0;
 }
+
+/*
+	Said out loud: a grid that has hidden everything looks the same as a grid
+	that failed to build.
+*/
+.overview__no-results {
+	grid-column: 1 / -1;
+	padding: var(--sp-6) 0;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.overview__coverage-footer {
+	display: flex;
+	justify-content: flex-end;
+	padding-top: var(--sp-4);
+}
+
+/* --------------------------------------------------------------
+	Project snapshot
+	------------------------------------------------------------ */
+
+.overview__snapshot {
+	display: grid;
+	align-content: start;
+}
+
+/*
+	Name on the left, number on the right, in the app's tabular figures - so
+	the four of them read as a column of numbers rather than four sentences.
+*/
+.overview__metrics {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-3) var(--sp-5);
+	margin-top: var(--sp-5);
+}
+
+.overview__metric-name {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.overview__metric-value {
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-primary);
+	text-align: right;
+}
+
+.overview__section-title {
+	margin: 0 0 var(--sp-4) 0;
+	font-size: var(--fs-md);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+.overview__continue-row {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-5);
+}
+
+/* The letterform itself, on the same plate the coverage tiles use. */
+.overview__continue-thumb {
+	flex: 0 0 auto;
+	display: grid;
+	place-items: center;
+	width: 88px;
+	height: 88px;
+	background-color: var(--canvas-bg);
+	color: var(--canvas-ink);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	overflow: hidden;
+}
+
+.overview__continue-thumb svg {
+	display: block;
+	width: 72px;
+	height: 72px;
+}
+
+.overview__continue-detail {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+.overview__continue-label {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.overview__continue-when {
+	font-size: var(--fs-md);
+	color: var(--text-primary);
+}
+
+.overview__continue-empty {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/* The last few things that happened, on one line. */
+.overview__activity {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--sp-3);
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+	min-width: 0;
+}
+
+.overview__activity-icon {
+	display: flex;
+	flex: 0 0 auto;
+	margin-top: 1px;
+	color: var(--icon-default);
+}
+
+/* --------------------------------------------------------------
+	The links out of a card
+	------------------------------------------------------------ */
+
+.overview__link {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sp-2);
+	height: var(--control-h);
+	padding: 0;
+	margin: 0;
+	background-color: transparent;
+	border: none;
+	color: var(--text-accent);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	cursor: pointer;
+	box-shadow: none;
+	transition: var(--transition-color);
+}
+
+/*
+	resets.css states a background, a border colour and a text colour on
+	button:hover, so all three have to be answered or one of them leaks.
+*/
+.overview__link:hover {
+	background-color: transparent;
+	border: none;
+	color: var(--accent-hover);
+}
+
+.overview__link:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+	border-radius: var(--r-sm);
+}
+
+/*
+	The arrow moves, which is the whole of the affordance on a control with no
+	edges of its own.
+*/
+.overview__link-arrow {
+	display: inline-block;
+	transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.overview__link:hover .overview__link-arrow {
+	transform: translateX(2px);
+}
+

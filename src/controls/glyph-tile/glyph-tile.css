@@ -346,3 +346,45 @@
 	padding: var(--sp-2) 0 0 var(--sp-1);
 	font-size: var(--fs-xs);
 }
+
+/* --------------------------------------------------------------
+	The coverage dot
+
+	Whether the font has this character yet, in the corner of the tile. The
+	caption cannot say it - it is the code point - and the drawing cannot
+	either, because an undrawn slot still shows the character in the interface
+	font, which is exactly the thing you are trying to tell apart from a real
+	outline.
+
+	Large only. On a 40px tile in a menu it would be a speck on the letterform,
+	and on the 52px one the caption already carries the session states.
+	------------------------------------------------------------ */
+
+.status {
+	display: none;
+}
+
+:host([large]) .status {
+	display: block;
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	width: 5px;
+	height: 5px;
+	border-radius: var(--r-pill);
+	background-color: var(--accent);
+}
+
+/*
+	Nothing drawn: an outline of the same dot rather than no dot at all. An
+	empty corner reads as a tile that forgot to draw one, and the pair - filled
+	against hollow - is the same language as the history timeline's markers.
+*/
+:host([large]) .wrapper[drawn='false'] .status {
+	background-color: transparent;
+	box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+:host([large]) .wrapper {
+	position: relative;
+}

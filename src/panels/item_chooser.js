@@ -97,11 +97,23 @@ export function showItemRange(editor, target) {
 	const count = wrapper.querySelector('.item-chooser__count');
 	if (count) count.textContent = rangeCountText(editor, target);
 
+	const name = typeof target === 'string' ? target : target.name;
+
 	// And so does which filter chip is the pressed one.
 	wrapper.querySelectorAll('.overview__filter').forEach((chip) => {
-		const name = typeof target === 'string' ? target : target.name;
 		chip.setAttribute('aria-pressed', `${chip.dataset.rangeName === name}`);
 	});
+
+	/*
+		Announced rather than reached for. The page around the chooser has its
+		own things to update when the range changes - a heading that names it, a
+		search box whose text no longer applies - and this module knowing their
+		class names would make every page that mounts a chooser this module's
+		business.
+	*/
+	wrapper.dispatchEvent(
+		new CustomEvent('chooser-range-change', { bubbles: true, detail: { name: name } })
+	);
 }
 
 /**
@@ -429,12 +441,14 @@ function makeCharacterChooserTileGrid(editor = getCurrentProjectEditor(), compac
 		pagedCharacters.forEach((charID) => {
 			const glyphID = `glyph-${charID}`;
 			// log(`glyphID: ${glyphID}`);
-			let oneTile = new GlyphTile({ 'displayed-item-id': glyphID, project: editor.project });
+			let oneTile = new GlyphTile({
+				'displayed-item-id': glyphID,
+				project: editor.project,
+				...(compact ? { compact: '' } : savedTileSize ? { [savedTileSize]: '' } : {}),
+			});
 			// In the breadcrumb's dropdown the tile is the letterform and nothing
 			// else; on the Overview page it is as large as the page can give it.
 			// See :host([compact]) and :host([large]) in glyph-tile.css.
-			if (compact) oneTile.setAttribute('compact', '');
-			else if (savedTileSize) oneTile.setAttribute(savedTileSize, '');
 			if (isPrimaryProject && editor.selectedGlyphID === glyphID) {
 				oneTile.setAttribute('selected', '');
 			}
@@ -486,8 +500,11 @@ function makeLigatureChooserTileGrid(editor = getCurrentProjectEditor(), showSel
 	}
 
 	pagedLigatures.forEach((ligature) => {
-		let oneTile = new GlyphTile({ 'displayed-item-id': ligature.id, project: editor.project });
-		if (savedTileSize) oneTile.setAttribute(savedTileSize, '');
+		let oneTile = new GlyphTile({
+			'displayed-item-id': ligature.id,
+			project: editor.project,
+			...(savedTileSize ? { [savedTileSize]: '' } : {}),
+		});
 		if (showSelected && editor.selectedLigatureID === ligature.id) {
 			oneTile.setAttribute('selected', '');
 		}
@@ -531,8 +548,11 @@ function makeComponentChooserTileGrid(editor = getCurrentProjectEditor(), showSe
 	}
 
 	pagedComponents.forEach((component) => {
-		let oneTile = new GlyphTile({ 'displayed-item-id': component.id, project: editor.project });
-		if (savedTileSize) oneTile.setAttribute(savedTileSize, '');
+		let oneTile = new GlyphTile({
+			'displayed-item-id': component.id,
+			project: editor.project,
+			...(savedTileSize ? { [savedTileSize]: '' } : {}),
+		});
 		if (showSelected && editor.selectedComponentID === component.id) {
 			oneTile.setAttribute('selected', '');
 		}

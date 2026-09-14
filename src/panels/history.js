@@ -34,7 +34,7 @@ import { attachTooltip } from '../controls/tooltip/tooltip.js';
  * @param {Number} now
  * @returns {String}
  */
-function timeAgo(timeStamp, now) {
+export function timeAgo(timeStamp, now) {
 	const seconds = Math.max(0, Math.round((now - timeStamp) / 1000));
 	if (seconds < 45) return 'just now';
 	const minutes = Math.round(seconds / 60);
