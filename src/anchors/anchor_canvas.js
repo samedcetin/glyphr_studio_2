@@ -1,4 +1,4 @@
-import { getCanvasColors } from '../common/theme.js';
+import { getCanvasColors, getCanvasFonts } from '../common/theme.js';
 import { cXsX, cYsY, sXcX, sYcY } from '../edit_canvas/edit_canvas.js';
 
 /**
@@ -95,7 +95,7 @@ export function drawAnchors(ctx, glyph, view) {
 		if (anchor.isMarkAnchor) ctx.fill();
 		else ctx.stroke();
 
-		ctx.font = `${lit ? 'bold ' : ''}10px ui-sans-serif, system-ui, sans-serif`;
+		ctx.font = `${lit ? '600 ' : ''}10px ${getCanvasFonts().ui}`;
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'middle';
 		ctx.fillText(anchor.name, x + ARM + 4, y - ARM - 2);

@@ -1,7 +1,7 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { accentColors, getColorFromRGBA, transparencyToAlpha } from '../common/colors.js';
 import { makeElement } from '../common/dom.js';
-import { getCanvasColors, onThemeChange } from '../common/theme.js';
+import { getCanvasColors, getCanvasFonts, onThemeChange } from '../common/theme.js';
 import { clone } from '../common/functions.js';
 import { drawGlyph, drawGlyphOutlineMode } from '../display_canvas/draw_paths.js';
 import { drawAnchors } from '../anchors/anchor_canvas.js';
@@ -595,7 +595,7 @@ export class EditCanvas extends HTMLElement {
 				y = 12;
 				ctx.fillRect(x - deltaX, 0, 1, 20);
 			}
-			ctx.font = '10px Tahoma, Verdana, sans-serif';
+			ctx.font = `10px ${getCanvasFonts().ui}`;
 			ctx.fillText(name, x, y);
 		}
 	}

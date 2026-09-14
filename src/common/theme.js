@@ -232,6 +232,44 @@ export function getCanvasColors() {
  * Forces the next getCanvasColors call to re-read from CSS. Only needed if
  * something outside this module mutates the token values at runtime.
  */
+/** @type {Object | false} */
+let canvasFontCache = false;
+
+/**
+ * The two type stacks, for canvas text.
+ *
+ * Canvas cannot read a CSS variable, so every ctx.font in this app used to
+ * carry its own stack written out by hand - six of them, none matching the
+ * chrome around the canvas and one of them Tahoma. They read the tokens
+ * through here instead, so the labels on the canvas are set in the same
+ * typeface as the panels beside them.
+ *
+ * Cached: unlike the colours these do not change with the theme.
+ *
+ * @returns {Object} - { ui, mono }
+ */
+export function getCanvasFonts() {
+	if (canvasFontCache) return canvasFontCache;
+
+	const computed = getComputedStyle(document.documentElement);
+
+	/*
+		Whitespace collapsed. A token declared over two lines comes back with the
+		newline and the indentation still in it, and the canvas font shorthand is
+		a CSS font property parsed from a single line - a raw newline in there is
+		a string some engines will simply refuse.
+	*/
+	const flat = (name, fallback) =>
+		(computed.getPropertyValue(name).trim() || fallback).replace(/\s+/g, ' ');
+
+	canvasFontCache = {
+		ui: flat('--font-ui', 'system-ui, sans-serif'),
+		mono: flat('--font-mono', 'monospace'),
+	};
+
+	return canvasFontCache;
+}
+
 export function invalidateCanvasColors() {
 	canvasColorCache = false;
 }

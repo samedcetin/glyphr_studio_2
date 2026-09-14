@@ -1,6 +1,6 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { accentColors, uiColors } from '../common/colors.js';
-import { getCanvasColors, onThemeChange } from '../common/theme.js';
+import { getCanvasColors, getCanvasFonts, onThemeChange } from '../common/theme.js';
 import {
 	calculateAngle,
 	calculateLength,
@@ -289,7 +289,7 @@ function drawRotationAffordance(ctx, accent = accentBlue, thickness = 1) {
 	readout = round(readout, 1);
 	// log(`readout: ${readout}`);
 
-	ctx.font = '24px FiraGo, "Open Sans", sans-serif';
+	ctx.font = `24px ${getCanvasFonts().ui}`;
 	ctx.fillStyle = accent;
 	ctx.globalAlpha = 0.8;
 	ctx.fillText('' + readout + '°', canvasCenter.x, startTopY - 24);
@@ -662,7 +662,7 @@ export function drawPoint(point, ctx, isSelected) {
 	// ctx.fillStyle = sel? 'white' : accent;
 	ctx.fillStyle = isSelected ? pointFill : accent;
 	ctx.strokeStyle = accent;
-	ctx.font = '10px Consolas';
+	ctx.font = `10px ${getCanvasFonts().mono}`;
 
 	let px = sXcX(point.p.x) - halfPointSize;
 	let py = sYcY(point.p.y) - halfPointSize;
@@ -756,7 +756,7 @@ export function drawHandles(point, ctx, drawH1 = true, drawH2 = true) {
 	ctx.fillStyle = accent;
 	ctx.strokeStyle = accent;
 	ctx.lineWidth = 1;
-	ctx.font = '10px Consolas';
+	ctx.font = `10px ${getCanvasFonts().mono}`;
 
 	if (drawH1 && point.h1.use) {
 		drawOneHandle(point.h1, '1');
