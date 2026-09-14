@@ -153,6 +153,13 @@ const sectionDefinitions = {
 			subscriberPrefix: 'qualityChecksPanel',
 			maker: makePanel_QualityChecks,
 			defaultOpen: false,
+			/*
+				It holds threshold fields and a disclosure that remembers whether it
+				is open. Rebuilding on every publish would close the disclosure and
+				take focus out of the field mid-number. It updates its own counts -
+				see quality_checks.js.
+			*/
+			skipOnRefresh: true,
 			isAvailable: (page) => page !== 'Kerning',
 		},
 	],

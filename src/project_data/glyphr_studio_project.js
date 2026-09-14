@@ -62,10 +62,18 @@ export class GlyphrStudioProject {
 				moveShapesOnSVGDragDrop: false,
 				autoSideBearingsOnSVGDragDrop: 50,
 				autoRightBearingOnFirstShape: 50,
+				/*
+					Quality checks. The four numbers are thresholds in em units; the
+					checks themselves always run. Only whether their findings are drawn
+					on the canvas is a setting, and it is saved with the project the way
+					the thresholds always were - the two used to disagree, so a reload
+					kept your threshold and lost the check that used it.
+				*/
 				highlightPointsNearPoints: 2,
 				highlightPointsNearHandles: 2,
 				highlightPointsNearXZero: 2,
 				highlightPointsNearYZero: 2,
+				showQualityChecksOnCanvas: false,
 				guides: {
 					drawGuidesOnTop: false,
 					systemShowGuides: true,

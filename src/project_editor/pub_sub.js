@@ -1,6 +1,7 @@
 import { closeAllNotations } from '../controls/dialogs/dialogs.js';
 import { checkForFirstShapeAutoRSB } from '../edit_canvas/tools/tools.js';
 import { glyphChanged } from './cross_item_actions.js';
+import { invalidateQualityChecks } from './quality_checks.js';
 
 // --------------------------------------------------------------
 // PubSub
@@ -57,6 +58,15 @@ const allTopics = [
  * @param {Object} data - whatever the new state is
  */
 export function publish(topic, data) {
+	/*
+		Any publish means something changed, so the quality check results are
+		stale. This is the whole invalidation strategy: it sits here, before
+		the subscriber guard, so it runs even for a topic nobody listens to.
+		Panning and zooming publish nothing, which is exactly why the checks
+		no longer run on every frame - see project_editor/quality_checks.js.
+	*/
+	invalidateQualityChecks();
+
 	// log(`ProjectEditor.publish`, 'start');
 	// log(`topic: ${topic}`);
 	// log(`\n⮟data⮟`);

@@ -1,102 +1,205 @@
-import { getCurrentProject } from '../app/main';
-import { calculateLength, clone, valuesAreClose } from '../common/functions';
+import { getCurrentProject } from '../app/main.js';
+import { calculateLength, valuesAreClose } from '../common/functions.js';
 
-export const enabledQualityChecks = {
-	highlightPointsNearPoints: false,
-	highlightPointsNearHandles: false,
-	highlightPointsNearXZero: false,
-	highlightPointsNearYZero: false,
-};
+/**
+	QUALITY CHECKS
+	--------------
+	Four tests for the small data errors that come out of an SVG import:
+	points sitting on top of each other, handles too short to do anything,
+	and points that just miss x=0 or y=0.
 
-export function runQualityChecksForItem(item) {
-	// log(`runQualityChecksForItem`, 'start');
-	// log(`\n⮟enabledQualityChecks⮟`);
-	// log(enabledQualityChecks);
+	THEY ALWAYS RUN. They used to be four switches you turned on one at a
+	time, which made the panel a settings screen: it asked which tests you
+	wanted rather than answering whether the glyph was clean. Running all
+	four costs one pass over the points of the item you are already looking
+	at, and it means the panel has a number in it the moment you open it.
 
-	if (
-		!enabledQualityChecks.highlightPointsNearPoints &&
-		!enabledQualityChecks.highlightPointsNearHandles &&
-		!enabledQualityChecks.highlightPointsNearXZero &&
-		!enabledQualityChecks.highlightPointsNearYZero
-	) {
-		// log(`runQualityChecksForItem`, 'end');
-		return;
-	}
+	WHEN THEY RUN. Not on every frame. The old code called this from
+	EditCanvas.paint, so every pan and every zoom walked every point of
+	every shape and then deep-cloned four arrays per shape - work that
+	produced exactly the same answer as the frame before, because panning
+	does not move a point. The results are cached against the item and
+	thrown away by `invalidateQualityChecks`, which pub_sub calls on any
+	publish. So an edit still recomputes immediately, and a pan does not.
 
-	const project = getCurrentProject();
-	const psa = project.settings.app;
+	The results hold the PathPoint objects themselves rather than indices
+	into a per-shape array, so the panel can hand them straight to
+	multiSelect and select the offending points.
+ */
 
-	let pointsNearPoints = [];
-	let pointsNearHandles = [];
-	let nearXZero = [];
-	let nearYZero = [];
+/**
+ * @typedef {Object} QualityCheck
+ * @property {String} id - also the key of its threshold in settings.app
+ * @property {String} name - what the panel row says
+ * @property {String} colorKey - getCanvasColors() key for its ring and dot
+ * @property {String} colorToken - the same colour as a CSS variable name
+ * @property {String} help - one line, shown beside its threshold
+ * @property {Function} test - (point, index, path, threshold) => Boolean
+ */
 
-	if (item.shapes) {
-		item.shapes.forEach((shape) => {
-			// log(`shape.name: ${shape.name}`);
-			if (shape.objType === 'Path') {
-				// Reset the cache
-				shape.chache = {};
+/** @type {Array<QualityCheck>} */
+export const qualityChecks = [
+	{
+		id: 'highlightPointsNearPoints',
+		name: 'Points near other points',
+		colorKey: 'checkNearPoint',
+		colorToken: '--canvas-check-near-point',
+		help: 'Two points closer together than this are probably one point.',
+		test: (point, index, path, threshold) => {
+			/* A one-point path is its own next point, so it always measured
+				zero and always tripped this check. */
+			if (path.pathPoints.length < 2) return false;
+			const next = path.pathPoints[path.getNextPointNumber(index)];
+			return calculateLength(point.p, next.p) <= threshold;
+		},
+	},
+	{
+		id: 'highlightPointsNearHandles',
+		name: 'Short handles',
+		colorKey: 'checkShortHandle',
+		colorToken: '--canvas-check-short-handle',
+		help: 'A handle shorter than this is doing nothing to the curve.',
+		test: (point, index, path, threshold) => {
+			const h1 = point.h1.use && calculateLength(point.p, point.h1) <= threshold;
+			const h2 = point.h2.use && calculateLength(point.p, point.h2) <= threshold;
+			return h1 || h2;
+		},
+	},
+	{
+		id: 'highlightPointsNearXZero',
+		name: 'Points near x = 0',
+		colorKey: 'checkNearX',
+		colorToken: '--canvas-check-near-x',
+		help: 'Points this close to the left side bearing meant to be on it.',
+		test: (point, index, path, threshold) =>
+			valuesAreClose(point.p.x, 0, threshold) && point.p.x !== 0,
+	},
+	{
+		id: 'highlightPointsNearYZero',
+		name: 'Points near y = 0',
+		colorKey: 'checkNearY',
+		colorToken: '--canvas-check-near-y',
+		help: 'Points this close to the baseline meant to be on it.',
+		test: (point, index, path, threshold) =>
+			valuesAreClose(point.p.y, 0, threshold) && point.p.y !== 0,
+	},
+];
 
-				// Run the checks
-				for (let index = 0; index < shape.pathPoints.length; index++) {
-					const point = shape.pathPoints[index];
+// --------------------------------------------------------------
+// Running them
+// --------------------------------------------------------------
 
-					// near other points
-					if (enabledQualityChecks.highlightPointsNearPoints) {
-						// log(`\n Doing quality check: highlightPointsNearPoints`);
-						pointsNearPoints[index] = false;
-						const nextPointNumber = shape.getNextPointNumber(index);
-						const nextPoint = shape.pathPoints[nextPointNumber];
-						const distance = calculateLength(point.p, nextPoint.p);
-						// log(`this point (${index}): ${point.p.x}, ${point.p.y}`);
-						// log(`next point (${nextPointNumber}): ${nextPoint.p.x}, ${nextPoint.p.y}`);
-						if (distance <= psa.highlightPointsNearPoints) {
-							pointsNearPoints[index] = true;
-						}
-						// log(`distance is ${distance} results in ${pointsNearPoints[index]}`);
-					}
+/**
+ * @typedef {Object} QualityCheckResults
+ * @property {String} itemID
+ * @property {Object} hits - { checkID: Array<PathPoint> }
+ * @property {Object} counts - { checkID: Number }
+ * @property {Number} total
+ * @property {Number} pointsChecked
+ * @property {Number} pathsChecked
+ * @property {Number} componentInstances - shapes this cannot look inside
+ */
 
-					// near its own handles
-					if (enabledQualityChecks.highlightPointsNearHandles) {
-						// log(`\n Doing quality check: highlightPointsNearHandles`);
-						pointsNearHandles[index] = false;
-						const distanceH1 = calculateLength(point.p, point.h1);
-						const distanceH2 = calculateLength(point.p, point.h2);
-						const pnh = psa.highlightPointsNearHandles;
-						if ((point.h1.use && distanceH1 <= pnh) || (point.h2.use && distanceH2 <= pnh)) {
-							pointsNearHandles[index] = true;
-						}
-					}
+/** @type {QualityCheckResults | false} */
+let cachedResults = false;
 
-					// near x = 0
-					if (enabledQualityChecks.highlightPointsNearXZero) {
-						// log(`\n Doing quality check: highlightPointsNearXZero`);
-						nearXZero[index] = false;
-						const pnx = psa.highlightPointsNearXZero;
-						if (valuesAreClose(point.p.x, 0, pnx) && point.p.x !== 0) {
-							nearXZero[index] = true;
-						}
-					}
+/**
+ * Throw the cached results away.
+ *
+ * Called from pub_sub on every publish. A publish is the app saying
+ * something changed; recomputing is cheaper than working out whether the
+ * particular thing that changed was a point.
+ */
+export function invalidateQualityChecks() {
+	cachedResults = false;
+}
 
-					// near y = 0
-					if (enabledQualityChecks.highlightPointsNearYZero) {
-						// log(`\n Doing quality check: highlightPointsNearYZero`);
-						nearYZero[index] = false;
-						const pny = psa.highlightPointsNearYZero;
-						if (valuesAreClose(point.p.y, 0, pny) && point.p.y !== 0) {
-							nearYZero[index] = true;
-						}
-					}
-				}
+/**
+ * Every check, over one item.
+ *
+ * @param {Object} item - Glyph, Ligature or Component
+ * @returns {QualityCheckResults | false} - false for anything with no shapes
+ */
+export function getQualityCheckResults(item) {
+	if (!item || !item.shapes) return false;
+	if (cachedResults && cachedResults.itemID === item.id) return cachedResults;
 
-				// Save the results
-				if (pointsNearPoints.length) shape.cache.pointsNearPoints = clone(pointsNearPoints);
-				if (pointsNearHandles.length) shape.cache.pointsNearHandles = clone(pointsNearHandles);
-				if (nearXZero.length) shape.cache.nearXZero = clone(nearXZero);
-				if (nearYZero.length) shape.cache.nearYZero = clone(nearYZero);
-			}
-		});
-	}
-	// log(`runQualityChecksForItem`, 'end');
+	const settings = getCurrentProject()?.settings?.app;
+	if (!settings) return false;
+
+	/** @type {Object} */
+	const hits = {};
+	qualityChecks.forEach((check) => (hits[check.id] = []));
+
+	let pointsChecked = 0;
+	let pathsChecked = 0;
+	let componentInstances = 0;
+
+	item.shapes.forEach((shape) => {
+		/*
+			A component instance is a reference to another item. Its points
+			live there and are checked when you edit it, so counting them
+			here would report the same problem once per use. The panel says
+			how many were skipped rather than leaving you to assume a glyph
+			built from components is clean.
+		*/
+		if (shape.objType !== 'Path') {
+			componentInstances++;
+			return;
+		}
+
+		pathsChecked++;
+		for (let index = 0; index < shape.pathPoints.length; index++) {
+			const point = shape.pathPoints[index];
+			pointsChecked++;
+			qualityChecks.forEach((check) => {
+				if (check.test(point, index, shape, settings[check.id])) hits[check.id].push(point);
+			});
+		}
+	});
+
+	/** @type {Object} */
+	const counts = {};
+	let total = 0;
+	qualityChecks.forEach((check) => {
+		counts[check.id] = hits[check.id].length;
+		total += counts[check.id];
+	});
+
+	cachedResults = {
+		itemID: item.id,
+		hits: hits,
+		counts: counts,
+		total: total,
+		pointsChecked: pointsChecked,
+		pathsChecked: pathsChecked,
+		componentInstances: componentInstances,
+	};
+
+	return cachedResults;
+}
+
+// --------------------------------------------------------------
+// Whether the canvas draws them
+// --------------------------------------------------------------
+
+/**
+ * One view option for the lot, saved with the project.
+ *
+ * It replaces four booleans that lived in a module-level object and were
+ * never written anywhere, so every reload turned all four off while the
+ * thresholds beside them survived.
+ *
+ * @returns {Boolean}
+ */
+export function getShowQualityChecksOnCanvas() {
+	return !!getCurrentProject()?.settings?.app?.showQualityChecksOnCanvas;
+}
+
+/**
+ * @param {Boolean} value
+ */
+export function setShowQualityChecksOnCanvas(value) {
+	const settings = getCurrentProject()?.settings?.app;
+	if (settings) settings.showQualityChecksOnCanvas = !!value;
 }

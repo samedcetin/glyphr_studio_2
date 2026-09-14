@@ -46,6 +46,10 @@ const CANVAS_TOKENS = [
 	'canvas-point',
 	'canvas-point-selected',
 	'canvas-snap',
+	'canvas-check-near-point',
+	'canvas-check-short-handle',
+	'canvas-check-near-x',
+	'canvas-check-near-y',
 ];
 
 /** @type {Object | false} */

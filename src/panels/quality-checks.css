@@ -1,0 +1,292 @@
+/*
+	QUALITY CHECKS PANEL
+	--------------------
+	A verdict, four rows with counts, and the thresholds behind a disclosure.
+
+	It opts out of the card grid entirely, the way the Anchors list does. The
+	card grid is a label column plus a control column, and none of this is a
+	label beside a control: it is a list of findings.
+*/
+
+.quality-checks {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--sp-3);
+}
+
+/* The verdict, with the thresholds button pinned to the right of it. */
+.quality-checks__head {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--sp-2);
+	width: 100%;
+	min-width: 0;
+}
+
+.quality-checks__verdict {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--sp-3);
+	flex: 1;
+	min-width: 0;
+	padding: var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+}
+
+.quality-checks__verdict svg {
+	flex-shrink: 0;
+	/* The icon is 16px in a 19px line: nudged to sit on the headline. */
+	margin-top: 1px;
+}
+
+/*
+	Green for clean, amber for findings - and nothing red. A quality check
+	finding is not an error: an SVG import always has some, and half of them
+	are fine once you look. Red would make a normal state read as a failure.
+*/
+.quality-checks__verdict--clean svg {
+	color: var(--canvas-anchor);
+}
+
+.quality-checks__verdict--problems svg {
+	color: var(--canvas-check-short-handle);
+}
+
+.quality-checks__verdict-text {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+.quality-checks__verdict-headline {
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+}
+
+.quality-checks__verdict-detail {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+/* Same square as the copy button in Character info. */
+.quality-checks__settings {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: var(--control-h);
+	height: var(--control-h);
+	padding: 0;
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	color: var(--icon-default);
+	cursor: pointer;
+}
+
+/* Every state stated: resets.css `button:hover` also sets a colour. */
+.quality-checks__settings:hover,
+.quality-checks__settings:focus,
+.quality-checks__settings:active,
+.quality-checks__settings--open {
+	background-color: var(--bg-hover);
+	border-color: var(--border-subtle);
+	color: var(--icon-strong);
+}
+
+/* --------------------------------------------------------------
+	The four rows
+	------------------------------------------------------------ */
+
+.quality-checks__list {
+	display: grid;
+	gap: var(--sp-1);
+	width: 100%;
+}
+
+/*
+	A row is a button whether or not it has anything to select, so the one
+	that found nothing can still say what it checks on hover. When it has
+	nothing it just does not look or behave like a target.
+*/
+.quality-checks__row {
+	display: grid;
+	grid-template-columns: 8px minmax(0, 1fr) max-content 14px;
+	align-items: center;
+	gap: var(--sp-3);
+	height: var(--row-h);
+	padding: 0 var(--sp-2);
+	/* Bleeds four pixels either side so the hover reaches the panel gutter. */
+	margin: 0 calc(var(--sp-2) * -1);
+	width: calc(100% + var(--sp-4));
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	text-align: left;
+	cursor: default;
+}
+
+.quality-checks__row--found {
+	cursor: pointer;
+}
+
+.quality-checks__row--found:hover,
+.quality-checks__row--found:focus {
+	background-color: var(--bg-hover);
+	border-color: var(--border-subtle);
+	color: var(--text-primary);
+}
+
+/*
+	The dot is the check's colour, and the same colour rings its points on
+	the canvas. That is the only thing tying a row to a mark out there, so it
+	is a filled disc rather than an outline - at 8px an outline is a smudge.
+*/
+.quality-checks__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: var(--r-pill);
+	background-color: var(--dot, var(--icon-default));
+}
+
+/* A check with nothing to report keeps its colour but stops asserting it. */
+.quality-checks__row:not(.quality-checks__row--found) .quality-checks__dot {
+	opacity: 0.3;
+}
+
+.quality-checks__name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.quality-checks__row--found .quality-checks__name {
+	color: var(--text-primary);
+}
+
+/*
+	Tabular figures so a column of counts lines up on its digits, and so the
+	row does not shift a pixel when 9 becomes 10.
+*/
+.quality-checks__count {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+.quality-checks__row--found .quality-checks__count {
+	color: var(--text-primary);
+}
+
+/* The back chevron, turned round: this set has no forward one. */
+.quality-checks__go {
+	display: grid;
+	place-items: center;
+	transform: rotate(180deg);
+	color: var(--icon-default);
+	opacity: 0;
+	transition: opacity var(--dur-fast) var(--ease);
+}
+
+.quality-checks__row--found:hover .quality-checks__go,
+.quality-checks__row--found:focus .quality-checks__go {
+	opacity: 1;
+}
+
+/* --------------------------------------------------------------
+	Thresholds and the rest
+	------------------------------------------------------------ */
+
+/*
+	display:grid beats the [hidden] rule in the shell reset, which is
+	display:none at one tag of specificity. Stated here so the disclosure
+	actually closes.
+*/
+.quality-checks__thresholds[hidden] {
+	display: none;
+}
+
+.quality-checks__thresholds {
+	display: grid;
+	gap: var(--sp-2);
+	padding: var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+}
+
+.quality-checks__thresholds-intro {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+/*
+	Label above field, not beside it. At 265px a field wide enough for a
+	number leaves 150px for `Points near other points`, which truncates -
+	and these are the only four places in the panel where the full name
+	has to be readable, because this is where you decide what it means.
+*/
+.quality-checks__threshold {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 84px;
+	align-items: center;
+	gap: var(--sp-2);
+}
+
+/*
+	input-number carries its own 120px width, which would burst an 84px
+	track rather than shrink to it.
+*/
+.quality-checks__threshold input-number {
+	width: 100%;
+}
+
+.quality-checks__threshold-label {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.quality-checks__note {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}
+
+.quality-checks__canvas {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	min-height: var(--row-h);
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	cursor: pointer;
+}
+
+.quality-checks__canvas input[type='checkbox'] {
+	margin: 0;
+	flex-shrink: 0;
+}
+
+/*
+	The explanation, last and quiet. It was the first thing in the panel and
+	a third of its height, on every glyph, forever - which is right once and
+	furniture after that.
+*/
+.quality-checks__help {
+	padding-top: var(--sp-3);
+	border-top: 1px solid var(--border-subtle);
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}

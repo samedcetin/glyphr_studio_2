@@ -175,6 +175,20 @@
 	--canvas-snap: hsl(340, 90%, 58%); /* smart-guide snap lines */
 	--canvas-anchor: hsl(145, 55%, 38%); /* mark attachment points */
 
+	/*
+		QUALITY CHECKS. One hue per check, not one colour for all four: two
+		checks can fire on the same point, and a single warning colour makes
+		that one ring rather than two. The panel shows the same four dots, so
+		the ring on the canvas and the row in the list are the same thing.
+
+		All four stay clear of the blue the selection and the points already
+		own, and of the green that means an anchor.
+	*/
+	--canvas-check-near-point: hsl(0, 78%, 52%);
+	--canvas-check-short-handle: hsl(45, 92%, 40%);
+	--canvas-check-near-x: hsl(192, 88%, 36%);
+	--canvas-check-near-y: hsl(288, 60%, 54%);
+
 	/* ============================================================
 		3. COMPONENT CONSTANTS
 		============================================================ */
@@ -419,6 +433,10 @@
 	--canvas-point: var(--a-40);
 	--canvas-point-selected: var(--violet-40);
 	--canvas-snap: hsl(340, 95%, 66%);
+	--canvas-check-near-point: hsl(0, 88%, 68%);
+	--canvas-check-short-handle: hsl(45, 95%, 58%);
+	--canvas-check-near-x: hsl(192, 82%, 56%);
+	--canvas-check-near-y: hsl(288, 72%, 72%);
 }
 
 /* Pre-paint fallback only. theme.js replaces this with data-theme as soon

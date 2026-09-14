@@ -15,7 +15,11 @@ import { ControlPoint } from '../project_data/control_point.js';
 import { Maxes } from '../project_data/maxes.js';
 import { Path } from '../project_data/path.js';
 import { PathPoint } from '../project_data/path_point.js';
-import { enabledQualityChecks } from '../project_editor/quality_checks.js';
+import {
+	getQualityCheckResults,
+	getShowQualityChecksOnCanvas,
+	qualityChecks,
+} from '../project_editor/quality_checks.js';
 import { cXsX, cYsY, sXcX, sYcY } from './edit_canvas.js';
 import { eventHandlerData } from './events.js';
 import { canResize } from './events_mouse.js';
@@ -814,85 +818,54 @@ export function computeAndDrawDragToSelectBox(ctx, eventHandlerData) {
 // Highlight points
 // --------------------------------------------------------------
 
+/**
+ * Rings round every point a quality check found a problem with.
+ *
+ * One ring per check rather than one per point: a point can trip two
+ * checks, and a single mark for both hides one of them. Each ring sits a
+ * little further out than the last, so two findings on one point read as
+ * two rings in two colours.
+ *
+ * @param {CanvasRenderingContext2D} ctx - canvas context
+ */
 export function drawAllHighlightedPoints(ctx) {
-	// log(`drawAllHighligthedPoints`, 'start');
-	let editor = getCurrentProjectEditor();
-	let currentItem = editor.selectedItem;
+	if (!getShowQualityChecksOnCanvas()) return;
 
-	if (currentItem?.shapes) {
-		currentItem.shapes.forEach((shape) => {
-			if (shape.objType === 'Path') {
-				// log(`\n⮟shape.cache ${shape.name}⮟`);
-				// log(shape.cache);
-				drawHighlightedPointsForPath(shape, ctx);
-			}
+	const editor = getCurrentProjectEditor();
+	const results = getQualityCheckResults(editor.selectedItem);
+	if (!results || !results.total) return;
+
+	const colors = getCanvasColors();
+	qualityChecks.forEach((check, index) => {
+		const color = colors[check.colorKey] || '#888';
+		results.hits[check.id].forEach((point) => {
+			drawPointHighlight(point.p, ctx, color, index * 3);
 		});
-	}
-	// log(`drawAllHighligthedPoints`, 'end');
-}
-
-function drawHighlightedPointsForPath(path, ctx) {
-	for (let p = 0; p < path.pathPoints.length; p++) {
-		const point = path.pathPoints[p];
-
-		if (
-			enabledQualityChecks.highlightPointsNearPoints &&
-			path?.cache?.pointsNearPoints &&
-			path?.cache?.pointsNearPoints[p]
-		) {
-			// log(path?.cache?.pointsNearPoints[p]);
-			drawPointHighlight(point.p, ctx);
-			// break;
-		}
-
-		if (
-			enabledQualityChecks.highlightPointsNearHandles &&
-			path?.cache?.pointsNearHandles &&
-			path?.cache?.pointsNearHandles[p]
-		) {
-			// log(path?.cache?.pointsNearHandles);
-			drawPointHighlight(point.p, ctx);
-			// break;
-		}
-
-		if (
-			enabledQualityChecks.highlightPointsNearXZero &&
-			path?.cache?.nearXZero &&
-			path?.cache?.nearXZero[p]
-		) {
-			// log(path?.cache?.nearXZero);
-			drawPointHighlight(point.p, ctx);
-			// break;
-		}
-
-		if (
-			enabledQualityChecks.highlightPointsNearYZero &&
-			path?.cache?.nearYZero &&
-			path?.cache?.nearYZero[p]
-		) {
-			// log(path?.cache?.nearYZero);
-			drawPointHighlight(point.p, ctx);
-			// break;
-		}
-	}
+	});
 }
 
 /**
- * Draws a circle around a point in the highlight point style
+ * Draws a circle around a point in the highlight point style.
+ *
+ * The colour is passed in. It used to be the string `red` - the last
+ * hard-coded colour on this canvas, so it was the one mark that ignored
+ * the theme and matched nothing else drawn beside it.
+ *
  * @param {ControlPoint | Object} point - point to draw a circle around
  * @param {CanvasRenderingContext2D} ctx - canvas context
+ * @param {String =} color - stroke colour
+ * @param {Number =} spread - extra radius, to stack rings on one point
  */
-export function drawPointHighlight(point, ctx) {
-	// log(`drawPointHighlight`, 'start');
-	let px = sXcX(point.x);
-	let py = sYcY(point.y);
-	// log(`canvas: ${px}, ${py}`);
+export function drawPointHighlight(point, ctx, color = false, spread = 0) {
+	const px = sXcX(point.x);
+	const py = sYcY(point.y);
+
 	ctx.beginPath();
-	ctx.arc(px, py, canvasUIPointSize + 4, 0, Math.PI * 2, true);
+	ctx.arc(px, py, canvasUIPointSize + 4 + spread, 0, Math.PI * 2, true);
 	ctx.closePath();
-	ctx.strokeStyle = 'red';
+	ctx.strokeStyle = color || getCanvasColors().checkNearPoint;
+	ctx.lineWidth = 1.5;
 	ctx.stroke();
-	// log(`drawPointHighlight`, 'end');
 }
 
 // --------------------------------------------------------------

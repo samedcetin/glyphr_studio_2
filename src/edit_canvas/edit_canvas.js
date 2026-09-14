@@ -8,7 +8,6 @@ import { drawAnchors } from '../anchors/anchor_canvas.js';
 import { drawPixelGrid } from '../pixel_font/draw_pixel_grid.js';
 import { kernGroupSideMaxWidth } from '../project_editor/cross_item_actions.js';
 import { guideColorDark, guideColorLight, guideColorMedium } from '../project_editor/guide.js';
-import { runQualityChecksForItem } from '../project_editor/quality_checks.js';
 import { drawCharacterKernExtra, drawContextCharacters } from './context_characters.js';
 import {
 	computeAndDrawBoundingBox,
@@ -294,7 +293,6 @@ export class EditCanvas extends HTMLElement {
 		const height = Number(this.height);
 		const currentItemID = this.editingItemID;
 		const currentItem = project.getItem(currentItemID);
-		runQualityChecksForItem(currentItem);
 		// log(`currentItemID: ${currentItemID}`);
 		const advanceWidth = currentItem?.advanceWidth || 0;
 		const itemXMax = Math.max(advanceWidth, currentItem?.maxes?.xMax || 0);

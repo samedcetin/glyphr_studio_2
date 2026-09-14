@@ -363,6 +363,10 @@ lineIcons.panel_qualityChecks = `<circle cx="12" cy="12" r="8.5"/><path d="M8.5 
 
 lineIcons.panel_characterInfo = `<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.7v.3"/>`;
 
+/* The same circle as the info mark, with the bar and the dot swapped. */
+lineIcons.alert = `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.3v.3"/>`;
+
+
 lineIcons.panel_view = `<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>`;
 
 // --------------------------------------------------------------
@@ -412,6 +416,13 @@ lineIcons.page_globalActions = `<path d="M13.5 3L5.5 13.5H11l-.5 7.5 8-10.5H13z"
 lineIcons.page_settings = `<path d="M6 21v-6M6 11V3M12 21v-9M12 8V3M18 21v-4M18 13V3"/><path d="M3.5 15h5M9.5 8h5M15.5 13h5"/>`;
 
 lineIcons.page_help = lineIcons.command_help;
+
+/*
+	Three sliders: the settings mark, wherever thresholds hide behind one.
+	Declared here rather than beside the panel icons - these are plain
+	assignments, so an alias placed above its source gets undefined.
+*/
+lineIcons.settings = lineIcons.page_settings;
 
 lineIcons.page_about = lineIcons.panel_characterInfo;
 
