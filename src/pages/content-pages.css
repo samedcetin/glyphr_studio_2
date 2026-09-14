@@ -462,11 +462,35 @@ span.spacer {
 	margin-top: 0;
 }
 
+/*
+	Masonry, by column flow rather than by grid.
+
+	A grid lines its rows up, and these cards are nowhere near the same height -
+	Move is four lines and Side bearings is fifteen - so every row left a band
+	of empty card-coloured nothing under the short ones. grid-template-rows:
+	masonry would be the direct answer and no Chromium ships it, so this is
+	multi-column: the cards flow down one column and on to the next, and the
+	browser balances the columns for us.
+
+	What it costs is reading order - down each column, then across, rather than
+	left to right. These are thirteen independent actions already grouped under
+	their headings, so there is no sentence running through them to break.
+*/
 .global-actions__grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-	gap: var(--sp-6);
-	align-items: start;
+	/* block, because makeElement builds a span unless told otherwise, and
+		multi-column only applies to a block container - on an inline box the
+		column properties are simply ignored. */
+	display: block;
+	column-width: 380px;
+	column-gap: var(--sp-6);
+}
+
+/*
+	A column flow has no row gap, so the space under a card is the card's own
+	margin - and a card must not be split down the middle by a column break.
+*/
+.global-actions__grid > * {
+	break-inside: avoid;
 }
 
 /*
@@ -480,7 +504,9 @@ span.spacer {
 	justify-items: start;
 	gap: var(--sp-5);
 	max-width: none;
-	margin: 0;
+	/* A column flow has no row gap, so the space under a card is its own
+		margin. It used to carry 20px on three sides for a single column. */
+	margin: 0 0 var(--sp-6) 0;
 	animation: none;
 }
 
