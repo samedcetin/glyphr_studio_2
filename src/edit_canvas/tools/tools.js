@@ -1,3 +1,4 @@
+import { attachTooltip } from '../../controls/tooltip/tooltip.js';
 import { makeQuickActionsButton } from '../quick_actions.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
 import { addAsChildren, makeElement } from '../../common/dom.js';
@@ -237,6 +238,16 @@ export function fillEditorToolBar(content, toolButtons = []) {
 	children.push(makeQuickActionsButton().element);
 
 	addAsChildren(bar, children);
+
+	/*
+		The app’s hover label for the whole bar, in one sweep rather than in
+		each builder - so a button added here later gets it without anyone
+		having to remember. attachTooltip reads the title and removes it;
+		buttons whose label changes have already set theirs and are skipped,
+		because they carry no title to read.
+	*/
+	bar.querySelectorAll('button[title]').forEach((button) => attachTooltip(button));
+
 	return true;
 }
 
@@ -288,8 +299,16 @@ function makePanelToggleButton() {
 		const hidden = arePanelsHidden();
 		const label = hidden ? 'Show panels  (Ctrl \\)' : 'Hide panels  (Ctrl \\)';
 		button.innerHTML = hidden ? panelIcons.hidden : panelIcons.shown;
-		button.setAttribute('title', label);
 		button.setAttribute('aria-label', label);
+		/*
+			Not a title: this label changes with the state. attachTooltip binds
+			once and updates the text on every later call, so calling it from
+			render is how the tip follows the button.
+		*/
+		attachTooltip(button, {
+			name: hidden ? 'Show panels' : 'Hide panels',
+			body: `Shortcut Ctrl ${String.fromCharCode(92)}`,
+		});
 		button.setAttribute('aria-pressed', String(hidden));
 	};
 

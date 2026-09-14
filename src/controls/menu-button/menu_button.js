@@ -18,6 +18,7 @@
  */
 
 import { makeElement } from '../../common/dom.js';
+import { attachTooltip } from '../tooltip/tooltip.js';
 
 /** Every open menu, so an outside click or Escape can close all of them. */
 const openMenus = new Set();
@@ -137,8 +138,9 @@ export function makeMenuButton({
 		if (!item) return;
 		face.innerHTML = item.icon || '';
 		const label = item.shortcut ? `${item.name}  (${item.shortcut})` : item.name;
-		face.setAttribute('title', label);
 		face.setAttribute('aria-label', label);
+		/* The app’s hover label, re-set here because the face changes tool. */
+		attachTooltip(face, { name: item.name, body: item.shortcut ? `Shortcut ${item.shortcut}` : '' });
 		face.setAttribute('aria-pressed', String(isFacePressed()));
 		face.classList.toggle('menu-button__face--pressed', isFacePressed());
 		if (item.disabled) face.setAttribute('disabled', '');
@@ -261,6 +263,7 @@ export function makeMenuButton({
 	wrapper.appendChild(chevron);
 	wrapper.appendChild(menu);
 	renderFace();
+	attachTooltip(chevron, { name: `${groupName} options` });
 
 	return {
 		element: wrapper,
@@ -325,12 +328,13 @@ export function makePopoverButton({
 		innerHTML: icon,
 		attributes: {
 			type: 'button',
-			title: label,
 			'aria-label': label,
 			'aria-haspopup': 'dialog',
 			'aria-expanded': 'false',
 		},
 	});
+
+	attachTooltip(face, { name: label });
 
 	const menu = makeElement({
 		className: `menu-button__menu menu-button__menu--popover${

@@ -99,12 +99,31 @@ export function hideTooltip() {
 }
 
 /**
- * Give one element the app's tooltip instead of the browser's.
+ * Set or change what an element’s tooltip says.
  *
- * With no text passed, the element's own `title` is used and then removed -
+ * Read at hover rather than captured at bind, because a toolbar face says
+ * whichever tool it is currently showing - the label changes under a
+ * listener that was attached once.
+ *
+ * @param {HTMLElement} element - the target
+ * @param {String} name - the bold first line
+ * @param {String =} body - the rest
+ */
+export function setTooltip(element, name, body = '') {
+	element.setAttribute('data-tip-name', name);
+	if (body) element.setAttribute('data-tip-body', body);
+	else element.removeAttribute('data-tip-body');
+}
+
+/**
+ * Give one element the app’s tooltip instead of the browser’s.
+ *
+ * With no text passed, the element’s own `title` is used and then removed -
  * the first line as the name, the rest as the body, which is the shape every
  * action button in this app already writes its title in. Removing it matters:
  * left in place, the OS tooltip appears a second later on top of this one.
+ *
+ * Binding is idempotent, so calling this again only updates the text.
  *
  * @param {HTMLElement} element - the target
  * @param {Object =} text - { name, body }, or omitted to read the title
@@ -124,8 +143,23 @@ export function attachTooltip(element, text) {
 		element.removeAttribute('title');
 	}
 
-	element.addEventListener('mouseenter', () => showTooltip(element, name, body));
-	element.addEventListener('focus', () => showTooltip(element, name, body));
+	setTooltip(element, name, body);
+
+	if (element.hasAttribute('data-tip-bound')) return;
+	element.setAttribute('data-tip-bound', '');
+
+	const show = () =>
+		showTooltip(
+			element,
+			element.getAttribute('data-tip-name') || '',
+			element.getAttribute('data-tip-body') || ''
+		);
+
+	element.addEventListener('mouseenter', show);
+	element.addEventListener('focus', show);
 	element.addEventListener('mouseleave', hideTooltip);
 	element.addEventListener('blur', hideTooltip);
+	/* Acting on it ends the errand - a tip left over a menu that just opened
+		sits on top of the menu. */
+	element.addEventListener('click', hideTooltip);
 }
