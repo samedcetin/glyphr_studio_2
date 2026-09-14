@@ -828,16 +828,81 @@ span.spacer {
 }
 
 /*
-	A select is as wide as the longest thing it has to say, not as wide as the
-	page. It was min 177 and max 488, so on this page it ran half the width of
-	the window to hold the words "Basic Latin".
+	The filter bar.
+
+	A select is the right control when the options are many, or long, or you
+	already know which one you want. None of that is true here: four options,
+	two words each, on the page whose whole job is browsing - so the menu was
+	asking for a click to show you what the font even contains, then hiding it
+	again.
+
+	One line that scrolls rather than a block that wraps. A project can enable
+	a lot of Unicode ranges, and a filter bar four rows deep pushes the thing
+	it filters off the screen. Same treatment as the kern chooser members row:
+	no bar, because a thin one under a 28px chip does not fit the row.
 */
-.overview .item-chooser__header option-chooser {
-	display: block;
-	flex: 0 1 240px;
-	width: auto;
+.overview__filters {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	flex: 1 1 auto;
 	min-width: 0;
-	max-width: 240px;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.overview__filters::-webkit-scrollbar {
+	display: none;
+}
+
+.overview__filter {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sp-2);
+	height: var(--control-h);
+	padding: 0 var(--sp-4);
+	margin: 0;
+	background-color: transparent;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-secondary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+	line-height: 1;
+	white-space: nowrap;
+	cursor: pointer;
+	box-shadow: none;
+	transition: var(--transition-color);
+}
+
+/* resets.css states a background, a border colour and a text colour on
+	button:hover, so all three have to be answered or one of them leaks. */
+.overview__filter:hover {
+	background-color: var(--bg-hover);
+	border-color: var(--border-default);
+	color: var(--text-primary);
+}
+
+.overview__filter[aria-pressed='true'] {
+	background-color: var(--bg-selected);
+	border-color: var(--border-selected);
+	color: var(--text-accent);
+	font-weight: var(--fw-medium);
+}
+
+/* How many characters are behind this chip. Tabular, so a row of them does
+	not jitter as the numbers change width. */
+.overview__filter-count {
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.overview__filter[aria-pressed='true'] .overview__filter-count {
+	color: var(--text-accent);
+	opacity: 0.7;
 }
 
 .overview .item-chooser__count {

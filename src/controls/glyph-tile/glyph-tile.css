@@ -248,13 +248,25 @@
 	height: 104px;
 }
 
+:host([large]) .wrapper {
+	padding: 2px;
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+}
+
 :host([large]) .thumbnail {
 	width: 72px;
 	height: 72px;
 	padding-top: 0;
 	font-size: 48px;
 	line-height: 72px;
-	border-radius: var(--r-sm);
+	/*
+		A rounder plate than the small tile. At 50px --r-xs is already visible
+		as a corner; at 72 it reads as a square with the corners nicked off, so
+		this takes --r-lg, and the hover and selected surface around it takes
+		--r-xl to stay concentric with it across the 2px of tile padding.
+	*/
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 }
 

@@ -146,8 +146,13 @@ function makeCharacterArea() {
 			},
 			'',
 			getCurrentProjectEditor(),
-			/* The page is the grid here, so the tiles get the room. */
-			'large'
+			{
+				/* The page is the grid here, so the tiles get the room. */
+				tileSize: 'large',
+				/* And the choice of what to look at is laid out, not hidden
+					behind a click - see makeRangeFilterChips. */
+				filters: 'chips',
+			}
 		)
 	);
 	return area;
