@@ -283,14 +283,225 @@
 }
 
 /*
-	Character info used to override the card grid with `max-content 1fr
-	!important`, which is why its labels ended at a different x from every other
-	card in the same sidebar. It uses the shared track now and overrides nothing.
+	CHARACTER INFO
+	--------------
+	A reference card: a thing to look at and a set of things to copy. Nothing in
+	it is editable, so nothing in it is allowed to look editable - which is what
+	the four read-only fields it used to hold got wrong. They carried the well,
+	the border and the text cursor of a real field, in a sidebar whose other
+	panels are full of real fields.
+
+	So the values sit on the card with no plate at all. The copy button is the
+	only affordance in the row, and it means the one thing you actually do here.
+
+	It uses the shared card grid and overrides nothing. It used to force
+	`max-content 1fr !important`, which is why its labels ended at a different x
+	from every other card in the same sidebar.
 */
-.char-info input {
+
+/*
+	The character itself, at a size you identify rather than read.
+
+	--control-h-lg x 1.5, so the tile is still on the 4px grid and still tied to
+	the control scale: 48. It grows past that for a ligature, which is two or
+	three characters wide and would otherwise be cropped by its own frame.
+*/
+.char-info__hero {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
+	width: 100%;
+	min-width: 0;
+	padding-bottom: var(--sp-2);
+}
+
+.char-info__sample {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	min-width: calc(var(--control-h-lg) * 1.5);
+	height: calc(var(--control-h-lg) * 1.5);
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-size: var(--fs-3xl);
+	line-height: 1;
+}
+
+.char-info__identity {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+/*
+	Both lines truncate rather than wrap. A character name runs to forty-odd
+	characters - LATIN SMALL LETTER O WITH DIAERESIS - and wrapping it makes the
+	hero three lines tall on some characters and one on others, so the card
+	changes height as you step through the range. The hero carries a tooltip
+	with the whole of both.
+*/
+.char-info__name,
+.char-info__points {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.char-info__name {
+	font-size: var(--fs-md);
+	color: var(--text-primary);
+}
+
+.char-info__points {
 	font-family: var(--font-mono);
-	padding: 4px 8px;
-	height: var(--control-h-lg);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+/*
+	A copy row: the value, and the button that takes it.
+
+	`user-select: all` so one click selects the whole value - people who reach
+	for the mouse rather than the button still get it in one go, instead of
+	dragging across a string with no word breaks in it.
+*/
+.char-info__value {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	width: 100%;
+	min-width: 0;
+	height: var(--row-h);
+}
+
+.char-info__text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	user-select: all;
+}
+
+/*
+	Resting, not hidden. Revealing it on hover would be quieter and would also
+	mean the panel's only action is invisible until you happen to point at the
+	right row.
+*/
+.char-info__copy {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0;
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	color: var(--icon-default);
+	cursor: pointer;
+}
+
+.char-info__value:hover .char-info__copy {
+	color: var(--icon-strong);
+}
+
+/* Every state stated: resets.css `button:hover` also sets a colour. */
+.char-info__copy:hover,
+.char-info__copy:focus,
+.char-info__copy:active {
+	background-color: var(--bg-hover);
+	border-color: var(--border-subtle);
+	color: var(--icon-strong);
+}
+
+.char-info__rule {
+	grid-column: 1 / -1;
+	/* The card is justify-items: left, so an empty span is 0 wide. */
+	width: 100%;
+	height: 1px;
+	margin: var(--sp-3) 0;
+	background-color: var(--border-subtle);
+}
+
+/*
+	Range name and range span on one line, where they used to be two cards and
+	four rows. The name gives way first, because `Basic…` beside a complete
+	`U+0020-007F` is more use than a complete name beside a cut-off span.
+*/
+.char-info__range {
+	display: flex;
+	align-items: baseline;
+	gap: var(--sp-2);
+	width: 100%;
+	min-width: 0;
+}
+
+.char-info__range-name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+}
+
+.char-info__range-span {
+	flex-shrink: 0;
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+}
+
+/*
+	Links as chips, not as their own URLs.
+
+	The old pair printed the full address of each - one of them with an inline
+	`width: 420px` inside a 265px card. A URL is not a label: it is the thing
+	the label stands for, and it belongs in the tooltip.
+*/
+.char-info__links {
+	grid-column: 1 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
+	margin-top: var(--sp-3);
+}
+
+.char-info__link {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sp-2);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-secondary);
+	font-size: var(--fs-xs);
+	text-decoration: none;
+}
+
+/* resets.css underlines every `a:hover`, which on a chip underlines the chip. */
+.char-info__link:hover,
+.char-info__link:focus {
+	background-color: var(--bg-hover);
+	border-color: var(--border-strong);
+	color: var(--text-primary);
+	text-decoration: none;
+}
+
+.char-info__link svg {
+	flex-shrink: 0;
 }
 
 .rowPad {

@@ -338,6 +338,9 @@ lineIcons.closeLivePreview = `<path d="M19 13.5V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3
 
 lineIcons.livePreview = lineIcons.openLivePreview;
 
+/* The same box-with-an-arrow-out: it is the external-link glyph. */
+lineIcons.externalLink = lineIcons.openLivePreview;
+
 // --------------------------------------------------------------
 // Sidebar panel sections
 // --------------------------------------------------------------
