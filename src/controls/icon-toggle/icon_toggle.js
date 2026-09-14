@@ -24,6 +24,30 @@ import { attachTooltip } from '../tooltip/tooltip.js';
  */
 
 /**
+ * A plain icon button: the square, the tooltip, and nothing else.
+ *
+ * @param {Object} args
+ * @param {String} args.icon - a key in lineIcons, or ready SVG markup
+ * @param {String} args.name - the tooltip’s first line, and the accessible name
+ * @param {String =} args.body - the rest of the tooltip
+ * @param {String =} args.className - an extra class for the call site
+ * @param {Function} args.onClick - handler
+ * @returns {HTMLElement}
+ */
+export function makeIconButton({ icon, name, body = '', className = '', onClick = () => {} }) {
+	const button = makeElement({
+		tag: 'button',
+		className: `icon-button${className ? ' ' + className : ''}`,
+		innerHTML: icon.startsWith('<') ? icon : makeLineIcon(icon, 16),
+		attributes: { type: 'button' },
+		onClick: onClick,
+	});
+
+	attachTooltip(button, { name: name, body: body });
+	return button;
+}
+
+/**
  * @param {Object} args
  * @param {String} args.icon - a key in lineIcons, or ready SVG markup
  * @param {String} args.name - the tooltip's first line, and the accessible name
@@ -45,7 +69,7 @@ export function makeIconToggle({
 }) {
 	const button = makeElement({
 		tag: 'button',
-		className: `icon-toggle${className ? ' ' + className : ''}`,
+		className: `icon-button icon-toggle${className ? ' ' + className : ''}`,
 		innerHTML: icon.startsWith('<') ? icon : makeLineIcon(icon, 16),
 		attributes: {
 			type: 'button',

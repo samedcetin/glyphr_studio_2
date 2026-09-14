@@ -946,6 +946,83 @@ nav .item-chooser__wrapper--compact {
 	width: 240px;
 }
 
+/*
+	KERN GROUP CHIPS
+	The characters on one side of a kern group. Used by the Kern group card,
+	the kern group chooser and the cross-project import dialog.
+
+	A wrapped flex row, because the wrapper was a bare span and the chips were
+	inline boxes touching edge to edge: measured, eight of them filled exactly
+	160px in a 160px span. A row of twenty read as a wall.
+*/
+.kern-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
+	width: 100%;
+	min-width: 0;
+}
+
+/*
+	--control-h-sm, so a character is legible. It was 20px at --fs-2xs, which
+	is small for the one thing on this row you actually have to read - and
+	this is the page where which characters are in which group is the work.
+*/
+.kern-chips__chip {
+	display: grid;
+	place-items: center;
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-2);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	line-height: 1;
+}
+
+/*
+	A character the project does not have. The whole pair it belongs to does
+	nothing, so this is worth seeing across the row rather than reading one
+	tooltip at a time: it used to be the text turned red and two of the four
+	corners squared off, which at 10px was a smudge.
+
+	Dashed, because the character is in the group and not in the font - a
+	slot with nothing in it, which is what a dashed border has always meant.
+*/
+.kern-chips__chip--missing {
+	background-color: transparent;
+	border-style: dashed;
+	border-color: var(--text-danger);
+	color: var(--text-danger);
+}
+
+/* How many are on this side, beside the label that names it. */
+.kern-chips__count {
+	margin-left: var(--sp-2);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+/* Heading and its edit button on one row. See .handle-group__head. */
+.kern-group__head {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	width: 100%;
+}
+
+.kern-group__head h3 {
+	margin: 0;
+}
+
 .kern-group-chooser__list {
 	width: 100%;
 	margin-bottom: 20px;

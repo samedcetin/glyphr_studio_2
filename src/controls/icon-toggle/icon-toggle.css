@@ -9,7 +9,11 @@
 	corner every button in the app takes.
 */
 
-.icon-toggle {
+/*
+	The square itself, which a plain action button wants too. A toggle is
+	this plus the states below; makeIconButton stops here.
+*/
+.icon-button {
 	display: grid;
 	place-items: center;
 	flex-shrink: 0;
@@ -25,9 +29,9 @@
 }
 
 /* Every state stated: resets.css `button:hover` also sets a colour. */
-.icon-toggle:hover,
-.icon-toggle:focus,
-.icon-toggle:active {
+.icon-button:hover,
+.icon-button:focus,
+.icon-button:active {
 	background-color: var(--bg-hover);
 	border-color: var(--border-subtle);
 	color: var(--icon-strong);
@@ -49,9 +53,9 @@
 	reconciled for it, so the toggle is disabled - and it has to still look
 	like the state it is in, pressed or not, while saying it cannot be reached.
 */
-.icon-toggle[disabled],
-.icon-toggle[disabled]:hover,
-.icon-toggle[disabled]:focus {
+.icon-button[disabled],
+.icon-button[disabled]:hover,
+.icon-button[disabled]:focus {
 	background-color: transparent;
 	border-color: transparent;
 	color: var(--icon-disabled, var(--text-disabled));
