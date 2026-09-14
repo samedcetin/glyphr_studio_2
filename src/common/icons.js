@@ -369,6 +369,9 @@ lineIcons.alert = `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.3
 
 lineIcons.panel_view = `<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>`;
 
+/* The same eye, wherever something is a show-or-hide rather than a panel. */
+lineIcons.eye = lineIcons.panel_view;
+
 // --------------------------------------------------------------
 // Commands
 // --------------------------------------------------------------

@@ -98,12 +98,21 @@ function selectPoints(points) {
 // --------------------------------------------------------------
 
 /**
- * The one-line answer at the top.
+ * The verdict box: the answer, and the two controls that belong to it.
  *
- * @returns {HTMLElement}
+ * The controls used to sit outside it - the thresholds button beside the
+ * box, and the canvas switch as a labelled checkbox two rows down. Both
+ * are about this one report, so both live in it. Inside, they are also
+ * concentric with it: --r-md in a --r-xl box at --sp-4 of padding, so
+ * 16 - 8 = 8 and the two corners share a centre.
+ *
+ * @returns {Object} - { element, body }
  */
 function makeVerdict() {
-	return makeElement({ className: 'quality-checks__verdict' });
+	const box = makeElement({ className: 'quality-checks__verdict' });
+	const body = makeElement({ className: 'quality-checks__verdict-body' });
+	box.appendChild(body);
+	return { element: box, body: body };
 }
 
 /**
@@ -117,8 +126,9 @@ function fillVerdict(element, results) {
 	if (!results) return;
 
 	const clean = results.total === 0;
-	element.classList.toggle('quality-checks__verdict--clean', clean);
-	element.classList.toggle('quality-checks__verdict--problems', !clean);
+	const box = element.parentElement;
+	box?.classList.toggle('quality-checks__verdict--clean', clean);
+	box?.classList.toggle('quality-checks__verdict--problems', !clean);
 
 	element.innerHTML = makeLineIcon(clean ? 'panel_qualityChecks' : 'alert', 16);
 
@@ -159,13 +169,16 @@ function makeRow(check) {
 	name.textContent = check.name;
 	row.appendChild(name);
 
+
+	/*
+		Flush right, with no chevron after it. A chevron would be an
+		affordance the hover and the pointer already give, and it would push
+		the number twenty pixels in from the edge it should be measured
+		against - four numbers in a column only read as a column if they
+		share an edge.
+	*/
 	const count = makeElement({ className: 'quality-checks__count' });
 	row.appendChild(count);
-
-	/* Rotated in CSS: the back chevron is the only one in the set. */
-	row.appendChild(
-		makeElement({ className: 'quality-checks__go', innerHTML: makeLineIcon('back', 14) })
-	);
 
 	let points = [];
 	row.addEventListener('click', () => selectPoints(points));
@@ -244,29 +257,40 @@ function makeThresholds() {
 /**
  * The canvas toggle: one view option for all four checks.
  *
+ * An eye, not a checkbox. What it does is show and hide something, which
+ * is the one thing an eye means in every editor - and it is the same
+ * control the Layers panel already uses for exactly this. The checkbox it
+ * replaces was also the largest control in the panel, at a size the
+ * browser picks and this app never otherwise ships.
+ *
  * @returns {HTMLElement}
  */
 function makeCanvasToggle() {
 	const editor = getCurrentProjectEditor();
-	const row = makeElement({ tag: 'label', className: 'quality-checks__canvas' });
 
-	const checkbox = makeElement({
-		tag: 'input',
-		attributes: { type: 'checkbox' },
+	const button = makeElement({
+		tag: 'button',
+		className: 'quality-checks__action',
+		innerHTML: makeLineIcon('eye', 16),
+		attributes: {
+			type: 'button',
+			'aria-pressed': `${getShowQualityChecksOnCanvas()}`,
+		},
 	});
-	if (getShowQualityChecksOnCanvas()) checkbox.setAttribute('checked', '');
 
-	checkbox.addEventListener('change', (event) => {
-		setShowQualityChecksOnCanvas(/** @type {HTMLInputElement} */ (event.target).checked);
+	button.addEventListener('click', () => {
+		const on = !getShowQualityChecksOnCanvas();
+		setShowQualityChecksOnCanvas(on);
+		button.setAttribute('aria-pressed', `${on}`);
 		editor.publish('editCanvasView', editor.view);
 	});
 
-	const text = makeElement({ tag: 'span' });
-	text.textContent = 'Show on canvas';
+	attachTooltip(button, {
+		name: 'Show on canvas',
+		body: 'Ring every point a check found, in that check\u2019s colour.',
+	});
 
-	row.appendChild(checkbox);
-	row.appendChild(text);
-	return row;
+	return button;
 }
 
 // --------------------------------------------------------------
@@ -309,11 +333,12 @@ export function makePanel_QualityChecks() {
 	const card = makeElement({ className: 'panel__card quality-checks' });
 	panelState = { card: card, rows: {}, verdict: false, note: false };
 
-	// The verdict, with the settings button beside it.
-	const head = makeElement({ className: 'quality-checks__head' });
+	// The verdict, with both of its controls inside it.
 	const verdict = makeVerdict();
-	panelState.verdict = verdict;
-	head.appendChild(verdict);
+	panelState.verdict = verdict.body;
+
+	const actions = makeElement({ className: 'quality-checks__actions' });
+	actions.appendChild(makeCanvasToggle());
 
 	const thresholds = makeThresholds();
 
@@ -324,23 +349,23 @@ export function makePanel_QualityChecks() {
 	*/
 	const settingsButton = makeElement({
 		tag: 'button',
-		className: 'quality-checks__settings',
+		className: 'quality-checks__action',
 		innerHTML: makeLineIcon('settings', 16),
 		attributes: { type: 'button', 'aria-expanded': 'false' },
 		onClick: () => {
 			const open = thresholds.hidden;
 			thresholds.hidden = !open;
 			settingsButton.setAttribute('aria-expanded', `${open}`);
-			settingsButton.classList.toggle('quality-checks__settings--open', open);
 		},
 	});
 	attachTooltip(settingsButton, {
 		name: 'Thresholds',
 		body: 'How close two points have to be before a check counts them.',
 	});
-	head.appendChild(settingsButton);
-	card.appendChild(head);
+	actions.appendChild(settingsButton);
 
+	verdict.element.appendChild(actions);
+	card.appendChild(verdict.element);
 	card.appendChild(thresholds);
 
 	// The four rows.
@@ -357,8 +382,6 @@ export function makePanel_QualityChecks() {
 	note.hidden = true;
 	panelState.note = note;
 	card.appendChild(note);
-
-	card.appendChild(makeCanvasToggle());
 
 	/*
 		The explanation, where it is worth reading. It used to sit above the

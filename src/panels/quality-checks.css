@@ -6,6 +6,13 @@
 	It opts out of the card grid entirely, the way the Anchors list does. The
 	card grid is a label column plus a control column, and none of this is a
 	label beside a control: it is a list of findings.
+
+	CORNERS. Two radii, and they are concentric wherever one box sits inside
+	another. A container is --r-xl (16) with --sp-4 (8) of padding, and what
+	sits in it is --r-md (8): 16 - 8 = 8, so the outer corner and the inner
+	corner share a centre and the gap between them is even all the way round.
+	--r-md is also the radius every input in the app carries, so the controls
+	in here are the same shape as the controls everywhere else.
 */
 
 .quality-checks {
@@ -14,29 +21,32 @@
 	gap: var(--sp-3);
 }
 
-/* The verdict, with the thresholds button pinned to the right of it. */
-.quality-checks__head {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--sp-2);
-	width: 100%;
-	min-width: 0;
-}
+/* --------------------------------------------------------------
+	The verdict, and the two controls inside it
+	------------------------------------------------------------ */
 
 .quality-checks__verdict {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	width: 100%;
+	min-width: 0;
+	padding: var(--sp-4);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+}
+
+.quality-checks__verdict-body {
 	display: flex;
 	align-items: flex-start;
 	gap: var(--sp-3);
 	flex: 1;
 	min-width: 0;
-	padding: var(--sp-3);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
 }
 
-.quality-checks__verdict svg {
+.quality-checks__verdict-body > svg {
 	flex-shrink: 0;
 	/* The icon is 16px in a 19px line: nudged to sit on the headline. */
 	margin-top: 1px;
@@ -47,11 +57,11 @@
 	finding is not an error: an SVG import always has some, and half of them
 	are fine once you look. Red would make a normal state read as a failure.
 */
-.quality-checks__verdict--clean svg {
+.quality-checks__verdict--clean .quality-checks__verdict-body > svg {
 	color: var(--canvas-anchor);
 }
 
-.quality-checks__verdict--problems svg {
+.quality-checks__verdict--problems .quality-checks__verdict-body > svg {
 	color: var(--canvas-check-short-handle);
 }
 
@@ -71,30 +81,47 @@
 	color: var(--text-tertiary);
 }
 
-/* Same square as the copy button in Character info. */
-.quality-checks__settings {
+.quality-checks__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-1);
+	flex-shrink: 0;
+}
+
+/*
+	--control-h-sm at an --sp-4 inset of an --r-xl box: the corner maths at
+	the top of this file. Same square as the Layers panel's row toggles, and
+	the same radius as an input.
+*/
+.quality-checks__action {
 	display: grid;
 	place-items: center;
-	flex-shrink: 0;
-	width: var(--control-h);
-	height: var(--control-h);
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
 	padding: 0;
 	background-color: transparent;
 	border: 1px solid transparent;
-	border-radius: var(--r-sm);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	color: var(--icon-default);
 	cursor: pointer;
 }
 
 /* Every state stated: resets.css `button:hover` also sets a colour. */
-.quality-checks__settings:hover,
-.quality-checks__settings:focus,
-.quality-checks__settings:active,
-.quality-checks__settings--open {
+.quality-checks__action:hover,
+.quality-checks__action:focus,
+.quality-checks__action:active {
 	background-color: var(--bg-hover);
 	border-color: var(--border-subtle);
 	color: var(--icon-strong);
+}
+
+/* On, in both senses: the eye is showing something, the sliders are open. */
+.quality-checks__action[aria-pressed='true'],
+.quality-checks__action[aria-expanded='true'] {
+	background-color: var(--bg-selected);
+	border-color: transparent;
+	color: var(--text-accent);
 }
 
 /* --------------------------------------------------------------
@@ -111,10 +138,13 @@
 	A row is a button whether or not it has anything to select, so the one
 	that found nothing can still say what it checks on hover. When it has
 	nothing it just does not look or behave like a target.
+
+	The count track is last and flush with the row's own right edge, so the
+	four numbers line up on one edge and read as a column.
 */
 .quality-checks__row {
 	display: grid;
-	grid-template-columns: 8px minmax(0, 1fr) max-content 14px;
+	grid-template-columns: 8px minmax(0, 1fr) max-content;
 	align-items: center;
 	gap: var(--sp-3);
 	height: var(--row-h);
@@ -124,7 +154,7 @@
 	width: calc(100% + var(--sp-4));
 	background-color: transparent;
 	border: 1px solid transparent;
-	border-radius: var(--r-sm);
+	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	text-align: left;
 	cursor: default;
@@ -172,9 +202,12 @@
 
 /*
 	Tabular figures so a column of counts lines up on its digits, and so the
-	row does not shift a pixel when 9 becomes 10.
+	row does not shift a pixel when 9 becomes 10. Two characters wide at a
+	minimum, so a single digit still lands on the same edge as a double.
 */
 .quality-checks__count {
+	min-width: 2ch;
+	text-align: right;
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
 	font-variant-numeric: tabular-nums;
@@ -183,21 +216,6 @@
 
 .quality-checks__row--found .quality-checks__count {
 	color: var(--text-primary);
-}
-
-/* The back chevron, turned round: this set has no forward one. */
-.quality-checks__go {
-	display: grid;
-	place-items: center;
-	transform: rotate(180deg);
-	color: var(--icon-default);
-	opacity: 0;
-	transition: opacity var(--dur-fast) var(--ease);
-}
-
-.quality-checks__row--found:hover .quality-checks__go,
-.quality-checks__row--found:focus .quality-checks__go {
-	opacity: 1;
 }
 
 /* --------------------------------------------------------------
@@ -213,13 +231,14 @@
 	display: none;
 }
 
+/* The same box as the verdict, so the same corner and the same inset. */
 .quality-checks__thresholds {
 	display: grid;
 	gap: var(--sp-2);
-	padding: var(--sp-3);
+	padding: var(--sp-4);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 }
 
@@ -229,10 +248,8 @@
 }
 
 /*
-	Label above field, not beside it. At 265px a field wide enough for a
-	number leaves 150px for `Points near other points`, which truncates -
-	and these are the only four places in the panel where the full name
-	has to be readable, because this is where you decide what it means.
+	Label beside field. At 265px the field takes 84 and the longest name -
+	`Points near other points` - needs 123, which is exactly what is left.
 */
 .quality-checks__threshold {
 	display: grid;
@@ -261,21 +278,6 @@
 	font-size: var(--fs-xs);
 	line-height: var(--lh-normal);
 	color: var(--text-tertiary);
-}
-
-.quality-checks__canvas {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-3);
-	min-height: var(--row-h);
-	font-size: var(--fs-sm);
-	color: var(--text-secondary);
-	cursor: pointer;
-}
-
-.quality-checks__canvas input[type='checkbox'] {
-	margin: 0;
-	flex-shrink: 0;
 }
 
 /*
