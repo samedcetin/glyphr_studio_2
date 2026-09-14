@@ -745,7 +745,15 @@ span.spacer {
 	border: 1px solid var(--border-subtle);
 	border-radius: var(--r-3xl);
 	corner-shape: var(--corner-smooth);
-	padding: var(--sp-7);
+	/*
+		--sp-6, not --sp-7. The padding is the distance between this corner and
+		the corner of whatever sits in it, so it is what decides how round that
+		inner corner is allowed to be: at 20 a --r-3xl card leaves 8, which is
+		too tight a corner against one this soft. Closing it a step leaves 12,
+		and the two nest at their own sizes rather than one being squared off to
+		fit the other.
+	*/
+	padding: var(--sp-6);
 	min-width: 0;
 }
 

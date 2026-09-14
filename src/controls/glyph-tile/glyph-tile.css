@@ -259,12 +259,12 @@
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-subtle);
 	/*
-		Concentric with the card it sits in: that card is --r-3xl and insets this
-		grid by --sp-7 of its own padding, so 28 - 20 = 8. It was --r-lg, which
-		is rounder than the corner it nests inside allows - and a tile rounder
-		than its container reads as loose in it rather than fitted to it.
+			Concentric with the card it sits in: that card is --r-3xl and insets this
+		grid by --sp-6 of its own padding, so 28 - 16 = 12. A tile rounder than
+		that reads as loose in its container rather than fitted to it, and one
+		squarer reads as cut to fit.
 	*/
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	position: relative;
 }
