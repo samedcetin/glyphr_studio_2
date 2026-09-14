@@ -7,6 +7,7 @@ import tokenStyle from '../common/tokens.css?inline';
 import { closeEveryTypeOfDialog, makeModalDialog, showToast } from '../controls/dialogs/dialogs';
 import dialogStyle from '../controls/dialogs/dialogs.css?inline';
 import { FontPreview } from '../controls/font-preview/font_preview';
+import { attachTooltip } from '../controls/tooltip/tooltip';
 import { DisplayCanvas } from '../display_canvas/display_canvas';
 import { TextBlockOptions } from '../display_canvas/text_block_options';
 import { makeToolButtonSVG } from '../edit_canvas/tools/tools';
@@ -241,26 +242,30 @@ function redrawPopOutWindow() {
 	// log(`redrawPopOutWindow`, 'end');
 }
 
-export function makeLivePreviewPopOutCard(showBlurb = false) {
-	const card = makeElement({
-		tag: 'div',
-		className: 'panel__card full-width',
-		innerHTML: '<h3>Pop out live preview</h3>',
-	});
-	if (showBlurb) {
-		card.innerHTML += `
-			A full-screen live preview can be launched in a new window,
-			useful for sentence or paragraph scale previews of your typeface.`;
-	}
+/**
+ * The way out to a full-screen preview: one button.
+ *
+ * It was a heading, two lines of prose and a button - 146px of a panel, on
+ * every glyph, to say what the button already says. The sentence is the
+ * button's tooltip now, where it costs nothing until it is wanted.
+ *
+ * @returns {HTMLElement}
+ */
+export function makeLivePreviewPopOutCard() {
+	const card = makeElement({ tag: 'div', className: 'panel__card full-width' });
+
 	const button = makeElement({
 		tag: 'fancy-button',
 		attributes: { secondary: '' },
-		content: 'Launch live preview in a new window',
+		content: 'Pop out live preview',
 	});
-	// button.innerHTML += makeToolButtonSVG({ name: 'openLivePreview' });
 	button.addEventListener('click', openPopOutWindow);
-	card.appendChild(button);
+	attachTooltip(button, {
+		name: 'Pop out live preview',
+		body: 'A full-screen preview in a new window, for sentence and paragraph scale.',
+	});
 
+	card.appendChild(button);
 	return card;
 }
 

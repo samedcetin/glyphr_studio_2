@@ -766,7 +766,12 @@
 	Actions
 */
 :root {
-	--action-icon-size: 30px;
+	/*
+		--control-h, like every other icon button in a sidebar. It was 30, which
+		is not on the scale and is two pixels taller than the buttons it sits
+		beside in the Guides rows below it.
+	*/
+	--action-icon-size: var(--control-h);
 }
 
 /*
@@ -1347,78 +1352,105 @@ nav .item-chooser__wrapper--compact {
 	color: var(--text-tertiary);
 }
 
-/*
-	History Panel
-*/
+/* --------------------------------------------------------------
+	HISTORY PANEL
+
+	One change, one row. Each entry used to be two separate children of a card
+	that collapses to one column in a sidebar this narrow, so a change took
+	two rows and its time ran along under the text instead of lining up in a
+	column with the others.
+	------------------------------------------------------------ */
+
 .history-list {
 	width: 100%;
 	display: grid;
-	grid-template-columns: 1fr max-content;
-	gap: 10px;
-	padding-right: 10px;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--sp-1);
 }
 
-.history-list h3,
-.history-list hr {
-	grid-column: 1 / -1;
+.history-list h3 {
+	margin-top: var(--sp-3);
 }
 
-.history-list hr {
-	width: 100%;
-	border-width: 0px 0px 1px 0px;
-	border-color: var(--gray-l80);
-	/* margin-top: 20px; */
-}
-
-.history-list__date {
-	width: 100%;
-	text-align: right;
-	color: var(--enabled-restingLight-lightText);
-}
-
-.history-list__initial-entry {
-	opacity: 0.6;
+.history-list > :first-child + h3 {
+	margin-top: 0;
 }
 
 .history-list__button-row {
-	grid-column: 1 / -1;
 	display: flex;
-	gap: 8px;
+	gap: var(--sp-4);
 	align-items: center;
+	margin-bottom: var(--sp-2);
 }
 
 .history-list__button-row button {
 	flex: 0 0 auto;
 }
 
-.history-list__title--clickable {
+/*
+	What happened on the left, when on the right - and the bleed the other
+	row lists in this app use, so the hover reaches the panel gutter without
+	moving the text.
+*/
+.history-list__row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) max-content;
+	align-items: baseline;
+	gap: var(--sp-3);
+	min-height: var(--row-h);
+	padding: var(--sp-1) var(--sp-2);
+	margin: 0 calc(var(--sp-2) * -1);
+	width: calc(100% + var(--sp-4));
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+}
+
+.history-list__row--clickable {
 	cursor: pointer;
-	border-radius: 3px;
-	padding: 1px 4px;
-	margin: -1px -4px;
-	transition: background-color 0.1s ease;
 }
 
-.history-list__title--clickable:hover {
-	background-color: var(--gray-l90);
-	color: var(--royal-l25);
+.history-list__row--clickable:hover {
+	background-color: var(--bg-hover);
 }
 
-.history-list__title--current {
-	font-weight: 600;
+.history-list__title {
+	min-width: 0;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
 }
 
+.history-list__row--current .history-list__title {
+	color: var(--text-primary);
+	font-weight: var(--fw-medium);
+}
+
+/* Tabular, so a column of times lines up on its digits. */
+.history-list__date {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+/*
+	Where you are. It was --royal-l85 on --royal-l25 - two fixed values from
+	the old ramp, which did not follow the theme.
+*/
 .history-list__current-tag {
-	display: inline-block;
-	margin-left: 6px;
-	padding: 0 5px;
-	font-size: 10px;
-	font-weight: 400;
-	border-radius: 3px;
-	background-color: var(--royal-l85);
-	color: var(--royal-l25);
-	vertical-align: middle;
+	padding: 0 var(--sp-2);
+	background-color: var(--bg-selected);
+	border-radius: var(--r-pill);
+	font-size: var(--fs-2xs);
+	color: var(--text-accent);
+	white-space: nowrap;
 }
+
+/* The far end of the queue, still reachable, visibly further away. */
+.history-list__initial-entry .history-list__title {
+	color: var(--text-tertiary);
+}
+
 
 /*
 		Content Pages
@@ -1431,6 +1463,33 @@ nav .item-chooser__wrapper--compact {
 	max-width: 260px;
 	min-width: 260px;
 	resize: vertical;
+}
+
+/* --------------------------------------------------------------
+	CONTEXT CHARACTERS PANEL
+	Same shape as the guides options below: a name, and the control for it
+	against the right edge. Each of these was two children of a card that
+	collapses to one column, so the label appeared and its control appeared
+	on the line under it, a panel width away from the thing it named.
+	------------------------------------------------------------ */
+
+.context-card__option {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) max-content;
+	align-items: center;
+	gap: var(--sp-3);
+	width: 100%;
+	min-height: var(--row-h);
+}
+
+.context-card__option label {
+	padding-top: 0;
+}
+
+.context-card input.context-card__input {
+	grid-column: 1 / -1;
+	width: 100%;
 }
 
 /* --------------------------------------------------------------
@@ -1452,9 +1511,9 @@ nav .item-chooser__wrapper--compact {
 	justify-content: space-between;
 	gap: var(--sp-3);
 	width: 100%;
-	margin-top: var(--sp-5);
 }
 
+.guides-card__group-head h3,
 .guides-card__group-head h4 {
 	margin: 0;
 }

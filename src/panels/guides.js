@@ -18,25 +18,6 @@ import { refreshPanel } from './panels.js';
 // --------------------------------------------------------------
 
 /**
- * A group heading with the switch that turns the whole group on.
- *
- * The switch used to be emitted before its own heading, so the card read
- * `[ ] Key metrics guides [ ]` down a single column and which box belonged
- * to which heading was a guess. Same shape as the handle groups in the
- * Properties panel: eyebrow left, control right, one row.
- *
- * @param {String} title
- * @param {HTMLElement} control
- * @returns {HTMLElement}
- */
-function makeGroupHead(title, control) {
-	const head = makeElement({ className: 'guides-card__group-head' });
-	head.appendChild(makeElement({ tag: 'h4', content: title }));
-	head.appendChild(control);
-	return head;
-}
-
-/**
  * One setting: what it is on the left, the control for it on the right.
  *
  * @param {String} title
@@ -50,16 +31,65 @@ function makeOptionRow(title, control) {
 	return row;
 }
 
-export function makePanel_Guides() {
-	let viewOptionsCard = makeElement({
-		className: 'panel__card guides-card__view-options',
-		innerHTML: '<h3>View options</h3>',
-	});
-	const guides = getCurrentProject().settings.app.guides;
-	const showSystem = guides.systemShowGuides;
-	const showCustom = guides.customShowGuides;
+/**
+ * A group of guides: what it is called, the switch that shows the lot, and
+ * the two settings that apply to all of them.
+ *
+ * Each group used to be named twice - once in a "View options" card holding
+ * its switch and its settings, and again two hundred pixels down as the
+ * heading of the card listing its members. One name, one place.
+ *
+ * @param {String} title
+ * @param {String} prefix - `system` or `custom`
+ * @param {Object} guides - settings.app.guides
+ * @returns {HTMLElement} - the card to fill with the group’s members
+ */
+function makeGuideGroupCard(title, prefix, guides) {
+	const card = makeElement({ className: `panel__card guides-card__${prefix}` });
 
-	viewOptionsCard.appendChild(
+	const head = makeElement({ className: 'guides-card__group-head' });
+	head.appendChild(makeElement({ tag: 'h3', content: title }));
+	head.appendChild(
+		makeDirectToggle(guides, `${prefix}ShowGuides`, () => getCurrentProjectEditor().navigate(), {
+			icon: 'eye',
+			name: `Show ${title.toLowerCase()}`,
+		})
+	);
+	card.appendChild(head);
+
+	if (!guides[`${prefix}ShowGuides`]) return card;
+
+	addAsChildren(card, [
+		makeOptionRow(
+			'Transparency',
+			makeFancySlider(guides[`${prefix}Transparency`], (newValue) => {
+				guides[`${prefix}Transparency`] = newValue;
+				getCurrentProjectEditor().editCanvas.redraw(`guides ${prefix} transparency`);
+			})
+		),
+		makeOptionRow(
+			'Show labels',
+			makeDirectToggle(guides, `${prefix}ShowLabels`, refreshGuideChange, {
+				icon: 'keyboard',
+				name: 'Show labels',
+				body: 'Name each guide where it meets the edge of the canvas.',
+			})
+		),
+	]);
+
+	return card;
+}
+
+export function makePanel_Guides() {
+	const guides = getCurrentProject().settings.app.guides;
+
+	/*
+		One row, so it does not need a card or a heading over it. It was a
+		"View options" card whose entire contents were this line and the two
+		group switches - and the section header already says Guides.
+	*/
+	const topCard = makeElement({ className: 'panel__card guides-card__view-options' });
+	topCard.appendChild(
 		makeOptionRow(
 			'Draw guides over shapes',
 			makeDirectToggle(guides, 'drawGuidesOnTop', refreshGuideChange, {
@@ -70,60 +100,13 @@ export function makePanel_Guides() {
 		)
 	);
 
-	const systemShowGuidesToggle = makeDirectToggle(guides, 'systemShowGuides', () =>
-		getCurrentProjectEditor().navigate()
-	, { icon: 'eye', name: 'Show key metrics guides' });
-	viewOptionsCard.appendChild(makeGroupHead('Key metrics guides', systemShowGuidesToggle));
+	const systemCard = makeGuideGroupCard('Key metrics guides', 'system', guides);
+	if (guides.systemShowGuides) fillSystemGuides(systemCard);
 
-	if (showSystem) {
-		addAsChildren(viewOptionsCard, [
-			makeOptionRow(
-				'Transparency',
-				makeFancySlider(guides.systemTransparency, (newValue) => {
-					guides.systemTransparency = newValue;
-					getCurrentProjectEditor().editCanvas.redraw('guides system transparency');
-				})
-			),
-			makeOptionRow(
-				'Show labels',
-				makeDirectToggle(guides, 'systemShowLabels', refreshGuideChange, {
-					icon: 'keyboard',
-					name: 'Show labels',
-					body: 'Name each guide where it meets the edge of the canvas.',
-				})
-			),
-		]);
-	}
+	const customCard = makeGuideGroupCard('Custom guides', 'custom', guides);
+	fillCustomGuides(customCard, guides);
 
-	const customShowGuidesToggle = makeDirectToggle(guides, 'customShowGuides', () =>
-		getCurrentProjectEditor().navigate()
-	, { icon: 'eye', name: 'Show custom guides' });
-	viewOptionsCard.appendChild(makeGroupHead('Custom guides', customShowGuidesToggle));
-
-	if (showCustom) {
-		addAsChildren(viewOptionsCard, [
-			makeOptionRow(
-				'Transparency',
-				makeFancySlider(guides.customTransparency, (newValue) => {
-					guides.customTransparency = newValue;
-					getCurrentProjectEditor().editCanvas.redraw('guides custom transparency');
-				})
-			),
-			makeOptionRow(
-				'Show labels',
-				makeDirectToggle(guides, 'customShowLabels', refreshGuideChange, {
-					icon: 'keyboard',
-					name: 'Show labels',
-					body: 'Name each guide where it meets the edge of the canvas.',
-				})
-			),
-		]);
-	}
-
-	let result = [viewOptionsCard];
-	if (showSystem) result.push(makeSystemGuidesCard());
-	if (showCustom) result.push(makeCustomGuidesCard());
-	return result;
+	return [topCard, systemCard, customCard];
 }
 
 function refreshGuideChange() {
@@ -131,15 +114,14 @@ function refreshGuideChange() {
 	getCurrentProjectEditor().editCanvas.redraw('guides refresh');
 }
 
-export function makeSystemGuidesCard() {
-	let systemCard = makeElement({
-		className: 'panel__card guides-card__system',
-		innerHTML: '<h3>Key metrics guides</h3>',
-	});
-
+/**
+ * The seven lines the font's key metrics draw.
+ * @param {HTMLElement} card
+ */
+function fillSystemGuides(card) {
 	const metrics = getCurrentProject().settings.font;
 	const advanceWidth = getCurrentProjectEditor().selectedItem.advanceWidth;
-	addAsChildren(systemCard, [
+	addAsChildren(card, [
 		makeSystemGuideRow('ascent', 'Ascent', metrics.ascent, guideColorMedium),
 		makeSystemGuideRow('capHeight', 'Cap height', metrics.capHeight, guideColorLight),
 		makeSystemGuideRow('xHeight', 'X height', metrics.xHeight, guideColorLight),
@@ -148,7 +130,6 @@ export function makeSystemGuidesCard() {
 		makeSystemGuideRow('leftSide', 'Left side', '0', guideColorDark),
 		makeSystemGuideRow('rightSide', 'Right side', advanceWidth, guideColorDark),
 	]);
-	return systemCard;
 }
 
 /**
@@ -217,19 +198,15 @@ function makeSystemGuideRow(property, title, value = '0000', color) {
 	return row;
 }
 
-function makeCustomGuidesCard() {
-	let customCard = makeElement({
-		className: 'panel__card guides-card__custom',
-		innerHTML: '<h3>Custom guides</h3>',
-	});
-
-	const guides = getCurrentProject().settings.app.guides.custom;
-
-	if (guides.length) {
-		guides.forEach((guide, number) => {
-			customCard.appendChild(makeCustomGuideRow(guide, number));
-		});
-
+/**
+ * The guides you have added yourself, and the way to add another.
+ *
+ * @param {HTMLElement} card
+ * @param {Object} guides - settings.app.guides
+ */
+function fillCustomGuides(card, guides) {
+	if (guides.customShowGuides) {
+		guides.custom.forEach((guide, number) => card.appendChild(makeCustomGuideRow(guide, number)));
 	}
 
 	const addGuideButton = makeElement({
@@ -238,14 +215,12 @@ function makeCustomGuidesCard() {
 		innerHTML: 'Add a custom guide',
 	});
 	addGuideButton.addEventListener('click', () => {
-		getCurrentProject().settings.app.guides.custom.push(
-			new Guide({ visible: true, color: makeRandomSaturatedColor() })
-		);
+		guides.custom.push(new Guide({ visible: true, color: makeRandomSaturatedColor() }));
+		guides.customShowGuides = true;
 		refreshGuideChange();
 	});
 
-	customCard.appendChild(addGuideButton);
-	return customCard;
+	card.appendChild(addGuideButton);
 }
 
 /**
