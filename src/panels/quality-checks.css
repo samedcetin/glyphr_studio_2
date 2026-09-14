@@ -7,12 +7,20 @@
 	card grid is a label column plus a control column, and none of this is a
 	label beside a control: it is a list of findings.
 
-	CORNERS. Two radii, and they are concentric wherever one box sits inside
-	another. A container is --r-xl (16) with --sp-4 (8) of padding, and what
-	sits in it is --r-md (8): 16 - 8 = 8, so the outer corner and the inner
-	corner share a centre and the gap between them is even all the way round.
-	--r-md is also the radius every input in the app carries, so the controls
-	in here are the same shape as the controls everywhere else.
+	ONE LEFT EDGE. Everything in the panel starts at the card edge, which is
+	where every label and every input in every other panel starts. Nothing
+	in here is inset from it and nothing bleeds past it.
+
+	That is why the verdict and the thresholds are not sunken boxes. A box
+	insets its contents by its own padding, so the verdict text began nine
+	pixels to the right of the sidebar column; and the rows bled four pixels
+	to the left of it so their hover would reach the gutter. Three left edges
+	in one panel - 1332, 1336, 1345 - where the app has one. Hairlines
+	separate the three parts instead, and they cost no horizontal space.
+
+	CORNERS. --r-md, which is the radius every input in the app carries, so
+	the buttons and the rows in here are the same shape as the controls
+	everywhere else.
 */
 
 .quality-checks {
@@ -31,11 +39,8 @@
 	gap: var(--sp-3);
 	width: 100%;
 	min-width: 0;
-	padding: var(--sp-4);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xl);
-	corner-shape: var(--corner-smooth);
+	padding-bottom: var(--sp-3);
+	border-bottom: 1px solid var(--border-subtle);
 }
 
 .quality-checks__verdict-body {
@@ -89,9 +94,9 @@
 }
 
 /*
-	--control-h-sm at an --sp-4 inset of an --r-xl box: the corner maths at
-	the top of this file. Same square as the Layers panel's row toggles, and
-	the same radius as an input.
+	The same square as the Layers panel's row toggles, and the same radius
+	as an input. Their right edge is the panel's, so they end where the
+	counts below them end.
 */
 .quality-checks__action {
 	display: grid;
@@ -140,7 +145,8 @@
 	nothing it just does not look or behave like a target.
 
 	The count track is last and flush with the row's own right edge, so the
-	four numbers line up on one edge and read as a column.
+	four numbers line up on one edge and read as a column - the same edge
+	the thresholds fields and the two buttons above end on.
 */
 .quality-checks__row {
 	display: grid;
@@ -148,12 +154,21 @@
 	align-items: center;
 	gap: var(--sp-3);
 	height: var(--row-h);
-	padding: 0 var(--sp-2);
-	/* Bleeds four pixels either side so the hover reaches the panel gutter. */
-	margin: 0 calc(var(--sp-2) * -1);
-	width: calc(100% + var(--sp-4));
+	/*
+		No padding and no negative margin. The row used to bleed four pixels
+		either side so its hover would reach the gutter, which put its dot
+		four pixels left of the column everything else in the sidebar sits on.
+		The hover is a little tighter now and the panel has one left edge.
+	*/
+	padding: 0;
+	width: 100%;
 	background-color: transparent;
-	border: 1px solid transparent;
+	/*
+		No border, not even a transparent one. A 1px border insets the content
+		box by a pixel, which is enough to put the dot off the column the
+		verdict icon above it sits on. The hover background carries the state.
+	*/
+	border: none;
 	border-radius: var(--r-md);
 	corner-shape: var(--corner-smooth);
 	text-align: left;
@@ -167,7 +182,6 @@
 .quality-checks__row--found:hover,
 .quality-checks__row--found:focus {
 	background-color: var(--bg-hover);
-	border-color: var(--border-subtle);
 	color: var(--text-primary);
 }
 
@@ -231,15 +245,16 @@
 	display: none;
 }
 
-/* The same box as the verdict, so the same corner and the same inset. */
+/*
+	A band between two hairlines rather than a box, for the same reason as
+	the verdict: its labels have to start where the row names start.
+*/
 .quality-checks__thresholds {
 	display: grid;
 	gap: var(--sp-2);
-	padding: var(--sp-4);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-xl);
-	corner-shape: var(--corner-smooth);
+	width: 100%;
+	padding-bottom: var(--sp-3);
+	border-bottom: 1px solid var(--border-subtle);
 }
 
 .quality-checks__thresholds-intro {
