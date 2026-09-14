@@ -1,5 +1,6 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
+import { makeIconToggle } from '../controls/icon-toggle/icon_toggle.js';
 import { round, transformOrigins } from '../common/functions.js';
 import { makeTransformOriginIcon } from '../common/graphics.js';
 import { makeLineIcon } from '../common/icons.js';
@@ -292,34 +293,39 @@ export function addAttributeListener(element, listenFor = [], callback) {
 	// observer.observe(element, { attributes: true, subtree: true });
 }
 
-export function makeSingleCheckbox(item, property, thisTopic) {
-	// log(`makeSingleCheckbox`, 'start');
-	// log(`item.type: ${item.type}`);
-	// log(`property: ${property}`);
-	// log(`thisTopic: ${thisTopic}`);
+/**
+ * A boolean property of the selected item, as a toggle rather than a tick.
+ *
+ * It replaces makeSingleCheckbox, which produced a browser checkbox: the
+ * largest control on any panel that had one, at a size the app never picks
+ * itself, in a shape nothing else here has. A checkbox is right for a list
+ * of things you tick; these are states of the thing you are editing, and a
+ * switch is what says that.
+ *
+ * Every row here has its label beside it, so the icon supports the label
+ * rather than carrying it: it is the picture of what turning this on does
+ * where the set has one - a flip, a link - and a plain tick where it does
+ * not. The control is the same either way, which is the part that matters.
+ *
+ * @param {Object} item - the object holding the property
+ * @param {String} property - the boolean to read and write
+ * @param {String} thisTopic - what to publish, and what to listen to
+ * @param {Object} args - { icon, name, body }
+ * @returns {HTMLElement}
+ */
+export function makePropertyToggle(item, property, thisTopic, args = {}) {
+	const icon = args.icon || 'check';
+	const name = args.name || property;
 
-	let newCheckbox = makeElement({
-		tag: 'input',
-		attributes: {
-			type: 'checkbox',
+	const toggle = makeIconToggle({
+		icon: icon,
+		name: name,
+		body: args.body || '',
+		pressed: !!item[property],
+		onToggle: (on) => {
+			item[property] = on;
+			if (thisTopic) getCurrentProjectEditor().publish(thisTopic, item);
 		},
-	});
-	// @ts-expect-error 'property does exist'
-	if (item[property]) newCheckbox.checked = true;
-
-	newCheckbox.addEventListener('change', (event) => {
-		// log(`makeSingleCheckbox CHANGE event listener`, 'start');
-		// @ts-expect-error 'property does exist'
-		let newValue = event.target.checked;
-		item[property] = !!newValue;
-		if (thisTopic) {
-			getCurrentProjectEditor().publish(thisTopic, item);
-			if (property === 'use') {
-				toggleHandleInputs(item.type, !!newValue);
-				item.parent.reconcileHandle(item.type);
-			}
-		}
-		// log(`makeSingleCheckbox CHANGE event listener`, 'end');
 	});
 
 	if (thisTopic) {
@@ -327,33 +333,12 @@ export function makeSingleCheckbox(item, property, thisTopic) {
 			topic: thisTopic,
 			subscriberID: `attributesPanel.${thisTopic}.${property}`,
 			callback: (changedItem) => {
-				// log(`makeSingleCheckbox SUBSCRIBER callback`, 'start');
-				if (changedItem[property]) {
-					// @ts-expect-error 'property does exist'
-					newCheckbox.checked = true;
-					if (property === 'use') toggleHandleInputs(item.type, true);
-				} else {
-					// @ts-expect-error 'property does exist'
-					newCheckbox.checked = false;
-					if (property === 'use') toggleHandleInputs(item.type, false);
-				}
-				// log(`makeSingleCheckbox SUBSCRIBER callback`, 'end');
+				toggle.setAttribute('aria-pressed', `${!!changedItem[property]}`);
 			},
 		});
 	}
 
-	// log(`makeSingleCheckbox`, 'end');
-	return newCheckbox;
-}
-
-function toggleHandleInputs(handle, show) {
-	// log(`toggleHandleInputs`, 'start');
-	// log(`handle: ${handle}`);
-	// log(`show: ${show}`);
-	let group = document.getElementById(`${handle}InputGroup`);
-	// log(group);
-	if (group) group.style.display = show ? 'grid' : 'none';
-	// log(`toggleHandleInputs`, 'end');
+	return toggle;
 }
 
 /**

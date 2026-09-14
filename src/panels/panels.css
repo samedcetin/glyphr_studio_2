@@ -506,6 +506,32 @@
 	flex-shrink: 0;
 }
 
+/*
+	A group heading with the switch that owns the group, on one row.
+
+	The same shape as the Quality checks verdict: the eyebrow on the left, the
+	control that applies to everything under it on the right, both ending on
+	the card edge. The h4 already spans both columns, so this only has to put
+	the two on a line and push them apart.
+*/
+.handle-group {
+	grid-column: 1 / -1;
+	width: 100%;
+}
+
+.handle-group__head {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	width: 100%;
+}
+
+.handle-group__head h4 {
+	margin: 0;
+}
+
 .rowPad {
 	display: block;
 	height: 10px;

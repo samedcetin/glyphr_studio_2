@@ -1,6 +1,7 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
+import { makeIconToggle } from '../controls/icon-toggle/icon_toggle.js';
 import { attachTooltip } from '../controls/tooltip/tooltip.js';
 import {
 	getQualityCheckResults,
@@ -268,29 +269,16 @@ function makeThresholds() {
 function makeCanvasToggle() {
 	const editor = getCurrentProjectEditor();
 
-	const button = makeElement({
-		tag: 'button',
-		className: 'quality-checks__action',
-		innerHTML: makeLineIcon('eye', 16),
-		attributes: {
-			type: 'button',
-			'aria-pressed': `${getShowQualityChecksOnCanvas()}`,
-		},
-	});
-
-	button.addEventListener('click', () => {
-		const on = !getShowQualityChecksOnCanvas();
-		setShowQualityChecksOnCanvas(on);
-		button.setAttribute('aria-pressed', `${on}`);
-		editor.publish('editCanvasView', editor.view);
-	});
-
-	attachTooltip(button, {
+	return makeIconToggle({
+		icon: 'eye',
 		name: 'Show on canvas',
 		body: 'Ring every point a check found, in that check\u2019s colour.',
+		pressed: getShowQualityChecksOnCanvas(),
+		onToggle: (on) => {
+			setShowQualityChecksOnCanvas(on);
+			editor.publish('editCanvasView', editor.view);
+		},
 	});
-
-	return button;
 }
 
 // --------------------------------------------------------------
@@ -349,7 +337,7 @@ export function makePanel_QualityChecks() {
 	*/
 	const settingsButton = makeElement({
 		tag: 'button',
-		className: 'quality-checks__action',
+		className: 'icon-toggle',
 		innerHTML: makeLineIcon('settings', 16),
 		attributes: { type: 'button', 'aria-expanded': 'false' },
 		onClick: () => {

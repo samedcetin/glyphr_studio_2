@@ -249,6 +249,12 @@ lineIcons.pathAddPoint = `<path d="M3.5 18.5C4.5 10 10 4.5 18.5 3.5"/><path d="M
 
 lineIcons.pathRemovePoint = `<path d="M3.5 18.5C4.5 10 10 4.5 18.5 3.5"/><path d="M13.5 18.5h7"/>`;
 
+/*
+	A control handle: the arm off an anchor, with the round grip on its end.
+	The same round anchor pathEdit uses, so the two read as one idea.
+*/
+lineIcons.handle = `<circle cx="5" cy="19" r="2.5"/><path d="M6.8 17.2L15 9"/><circle cx="17.5" cy="6.5" r="2.5"/>`;
+
 /* A selection frame and the corner you pull. */
 lineIcons.pathResize = squirclePath(3, 3, 18, 18, 4) + `<path d="M10 17h4a3 3 0 0 0 3-3v-4"/>`;
 

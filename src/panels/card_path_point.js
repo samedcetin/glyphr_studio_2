@@ -1,7 +1,8 @@
 import { getCurrentProjectEditor } from '../app/main.js';
 import { accentColors } from '../common/colors.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
-import { makeInputs_position, makeSingleCheckbox, makeSingleLabel, rowPad } from './cards.js';
+import { makeIconToggle } from '../controls/icon-toggle/icon_toggle.js';
+import { makeInputs_position, makeSingleLabel, rowPad } from './cards.js';
 
 // --------------------------------------------------------------
 // Path Point Attributes Card
@@ -66,9 +67,16 @@ export function makeCard_pathPointAttributes(selectedPoint) {
 		},
 	});
 
-	let h1Group = makeElement({ id: `h1Group`, className: 'span-all-columns' });
+	/*
+		.handle-group, not .span-all-columns. The latter only spans; it does not
+		stretch, and the card is justify-items: left - so the group with its
+		coordinates hidden shrank to the width of its own heading and took the
+		toggle on that heading with it, two hundred pixels short of the edge the
+		other one ended on.
+	*/
+	let h1Group = makeElement({ id: `h1Group`, className: 'handle-group' });
 	addAsChildren(h1Group, makeHandleGroup('h1', selectedPoint));
-	let h2Group = makeElement({ id: `h2Group`, className: 'span-all-columns' });
+	let h2Group = makeElement({ id: `h2Group`, className: 'handle-group' });
 	addAsChildren(h2Group, makeHandleGroup('h2', selectedPoint));
 
 	// Put it all together
@@ -86,15 +94,44 @@ export function makeCard_pathPointAttributes(selectedPoint) {
 	return pathPointCard;
 }
 
+/**
+ * One handle: a heading with its switch, and the coordinates under it.
+ *
+ * The switch was a browser checkbox with a caption beside it - the largest
+ * control in the panel, in a shape nothing else here has, and the wrong
+ * idea besides: this is a state of the point, not an item you tick in a
+ * list. It is an icon toggle now, the same control the Layers panel uses
+ * for a layer and the Quality checks panel for its overlay.
+ *
+ * It sits on the heading row rather than on one of its own, which is where
+ * the panel already puts a control that belongs to a whole group - see the
+ * Quality checks verdict. That also buys back the row the caption's own
+ * line was spending on saying what the heading already says.
+ *
+ * @param {String} h - 'h1' or 'h2'
+ * @param {Object} selectedPoint - the PathPoint being edited
+ * @returns {Array<HTMLElement>}
+ */
 function makeHandleGroup(h = 'h1', selectedPoint) {
-	// Checkbox and title
-	let useHandleLabel = makeElement({ className: 'pre-checkbox' });
-	let useHandleCheckbox = makeSingleCheckbox(selectedPoint[h], 'use', `currentPathPoint.${h}`);
-	if (selectedPoint.type !== 'corner') useHandleCheckbox.setAttribute('disabled', '');
-	addAsChildren(useHandleLabel, [
-		useHandleCheckbox,
-		makeElement({ tag: 'h4', content: `Use handle ${h.charAt(1)}` }),
-	]);
+	const head = makeElement({ className: 'handle-group__head' });
+	head.appendChild(makeElement({ tag: `h4`, content: `Handle ${h.charAt(1)}` }));
+
+	const useToggle = makeIconToggle({
+		icon: 'handle',
+		name: `Use handle ${h.charAt(1)}`,
+		body: 'Off, the curve leaves this side of the point straight.',
+		pressed: !!selectedPoint[h].use,
+		/* Only a corner point owns its handles: the other two types have
+			theirs reconciled for them, so the switch is not yours to throw. */
+		disabled: selectedPoint.type !== 'corner',
+		className: 'handle-group__toggle',
+		onToggle: (on) => {
+			selectedPoint[h].use = on;
+			selectedPoint.reconcileHandle(h);
+			getCurrentProjectEditor().publish(`currentPathPoint.${h}`, selectedPoint[h]);
+		},
+	});
+	head.appendChild(useToggle);
 
 	// Inputs
 	let handleInputGroup = makeElement({
@@ -120,7 +157,7 @@ function makeHandleGroup(h = 'h1', selectedPoint) {
 	});
 
 	// Put it all together
-	return [useHandleLabel, handleInputGroup];
+	return [head, handleInputGroup];
 }
 
 function updateHandleGroup(h = 'h1', changedItem) {
@@ -135,20 +172,28 @@ function updateHandleGroup(h = 'h1', changedItem) {
 
 	let handleGroup = document.getElementById(`${h}Group`);
 	if (handleGroup) {
-		let handleUse = changedPathPoint[h].use;
-		// log(`handleUse: ${handleUse}`);
-		let handleCheckbox = handleGroup.querySelector('input');
-		handleCheckbox.checked = false;
-		handleCheckbox.removeAttribute('disabled');
+		const handleUse = changedPathPoint[h].use;
+		const toggle = handleGroup.querySelector('.handle-group__toggle');
+		toggle.setAttribute('aria-pressed', `${!!handleUse}`);
+		/*
+			Disabled follows the point type, not the handle. The old code only
+			ever disabled it inside the `if (handleUse)` branch, so a symmetric
+			point with the handle already off offered a switch that could not
+			do anything.
+		*/
+		if (changedPathPoint.type === 'corner') toggle.removeAttribute('disabled');
+		else toggle.setAttribute('disabled', 'disabled');
+
 		if (handleUse) {
-			handleCheckbox.checked = true;
-			if (changedPathPoint.type !== 'corner') handleCheckbox.setAttribute('disabled', '');
 			let handleInputGroup = document.getElementById(`${h}InputGroup`);
 			handleInputGroup.style.display = 'grid';
 			let handleInputGroupX = handleInputGroup.querySelectorAll('input-number')[0];
 			handleInputGroupX.setAttribute('value', changedPathPoint[h].x);
 			let handleInputGroupY = handleInputGroup.querySelectorAll('input-number')[1];
 			handleInputGroupY.setAttribute('value', changedPathPoint[h].y);
+		} else {
+			const group = document.getElementById(`${h}InputGroup`);
+			if (group) group.style.display = 'none';
 		}
 	}
 	// log(`updateHandleGroup`, 'end');

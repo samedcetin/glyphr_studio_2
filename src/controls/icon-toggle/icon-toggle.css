@@ -1,0 +1,65 @@
+/*
+	ICON TOGGLE
+	-----------
+	The look that was in the Quality checks panel's own stylesheet, moved here
+	so the three surfaces that want it cannot drift apart. See icon_toggle.js
+	for why it exists at all.
+
+	--control-h, the height of every control in a sidebar row, and --r-lg, the
+	corner every button in the app takes.
+*/
+
+.icon-toggle {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: var(--control-h);
+	height: var(--control-h);
+	padding: 0;
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	color: var(--icon-default);
+	cursor: pointer;
+}
+
+/* Every state stated: resets.css `button:hover` also sets a colour. */
+.icon-toggle:hover,
+.icon-toggle:focus,
+.icon-toggle:active {
+	background-color: var(--bg-hover);
+	border-color: var(--border-subtle);
+	color: var(--icon-strong);
+}
+
+/*
+	On. Both spellings, because a disclosure says the same thing with
+	aria-expanded and should look the same saying it.
+*/
+.icon-toggle[aria-pressed='true'],
+.icon-toggle[aria-expanded='true'] {
+	background-color: var(--bg-selected);
+	border-color: transparent;
+	color: var(--text-accent);
+}
+
+/*
+	Off limits rather than off. A point that is not a corner has its handles
+	reconciled for it, so the toggle is disabled - and it has to still look
+	like the state it is in, pressed or not, while saying it cannot be reached.
+*/
+.icon-toggle[disabled],
+.icon-toggle[disabled]:hover,
+.icon-toggle[disabled]:focus {
+	background-color: transparent;
+	border-color: transparent;
+	color: var(--icon-disabled, var(--text-disabled));
+	cursor: default;
+}
+
+.icon-toggle[disabled][aria-pressed='true'],
+.icon-toggle[disabled][aria-pressed='true']:hover {
+	background-color: var(--bg-active);
+	color: var(--text-disabled);
+}
