@@ -70,7 +70,15 @@
 	border-color: var(--accent);
 }
 
-/* Number input */
+/*
+	Number input.
+
+	Left, not right. Right-aligning digits is for a column of them you read
+	down to compare magnitudes, and this app has no such column: its fields
+	sit side by side in pairs, so right alignment only pushed the value away
+	from the prefix that names it and left a gap in the middle of the field.
+	Reading starts at the left edge, and now so does the value.
+*/
 .numberInput {
 	background-color: transparent;
 	color: var(--text-primary);
@@ -79,7 +87,7 @@
 	min-width: 0;
 	height: 100%;
 	padding: 0 var(--sp-3);
-	text-align: right;
+	text-align: left;
 	font-family: var(--font-mono);
 	font-variant-numeric: tabular-nums;
 	font-size: var(--fs-sm);
