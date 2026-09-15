@@ -253,8 +253,15 @@
 	text-align: center;
 }
 
+/*
+	Centred here rather than inherited from .hub-empty: resets.css carries
+	`* { text-align: left }`, and a declaration that matches an element beats
+	an inherited value whatever the specificity either side of it - so the
+	box centred and the sentence in it did not.
+*/
 .hub-empty__message {
 	max-width: 48ch;
+	text-align: center;
 	font-size: var(--fs-md);
 	line-height: var(--lh-normal);
 	color: var(--text-secondary);
