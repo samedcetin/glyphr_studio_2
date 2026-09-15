@@ -73,13 +73,18 @@
 	min-height: 0;
 }
 
+/*
+	The group name. --text-secondary because a 10px caps label owes 4.5:1 and
+	--text-tertiary paid 3.79:1 here - see .studio-eyebrow in
+	pages/content-pages.css for why there is no step between the two.
+*/
 .command-palette__group {
 	padding: var(--sp-4) var(--sp-4) var(--sp-2) var(--sp-4);
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
 	letter-spacing: var(--tracking-caps);
 	text-transform: uppercase;
-	color: var(--text-tertiary);
+	color: var(--text-secondary);
 }
 
 .command-palette__group:first-child {
@@ -263,13 +268,14 @@
 	align-content: start;
 }
 
+/* Secondary, with .command-palette__group above and for the same reason. */
 .shortcut-sheet__group h3 {
 	margin-bottom: var(--sp-3);
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
 	letter-spacing: var(--tracking-caps);
 	text-transform: uppercase;
-	color: var(--text-tertiary);
+	color: var(--text-secondary);
 }
 
 .shortcut-sheet__row {

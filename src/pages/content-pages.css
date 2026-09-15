@@ -1963,13 +1963,18 @@ code {
 	text-align: right;
 }
 
+/*
+	No colour here on purpose. This block turns a column header into the app's
+	caps label, and it used to drop the colour to --text-tertiary on the way -
+	3.79:1, under what a label owes (see .studio-eyebrow). .list__column-header
+	above already states --text-secondary, so not restating it is the fix.
+*/
 .settings .range-table__list-area .list__column-header {
 	font-style: normal;
 	font-size: var(--fs-xs);
 	font-weight: var(--fw-medium);
 	letter-spacing: var(--tracking-caps);
 	text-transform: uppercase;
-	color: var(--text-tertiary);
 	padding: var(--sp-5) 0 var(--sp-3) 0;
 	top: 0;
 	margin-bottom: 0;

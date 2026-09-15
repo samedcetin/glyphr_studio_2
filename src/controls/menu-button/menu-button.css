@@ -318,14 +318,18 @@
 	gap: var(--sp-2);
 }
 
-/* The group name, in the app's eyebrow. */
+/*
+	The group name, in the app's eyebrow - including its colour: see
+	.studio-eyebrow in pages/content-pages.css, where --text-tertiary turned
+	out to be under the 4.5:1 a label this size owes.
+*/
 .quick-actions__content h3 {
 	margin: 0;
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
 	letter-spacing: var(--tracking-caps);
 	text-transform: uppercase;
-	color: var(--text-tertiary);
+	color: var(--text-secondary);
 }
 
 /* A heading that follows a grid needs air above it; the first does not. */

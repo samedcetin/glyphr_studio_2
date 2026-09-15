@@ -1,44 +1,24 @@
 /*
 	NAVIGATION
 	----------
-	These three buttons (page / item / panel) used to be 48px slabs of saturated
-	blue stacked to ~90px of vertical chrome before any content. They are now
-	compact surface-colored selects that read the same way a breadcrumb does in
-	any modern design tool, and they theme correctly instead of inverting into
-	bright blocks on a dark UI.
+	The dropdowns the breadcrumb opens, and the two ids it hangs them from.
+
+	WHAT THIS FILE USED TO HOLD. Three buttons - page, item, panel - drawn as
+	48px slabs of saturated blue, stacked to about 90px of vertical chrome
+	before any content, inverting into bright blocks on a dark UI. They became
+	compact neutral selects, and then the breadcrumb replaced them outright
+	everywhere except the content pages, which kept one as a page selector: a
+	dropdown that named the page you were already on. Those pages came off it
+	one at a time, and Help was the last.
+
+	So .nav-button is gone with makeNavButton and makeNavButtonContent in
+	navigator.js, and with them .nav-button__super-title, .nav-button__title
+	and the #nav-button-l3 rules for a panel selector that the sidebar's own
+	section list had already replaced. Nothing built any of that markup.
+
+	The ids below are live - the breadcrumb reuses them so the dropdown
+	machinery keeps working - and the classes are not. Grep before reviving.
 */
-
-.nav-button,
-.nav-button:hover,
-.nav-button:active,
-.nav-button:focus {
-	display: grid;
-	grid-template-rows: min-content 1fr;
-	gap: 0px;
-	height: 38px;
-	min-height: 38px;
-	margin: 0;
-	padding: var(--sp-2) var(--sp-4);
-	text-align: left;
-	justify-content: start;
-	align-content: center;
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	border: 1px solid var(--border-default);
-	background-color: var(--bg-surface);
-	box-shadow: none;
-	transition: var(--transition-color);
-}
-
-.nav-button:hover {
-	background-color: var(--bg-hover);
-	border-color: var(--border-strong);
-}
-
-.nav-button:active {
-	position: static;
-	background-color: var(--bg-active);
-}
 
 /*
 	Nothing here for the breadcrumb's buttons.
@@ -60,47 +40,6 @@
 #nav-button-l2:focus {
 	max-width: 360px;
 	overflow: hidden;
-}
-
-/* The panel selector is the one that changes what you are looking at, so it
-	carries the accent while the other two stay neutral. */
-#nav-button-l3,
-#nav-button-l3:active,
-#nav-button-l3:hover,
-#nav-button-l3:focus {
-	background-color: var(--bg-selected);
-	border-color: var(--border-selected);
-}
-
-#nav-button-l3:hover {
-	background-color: var(--bg-selected);
-	border-color: var(--accent);
-}
-
-.nav-button__super-title {
-	color: var(--text-tertiary);
-	font-size: var(--fs-2xs);
-	line-height: 1.2;
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
-	font-weight: var(--fw-medium);
-}
-
-.nav-button__title {
-	color: var(--text-primary);
-	font-size: var(--fs-sm);
-	font-weight: var(--fw-medium);
-	line-height: 1.35;
-	height: auto;
-	letter-spacing: var(--tracking-tight);
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	max-width: 340px;
-	overflow: hidden;
-}
-
-#nav-button-l3 .nav-button__title {
-	color: var(--text-accent);
 }
 
 /* --------------------------------------------------------------

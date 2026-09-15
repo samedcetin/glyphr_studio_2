@@ -422,29 +422,16 @@ function makeItemLabel(editor, itemName) {
 	return `<span class="breadcrumb__glyph">${chars}</span><span class="breadcrumb__codepoint">${codePoint}</span>`;
 }
 
-export function makeNavButton(properties = {}) {
-	let title = properties.title || 't i t l e';
-	let superTitle = properties.superTitle || 's u p e r t i t l e';
-	let level = properties.level || '';
+/*
+	makeNavButton and makeNavButtonContent were here.
 
-	return `
-		<button
-			data-nav-type="${superTitle}"
-			class="nav-button"
-			id="nav-button${level ? `-${level}` : ''}"
-			title="${title}"
-		>
-			${makeNavButtonContent(title, superTitle)}
-		</button>
-	`;
-}
-
-export function makeNavButtonContent(title, superTitle) {
-	return `
-		<span class="nav-button__super-title">${superTitle}</span>
-		<span class="nav-button__title" title="${title}">${title}</span>
-	`;
-}
+	They built the two-line slab - a caps super-title over a title - that the
+	breadcrumb above replaced. The content pages outlived it by using one as a
+	page selector: a dropdown whose whole job was naming the page you were
+	already on. They came off it one at a time and Help was the last, which
+	left both functions exported and imported by nothing. The CSS went with
+	them; see the head of nav.css.
+*/
 
 export function toggleNavDropdown(parentElement) {
 	closeAllNavMenus();
