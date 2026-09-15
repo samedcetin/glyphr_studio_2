@@ -956,44 +956,62 @@ function makeProjectSearch({ wide = false } = {}) {
 }
 
 /**
- * Sort order. A native select, taking the app's field treatment.
+ * What the sort control offers.
+ *
+ * "Last edited", not "last opened". The timestamp is written by the auto-saver
+ * on a history step; nothing in the app records when a project was opened, and
+ * the line on every card under this control already says "Edited N ago".
+ */
+const SORT_OPTIONS = [
+	{ id: 'recent', label: 'Last edited' },
+	{ id: 'name', label: 'Name' },
+];
+
+/**
+ * Sort order, on the app's own dropdown.
+ *
+ * option-chooser rather than a native select: the platform control draws its
+ * own list, in its own shape, with its own type - which is the one popover on
+ * the page that is not ours. This is the control the range choosers and the
+ * PANOSE fields use, so the list that opens here is the list that opens
+ * everywhere else.
+ *
  * @returns {Element}
  */
 function makeSortSelect() {
 	const wrapper = makeElement({ tag: 'div', className: 'hub__sort' });
-	wrapper.appendChild(
-		makeElement({
-			tag: 'label',
-			className: 'hub__sort-label',
-			content: 'Sort',
-			attributes: { for: 'hub__sort-select' },
-		})
-	);
+	wrapper.appendChild(makeElement({ tag: 'span', className: 'hub__sort-label', content: 'Sort' }));
 
-	const select = makeElement({
-		tag: 'select',
-		id: 'hub__sort-select',
-		className: 'studio-select hub__sort-select',
-		/*
-			"Last edited", not "last opened". The timestamp is written by the
-			auto-saver on a history step; nothing in the app records when a
-			project was opened, and the line on every card under this select
-			already says "Edited N ago".
-		*/
-		innerHTML: `
-			<option value="recent">Last edited</option>
-			<option value="name">Name</option>
-		`,
-	});
-	select.value = hubSort;
+	const current = SORT_OPTIONS.find((option) => option.id === hubSort) || SORT_OPTIONS[0];
 
-	select.addEventListener('change', (event) => {
-		// @ts-expect-error 'property does exist'
-		hubSort = event.target.value;
-		refreshProjectGrid();
+	const chooser = makeElement({
+		tag: 'option-chooser',
+		className: 'hub__sort-chooser',
+		attributes: {
+			'selected-id': current.id,
+			'selected-name': current.label,
+			'aria-label': 'Sort projects',
+		},
 	});
 
-	wrapper.appendChild(select);
+	SORT_OPTIONS.forEach((option) => {
+		const row = makeElement({
+			tag: 'option',
+			innerHTML: option.label,
+			/*
+				The id is stated rather than derived from the label, so the
+				sort keys stay 'recent' and 'name' if the wording changes.
+			*/
+			attributes: { 'selection-id': option.id },
+		});
+		row.addEventListener('click', () => {
+			hubSort = option.id;
+			refreshProjectGrid();
+		});
+		chooser.appendChild(row);
+	});
+
+	wrapper.appendChild(chooser);
 	return wrapper;
 }
 

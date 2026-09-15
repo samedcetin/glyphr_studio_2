@@ -11,6 +11,17 @@
 	ground, --border-strong, --r-xs, mono at --fs-sm. The point is that it
 	should be indistinguishable from the number field next to it until you
 	click it.
+
+	FOUR THINGS A CALL SITE MAY OVERRIDE, the way panels.css overrides
+	--fancy-button-h: --option-chooser-h, --option-chooser-radius,
+	--option-chooser-bg and --option-chooser-font. Each falls back to what is
+	written here, so every existing call site is untouched.
+
+	They exist because "one surface, one control radius" cuts across this
+	control: on a page whose other controls are 32px at --r-lg, a 28px --r-md
+	chooser is the one thing out of step. The font is the other half of it -
+	the display is mono because what this usually holds is a code point range,
+	and a chooser holding words wants the UI face.
 */
 
 * {
@@ -23,10 +34,10 @@
 	align-items: center;
 	margin: 0;
 	padding: 0;
-	height: var(--control-h);
-	background-color: var(--bg-surface-sunken);
+	height: var(--option-chooser-h, var(--control-h));
+	background-color: var(--option-chooser-bg, var(--bg-surface-sunken));
 	border: 1px solid var(--border-strong);
-	border-radius: var(--r-md);
+	border-radius: var(--option-chooser-radius, var(--r-md));
 	corner-shape: var(--corner-smooth);
 	color: var(--text-primary);
 	transition: var(--transition-color);
@@ -71,7 +82,7 @@
 	background-color: transparent;
 	border: 0;
 	color: inherit;
-	font-family: var(--font-mono);
+	font-family: var(--option-chooser-font, var(--font-mono));
 	font-size: var(--fs-sm);
 	font-variant-numeric: tabular-nums;
 	line-height: 1;

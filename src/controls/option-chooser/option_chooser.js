@@ -246,18 +246,21 @@ export class OptionChooser extends HTMLElement {
 
 	/**
 	 * Handle keypress event
-	 * @param {Object} ev - event
+	 *
+	 * This was a switch on the deprecated numeric key codes 40, 98 and 109 -
+	 * arrow down, numpad 2 and numpad minus - with no Enter and no Space. So
+	 * the control was a tab stop you could reach and could not open: the two
+	 * keys a person actually presses on a focused control did nothing, and the
+	 * two numpad values were whatever the original author's keyboard happened
+	 * to send. The numeric codes do not survive a non-US layout either.
+	 *
+	 * @param {KeyboardEvent} ev - event
 	 */
 	keyboardPress(ev) {
-		switch (ev.keyCode) {
-			case 40: // d-pad down
-			case 98: // ten key down
-			case 109: // ten key -
-				this.showOptions();
-				break;
-
-			default:
-				break;
+		if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'ArrowDown') {
+			/* Space scrolls the page otherwise, and Enter submits a form. */
+			ev.preventDefault();
+			this.showOptions();
 		}
 	}
 }

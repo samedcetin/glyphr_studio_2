@@ -1544,11 +1544,21 @@
 	color: var(--text-secondary);
 }
 
-.hub__sort-select {
-	height: var(--control-h-lg);
-	border-color: var(--border-default);
-	border-radius: var(--r-lg);
-	corner-shape: var(--corner-smooth);
+/*
+	The app's dropdown, set to this page's control system. The four properties
+	it reads are declared with fallbacks in option-chooser.css, so every other
+	chooser in the app is untouched - see the note at the top of that file.
+
+	The UI face because what this holds is words. The control's display is
+	mono by default, which is right for the code point ranges it usually
+	carries and wrong for "Last edited".
+*/
+.hub__sort-chooser {
+	--option-chooser-h: var(--control-h-lg);
+	--option-chooser-radius: var(--r-lg);
+	--option-chooser-bg: var(--bg-surface);
+	--option-chooser-font: var(--font-ui);
+	min-width: 132px;
 }
 
 /* --------------------------------------------------------
