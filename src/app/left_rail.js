@@ -19,6 +19,7 @@
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
 import { showCommandPalette } from '../controls/command-palette/command_palette.js';
+import { attachTooltip } from '../controls/tooltip/tooltip.js';
 import { navigateToPage } from '../project_editor/navigator.js';
 import { PRODUCT_NAME } from './brand.js';
 import { getCurrentProjectEditor } from './main.js';
@@ -110,19 +111,20 @@ export function makeAppPageRail({ tabs = [], current = '', onSelect = () => {}, 
 		makeRailGroup(
 			tabs.map((tab) => {
 				const isCurrent = tab.id === current;
-				return makeElement({
+				const button = makeElement({
 					tag: 'button',
 					className: `left-rail__button${isCurrent ? ' left-rail__button--current' : ''}`,
 					innerHTML: makeLineIcon(tab.icon, 20),
 					attributes: {
 						type: 'button',
-						title: tab.label,
 						'aria-label': tab.label,
 						'aria-current': isCurrent ? 'page' : 'false',
 						'data-rail-tab': tab.id,
 					},
 					onClick: () => onSelect(tab.id),
 				});
+				attachTooltip(button, { name: tab.label });
+				return button;
 			})
 		)
 	);
@@ -168,24 +170,27 @@ function makeRailGroup(children) {
  */
 function makeRailMark(onClick = undefined) {
 	if (!onClick) {
-		return makeElement({
+		const mark = makeElement({
 			className: 'left-rail__mark',
 			innerHTML: makeLineIcon('appMark', 24),
-			title: PRODUCT_NAME,
+			attributes: { 'aria-label': PRODUCT_NAME },
 		});
+		attachTooltip(mark, { name: PRODUCT_NAME });
+		return mark;
 	}
 
-	return makeElement({
+	const button = makeElement({
 		tag: 'button',
 		className: 'left-rail__mark',
 		innerHTML: makeLineIcon('appMark', 24),
 		attributes: {
 			type: 'button',
-			title: `${PRODUCT_NAME}\nBack to your projects.`,
 			'aria-label': `${PRODUCT_NAME} — back to your projects`,
 		},
 		onClick: onClick,
 	});
+	attachTooltip(button, { name: PRODUCT_NAME, body: 'Back to your projects.' });
+	return button;
 }
 
 /**
@@ -202,8 +207,8 @@ function makeRailMenuButton({ name, icon }) {
 	const button = makeMenu(name);
 	button.classList.add('left-rail__button');
 	button.innerHTML = makeLineIcon(icon, 20);
-	button.setAttribute('title', name);
 	button.setAttribute('aria-label', name);
+	attachTooltip(button, { name: name });
 	return button;
 }
 
@@ -231,6 +236,13 @@ function makeRailPageButtons() {
 	/** @type {Array<Element>} */
 	const buttons = [];
 	let pendingDivider = false;
+	/*
+		The group the page belongs to - "Design glyphs", "Refine" - kept as the
+		tooltip's second line. It is the only description the table of contents
+		carries, and in a column of icons where the group break is a 20px
+		hairline it is the one thing the icon cannot say for itself.
+	*/
+	let currentGroup = '';
 
 	Object.keys(toc).forEach((pageName) => {
 		const entry = toc[pageName];
@@ -243,6 +255,7 @@ function makeRailPageButtons() {
 			between Settings and Help, where the tree has no group break.
 		*/
 		if (entry.type === 'subtitle') {
+			currentGroup = pageName;
 			/* Only between groups, never leading or trailing. */
 			if (buttons.length) pendingDivider = true;
 			return;
@@ -262,13 +275,13 @@ function makeRailPageButtons() {
 			innerHTML: makeLineIcon(entry.iconName || 'default', 20),
 			attributes: {
 				type: 'button',
-				title: pageName,
 				'aria-label': pageName,
 				'aria-current': isCurrent ? 'page' : 'false',
 			},
 			onClick: () => navigateToPage(pageName),
 		});
 
+		attachTooltip(button, { name: pageName, body: currentGroup });
 		buttons.push(button);
 	});
 
@@ -278,15 +291,20 @@ function makeRailPageButtons() {
 /** The command palette, at the bottom where a search box would sit. */
 function makeRailSearchButton() {
 	const isMac = navigator.platform.toLowerCase().includes('mac');
-	const label = `Search commands, characters and pages  (${isMac ? '⌘' : 'Ctrl'} K)`;
+	const name = 'Search commands, characters and pages';
+	const shortcut = `Shortcut ${isMac ? '⌘' : 'Ctrl'} K`;
 
-	return makeElement({
+	const button = makeElement({
 		tag: 'button',
 		className: 'left-rail__button',
 		innerHTML: makeLineIcon('search', 20),
-		attributes: { type: 'button', title: label, 'aria-label': label },
+		attributes: { type: 'button', 'aria-label': `${name}. ${shortcut}` },
 		onClick: showCommandPalette,
 	});
+
+	/* The shortcut on the second line, the way the menus write theirs. */
+	attachTooltip(button, { name: name, body: shortcut });
+	return button;
 }
 
 /** The theme switch, reusing the top bar's three-state control. */

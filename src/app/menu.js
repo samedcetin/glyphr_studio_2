@@ -21,6 +21,7 @@ import { makePage_CrossProjectActions } from './cross_project_actions/cross_proj
 import { getCurrentProjectEditor, getGlyphrStudioApp } from './main.js';
 import { cycleThemePreference, getThemePreference, onThemeChange } from '../common/theme.js';
 import { showKeyboardShortcuts } from '../controls/command-palette/command_palette.js';
+import { attachTooltip, setTooltip } from '../controls/tooltip/tooltip.js';
 import { makePage_OpenProject } from './open_project.js';
 
 /**
@@ -51,15 +52,22 @@ export function makeThemeToggle() {
 	*/
 	const button = makeElement({
 		tag: 'button',
-		title: themeLabels[getThemePreference()],
 		innerHTML: themeIcons[getThemePreference()],
 		attributes: { 'aria-label': themeLabels[getThemePreference()] },
 	});
 
+	/*
+		The app's tooltip rather than the browser's, and re-set rather than
+		re-titled: this button relabels itself every time it is pressed, and a
+		`title` written back after attachTooltip removed it would bring the OS
+		tooltip up a second later on top of ours.
+	*/
+	attachTooltip(button, { name: themeLabels[getThemePreference()] });
+
 	const render = () => {
 		const preference = getThemePreference();
 		button.innerHTML = themeIcons[preference];
-		button.setAttribute('title', themeLabels[preference]);
+		setTooltip(button, themeLabels[preference]);
 		button.setAttribute('aria-label', themeLabels[preference]);
 	};
 
@@ -437,10 +445,7 @@ export function makeMenu(menuName) {
 							icon: 'mail',
 							onClick: () => {
 								const app = getGlyphrStudioApp();
-								window.open(
-									`mailto:${SUPPORT_EMAIL}?subject=[${app.version}] Feedback`,
-									'_blank'
-								);
+								window.open(`mailto:${SUPPORT_EMAIL}?subject=[${app.version}] Feedback`, '_blank');
 							},
 						},
 					],
