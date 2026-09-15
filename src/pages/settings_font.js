@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { getCurrentProject } from '../app/main';
 import { addAsChildren, makeElement, textToNode } from '../common/dom';
 import { closeEveryTypeOfDialog, showModalDialog } from '../controls/dialogs/dialogs';
@@ -19,7 +20,7 @@ export function makeSettingsTabContentFont() {
 			<h1>Font metadata</h1>
 			<p>
 				These settings will be exported with any font you save,
-				and will be used around Blue Rain Type while you are making edits.
+				and will be used around ${PRODUCT_NAME} while you are making edits.
 			</p>
 		`,
 	});

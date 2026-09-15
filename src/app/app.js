@@ -553,7 +553,7 @@ export function emailLink(displayText = SUPPORT_EMAIL) {
 export function makeEmailContent() {
 	const con = `Have a feature idea or ran into an issue%3F We'd be happy to help!
 	%0A%0A%0A%0A___________________________________________%0A
-	version %09Blue Rain Type  ${getGlyphrStudioApp().version} %0A
+	version %09${PRODUCT_NAME}  ${getGlyphrStudioApp().version} %0A
 	user agent %09 ${encodeURIComponent(navigator.userAgent)} %0A`;
 
 	// log(con);

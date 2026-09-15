@@ -1,4 +1,4 @@
-import { PRODUCT_URL, SUPPORT_EMAIL } from './brand.js';
+import { PRODUCT_NAME, PRODUCT_URL, SUPPORT_EMAIL } from './brand.js';
 import { insertAfter, makeElement } from '../common/dom.js';
 import {
 	closeEveryTypeOfDialog,
@@ -148,7 +148,7 @@ export function makeMenu(menuName) {
 			is the thing you ship. The descriptions say so once, here.
 		*/
 		if (typeof editor.loadedFileHandle === 'object') {
-			let projectDisplayName = `${editor.project.settings.project.name} - Blue Rain Type Project.gs2`;
+			let projectDisplayName = `${editor.project.settings.project.name} - ${PRODUCT_NAME} Project.gs2`;
 
 			// @ts-expect-error 'property does exist'
 			if (typeof editor?.loadedFileHandle?.name === 'string') {
@@ -424,7 +424,7 @@ export function makeMenu(menuName) {
 						{ name: 'hr' },
 						{ type: 'heading', name: 'About' },
 						{
-							name: 'About Blue Rain Type',
+							name: `About ${PRODUCT_NAME}`,
 							description: 'Version, credits and licence',
 							icon: 'command_info',
 							onClick: () => {

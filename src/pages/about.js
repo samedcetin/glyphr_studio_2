@@ -156,7 +156,8 @@ function specTable(rows) {
 
 /**
  * A row of links out of the app.
- * @param {Array} rows - [label, href, display] triples
+ * @param {Array} rows - [label, href] pairs, or [label, href, display] when the
+ *	link's text is a sentence rather than the address itself
  * @returns {String}
  */
 function linkTable(rows) {
@@ -164,10 +165,31 @@ function linkTable(rows) {
 		.map(
 			([label, href, display]) =>
 				`<dt class="about__spec-label">${label}</dt>
-				<dd class="about__spec-value"><a href="${href}" target="_blank">${display}</a></dd>`
+				<dd class="about__spec-value"><a href="${href}" target="_blank">${
+					display || displayURL(href)
+				}</a></dd>`
 		)
 		.join('');
 	return `<dl class="about__spec">${cells}</dl>`;
+}
+
+/**
+ * A URL as it is written down rather than as it is typed.
+ *
+ * Seven of these rows used to carry the address twice - once as the href, once
+ * as a string spelling out the same thing - so a constant could move and the
+ * label beside it would go on naming where it used to point, silently. A row
+ * only states its own text now when that text is a sentence rather than an
+ * address.
+ *
+ * @param {String} url - the href
+ * @returns {String} - without the scheme, the www, or a trailing slash
+ */
+function displayURL(url) {
+	return String(url)
+		.replace(/^https?:\/\//, '')
+		.replace(/^www\./, '')
+		.replace(/\/$/, '');
 }
 
 // --------------------------------------------------------------
@@ -285,8 +307,8 @@ function makeContactInfo() {
 				people.
 			</p>` +
 				linkTable([
-					['Site', PRODUCT_URL, 'bluerain.studio'],
-					['Source', PRODUCT_SOURCE_URL, 'github.com/samedcetin/glyphr_studio_2'],
+					['Site', PRODUCT_URL],
+					['Source', PRODUCT_SOURCE_URL],
 					['Issues', PRODUCT_ISSUES_URL, 'Report a bug or ask for a feature'],
 				]) +
 				`<dl class="about__spec">
@@ -307,9 +329,9 @@ function makeContactInfo() {
 				should not go to them.
 			</p>` +
 				linkTable([
-					['Help', UPSTREAM_HELP, 'glyphrstudio.com/help'],
-					['Site', UPSTREAM_URL, 'glyphrstudio.com'],
-					['Source', UPSTREAM_SOURCE_URL, 'github.com/glyphr-studio'],
+					['Help', UPSTREAM_HELP],
+					['Site', UPSTREAM_URL],
+					['Source', UPSTREAM_SOURCE_URL],
 				])
 		)
 	);
@@ -341,8 +363,8 @@ function makeLicenseInfo() {
 				freeness stay intact.
 			</p>` +
 				linkTable([
-					['Site', PRODUCT_URL, 'bluerain.studio'],
-					['Source', PRODUCT_SOURCE_URL, 'github.com/samedcetin/glyphr_studio_2'],
+					['Site', PRODUCT_URL],
+					['Source', PRODUCT_SOURCE_URL],
 				]) +
 				`<p class="about__copyright">
 					Copyright © 2010–2026 Matthew LaGrandeur, for ${UPSTREAM_NAME}<br>

@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { updateWindowUnloadEvent } from '../app/app';
 import { getGlyphrStudioApp } from '../app/main';
 import { addAsChildren, makeElement, textToNode } from '../common/dom';
@@ -15,7 +16,7 @@ export function makeSettingsTabContentApp() {
 		id: 'tab-content__app',
 		innerHTML: `
 			<h1>App preferences</h1>
-			<p>These settings adjust how the Blue Rain Type App behaves.</p>
+			<p>These settings adjust how the ${PRODUCT_NAME} App behaves.</p>
 		`,
 	});
 
@@ -28,7 +29,7 @@ export function makeSettingsTabContentApp() {
 		textToNode('<label class="settings__label">Delete all auto-saved backups:</label>'),
 		makeElement({
 			tag: 'info-bubble',
-			content: `Blue Rain Type uses your browser's local storage to keep auto-saved backups. If you use Blue Rain Type from a different browser, or on a different computer, you'll have to go there to restore or delete backups.`,
+			content: `${PRODUCT_NAME} uses your browser's local storage to keep auto-saved backups. If you use ${PRODUCT_NAME} from a different browser, or on a different computer, you'll have to go there to restore or delete backups.`,
 		}),
 		makeElement({
 			tag: 'fancy-button',

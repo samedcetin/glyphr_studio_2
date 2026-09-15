@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { getCurrentProjectEditor } from '../app/main';
 import colorStyle from '../common/colors.css?inline';
 import { addAsChildren, makeElement } from '../common/dom';
@@ -48,7 +49,7 @@ export function openPopOutWindow() {
 	// @ts-expect-error 'property does exist'
 	let popDoc = editor.popOutWindow.document;
 
-	popDoc.head.appendChild(makeElement({ tag: 'title', content: 'Live Preview - Blue Rain Type' }));
+	popDoc.head.appendChild(makeElement({ tag: 'title', content: `Live Preview - ${PRODUCT_NAME}` }));
 
 	/*
 		tokens.css comes first, and the theme attribute comes with it. Every sheet

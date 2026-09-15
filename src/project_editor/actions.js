@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { addCrossProjectCopyShapeOptionControls } from '../app/cross_project_actions/action_copy_shapes.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
@@ -369,8 +370,8 @@ export function clipboardPaste() {
 
 			let toastMessage =
 				len === 1
-					? 'Pasted from the Blue Rain Type clipboard'
-					: `Pasted ${len} shapes<br>from the Blue Rain Type clipboard`;
+					? `Pasted from the ${PRODUCT_NAME} clipboard`
+					: `Pasted ${len} shapes<br>from the ${PRODUCT_NAME} clipboard`;
 
 			if (circularReferenceNote.length) {
 				circularReferenceNote = circularReferenceNote.replaceAll(' ', ', ');
@@ -383,7 +384,7 @@ export function clipboardPaste() {
 			editor.publish('currentItem', editor.selectedItem);
 		} else {
 			showError(
-				`No shapes from the Blue Rain Type clipboard could be pasted to this item. Pasting component instances that would cause circular references is not allowed.`
+				`No shapes from the ${PRODUCT_NAME} clipboard could be pasted to this item. Pasting component instances that would cause circular references is not allowed.`
 			);
 		}
 		return true;
@@ -429,8 +430,8 @@ export function makeActionButtonPasteTooltip(clipBoardPathCount) {
 }
 
 export function makeActionButtonClearClipboardTooltip(clipBoardPathCount) {
-	let re = `Clear Blue Rain Type Clipboard\n`;
-	re += `In order to use your Operating System clipboard for copy / paste, the Blue Rain Type clipboard must be empty.\n\n`;
+	let re = `Clear ${PRODUCT_NAME} Clipboard\n`;
+	re += `In order to use your Operating System clipboard for copy / paste, the ${PRODUCT_NAME} clipboard must be empty.\n\n`;
 	re += `Currently ${clipBoardPathCount} Path${
 		clipBoardPathCount === 1 ? '' : 's'
 	} on the clipboard.`;

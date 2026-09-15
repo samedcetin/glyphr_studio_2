@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { getGlyphrStudioApp } from '../app/main.js';
 import { FontFlux } from 'font-flux-js';
 import { XMLtoJSON } from '@mattlag/xmltojson';
@@ -84,7 +85,7 @@ export async function validateSingleFileInput(fileInput, callback) {
 	} else {
 		return failWithError(`
 			Unrecognized file type (.${validationResult.fileSuffix}).
-			Try loading a Blue Rain Type project file, or a font file.
+			Try loading a ${PRODUCT_NAME} project file, or a font file.
 			[FR1]
 		`);
 	}
@@ -181,7 +182,7 @@ function readerValidateTXTandGS2() {
 		projectData = JSON.parse(file);
 	} catch (e) {
 		return failWithError(`
-			The file could not be read. Expecting a Blue Rain Type project file
+			The file could not be read. Expecting a ${PRODUCT_NAME} project file
 			in JSON format. [PF0]
 			<hr>
 			${e.message}
@@ -192,7 +193,7 @@ function readerValidateTXTandGS2() {
 	if (!projectData.settings && !projectData.projectsettings) {
 		return failWithError(`
 		The provided text file is missing project settings.
-		It may not be a Blue Rain Type project file. [PF1]
+		It may not be a ${PRODUCT_NAME} project file. [PF1]
 		`);
 	}
 
@@ -200,7 +201,7 @@ function readerValidateTXTandGS2() {
 	if (!projectData?.settings?.project?.latestVersion && !projectData?.projectsettings?.versionnum) {
 		return failWithError(`
 			The provided text file has no version information associated with it.
-			It may not be a Blue Rain Type project file. [PF2]
+			It may not be a ${PRODUCT_NAME} project file. [PF2]
 		`);
 	}
 

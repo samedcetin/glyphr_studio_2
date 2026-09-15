@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { countItems } from '../common/functions.js';
@@ -180,7 +181,7 @@ function makeComponentsFirstRunContent() {
 		innerHTML: `
 			<h1>There are no components in your project</h1>
 			<p>
-				Components are a Blue Rain Type feature that lets you re-use a collection of paths
+				Components are a ${PRODUCT_NAME} feature that lets you re-use a collection of paths
 				across many different glyphs. The root is called a 'Component' and these are added
 				by reference to other glyphs, where they are called 'Component Instances'.
 				Updating the root component will also update all component instances.

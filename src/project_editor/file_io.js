@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 
 /**
@@ -81,7 +82,7 @@ async function saveTextFileDirectly(fileSuffix, fileContent, fileHandle = false)
 		suggestedName: fileName,
 		types: [
 			{
-				description: 'Blue Rain Type Project file',
+				description: `${PRODUCT_NAME} Project file`,
 				accept: { 'application/json': ['.gs2'] },
 			},
 		],
@@ -116,7 +117,7 @@ export function makeFileName(suffix, includeDateString = false) {
 	let fileName = project.settings.project.name;
 
 	if (suffix === 'gs2') {
-		fileName += ' - Blue Rain Type Project';
+		fileName += ` - ${PRODUCT_NAME} Project`;
 		if (includeDateString) fileName += ` - ${makeFileDateString()}`;
 	} else if (suffix === 'svg') {
 		fileName += ` - SVG Font - ${makeFileDateString()}`;

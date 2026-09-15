@@ -1583,7 +1583,7 @@ function makeOpenFileView() {
 			<div class="hub-drop__icon">${hubIcons.upload}</div>
 			<div class="hub-drop__title">Drop a font file anywhere on this page</div>
 			<div class="hub-drop__formats">
-				<code>.gs2</code> <code>.txt</code> Blue Rain Type project<br>
+				<code>.gs2</code> <code>.txt</code> ${PRODUCT_NAME} project<br>
 				<code>.otf</code> <code>.ttf</code> <code>.woff</code> OpenType, TrueType, WOFF<br>
 				<code>.svg</code> SVG font
 			</div>

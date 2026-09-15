@@ -43,6 +43,13 @@ export function glyphrStudioOnLoad() {
 		// });
 		// document.head.appendChild(favIcon);
 
+		/*
+			index.html carries the tab name as a literal, because it has to say
+			something before any of this runs. Setting it here makes the constant
+			the source of truth from the first frame the app owns onward.
+		*/
+		document.title = PRODUCT_NAME;
+
 		if (passPreChecks()) {
 			registerCustomComponents();
 			addGlobalEventListeners();

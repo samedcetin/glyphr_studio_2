@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { decToHex } from '../common/character_ids.js';
 import { clone, getFirstID, json, round } from '../common/functions.js';
 import { showToast } from '../controls/dialogs/dialogs.js';
@@ -1153,7 +1154,7 @@ export class ProjectEditor {
 		// log('saveProjectFile - \n'+saveData);
 
 		await saveTextFile('gs2', saveData, saveAsCopy);
-		showToast('Saved Blue Rain Type Project File');
+		showToast(`Saved ${PRODUCT_NAME} Project File`);
 		this.setProjectAsSaved();
 		// log(`ProjectEditor.saveProjectFile`, 'end');
 	}

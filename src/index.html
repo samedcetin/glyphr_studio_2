@@ -43,6 +43,12 @@
 				}
 			})();
 		</script>
+		<!--
+			The tab name before any script runs. main.js sets it from PRODUCT_NAME
+			once the app boots, so this is the first-paint value rather than the
+			source of truth - but it is what someone sees if the app never starts,
+			so keep it in step with the constant.
+		-->
 		<title>Blue Rain Type</title>
 		<meta name="viewport" content="width=device-width" />
 		<link rel="shortcut icon" href="./common/graphics/logo-icon-color.ico" />
@@ -55,12 +61,29 @@
 			window._GlyphrStudioApp = getGlyphrStudioApp();
 		</script>
 		<style>
+			/*
+				The boot splash's own colours, and the one place in the app where a
+				literal is the right answer.
+
+				This ground is a fixed dark gradient - it does not follow the theme,
+				because it is on screen before there is an app to have a theme. So
+				the text on it cannot follow the theme either: reaching for
+				--text-primary here put near-black type on a dark gradient the
+				moment the app was in light mode. Measured, in light mode, before
+				these three lines existed.
+
+				Declared together rather than inlined, so the ground and what sits
+				on it are read and changed as one thing.
+			*/
 			:root {
 				--dark-gradient-background: linear-gradient(
 					135deg,
 					hsl(200, 100%, 12%),
 					hsl(285, 100%, 10%)
 				);
+				--splash-text: hsl(220, 18%, 92%);
+				--splash-text-muted: hsl(220, 12%, 72%);
+				--splash-link: hsl(212, 90%, 72%);
 			}
 
 			body,
@@ -191,24 +214,36 @@
 				}, 5000);
 			</script>
 
-			<div id="errorMessage" style="display: none; width: 400px">
-				<div
-					style="font-size: 80px; padding-bottom: 20px; text-align: center; color: var(--blue-l60)"
-				>
-					¯\_(ツ)_/¯
-				</div>
+			<!--
+				The pre-JavaScript failure screen: shown by the timeout above when
+				the app has not booted after five seconds.
 
-				<div
-					style="margin: auto; font-size: 16px; text-align: center; color: rgba(255, 255, 255, 0.8)"
-				>
-					It looks like Blue Rain Type failed to load. Bummer.
-					<br />
-					Try using the latest version of FireFox, Edge, or Chrome.
+				This is the one place in the app that cannot read PRODUCT_NAME,
+				because by the time it is on screen the modules that would export
+				it have failed. The name here is a literal on purpose, and it is
+				the only one left outside brand.js - keep it in step with
+				PRODUCT_NAME and with the <title> above.
+
+				It can still read the token layer: tokens.css is a stylesheet link,
+				loaded independently of the scripts that failed.
+
+				It used to lead with ¯\_(ツ)_/¯ at 80px and "Bummer." That was the
+				sibling of the table flip that used to head the crash screen, and
+				it went for the same reason - see .app-error in app/app.css.
+			-->
+			<div id="errorMessage" style="display: none; max-width: 420px; margin: auto">
+				<div style="font-size: 15px; line-height: 1.5; color: var(--splash-text-muted)">
+					<strong style="font-size: 20px; font-weight: 600; color: var(--splash-text)"
+						>Blue Rain Type could not start</strong
+					>
 					<br /><br />
-					Or, send us an email:
+					This usually means the browser is too old for it. The current version of
+					Firefox, Edge, Chrome or Safari should work.
+					<br /><br />
+					If you are on one of those already, tell us and we will look at it:
 					<a
-						style="color: white; text-decoration: underline"
-						href="mailto:hello@bluerain.studio&subject=Howdy"
+						style="color: var(--splash-link)"
+						href="mailto:hello@bluerain.studio?subject=Blue%20Rain%20Type%20could%20not%20start"
 						>hello@bluerain.studio</a
 					>
 				</div>

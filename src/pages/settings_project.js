@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '../app/brand.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { decToHex, hexesToChars } from '../common/character_ids.js';
 import { addAsChildren, makeElement, textToNode } from '../common/dom.js';
@@ -31,7 +32,7 @@ export function makeSettingsTabContentProject() {
 		id: 'tab-content__project',
 		innerHTML: `
 			<h1>Project settings</h1>
-			<p>These settings affect how this Blue Rain Type Project behaves.</p>
+			<p>These settings affect how this ${PRODUCT_NAME} Project behaves.</p>
 		`,
 	});
 
@@ -107,7 +108,7 @@ export function makeSettingsTabContentProject() {
 				These are ranges with characters that are saved in your project,
 				but are not part of enabled character ranges.
 				<br>
-				These will be saved to your Blue Rain Type Project File, but
+				These will be saved to your ${PRODUCT_NAME} Project File, but
 				will not be exported to fonts.
 			</p>
 		`),
@@ -508,7 +509,7 @@ function showEditCharacterRangeDialog(range = false) {
 	// log(`\n⮟range⮟`);
 	// log(range);
 	const unicodeHelp = `
-		Start and End inputs are Unicode or number IDs for the characters on each end of the range. Blue Rain Type accepts three flavors of this ID number:<br>
+		Start and End inputs are Unicode or number IDs for the characters on each end of the range. ${PRODUCT_NAME} accepts three flavors of this ID number:<br>
 		<ul>
 			<li><b>Unicode Number</b> - a base-16 number with a U+&nbsp;prefix. For example, <code>U+4E</code> corresponds to Capital&nbsp;N.</li>
 			<li><b>Hexadecimal Number</b> - a base-16 number with a 0x&nbsp;prefix. For example, <code>0x4E</code> corresponds to Capital&nbsp;N.</li>
