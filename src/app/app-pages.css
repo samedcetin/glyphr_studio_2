@@ -1434,18 +1434,34 @@
 	color: var(--text-primary);
 	font-family: inherit;
 	cursor: pointer;
-	transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease),
-		transform var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+	/*
+		The lift decelerates and the colours do not: something that travels
+		should settle where it lands, and a border that takes --dur-base to
+		change colour reads as lag rather than as motion.
+	*/
+	transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-base) var(--ease-out),
+		transform var(--dur-base) var(--ease-out), background-color var(--dur-fast) var(--ease);
 }
 
 /*
+	Hover takes the accent edge, which is the app's own answer for a surface
+	you are pointing at that you can type into or press - .studio-field,
+	.studio-select and the option chooser all do it. It was --border-strong,
+	which on this panel moves the border from 0.15 alpha to 0.26 and is not a
+	signal at that size: the only thing you could actually see change was the
+	arrow.
+
+	Accent on hover costs nothing at rest, so the create card still owns the
+	only accent on the screen until you reach for this one - and only one
+	element is hovered at a time.
+
 	The background is restated on both states: resets.css floods button:hover
 	with --bg-hover and button:active with --bg-active, which across a panel
 	this size reads as disabled rather than as pointed-at.
 */
 .hub__import-action:hover {
 	background-color: var(--bg-surface);
-	border-color: var(--border-strong);
+	border-color: var(--accent);
 	box-shadow: var(--shadow-2);
 	transform: translateY(-1px);
 }
@@ -1497,18 +1513,22 @@
 	color: var(--text-secondary);
 }
 
-/* The arrow moves, which is the whole of the affordance on a surface this plain. */
+/*
+	The arrow. It travels --sp-2 rather than 2px - on a panel this wide a
+	two-pixel move is a twitch - and it takes the accent with the border, so
+	the two halves of the hover say the same thing at the same moment.
+*/
 .hub__import-arrow {
 	display: inline-flex;
 	flex: 0 0 auto;
 	font-size: var(--fs-lg);
 	color: var(--icon-default);
-	transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease);
+	transition: transform var(--dur-base) var(--ease-out), color var(--dur-fast) var(--ease);
 }
 
 .hub__import-action:hover .hub__import-arrow {
-	color: var(--icon-strong);
-	transform: translateX(2px);
+	color: var(--accent);
+	transform: translateX(var(--sp-2));
 }
 
 .hub__start-text {
