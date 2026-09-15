@@ -785,13 +785,29 @@ code {
 	grid-template-rows: min-content minmax(0, 1fr) min-content min-content;
 }
 
-/* The small caps line that names a block without spending a heading on it. */
+/*
+	The small caps line that names a block without spending a heading on it.
+
+	--text-secondary, not --text-tertiary. At tertiary it measured 2.97:1 on a
+	light card and 3.79:1 on a dark one, against the 4.5:1 a 10px label owes -
+	it is a label, not incidental text, so the large-text exception does not
+	reach it. And there is no third step to move to: the quietest grey that
+	clears 4.5:1 on white sits near 46% lightness, four points off
+	--text-secondary's own 42%, so a token between them would be a different
+	name for the same colour.
+
+	The step down in register is carried by the size, the weight and the caps
+	instead, which is what was doing most of the work anyway. It also settles a
+	split the app had already made - .hub-section__label, .context-menu-heading,
+	the sidebar's card headings and .nav-dropdown__subtitle are the same kind of
+	label and are all secondary already.
+*/
 .studio-eyebrow {
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
 	letter-spacing: var(--tracking-caps);
 	text-transform: uppercase;
-	color: var(--text-tertiary);
+	color: var(--text-secondary);
 }
 
 .overview__specimen-stage {
