@@ -777,9 +777,9 @@ function describeTimeAgo(time) {
  * @returns {Element}
  */
 function makeEmptyState(message, actionLabel, onAction) {
-	const wrapper = makeElement({ className: 'hub-empty' });
+	const wrapper = makeElement({ tag: 'div', className: 'hub-empty' });
 	addAsChildren(wrapper, [
-		makeElement({ className: 'hub-empty__message', content: message }),
+		makeElement({ tag: 'p', className: 'hub-empty__message', content: message }),
 		makeElement({
 			tag: 'button',
 			className: 'hub-button hub-button--primary',

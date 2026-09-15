@@ -231,18 +231,30 @@
 	Empty state and forms
 -------------------------------------------------------- */
 
+/*
+	One band across the grid, not one card in it.
+
+	It is a child of the same grid the project cards sit in, so it was taking
+	a single 260px cell: a cramped box with its text broken over three lines,
+	at half the radius of the cards it was standing in for. It spans the row
+	now and takes their shape, and is centred the way an empty state is -
+	which also says it is a statement about the grid rather than the first
+	thing in it.
+*/
 .hub-empty {
+	grid-column: 1 / -1;
 	display: grid;
-	justify-items: start;
+	justify-items: center;
 	gap: var(--sp-6);
-	max-width: 440px;
-	padding: var(--sp-9);
+	padding: var(--sp-10) var(--sp-9);
 	border: 1px dashed var(--border-strong);
-	border-radius: var(--r-lg);
+	border-radius: var(--r-3xl);
 	corner-shape: var(--corner-smooth);
+	text-align: center;
 }
 
 .hub-empty__message {
+	max-width: 48ch;
 	font-size: var(--fs-md);
 	line-height: var(--lh-normal);
 	color: var(--text-secondary);
@@ -630,6 +642,11 @@
 
 /* --------------------------------------------------------
 	Modal body and footer
+
+	No empty state here: the dialog's is .hub-section__empty, one line under a
+	section heading (see makeHubSection). .hub-empty is the page's alone, and
+	spans its grid rather than capping its width, so the override that used to
+	sit in this block went with its last caller.
 -------------------------------------------------------- */
 
 .open-project__page--modal #open-project__body {
@@ -644,15 +661,6 @@
 
 .open-project__page--modal .hub-card__preview {
 	height: 88px;
-}
-
-/*
-	The empty state stretches, the form does not. A font name is a short
-	string, and a 700px field for it reads as though something longer is
-	expected - the panel keeps its 420px cap inside the dialog too.
-*/
-.open-project__page--modal .hub-empty {
-	max-width: 100%;
 }
 
 .open-project__page--modal #open-project__footer {
