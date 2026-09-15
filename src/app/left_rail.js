@@ -85,6 +85,17 @@ export function makeAppPageRail({ tabs = [], current = '', onSelect = () => {}, 
 
 	rail.appendChild(makeRailMark());
 
+	/*
+		A spacer on each side of the destinations, so they sit in the middle of
+		the column rather than stacked under the mark.
+
+		The editor's rail fills its column - twelve buttons and three dividers -
+		and starts at the top because that is where the list starts. The hub has
+		three, and three buttons pinned to the top of a tall empty column read as
+		the top of a list that was cut off.
+	*/
+	rail.appendChild(makeElement({ className: 'left-rail__spacer' }));
+
 	rail.appendChild(
 		makeRailGroup(
 			tabs.map((tab) => {
