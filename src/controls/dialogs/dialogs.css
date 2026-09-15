@@ -1783,6 +1783,8 @@ dialog {
 }
 
 .dialog-search input {
+	flex: 1 1 auto;
+	min-width: 0;
 	width: 100%;
 	height: 100%;
 	padding: 0;
@@ -1991,5 +1993,57 @@ dialog {
 
 .modal-dialog__body .dialog-picker__note {
 	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+}
+
+/*
+	The way out of a search, in the app's language rather than the browser's.
+	The field suppresses the native clear button above; this one appears only
+	when there is something to clear, so the box is plain until you type.
+*/
+.dialog-search__clear {
+	display: grid;
+	place-items: center;
+	flex: 0 0 auto;
+	width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	min-height: 0;
+	padding: 0;
+	/*
+		The field insets by --sp-5 for its text; a target does not need that
+		much, so the button takes most of it back and sits as a 24px box inside
+		a 32px field, 4px off the inner edge.
+	*/
+	margin-right: calc(var(--sp-2) - var(--sp-5));
+	background-color: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--r-pill);
+	box-shadow: none;
+	color: var(--icon-default);
+	font-size: var(--fs-lg);
+	line-height: 1;
+	transition: var(--transition-color);
+}
+
+.dialog-search__clear:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--icon-strong);
+}
+
+.dialog-search__clear:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+/*
+	How many blocks there are, and how many the search left. A filter that says
+	nothing about what it removed leaves you unable to tell a term that
+	narrowed the list from one that nearly emptied it.
+*/
+.modal-dialog__body .dialog-picker__count {
+	grid-row: 3;
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
 	color: var(--text-tertiary);
 }

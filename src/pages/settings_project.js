@@ -14,6 +14,7 @@ import { unicodeBlocksSMP } from '../lib/unicode/unicode_blocks_1_smp.js';
 import { unicodeBlocksSIP } from '../lib/unicode/unicode_blocks_2_sip.js';
 import { unicodeBlocksTIP } from '../lib/unicode/unicode_blocks_3_tip.js';
 import { getUnicodeName } from '../lib/unicode/unicode_names.js';
+import { hideTooltip, showTooltip } from '../controls/tooltip/tooltip.js';
 import { makeDirectCheckbox } from '../panels/cards';
 import { CharacterRange } from '../project_data/character_range.js';
 import { resolveItemLinks } from '../project_editor/cross_item_actions';
@@ -822,7 +823,25 @@ function showUnicodeCharacterRangeDialog() {
 			'aria-label': 'Search Unicode blocks',
 		},
 	});
-	searchField.appendChild(searchInput);
+	/*
+		A way out of a search. The field suppresses the browser's own clear
+		button - it is drawn in the browser's language rather than the app's -
+		and Escape in a dialog closes the dialog, so a typed term could only be
+		undone by selecting it and deleting it.
+	*/
+	const clearSearch = makeElement({
+		tag: 'button',
+		className: 'dialog-search__clear',
+		attributes: { type: 'button', 'aria-label': 'Clear the search' },
+		content: '&times;',
+	});
+	clearSearch.hidden = true;
+	clearSearch.addEventListener('click', () => {
+		/** @type {HTMLInputElement} */ (searchInput).value = '';
+		runSearch();
+		/** @type {HTMLElement} */ (searchInput).focus();
+	});
+	addAsChildren(searchField, [searchInput, clearSearch]);
 
 	const list = makeElement({
 		className: 'dialog-picklist',
@@ -834,6 +853,13 @@ function showUnicodeCharacterRangeDialog() {
 		content: 'No block matches that.',
 	});
 	noMatches.hidden = true;
+
+	/*
+		How many there are, and how many of them you are looking at. A filter
+		that says nothing about what it removed leaves you unable to tell a
+		term that narrowed the list from one that nearly emptied it.
+	*/
+	const listCount = makeElement({ className: 'dialog-picker__count' });
 
 	/** @type {Array<Object>} */
 	const entries = [];
@@ -884,7 +910,7 @@ function showUnicodeCharacterRangeDialog() {
 		});
 	});
 
-	addAsChildren(listColumn, [searchField, list, noMatches]);
+	addAsChildren(listColumn, [searchField, list, noMatches, listCount]);
 
 	// --------------------------------------------------------------
 	// Right: what is in the block you picked
@@ -910,10 +936,46 @@ function showUnicodeCharacterRangeDialog() {
 		content: 'Pick a block on the left to see what is in it.',
 	});
 
+	/*
+		A block with nothing to draw, said in words.
+
+		The Controls blocks are code points with no shape at all, so their
+		preview was 32 empty squares - which is indistinguishable from a
+		preview that failed to build. And the thing worth knowing about them is
+		not what they look like: adding one turns on an app setting, which
+		addCharacterRangeToCurrentProject does quietly. It says so here first.
+	*/
+	const previewControls = makeElement({
+		className: 'dialog-empty',
+		content:
+			'Control codes have no visible shape.<br>Adding this block turns on <strong>Settings &rsaquo; App &rsaquo; Show non-graphic control characters</strong>, so the slots appear on the Characters page.',
+	});
+	previewControls.hidden = true;
+
 	const previewNote = makeElement({ tag: 'span', className: 'dialog-picker__note' });
 	previewNote.hidden = true;
 
-	addAsChildren(previewBody, [previewGrid, previewEmpty]);
+	/*
+		The app's tooltip rather than the browser's, and bound once to the grid
+		rather than 256 times to the tiles inside it. The native `title` waits a
+		second, draws itself in the operating system's language and sits over
+		whatever is under it; every other hover label in this app is the one in
+		controls/tooltip. It is also what makes the tile's hover state honest -
+		a tile is not clickable, and the highlight is there to say which one is
+		telling you its name.
+	*/
+	previewGrid.addEventListener('mouseover', (event) => {
+		const tile = /** @type {HTMLElement} */ (event.target)?.closest?.('.dialog-picker__tile');
+		if (!(tile instanceof HTMLElement)) return;
+		showTooltip(
+			tile,
+			tile.getAttribute('data-tip-name') || '',
+			tile.getAttribute('data-tip-body') || ''
+		);
+	});
+	previewGrid.addEventListener('mouseleave', hideTooltip);
+
+	addAsChildren(previewBody, [previewGrid, previewControls, previewEmpty]);
 	addAsChildren(previewColumn, [previewHead, previewBody, previewNote]);
 
 	// --------------------------------------------------------------
@@ -978,32 +1040,58 @@ function showUnicodeCharacterRangeDialog() {
 		const shown = Math.min(count, PREVIEW_LIMIT);
 
 		previewName.textContent = block.name;
-		previewMeta.textContent = `${decToHex(block.begin)} - ${decToHex(
+		/* An en dash with air round it. The row in the list runs the same span
+			together because its column is 104px; here there is room to set it
+			properly, and the two should at least agree on the dash. */
+		previewMeta.textContent = `${decToHex(block.begin)} – ${decToHex(
 			block.end
 		)} · ${count} character${count === 1 ? '' : 's'}`;
 		previewHead.hidden = false;
 		previewEmpty.hidden = true;
 
+		const isControls = `${block.name}`.includes('Controls');
+		previewControls.hidden = !isControls;
+		previewGrid.hidden = isControls;
+
 		previewGrid.innerHTML = '';
-		for (let point = block.begin; point < block.begin + shown; point++) {
-			const hexString = `${decToHex(point)}`;
-			previewGrid.appendChild(
-				makeElement({
+		if (!isControls) {
+			for (let point = block.begin; point < block.begin + shown; point++) {
+				const hexString = `${decToHex(point)}`;
+				const tile = makeElement({
 					className: 'dialog-picker__tile',
-					title: `${hexString}\n${getUnicodeName(hexString)}`,
 					innerHTML: hexesToChars(hexString) || '',
-				})
-			);
+				});
+				/*
+					Read by the grid's delegated hover handler, and carried as the
+					accessible name too - the title that used to do both jobs is
+					gone with the browser's tooltip.
+				*/
+				const characterName = getUnicodeName(hexString);
+				tile.setAttribute('data-tip-name', hexString);
+				tile.setAttribute('data-tip-body', characterName);
+				tile.setAttribute('aria-label', `${hexString} ${characterName}`);
+				previewGrid.appendChild(tile);
+			}
 		}
 
+		/*
+			Back to the top. The scroller belongs to the column rather than to
+			the block in it, so picking Arabic after scrolling to the end of
+			Cyrillic - both 256 characters, so both the same height - left you
+			at the bottom of a block you had never seen the start of.
+		*/
+		previewBody.scrollTop = 0;
+		hideTooltip();
+
 		previewNote.textContent =
-			count > shown ? `Showing the first ${shown}. The block holds ${count}.` : '';
-		previewNote.hidden = count <= shown;
+			count > shown && !isControls ? `Showing the first ${shown}. The block holds ${count}.` : '';
+		previewNote.hidden = !previewNote.textContent;
 
 		refreshAddButton();
 	}
 
-	searchInput.addEventListener('input', () => {
+	/** Filters the list, and says what it did. */
+	function runSearch() {
 		const term = `${/** @type {HTMLInputElement} */ (searchInput).value}`.trim().toLowerCase();
 		let shown = 0;
 
@@ -1024,13 +1112,43 @@ function showUnicodeCharacterRangeDialog() {
 
 		noMatches.hidden = shown > 0;
 		list.hidden = shown === 0;
-	});
+		clearSearch.hidden = !term;
+		listCount.textContent = term
+			? `${shown} of ${entries.length} blocks`
+			: `${entries.length} blocks`;
+	}
+
+	searchInput.addEventListener('input', runSearch);
 
 	searchInput.addEventListener('keydown', (event) => {
-		if (event.key !== 'ArrowDown') return;
-		event.preventDefault();
-		const first = entries.find((entry) => !entry.row.hidden);
-		if (first) selectBlock(first.block, true);
+		/*
+			Enter and ArrowDown both go to the first match. Enter is what you
+			press after typing a search; it did nothing at all.
+		*/
+		if (event.key === 'ArrowDown' || event.key === 'Enter') {
+			event.preventDefault();
+			const first = entries.find((entry) => !entry.row.hidden);
+			if (first) selectBlock(first.block, true);
+			return;
+		}
+
+		/*
+			Escape clears the search. It only stops here while there is
+			something to clear, so an empty field passes the key on to whatever
+			else wants it.
+
+			Which today is nothing, on this page: the app's Escape-closes-every-
+			dialog handler is attached to `document` by initEventHandlers, and
+			that runs when an edit canvas is built - so on Settings, in a
+			session that has not opened an editor page yet, Escape closes no
+			dialog at all. That is app-wide and not this dialog's to fix.
+		*/
+		if (event.key === 'Escape' && /** @type {HTMLInputElement} */ (searchInput).value) {
+			event.preventDefault();
+			event.stopPropagation();
+			/** @type {HTMLInputElement} */ (searchInput).value = '';
+			runSearch();
+		}
 	});
 
 	/*
@@ -1064,11 +1182,21 @@ function showUnicodeCharacterRangeDialog() {
 
 	addAsChildren(content, [listColumn, previewColumn]);
 
+	runSearch();
+
 	showModalDialog(content, 900, {
 		title: 'Add character ranges from Unicode',
 		subtitle: 'Every block in the standard. Pick one to see what is in it.',
 		actions: [closeButton, addButton],
 	});
+
+	/*
+		Typing is the first thing you do to three hundred and seventy blocks, so
+		the caret is already there. showModalDialog appends synchronously, so
+		the field is in the document by now - focus() on a detached node does
+		nothing and says nothing.
+	*/
+	/** @type {HTMLElement} */ (searchInput).focus();
 }
 
 export function addCharacterRangeToCurrentProject(range, successCallback, showNotification = true) {
