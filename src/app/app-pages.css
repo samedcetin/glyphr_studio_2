@@ -131,6 +131,14 @@
 .hub-card {
 	display: grid;
 	grid-template-rows: min-content min-content;
+	/*
+		A column that fills the card. Without it the implicit track is sized to
+		its content and resets.css `button { justify-content: center }` centres
+		it - so the specimen was a content-width block floating in the middle of
+		the card with the card's own ground either side of it, square-cornered
+		because it was nowhere near the corners it was supposed to be clipped by.
+	*/
+	grid-template-columns: minmax(0, 1fr);
 	gap: 0;
 	padding: 0;
 	margin: 0;
@@ -1619,8 +1627,15 @@
 	align-items: center;
 }
 
+/*
+	The card turned on its side turns its separator with it: the hairline
+	divides the specimen from the words, and in a row that edge is the right
+	one, not the bottom.
+*/
 .hub-grid--list .hub-card__preview {
 	height: 72px;
+	border-bottom: none;
+	border-right: 1px solid var(--border-subtle);
 }
 
 .hub-grid--list .hub-card__info {
