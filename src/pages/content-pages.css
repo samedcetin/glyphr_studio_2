@@ -1943,11 +1943,16 @@ span.spacer {
 	pointer-events: none;
 }
 
-/* Only once measured - a thumb sized from nothing would flash in at zero. */
+/*
+	Only once measured - a thumb sized from nothing would flash in at zero.
+
+	--ease-out rather than a hand-written cubic-bezier(0.2, 0.8, 0.2, 1). The
+	curve it had was a decelerate written by hand, which is what --ease-out is
+	for, and the token is the one the rest of the app moves on.
+*/
 .studio-tabs .tab-control__tab-container[data-thumb-ready]::before {
 	opacity: 1;
-	transition: transform var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1),
-		width var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1);
+	transition: transform var(--dur-slow) var(--ease-out), width var(--dur-slow) var(--ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
