@@ -96,82 +96,82 @@ dialog {
 }
 
 /* --------------------------------------------------------------
-	Error panel
+	ERROR PANEL
+
+	The same message surface as the toast, one step louder. It was two #error
+	rules disagreeing with each other twenty lines apart - the first said
+	`display: none; width: 300px; position: absolute; left: 520px`, the second
+	said `display: grid` and a different padding - and the second won, so the
+	panel showed, 300px wide, parked at a hard-coded 520px from the left of the
+	document.
+
+	That 520 is the same defunct-window measurement the toast used to carry:
+	see the top of this file. On this window it landed over the canvas, well
+	off centre; on a narrow one it would have covered the panels; and being
+	absolute rather than fixed, it sat at the document's top rather than the
+	window's.
+
+	It takes the toast's slot now - centred, top of the window, where nothing
+	else lives. The two cannot collide: showError closes every other dialog
+	first, the toast included.
 	------------------------------------------------------------ */
 
 #error {
-	display: none;
-	width: 300px;
-	position: absolute;
-	left: 520px;
-	top: 0px;
-	margin: 5px 0px 5px 0px;
-	padding: var(--sp-3) var(--sp-5);
+	display: grid;
+	position: fixed;
+	top: var(--sp-6);
+	left: 0;
+	right: 0;
+	margin-inline: auto;
+	width: max-content;
+	min-width: 280px;
+	max-width: min(460px, calc(100vw - var(--sp-9)));
+	row-gap: var(--sp-3);
+	padding: var(--sp-4) var(--sp-5);
 	z-index: var(--z-toast);
-	text-align: center;
+	text-align: left;
+	text-wrap: pretty;
+	color: var(--text-danger);
+	background-color: var(--danger-bg);
 	border: 1px solid var(--danger);
 	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
+	user-select: text;
 	animation: var(--animate-fade-in-slide-down);
 }
 
-#notation {
-	display: none;
-	position: absolute;
-	right: 900px;
-	top: 400px;
-	width: auto;
-	height: auto;
-	padding: 0;
-	z-index: var(--z-alert);
-	background-color: var(--bg-surface-raised);
-	border: 5px solid var(--bg-surface-raised);
-	border-radius: var(--r-lg);
-	corner-shape: var(--corner-smooth);
-	box-shadow: var(--shadow-3);
-	animation: var(--animate-fade-in);
-}
-
-.notation__path-add-point {
-	display: grid;
-	grid-template-columns: 20px min-content min-content;
-	margin: 0px 5px 2px 5px;
-}
-
-.notation__path-add-point span {
-	font-family: monospace;
-}
-
-.notation__path-add-point label {
-	font-family: monospace;
-	color: var(--enabled-restingLight-lightText);
-}
-
-#error {
-	margin-top: 10px;
-	border-color: var(--danger);
-	color: var(--text-danger);
-	background-color: var(--danger-bg);
-	display: grid;
-	grid-template-rows: 20px 1fr;
-	padding: 10px 12px 12px 12px;
-	row-gap: 10px;
-	user-select: text;
-}
-
 #error hr {
-	border-color: var(--danger);
-	margin: 10px 0px;
+	height: 1px;
+	margin: var(--sp-4) 0;
+	border: none;
+	background-color: var(--danger);
+	opacity: 0.35;
 }
 
 .error__header {
 	display: grid;
-	grid-template-columns: 1fr var(--control-h-lg);
+	grid-template-columns: minmax(0, 1fr) var(--control-h-sm);
 	align-items: center;
+	gap: var(--sp-4);
 }
 
+/*
+	"Error" is a label on a panel that is already red and already bordered red,
+	so it is set at the size of one rather than as a heading in prose - which
+	is what a bare h3 gave it.
+*/
 .error__header h3 {
+	margin: 0;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	line-height: var(--lh-tight);
+	color: var(--text-danger);
+}
+
+.error__body {
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
 	color: var(--text-danger);
 }
 
@@ -190,6 +190,7 @@ dialog {
 	background-color: transparent;
 	color: var(--text-danger);
 	box-shadow: none;
+	font-size: var(--fs-lg);
 	line-height: 1;
 	transition: var(--transition-color);
 }
@@ -198,6 +199,63 @@ dialog {
 	background-color: var(--danger);
 	border-color: transparent;
 	color: var(--danger-bg);
+}
+
+/* --------------------------------------------------------------
+	NOTATION
+
+	The readout the Add Path Point tool leaves beside the cursor. Not a dialog
+	- it is placed from canvas coordinates by showNotation - but it lives in
+	this file and it was the last thing here still reaching into colors.css.
+	------------------------------------------------------------ */
+
+#notation {
+	display: none;
+	position: absolute;
+	right: 900px;
+	top: 400px;
+	width: auto;
+	height: auto;
+	/* Was a 5px border in the surface colour, standing in for padding. */
+	padding: var(--sp-3) var(--sp-4);
+	z-index: var(--z-alert);
+	background-color: var(--bg-surface-raised);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
+	animation: var(--animate-fade-in);
+}
+
+/*
+	Three columns: the axis, the whole part, the decimal. No column gap - the
+	last two are one number split across two spans so the point can line up
+	down the column, and four pixels between them read as "412 .375".
+	The label holds its own gap with a padding instead.
+*/
+.notation__path-add-point {
+	display: grid;
+	grid-template-columns: min-content min-content min-content;
+	align-items: center;
+	row-gap: var(--sp-1);
+	column-gap: 0;
+}
+
+/* A coordinate, read a digit at a time and compared down the column. */
+.notation__path-add-point span {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-primary);
+}
+
+/* --text-secondary, for the reason .studio-eyebrow is: see content-pages.css. */
+.notation__path-add-point label {
+	margin: 0;
+	padding-right: var(--sp-2);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
 }
 
 /* --------------------------------------------------------------
@@ -495,35 +553,59 @@ dialog {
 	flex: 0 0 auto;
 }
 
-/* Modal dialog */
+/* --------------------------------------------------------------
+	MODAL DIALOG
+	------------------------------------------------------------ */
+
+/*
+	fixed, not absolute. At `absolute` with a 100vh height the scrim was laid
+	out against the document rather than the viewport: it happened to cover the
+	window because the app shell does not scroll, and would have scrolled away
+	from the dialog the moment anything did. `inset: 0` says the same thing as
+	the four properties it replaces and cannot disagree with itself.
+
+	Also gone: `padding: 0px auto`, which is not a valid padding and was doing
+	nothing, and `text-align: center`, which the content below immediately set
+	back to left.
+*/
 #modal-dialog {
 	display: block;
-	position: absolute;
-	text-align: center;
+	position: fixed;
+	inset: 0;
+	/*
+		Both axes stated, because this is a <dialog>: the user-agent sheet gives
+		it `width: fit-content; height: fit-content`, which outranks a pair of
+		insets, so `inset: 0` on its own sized the scrim to the dialog inside it
+		and parked the whole thing in the top left corner. `auto` hands the
+		sizing back to the insets.
+	*/
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
 	border-width: 0px;
-	padding: 0px auto;
-	left: 0px;
-	top: 0px;
-	width: 100vw;
-	height: 100vh;
+	padding: 0;
 	z-index: var(--z-modal);
 	backdrop-filter: blur(2px);
-	/*
-		The scrim was a hard-coded white wash, which in dark mode lit the whole
-		window up behind the dialog. A dark scrim at low opacity reads as depth
-		in both themes, which is what a scrim is for.
-	*/
-	background-color: hsla(220, 25%, 6%, 0.45);
+	/* Was a hard-coded hsla here; see --bg-scrim in tokens.css. */
+	background-color: var(--bg-scrim);
 	animation: var(--animate-fade-in);
 }
 
+/*
+	The scroll lives in one place: the body. The content box held a second
+	max-height 40px shorter than the body's, so on a tall dialog the two
+	disagreed about where the bottom was and the body's own limit never
+	applied. The content is now the frame - header, then a 1fr row that scrolls
+	- and `min-height: 0` is what lets that row actually shrink inside the
+	grid rather than growing past it.
+*/
 .modal-dialog__content {
 	display: grid;
-	grid-template-rows: min-content 1fr;
+	grid-template-rows: min-content minmax(0, 1fr);
 	width: clamp(500px, 66vw, 1000px);
-	max-height: calc(100vh - 80px);
-	overflow-y: hidden;
-	margin: 40px auto;
+	max-height: calc(100vh - var(--sp-10) * 2);
+	margin: var(--sp-10) auto;
 	text-align: left;
 	/* The same floating surface as the menus and the palette. */
 	background-color: var(--bg-surface-raised);
@@ -535,24 +617,27 @@ dialog {
 }
 
 /*
-	The close button sits --sp-2 in from the dialog's corner, which is what
-	makes its --r-md corner concentric with the dialog's --r-2xl at this size.
+	The track is the close button's own height. It used to be --control-h-sm
+	against a button that had since grown to --control-h-lg, so the button
+	overhung the dialog's right edge by three pixels - and because the content
+	box clipped one axis, the browser gave the other one a scrollbar: a grey
+	rule across the bottom of every dialog in the app, which read as the
+	content being cut off. Measured on Create a new ligature.
+
+	--sp-2 in from the corner is what keeps the button's --r-md concentric
+	with the dialog's --r-2xl at this size.
 */
 .modal-dialog__header {
 	display: grid;
-	grid-template-columns: 1fr var(--control-h-sm);
+	grid-template-columns: minmax(0, 1fr) var(--control-h-lg);
 	padding: var(--sp-2);
 }
 
 .modal-dialog__body {
 	display: block;
-	max-height: calc(100vh - 120px);
+	min-height: 0;
 	overflow-y: auto;
-	padding: 0px 20px 20px 20px;
-}
-
-.modal-dialog__body h2 {
-	margin-bottom: 10px;
+	padding: 0 var(--sp-7) var(--sp-7) var(--sp-7);
 }
 
 /*
@@ -599,4 +684,196 @@ dialog {
 	border-color: transparent;
 	color: var(--icon-strong);
 	cursor: pointer;
+}
+
+/* --------------------------------------------------------------
+	MODAL DIALOG > BODY
+
+	Twelve dialogs pour their content through .modal-dialog__body, and most of
+	them were written before the token system: a heading, a paragraph of loose
+	text, <br><br> for rhythm, a bare <input>, a button. They are wired to
+	their own element ids, so restyling each one by hand is twelve chances to
+	break a handler for a change that is the same change every time.
+
+	So the shell styles the vocabulary they already speak. Everything below
+	selects an element, not a class, and every dialog in the app gets it.
+
+	One trap runs through all of it: resets.css states font-size and
+	font-weight on the universal selector, which beats inheritance at any
+	specificity. A size set on the body reaches the loose text nodes - they
+	inherit, they are not elements - and reaches nothing else. Hence the
+	:where() list, which adds no specificity of its own, so a dialog's own
+	stylesheet still wins.
+	------------------------------------------------------------ */
+
+.modal-dialog__body {
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+.modal-dialog__body :where(p, span, div, label, li, td, th, b, strong, i, em, a) {
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+}
+
+/*
+	The dialog's name. It is the first thing in the body and the thing that
+	says what you are about to do, so it is set like a page title rather than
+	like an h2 in prose - which is what it was, at --fs-md and the universal
+	weight, a single step above the sentence under it.
+*/
+.modal-dialog__body h2 {
+	margin: 0 0 var(--sp-3) 0;
+	font-size: var(--fs-xl);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+/*
+	A field's name, in the dialogs that group their inputs. --sp-6 above and
+	--sp-2 below, so the heading belongs to the input under it rather than
+	floating between the two - it used to be a bare <h3> with the browser's
+	1em margins on both sides, which spaced it equally from what it labelled
+	and what it did not.
+*/
+.modal-dialog__body h3 {
+	margin: var(--sp-6) 0 var(--sp-2) 0;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body h3:first-child {
+	margin-top: 0;
+}
+
+.modal-dialog__body :where(b, strong) {
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body p {
+	margin: 0 0 var(--sp-5) 0;
+	max-width: 68ch;
+}
+
+/*
+	A name is not a number. resets.css sets every input in the app in the mono
+	face, which is right for the panels - those fields hold coordinates and
+	widths, read a digit at a time - and wrong here, where the input holds a
+	component name or the letters of a ligature. Those are words, and they are
+	read as words.
+
+	--control-h-lg rather than the 28px of a panel row: a dialog is not a dense
+	surface, and this is usually its only field.
+*/
+.modal-dialog__body input[type='text'] {
+	/*
+		The field takes the width it was given. Left to the browser's default it
+		came out at 182px in a 500px dialog - a stub in the top left of a lot of
+		empty surface, which reads as a field that wants a short answer when the
+		answer is a name.
+	*/
+	width: 100%;
+	height: var(--control-h-lg);
+	padding: 0 var(--sp-4);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+}
+
+/*
+	A single character, so it is sized to one: at full width these read as
+	fields waiting for a word. Centred, because a lone glyph in the left corner
+	of a 200px box looks like a mistake.
+*/
+.modal-dialog__body input[type='text'][maxlength='1'] {
+	width: var(--control-h-lg);
+	padding: 0;
+	font-family: var(--font-mono);
+	text-align: center;
+}
+
+.modal-dialog__body hr {
+	height: 1px;
+	margin: var(--sp-7) 0;
+	border: none;
+	background-color: var(--border-subtle);
+}
+
+/*
+	The column headers in the letter-pair dialogs, which arrive italic from
+	.list__column-header - a table caption idiom from the old settings pages.
+	They are labels over two fields here, so they are set like every other
+	label in the app.
+*/
+.modal-dialog__body .list__column-header {
+	top: 0;
+	width: auto;
+	padding: 0;
+	margin-bottom: var(--sp-2);
+	border-bottom: none;
+	font-style: normal;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-secondary);
+}
+
+/* The row of buttons a dialog ends on. */
+.modal-dialog__body fancy-button {
+	margin-top: var(--sp-5);
+}
+
+/* --------------------------------------------------------------
+	THE LETTER-PAIR FIELDS
+
+	Two single-character inputs under their two labels, in Find a letter pair
+	and Delete letter pairs.
+
+	They arrived as a .list__two-column with `style="max-width: 100px"` on it -
+	a two-column grid holding two labels and two fields, given 100 pixels to do
+	it in. "Left group letter" broke over three lines, the fields ended up
+	18px wide, and the whole block sat in the corner of an 800px dialog. The
+	cap was inline, so no stylesheet could answer it; it is a class now.
+
+	The fields are one character wide (see input[maxlength='1'] above) and the
+	columns are the labels' own width, so the block is as wide as its widest
+	word and no wider.
+	------------------------------------------------------------ */
+
+.kerning__letter-pair-fields {
+	display: grid;
+	grid-template-columns: repeat(2, max-content);
+	column-gap: var(--sp-6);
+	row-gap: 0;
+	width: max-content;
+	margin-bottom: var(--sp-5);
+}
+
+/*
+	A checkbox and its label, in Create a new ligature.
+
+	It arrives as .panel__card.no-card, which is the sidebar's row grid: a
+	--panel-label-col track for the label and the rest for the control. That is
+	right in a panel, where every card's fields have to start at the same x,
+	and wrong here - it put the checkbox alone in a 96px column with its own
+	label stranded on the far side of the gap.
+
+	A checkbox belongs next to the words it applies to. The inline
+	grid-column-start the label carries stops meaning anything once this is a
+	flex row, which is why the markup needs no change.
+*/
+.modal-dialog__body .panel__card.no-card {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--sp-3);
+	padding: 0;
+	margin-bottom: var(--sp-5);
+}
+
+.modal-dialog__body .panel__card.no-card label {
+	max-width: 62ch;
 }

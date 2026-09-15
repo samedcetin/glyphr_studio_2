@@ -346,7 +346,7 @@ export function showFindSingleLetterPairDialog() {
 		gets used may not be the expected one.
 		<br><br>
 
-		<div class="list__two-column" style="max-width: 100px;">
+		<div class="list__two-column kerning__letter-pair-fields">
 			<div class="list__column-header">Left group letter</div>
 			<div class="list__column-header">Right group letter</div>
 			<input
@@ -402,7 +402,7 @@ export function showDeleteSingleLetterPairDialog() {
 		than just the kern value for those two letters.
 		<br><br>
 
-		<div class="list__two-column" style="max-width: 100px;">
+		<div class="list__two-column kerning__letter-pair-fields">
 			<div class="list__column-header">Left group letter</div>
 			<div class="list__column-header">Right group letter</div>
 			<input
