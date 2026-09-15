@@ -118,7 +118,7 @@ export class Navigator {
 				wrapper.appendChild(pageContent);
 			} catch (e) {
 				console.warn(`Navigation failed:`, e);
-				showAppErrorPage(`Oops, navigation failed!`, e);
+				showAppErrorPage('This page could not be opened', e);
 				// log(getCurrentProject());
 			}
 		} else {

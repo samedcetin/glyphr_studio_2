@@ -18,6 +18,7 @@ import { GlyphrStudioProject } from '../project_data/glyphr_studio_project.js';
 import { closeAllNavMenus } from '../project_editor/navigator.js';
 import { ProjectEditor } from '../project_editor/project_editor.js';
 import { GlyphrStudioApp, showAppErrorPage } from './app.js';
+import { PRODUCT_NAME } from './brand.js';
 
 /**
  * First function to run when the browser starts
@@ -53,7 +54,7 @@ export function glyphrStudioOnLoad() {
 		}
 		// log(`glyphrStudioOnLoad`, 'end');
 	} catch (e) {
-		showAppErrorPage('Blue Rain Type failed to load!', e);
+		showAppErrorPage(`${PRODUCT_NAME} could not start`, e);
 		console.error(e);
 	}
 }

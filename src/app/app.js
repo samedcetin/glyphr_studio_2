@@ -1,6 +1,7 @@
-import { SUPPORT_EMAIL } from './brand.js';
+import { PRODUCT_NAME, SUPPORT_EMAIL } from './brand.js';
 import { makeElement } from '../common/dom.js';
-import { countItems } from '../common/functions.js';
+import { makeLineIcon } from '../common/icons.js';
+import { copyToClipboard, countItems } from '../common/functions.js';
 import { closeEveryTypeOfDialog, showToast } from '../controls/dialogs/dialogs.js';
 import { parseSemVer } from '../formats_io/validate_file_input.js';
 import { importGlyphrProjectFromText } from '../project_editor/import_project.js';
@@ -388,30 +389,149 @@ function showBeforeUnloadConfirmation(event) {
 // --------------------------------------------------------------
 
 /**
- * Catch an error and show this 'nice' page instead
+	THE CRASH SCREEN.
+
+	It borrowed #app__landing-page - the boot splash - for its box, so it
+	arrived on the splash's purple gradient, left-aligned, with 189px of
+	padding under it, none of which was written for it. What it did own was a
+	table-flip emoticon at 36px in hue-285 purple, an unstyled stack trace, and
+	a mailto whose subject was joined with `&` instead of `?`, so it never
+	reached the mail client.
+
+	It is the app's own surface now, on --bg-app, theme-aware like everything
+	else. And it does the two things this screen is for: gets you out (Reload),
+	and gets the details to us (Copy, or the email link, which now carries its
+	subject). The trace is kept, in a well you can select and scroll.
+
+	No table flip. Someone reading this may have just lost an afternoon's work,
+	and a joke at that moment is a joke at their expense.
+
+	DEFENSIVE ON PURPOSE. Every value here is read through a guard: this runs
+	after something has already failed, and main.js calls it when the app
+	failed to *load*, which is the one moment getGlyphrStudioApp() may have
+	nothing to give. A crash screen that throws leaves a blank window.
+ */
+
+/**
+ * Catch an error and show this page instead
  * @param {String} friendlyMessage - What human-readable message to show
  * @param {Object} errorObject - Error data
  */
 export function showAppErrorPage(friendlyMessage = '', errorObject = { message: '', stack: '' }) {
 	const wrapper = document.querySelector('#app__wrapper');
+	if (!wrapper) return;
 	closeEveryTypeOfDialog();
-	let content = `
-		<div id="app__landing-page">
-		<div class="error-page__wrapper">
-			<div class="error-page__table-flip">(╯°▢°）╯︵ ┻━┻</div>
-				<h1>${friendlyMessage || 'Blue Rain Type ran into a problem'}</h1>
-				<br>
-				Please send us an email, hopefully we'll be able to help:
-				<a
-					href="mailto:${SUPPORT_EMAIL}&subject=[${getGlyphrStudioApp().version}] Feedback"
-					>${SUPPORT_EMAIL}</a>
-				<br><br><br>
-				<pre>${errorObject.stack.replaceAll('<', '&lt;')}</pre>
-			</div>
-		</div>
-	`;
 
-	wrapper.innerHTML = content;
+	let version = '';
+	try {
+		version = getGlyphrStudioApp()?.version || '';
+	} catch {
+		/* The load path can reach here before there is an app to ask. */
+	}
+
+	const details = String(errorObject?.stack || errorObject?.message || '').trim();
+	const subject = `[${version || PRODUCT_NAME}] Error report`;
+
+	const page = makeElement({ tag: 'div', className: 'app-error' });
+	const card = makeElement({ tag: 'div', className: 'app-error__card' });
+
+	card.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'app-error__mark',
+			attributes: { 'aria-hidden': 'true' },
+			innerHTML: makeLineIcon('alert', 24),
+		})
+	);
+	/* textContent, not makeElement's `content`, which is innerHTML: the caller's
+		message is a sentence, and one carrying a `<` should read as a `<`. */
+	const title = makeElement({ tag: 'h1', className: 'app-error__title' });
+	title.textContent = friendlyMessage || `${PRODUCT_NAME} ran into a problem`;
+	card.appendChild(title);
+	card.appendChild(
+		makeElement({
+			tag: 'p',
+			className: 'app-error__body',
+			content: `Reloading starts the app again, and any project auto-saved in this
+				browser comes back with it. If this keeps happening, send us the details
+				below and we will look at it.`,
+		})
+	);
+
+	// --- Actions -------------------------------------------------
+	const actions = makeElement({ tag: 'div', className: 'app-error__actions' });
+
+	actions.appendChild(
+		makeElement({
+			tag: 'button',
+			className: 'hub-button hub-button--primary',
+			attributes: { type: 'button' },
+			innerHTML: `<span>Reload ${PRODUCT_NAME}</span>`,
+			onClick: () => window.location.reload(),
+		})
+	);
+
+	const copyButton = makeElement({
+		tag: 'button',
+		className: 'hub-button',
+		attributes: { type: 'button' },
+		innerHTML: `${makeLineIcon('copy', 16)}<span>Copy details</span>`,
+	});
+	copyButton.addEventListener('click', async () => {
+		const copied = await copyToClipboard(`${friendlyMessage}\n${version}\n\n${details}`);
+		const label = copyButton.querySelector('span');
+		if (copied) {
+			if (label) label.textContent = 'Copied';
+			return;
+		}
+		/*
+			The clipboard can be refused - a denied permission, or a page served
+			over file://, which is a supported way to run this. Telling someone to
+			press Ctrl C with nothing selected is advice that does not work, so
+			select the trace for them first and then say it.
+		*/
+		const trace = page.querySelector('.app-error__trace');
+		if (trace) {
+			const range = document.createRange();
+			range.selectNodeContents(trace);
+			const selection = window.getSelection();
+			selection?.removeAllRanges();
+			selection?.addRange(range);
+		}
+		if (label) label.textContent = trace ? 'Selected — press Ctrl C' : 'Could not copy';
+	});
+	actions.appendChild(copyButton);
+
+	actions.appendChild(
+		makeElement({
+			tag: 'a',
+			className: 'app-error__mail',
+			attributes: {
+				/* `?`, not `&`: the subject is the first parameter, so it opens the
+					query string rather than continuing one that was never started. */
+				href: `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`,
+			},
+			innerHTML: `${makeLineIcon('mail', 16)}<span>${SUPPORT_EMAIL}</span>`,
+		})
+	);
+
+	card.appendChild(actions);
+
+	// --- What actually happened ----------------------------------
+	if (details) {
+		card.appendChild(
+			makeElement({ tag: 'div', className: 'studio-eyebrow app-error__label', content: 'Details' })
+		);
+		/* textContent, not innerHTML: a stack trace is text, and it can carry
+			angle brackets that would otherwise be read as markup. */
+		const trace = makeElement({ tag: 'pre', className: 'app-error__trace' });
+		trace.textContent = details;
+		card.appendChild(trace);
+	}
+
+	page.appendChild(card);
+	wrapper.innerHTML = '';
+	wrapper.appendChild(page);
 }
 
 /**
