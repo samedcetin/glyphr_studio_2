@@ -1334,35 +1334,38 @@
 }
 
 /*
-	--sp-6 to match the import card, and for one reason only: the two eyebrows
-	are the first thing the eye hits on each half of a deliberately matched
-	pair, and at 24 against 16 they sat at different insets across the gutter.
-	Nothing else about this card changes.
+	Matched to the import card, and for one reason only: the two eyebrows are
+	the first thing the eye hits on each half of a deliberately matched pair,
+	and at different paddings they sit at different insets across the gutter.
+	The number is decided next door, by the corner nesting. Nothing else about
+	this card changes.
 */
 .hub__create {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) min-content;
 	align-items: center;
 	gap: var(--sp-6);
-	padding: var(--sp-6);
+	padding: var(--sp-5);
 }
 
 /*
 	Two rows: a head line, and one object under it that takes the rest.
 
-	--sp-6 of padding, not --sp-8. The action below is a bordered box filling
-	the card's lower area, so its corners sit in the card's corner region and
-	inner = outer - padding decides its radius: at --sp-8 that is 28 - 24 = 4,
-	which is no corner at all. At --sp-6 it is 12, which is also what "one
-	surface, one control radius" asks for independently. Two rules, one number.
-	--sp-6 is .studio-card's own baseline besides; the --sp-8 was the deviation.
+	--sp-5 of padding, and the padding is the whole argument. The action is a
+	bordered box filling the card's lower area, so its corners sit inside the
+	card's and inner = outer - padding decides its radius. The card is 28, so
+	the gap between the two corners is the only lever there is: --sp-8 gives 4,
+	--sp-6 gives 12, --sp-5 gives 16. At 12 the inner corner reads tight against
+	a corner as soft as --r-3xl - the two curves are concentric arithmetically
+	and do not look it. Closing the gap one step to --sp-5 puts the inner corner
+	at --r-xl 16, which is where the pair starts reading as one shape.
 */
 .hub__import {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	grid-template-rows: min-content minmax(0, 1fr);
 	gap: var(--sp-5);
-	padding: var(--sp-6);
+	padding: var(--sp-5);
 }
 
 .hub__import-head {
@@ -1413,7 +1416,8 @@
 	text-align: left;
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	/* --r-3xl 28 less the card's --sp-5 12. See the note on .hub__import. */
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-1);
 	color: var(--text-primary);
