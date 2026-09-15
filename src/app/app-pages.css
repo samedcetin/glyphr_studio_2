@@ -1699,9 +1699,13 @@
 	The foot
 -------------------------------------------------------- */
 
+/*
+	No ground of its own. The foot holds one line of small tertiary text, and
+	a raised strip under it made the page end in a band that looked like a
+	toolbar with nothing in it. The hairline is enough to close the page.
+*/
 .hub__footer {
 	border-top: 1px solid var(--border-subtle);
-	background-color: var(--bg-surface);
 }
 
 .hub__footer-inner {
