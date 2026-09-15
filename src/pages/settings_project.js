@@ -762,95 +762,313 @@ export function sortCharacterRanges() {
 // Range Chooser
 // --------------------------------------------------------------
 
+/*
+	The four planes, named. The blocks were four arrays appended to one list,
+	so `Egyptian Hieroglyphs` sat under `Specials` with nothing to say that the
+	code points had jumped from 0xFFFF to 0x13000 - which is the one thing a
+	person picking a block out of three hundred and seventy needs to know about
+	where they have ended up.
+*/
+const UNICODE_PLANES = [
+	{ label: 'Basic Multilingual Plane', blocks: unicodeBlocksBMP },
+	{ label: 'Supplementary Multilingual Plane', blocks: unicodeBlocksSMP },
+	{ label: 'Supplementary Ideographic Plane', blocks: unicodeBlocksSIP },
+	{ label: 'Tertiary Ideographic Plane', blocks: unicodeBlocksTIP },
+];
+
+/*
+	How much of a block the preview draws.
+
+	It used to draw all of it, synchronously, on click. CJK Unified Ideographs
+	Extension B is 42,720 code points, each one a getUnicodeName lookup and a
+	DOM node - so picking it locked the tab. The point of the preview is to
+	recognise a script, and the first 256 characters do that for every block in
+	the standard; the rest is said in words. 256 is the item chooser's own page
+	size, for the same reason.
+*/
+const PREVIEW_LIMIT = 256;
+
+/**
+ * Every block in the Unicode standard, and a way into your project.
+ *
+ * WHAT IT WAS. An h1, three h3s and an h4 doing the work of labels; the
+ * preview on the left and the list you pick from on the right, so the dialog
+ * read backwards; no search over three hundred and seventy blocks, so finding
+ * Devanagari meant scrolling for it; no mark on the row you had picked, and
+ * none on the ones already in the project - you found that out from a toast
+ * after you had added a second copy; Start and End as two columns writing one
+ * fact; the only action loose at the bottom of the left column; and a preview
+ * that built a DOM node per code point.
+ */
 function showUnicodeCharacterRangeDialog() {
-	const content = makeElement({
-		className: 'glyph-range-chooser__wrapper',
-		innerHTML: `
-			<h1>Add character ranges from Unicode</h1>
-			<h3>Preview</h3>
-			<h3>Blocks</h3>
-			<div class="glyph-range-chooser__preview-area">
-				<div class="glyph-range-chooser__preview">
-					Select a character range from the right to preview it here.
-				</div>
-				<h4 id="glyph-range-chooser__preview-selected"></h4>
-				<span id="glyph-range-chooser__add-button-wrapper">
-					<fancy-button disabled id="glyph-range-chooser__add-button">Add range to project</fancy-button>
-				</span>
-			</div>
-			<div class="glyph-range-chooser__list-area"></div>
-		`,
+	/** @type {Object | false} */
+	let selectedBlock = false;
+
+	const content = makeElement({ className: 'dialog-layout dialog-picker' });
+
+	// --------------------------------------------------------------
+	// Left: search, then the blocks
+	// --------------------------------------------------------------
+
+	const listColumn = makeElement({ className: 'dialog-picker__column' });
+
+	const searchField = makeElement({ className: 'dialog-search' });
+	const searchInput = makeElement({
+		tag: 'input',
+		attributes: {
+			type: 'search',
+			placeholder: 'Search blocks',
+			spellcheck: 'false',
+			'aria-label': 'Search Unicode blocks',
+		},
+	});
+	searchField.appendChild(searchInput);
+
+	const list = makeElement({
+		className: 'dialog-picklist',
+		attributes: { role: 'listbox', 'aria-label': 'Unicode blocks' },
 	});
 
-	const listArea = content.querySelector('.glyph-range-chooser__list-area');
+	const noMatches = makeElement({
+		className: 'dialog-empty',
+		content: 'No block matches that.',
+	});
+	noMatches.hidden = true;
 
-	addAsChildren(listArea, [
-		textToNode('<span class="list__column-header">Range name</span>'),
-		textToNode('<span class="list__column-header">Start</span>'),
-		textToNode('<span class="list__column-header">End</span>'),
-	]);
+	/** @type {Array<Object>} */
+	const entries = [];
+	/** @type {Array<Object>} */
+	const groups = [];
 
-	let rowWrapper;
-	unicodeBlocksBMP.forEach(processOneBlock);
-	unicodeBlocksSMP.forEach(processOneBlock);
-	unicodeBlocksSIP.forEach(processOneBlock);
-	unicodeBlocksTIP.forEach(processOneBlock);
-
-	function processOneBlock(block) {
-		rowWrapper = makeElement({
-			className: 'list__row-wrapper__selectable',
-			onClick: () => {
-				previewCharacterRange(block);
-			},
+	UNICODE_PLANES.forEach((plane) => {
+		const heading = makeElement({
+			className: 'dialog-picklist__group',
+			attributes: { role: 'presentation' },
 		});
+		heading.textContent = plane.label;
+		list.appendChild(heading);
 
-		addAsChildren(rowWrapper, [
-			textToNode(`<span>${block.name}</span>`),
-			textToNode(`<code>${decToHex(block.begin)}</code>`),
-			textToNode(`<code>${decToHex(block.end)}</code>`),
-		]);
+		const group = { heading: heading, entries: [] };
+		groups.push(group);
 
-		addAsChildren(listArea, rowWrapper);
-	}
+		plane.blocks.forEach((block) => {
+			const row = makeElement({
+				tag: 'div',
+				className: 'dialog-picklist__row',
+				attributes: { role: 'option', 'aria-selected': 'false', tabindex: '-1' },
+			});
 
-	showModalDialog(content);
-}
+			const name = makeElement({ tag: 'span', className: 'dialog-picklist__name' });
+			name.textContent = block.name;
 
-function previewCharacterRange(range) {
-	// log(`previewCharacterRange`, 'start');
-	// log(range);
-	document.querySelector('#glyph-range-chooser__preview-selected').innerHTML = range.name;
+			const span = makeElement({ tag: 'span', className: 'dialog-picklist__span' });
+			/* No spaces round the dash: this column has to hold 0x10FFFF at both
+				ends and still leave the name room to be read. */
+			span.textContent = `${decToHex(block.begin)}–${decToHex(block.end)}`;
+
+			/*
+				Already in the project, said on the row. It used to be said by a
+				toast after you had picked the block, read the preview and
+				pressed Add - three steps to find out the answer was no.
+			*/
+			const state = makeElement({ tag: 'span', className: 'dialog-picklist__state' });
+			state.textContent = findCharacterRange(block) ? 'Added' : '';
+
+			addAsChildren(row, [name, span, state]);
+			row.addEventListener('click', () => selectBlock(block));
+			list.appendChild(row);
+
+			const entry = { block: block, row: row, state: state };
+			entries.push(entry);
+			group.entries.push(entry);
+		});
+	});
+
+	addAsChildren(listColumn, [searchField, list, noMatches]);
+
+	// --------------------------------------------------------------
+	// Right: what is in the block you picked
+	// --------------------------------------------------------------
+
+	const previewColumn = makeElement({ className: 'dialog-picker__column' });
+
+	const previewHead = makeElement({ className: 'dialog-picker__head' });
+	const previewName = makeElement({ tag: 'span', className: 'dialog-picker__name' });
+	const previewMeta = makeElement({ tag: 'span', className: 'dialog-picker__meta' });
+	addAsChildren(previewHead, [previewName, previewMeta]);
+	previewHead.hidden = true;
+
+	/*
+		The grid and the empty state share the column's scrolling row, so the
+		message that stands in for the characters stands where they would.
+	*/
+	const previewBody = makeElement({ className: 'dialog-picker__body' });
+	const previewGrid = makeElement({ className: 'dialog-picker__grid' });
+
+	const previewEmpty = makeElement({
+		className: 'dialog-empty',
+		content: 'Pick a block on the left to see what is in it.',
+	});
+
+	const previewNote = makeElement({ tag: 'span', className: 'dialog-picker__note' });
+	previewNote.hidden = true;
+
+	addAsChildren(previewBody, [previewGrid, previewEmpty]);
+	addAsChildren(previewColumn, [previewHead, previewBody, previewNote]);
+
+	// --------------------------------------------------------------
+	// The one action
+	// --------------------------------------------------------------
 
 	const addButton = makeElement({
 		tag: 'fancy-button',
-		id: 'glyph-range-chooser__add-button',
 		content: 'Add range to project',
+		attributes: { disabled: '' },
 	});
+
 	addButton.addEventListener('click', () => {
-		addCharacterRangeToCurrentProject(range, updateRangesTables);
+		if (!selectedBlock || findCharacterRange(selectedBlock)) return;
+		addCharacterRangeToCurrentProject(selectedBlock);
+		/*
+			The dialog stays open. Adding three scripts to a project used to be
+			three trips back through the Settings page to reopen this.
+		*/
+		entries.forEach((entry) => {
+			entry.state.textContent = findCharacterRange(entry.block) ? 'Added' : '';
+		});
+		refreshAddButton();
 	});
 
-	const addButtonWrapper = document.querySelector('#glyph-range-chooser__add-button-wrapper');
-	addButtonWrapper.innerHTML = '';
-	addButtonWrapper.appendChild(addButton);
+	const closeButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		content: 'Close',
+		onClick: closeEveryTypeOfDialog,
+	});
 
-	const previewArea = document.querySelector('.glyph-range-chooser__preview');
-	previewArea.innerHTML = '';
-
-	let hexString;
-	let name;
-	for (let g = range.begin; g <= range.end; g++) {
-		hexString = '' + decToHex(g);
-		name = getUnicodeName(hexString);
-		previewArea.appendChild(
-			makeElement({
-				className: 'glyph-range-chooser__preview-tile',
-				title: `${hexString}\n${name}`,
-				innerHTML: hexesToChars(hexString) || '',
-			})
-		);
+	function refreshAddButton() {
+		const already = selectedBlock && findCharacterRange(selectedBlock);
+		if (!selectedBlock || already) addButton.setAttribute('disabled', '');
+		else addButton.removeAttribute('disabled');
+		addButton.innerHTML = already ? 'Already in project' : 'Add range to project';
 	}
-	// log(`previewCharacterRange`, 'end');
+
+	// --------------------------------------------------------------
+	// Selecting, searching, and the keyboard between them
+	// --------------------------------------------------------------
+
+	/**
+	 * @param {Object} block - the Unicode block to show
+	 * @param {Boolean} moveFocus - whether the row should take focus
+	 */
+	function selectBlock(block, moveFocus = false) {
+		selectedBlock = block;
+
+		entries.forEach((entry) => {
+			const on = entry.block === block;
+			entry.row.setAttribute('aria-selected', `${on}`);
+			entry.row.setAttribute('tabindex', on ? '0' : '-1');
+			if (on && moveFocus) {
+				/** @type {HTMLElement} */ (entry.row).focus();
+				entry.row.scrollIntoView({ block: 'nearest' });
+			}
+		});
+
+		const count = block.end - block.begin + 1;
+		const shown = Math.min(count, PREVIEW_LIMIT);
+
+		previewName.textContent = block.name;
+		previewMeta.textContent = `${decToHex(block.begin)} - ${decToHex(
+			block.end
+		)} · ${count} character${count === 1 ? '' : 's'}`;
+		previewHead.hidden = false;
+		previewEmpty.hidden = true;
+
+		previewGrid.innerHTML = '';
+		for (let point = block.begin; point < block.begin + shown; point++) {
+			const hexString = `${decToHex(point)}`;
+			previewGrid.appendChild(
+				makeElement({
+					className: 'dialog-picker__tile',
+					title: `${hexString}\n${getUnicodeName(hexString)}`,
+					innerHTML: hexesToChars(hexString) || '',
+				})
+			);
+		}
+
+		previewNote.textContent =
+			count > shown ? `Showing the first ${shown}. The block holds ${count}.` : '';
+		previewNote.hidden = count <= shown;
+
+		refreshAddButton();
+	}
+
+	searchInput.addEventListener('input', () => {
+		const term = `${/** @type {HTMLInputElement} */ (searchInput).value}`.trim().toLowerCase();
+		let shown = 0;
+
+		entries.forEach((entry) => {
+			const match =
+				!term ||
+				entry.block.name.toLowerCase().includes(term) ||
+				`${decToHex(entry.block.begin)}`.toLowerCase().includes(term) ||
+				`${decToHex(entry.block.end)}`.toLowerCase().includes(term);
+			/** @type {HTMLElement} */ (entry.row).hidden = !match;
+			if (match) shown++;
+		});
+
+		/* A plane heading with nothing under it is a heading for nothing. */
+		groups.forEach((group) => {
+			group.heading.hidden = !group.entries.some((entry) => !entry.row.hidden);
+		});
+
+		noMatches.hidden = shown > 0;
+		list.hidden = shown === 0;
+	});
+
+	searchInput.addEventListener('keydown', (event) => {
+		if (event.key !== 'ArrowDown') return;
+		event.preventDefault();
+		const first = entries.find((entry) => !entry.row.hidden);
+		if (first) selectBlock(first.block, true);
+	});
+
+	/*
+		Roving tabindex, which is what a list of three hundred and seventy
+		options needs: one tab stop, and the arrows move inside it. Every row
+		as its own tab stop would put the preview, the Add button and the way
+		out three hundred presses away.
+	*/
+	list.addEventListener('keydown', (event) => {
+		const visible = entries.filter((entry) => !entry.row.hidden);
+		if (!visible.length) return;
+
+		const current = visible.findIndex((entry) => entry.block === selectedBlock);
+		let next;
+
+		if (event.key === 'ArrowDown') next = Math.min(current + 1, visible.length - 1);
+		else if (event.key === 'ArrowUp') next = Math.max(current - 1, 0);
+		else if (event.key === 'Home') next = 0;
+		else if (event.key === 'End') next = visible.length - 1;
+		else if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			if (!addButton.hasAttribute('disabled')) /** @type {HTMLElement} */ (addButton).click();
+			return;
+		} else return;
+
+		event.preventDefault();
+		selectBlock(visible[Math.max(next, 0)].block, true);
+	});
+
+	// --------------------------------------------------------------
+
+	addAsChildren(content, [listColumn, previewColumn]);
+
+	showModalDialog(content, 900, {
+		title: 'Add character ranges from Unicode',
+		subtitle: 'Every block in the standard. Pick one to see what is in it.',
+		actions: [closeButton, addButton],
+	});
 }
 
 export function addCharacterRangeToCurrentProject(range, successCallback, showNotification = true) {

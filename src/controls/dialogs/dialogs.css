@@ -1683,3 +1683,313 @@ dialog {
 .modal-dialog__body .dialog-checklist__head > span:last-child {
 	text-align: right;
 }
+
+/* --------------------------------------------------------------
+	A DIALOG THAT PICKS ONE THING OUT OF A LONG LIST
+
+	Two columns: what there is, and what the one you are pointing at
+	contains. The Unicode block chooser is the first of these - three hundred
+	and seventy blocks on the left, the characters in the picked one on the
+	right.
+
+	The list is on the left because you act on it first. It was on the right,
+	with the preview of a thing you had not chosen yet filling the left half
+	of the dialog.
+	------------------------------------------------------------ */
+
+.dialog-picker {
+	display: grid;
+	grid-template-columns: 380px minmax(0, 1fr);
+	gap: var(--sp-7);
+	/*
+		A stated height, not one taken from the content. This is a browser: the
+		list is three hundred and seventy blocks long, and one search term can
+		cut it to three. Left to the content the dialog collapsed from 724px to
+		500 as you typed and grew back as you cleared it, which is the frame
+		moving while you are reading what is inside it. 520, or as much of it as
+		the window has once the frame, the header and the footer are paid for.
+	*/
+	height: min(520px, calc(100vh - 240px));
+	min-height: 0;
+}
+
+/*
+	Each column scrolls its own middle row. One scroller for the whole body
+	would mean losing the search box the moment you scrolled the list, and
+	losing the block's name the moment you scrolled its characters.
+*/
+.dialog-picker__column {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
+	gap: var(--sp-4);
+	min-height: 0;
+}
+
+/*
+	WHERE EACH PART SITS IS NOT NEGOTIABLE, so it is stated on the part itself
+	rather than left to auto-flow. Three of these five parts are hidden at any
+	given moment - the preview head until a block is picked, the note until one
+	is too long to draw, the empty state whenever there is something to show -
+	and [hidden] takes the element out of the grid entirely. On auto-flow that
+	pulls everything after it up a row: the empty message landed in the head's
+	min-content row, 49px tall at the top of a 497px column, with the row it
+	was meant to fill sitting empty underneath it.
+
+	The two messages take row 2 on purpose. A message that stands in for a
+	thing stands where the thing would.
+*/
+.dialog-picker__column > .dialog-search,
+.dialog-picker__head {
+	grid-row: 1;
+}
+
+.dialog-picker__column > .dialog-picklist,
+.dialog-picker__column > .dialog-empty,
+.dialog-picker__body {
+	grid-row: 2;
+}
+
+.dialog-picker__note {
+	grid-row: 3;
+}
+
+.dialog-picker__column > .dialog-empty {
+	align-self: center;
+}
+
+/* --- The search ---------------------------------------------- */
+
+/*
+	The field is the box; the input inside it carries no box of its own. Same
+	shape as the Overview page's character search - see .overview__search.
+*/
+.dialog-search {
+	display: flex;
+	align-items: center;
+	height: var(--control-h-lg);
+	padding: 0 var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	/* 12 for a 32px box, and the text sits 12 in from the hairline to match. */
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
+}
+
+.dialog-search:focus-within {
+	border-color: var(--accent);
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.dialog-search input {
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	background-color: transparent;
+	border: none;
+	box-shadow: none;
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+}
+
+/*
+	The ring belongs to the field, which is the box you can see. Legal for the
+	one reason it ever is: the rule above draws it for the same state.
+*/
+.dialog-search input:focus,
+.dialog-search input:focus-visible {
+	border: none;
+	outline: none;
+}
+
+.dialog-search input::-webkit-search-cancel-button {
+	appearance: none;
+}
+
+/* --- The list ------------------------------------------------- */
+
+.dialog-picklist {
+	display: grid;
+	align-content: start;
+	gap: 1px;
+	min-height: 0;
+	overflow-y: auto;
+	/* The rows carry their own focus ring, and a ring is drawn outside the
+		element - so the scroll box holds its width off its own edge. */
+	padding: var(--focus-offset);
+	margin: calc(var(--focus-offset) * -1);
+}
+
+/*
+	Which plane you are in. Sticky, because the answer matters most at the
+	moment you have scrolled far enough to have forgotten it.
+*/
+.modal-dialog__body .dialog-picklist__group {
+	position: sticky;
+	top: 0;
+	/*
+		No z-index. A positioned element paints above the in-flow content of its
+		siblings on its own, and the rows are static - so a stacking number here
+		would only be a number.
+	*/
+	padding: var(--sp-5) var(--sp-4) var(--sp-2) var(--sp-4);
+	background-color: var(--bg-surface-raised);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-semibold);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+
+.dialog-picklist__group:first-child {
+	padding-top: 0;
+}
+
+.dialog-picklist__row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 104px 40px;
+	align-items: center;
+	column-gap: var(--sp-4);
+	min-height: var(--control-h-lg);
+	padding: 0 var(--sp-4);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.dialog-picklist__row:hover {
+	background-color: var(--bg-hover);
+}
+
+/*
+	Where you are. The list had no selected state at all - you clicked a row,
+	the right-hand column changed, and the list looked exactly as it had.
+*/
+.dialog-picklist__row[aria-selected='true'],
+.dialog-picklist__row[aria-selected='true']:hover {
+	background-color: var(--bg-selected);
+	box-shadow: inset 0 0 0 1px var(--border-selected);
+}
+
+.dialog-picklist__row:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: calc(var(--focus-offset) * -1);
+}
+
+.modal-dialog__body .dialog-picklist__name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .dialog-picklist__row[aria-selected='true'] .dialog-picklist__name {
+	color: var(--text-accent);
+	font-weight: var(--fw-medium);
+}
+
+.modal-dialog__body .dialog-picklist__span {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+/* Already in the project. Set as a label rather than a chip: it is the
+	answer to a question you asked of the whole column, not a badge. */
+.modal-dialog__body .dialog-picklist__state {
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	text-align: right;
+	color: var(--ok);
+}
+
+/* --- The preview ---------------------------------------------- */
+
+/*
+	Level with the search box across the gap, which is the other column's first
+	row - so the two columns start on the same line and their scrolling rows do
+	too. A min-height let the two lines of text push it to 35 and the character
+	grid started three pixels below the list beside it.
+*/
+.dialog-picker__head {
+	display: grid;
+	gap: 0;
+	height: var(--control-h-lg);
+	align-content: center;
+}
+
+.modal-dialog__body .dialog-picker__name {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-semibold);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .dialog-picker__meta {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	line-height: var(--lh-tight);
+	color: var(--text-secondary);
+}
+
+/*
+	A wall of characters at a size you can recognise a script by. They used to
+	be inline text at the body size, so a block of Devanagari was a paragraph
+	of Devanagari - which reads as prose, not as an inventory.
+*/
+.dialog-picker__body {
+	display: grid;
+	align-content: start;
+	min-height: 0;
+	overflow-y: auto;
+	/* No bar down the side of the one thing this column exists to show. */
+	scrollbar-width: none;
+}
+
+/* Nothing picked yet: the message sits where the characters would, not
+	pinned to the top of an empty column. */
+.dialog-picker__body:has(.dialog-empty:not([hidden])) {
+	align-content: center;
+}
+
+.dialog-picker__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 32px);
+	justify-content: space-between;
+	align-content: start;
+	gap: var(--sp-2);
+}
+
+.dialog-picker__body::-webkit-scrollbar {
+	display: none;
+}
+
+.modal-dialog__body .dialog-picker__tile {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-lg);
+	line-height: 1;
+	color: var(--text-secondary);
+	transition: var(--transition-color);
+}
+
+.dialog-picker__tile:hover {
+	background-color: var(--bg-hover);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .dialog-picker__note {
+	font-size: var(--fs-2xs);
+	color: var(--text-tertiary);
+}
