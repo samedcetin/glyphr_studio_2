@@ -20,8 +20,10 @@ import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
 import { showCommandPalette } from '../controls/command-palette/command_palette.js';
 import { navigateToPage } from '../project_editor/navigator.js';
+import { PRODUCT_NAME } from './brand.js';
 import { getCurrentProjectEditor } from './main.js';
 import { makeMenu, makeThemeToggle } from './menu.js';
+import { navigateToHub } from './open_project.js';
 
 /** Shell menus, in the order they were in the old top bar. */
 const RAIL_MENUS = [
@@ -41,7 +43,7 @@ export function makeLeftRail() {
 		attributes: { 'aria-label': 'Main' },
 	});
 
-	rail.appendChild(makeRailMark());
+	rail.appendChild(makeRailMark(navigateToHub));
 	rail.appendChild(makeRailGroup(RAIL_MENUS.map(makeRailMenuButton)));
 	rail.appendChild(makeElement({ className: 'left-rail__divider' }));
 
@@ -145,12 +147,36 @@ function makeRailGroup(children) {
 	return group;
 }
 
-/** The app mark at the top of the rail. */
-function makeRailMark() {
+/**
+ * The app mark at the top of the rail.
+ *
+ * In the editor it is the way back to the hub - the one thing the rail was
+ * missing, since every other route out of a project is inside a menu. On the
+ * hub it stays a plain mark: home is a tab three pixels below it, and a mark
+ * that reloads the page you are on is a control that does nothing.
+ *
+ * @param {Function =} onClick - what the mark does, if anything
+ * @returns {Element}
+ */
+function makeRailMark(onClick = undefined) {
+	if (!onClick) {
+		return makeElement({
+			className: 'left-rail__mark',
+			innerHTML: makeLineIcon('appMark', 24),
+			title: PRODUCT_NAME,
+		});
+	}
+
 	return makeElement({
+		tag: 'button',
 		className: 'left-rail__mark',
 		innerHTML: makeLineIcon('appMark', 24),
-		title: 'Blue Rain Type',
+		attributes: {
+			type: 'button',
+			title: `${PRODUCT_NAME}\nBack to your projects.`,
+			'aria-label': `${PRODUCT_NAME} — back to your projects`,
+		},
+		onClick: onClick,
 	});
 }
 

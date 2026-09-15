@@ -267,6 +267,17 @@ function getAutoSaves() {
 // --------------------------------------------------------------
 
 /**
+ * Leaves whatever is on screen and shows the hub.
+ *
+ * The way back out of the editor. Nothing is lost by it: the project stays in
+ * the app's editor list, and auto-save writes on every history entry, so the
+ * card the hub offers is the work you just left.
+ */
+export function navigateToHub() {
+	getGlyphrStudioApp().appPageNavigate(makePage_OpenProject, makeHubRail);
+}
+
+/**
  * The hub's rail.
  *
  * Built here rather than in left_rail.js because the destinations are the

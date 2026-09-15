@@ -67,15 +67,45 @@
 	overflow-x: hidden;
 }
 
+/*
+	The mark. In the editor it is a <button> that goes back to the hub, so it
+	answers resets.css button{} clause by clause - border, ground, radius,
+	padding and min-height - and takes the rail button's own shape, because
+	that is what it is once it can be pressed.
+*/
 .left-rail__mark {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	width: var(--tool-size);
 	height: var(--tool-size);
-	margin-bottom: var(--sp-2);
+	min-height: 0;
+	padding: 0;
+	margin: 0 0 var(--sp-2) 0;
+	border: 1px solid transparent;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	box-shadow: none;
 	color: var(--text-primary);
 	flex: 0 0 auto;
+	transition: var(--transition-color);
+}
+
+/* Only the pressable one reacts: on the hub the mark is a plain span. */
+button.left-rail__mark {
+	cursor: pointer;
+}
+
+button.left-rail__mark:hover {
+	background-color: var(--bg-hover);
+	border-color: transparent;
+	color: var(--text-primary);
+}
+
+button.left-rail__mark:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
 }
 
 .left-rail__group {
