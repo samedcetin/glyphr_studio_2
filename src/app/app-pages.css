@@ -1284,12 +1284,21 @@
 	display: none;
 }
 
+/*
+	No width cap. It was 1280, which on anything wider than that left a band of
+	bare page down the right that nothing reached - 452px of it on an 1812px
+	window - while the grid underneath was still breaking to four columns as
+	though the room were not there.
+
+	Nothing here needs the cap: the grid adds columns rather than widening its
+	cards, the banner and the two start cards want the width, and the one thing
+	that would run too long for the eye - prose - carries its own measure.
+*/
 .hub__home {
 	display: grid;
 	gap: var(--sp-9);
 	align-content: start;
 	min-width: 0;
-	max-width: 1280px;
 }
 
 /* --------------------------------------------------------
@@ -1349,7 +1358,14 @@
 */
 .hub__create {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) min-content;
+	/*
+		Both tracks flexible, so the composition scales instead of tearing.
+		The artwork used to be a min-content 240px column pinned to the right,
+		which held at the width this was drawn at and opened a lake between the
+		words and the letters once the page stopped being capped: at 1028 the
+		gap was 650px. Now the two columns keep their ratio at any width.
+	*/
+	grid-template-columns: minmax(0, 1fr) minmax(200px, 0.55fr);
 	align-items: center;
 	gap: var(--sp-6);
 	padding: var(--sp-8);
@@ -1583,10 +1599,12 @@
 	than as a picture of someone else's typeface.
 -------------------------------------------------------- */
 
+/* Fills whatever its track gives it, up to a size where the letters stop
+	gaining anything from being larger. */
 .hub__art {
-	flex: 0 0 auto;
-	width: 240px;
-	max-width: 100%;
+	width: 100%;
+	max-width: 460px;
+	justify-self: end;
 	pointer-events: none;
 }
 
