@@ -87,6 +87,18 @@
 	height: var(--icon-size);
 }
 
+/*
+	Every one of these buttons wraps its label in a <span>, and resets.css sets
+	font-size and font-weight on `*` - which beats inheritance, whatever the
+	specificity either side of it. So the rule above asked for 12/500 and every
+	label in the app rendered at the universal 13/400: measured on "Open file"
+	in the hub bar before this line existed.
+*/
+.hub-button span {
+	font-size: inherit;
+	font-weight: inherit;
+}
+
 .hub-button:hover {
 	background-color: var(--bg-hover);
 	border-color: var(--border-strong);
@@ -315,14 +327,55 @@
 	color: var(--text-tertiary);
 	max-width: 44ch;
 }
-/* --------------------------------------------------------
-	Drop overlay
 
-	#open-project__drop-target and the .hub-drop__* group were here, styling
-	the "Open a file" view. That view lost its last caller when the rail
-	replaced the hub sidebar, and the affordance it carried now lives in the
-	import card - see .hub__drop-well.
+/* --------------------------------------------------------
+	Drop target and drop overlay
 -------------------------------------------------------- */
+
+#open-project__drop-target {
+	display: grid;
+	justify-items: center;
+	gap: var(--sp-4);
+	width: 100%;
+	margin: 0;
+	background-color: var(--bg-surface);
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-secondary);
+	padding: var(--sp-9);
+	text-align: center;
+	line-height: var(--lh-normal);
+}
+
+.hub-drop__icon svg {
+	width: 28px;
+	height: 28px;
+	color: var(--icon-default);
+}
+
+.hub-drop__title {
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+}
+
+.hub-drop__formats {
+	font-size: var(--fs-sm);
+	color: var(--text-tertiary);
+	line-height: 2;
+}
+
+.hub-drop__formats code {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	padding: 1px var(--sp-2);
+	margin-right: 2px;
+}
 
 /*
 	The drop overlay.
@@ -1281,80 +1334,166 @@
 }
 
 /*
-	--sp-6 of padding on both, not --sp-8.
-
-	The import card holds a well in its corner region, and inner = outer -
-	padding: at --sp-8 that is 28 - 24 = 4, a well with no corner at all. At
-	--sp-6 it is 12, which is a shape. The create card takes the same padding
-	because the two sit side by side and their eyebrows would otherwise start
-	at different insets. See "The radius question" in the design skill.
-*/
-/*
-	Eyebrow, the thing itself, the action - the same three rows the import
-	card has, so the two read as one pair rather than as two designs. The
-	artwork spans all three down the right.
+	--sp-6 to match the import card, and for one reason only: the two eyebrows
+	are the first thing the eye hits on each half of a deliberately matched
+	pair, and at 24 against 16 they sat at different insets across the gutter.
+	Nothing else about this card changes.
 */
 .hub__create {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) min-content;
-	grid-template-rows: min-content minmax(0, 1fr) min-content;
-	column-gap: var(--sp-6);
-	row-gap: var(--sp-5);
+	align-items: center;
+	gap: var(--sp-6);
 	padding: var(--sp-6);
 }
 
-.hub__create > .studio-eyebrow {
-	grid-area: 1 / 1;
-}
+/*
+	Two rows: a head line, and one object under it that takes the rest.
 
-.hub__create > .hub__start-text {
-	grid-area: 2 / 1;
-	align-content: center;
-}
-
-.hub__create > .hub-button {
-	grid-area: 3 / 1;
-	justify-self: start;
-}
-
-.hub__create > .hub__art {
-	grid-area: 1 / 2 / -1 / 2;
-	align-self: center;
-}
-
+	--sp-6 of padding, not --sp-8. The action below is a bordered box filling
+	the card's lower area, so its corners sit in the card's corner region and
+	inner = outer - padding decides its radius: at --sp-8 that is 28 - 24 = 4,
+	which is no corner at all. At --sp-6 it is 12, which is also what "one
+	surface, one control radius" asks for independently. Two rules, one number.
+	--sp-6 is .studio-card's own baseline besides; the --sp-8 was the deviation.
+*/
 .hub__import {
 	display: grid;
-	/* The well takes whatever the eyebrow and the formats leave. */
-	grid-template-rows: min-content minmax(0, 1fr) min-content;
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: min-content minmax(0, 1fr);
 	gap: var(--sp-5);
 	padding: var(--sp-6);
 }
 
-/*
-	The well. Dashed, because that is how this page already says "put
-	something here" - the empty state over the project grid is the same
-	treatment, and the two never mean different things.
-*/
-.hub__drop-well {
-	display: grid;
-	justify-items: center;
-	align-content: center;
-	gap: var(--sp-4);
-	padding: var(--sp-6);
-	min-height: 0;
-	border: 1px dashed var(--border-strong);
-	border-radius: var(--r-lg);
-	corner-shape: var(--corner-smooth);
-	text-align: center;
+.hub__import-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: var(--sp-2) var(--sp-5);
+	min-width: 0;
+}
+
+/* What it takes, said once, in the face the app uses for machine strings. */
+.hub__import-formats {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
 }
 
 /*
-	resets.css carries `* { text-align: left }`, which beats an inherited
-	value - so the well's children each need it. Same trap as .hub-empty.
+	The action, which is the card.
+
+	Raised rather than recessed, and that is what keeps it clear of a drop
+	zone: a drop zone is a hole in the page - sunken ground, a dashed edge, an
+	icon centred over centred text. This is the inverse of each. Its hover is
+	.hub-card's, verbatim, because three project cards further down this same
+	page already answer a pointer that way - the page has taught the gesture
+	before you reach this.
+
+	Its accent budget is zero. The create card keeps the page's only accent
+	fill; this one is unmissable by area instead, which is how a secondary
+	path should read.
 */
-.hub__drop-well .hub__start-title,
-.hub__drop-well .hub__start-body {
-	text-align: center;
+.hub__import-action {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) min-content;
+	/*
+		resets.css button{} centres an implicit auto column, which is the bug
+		.hub-card carries a note about. Both tracks are named and the centring
+		is cancelled.
+	*/
+	justify-content: normal;
+	align-items: center;
+	align-content: center;
+	gap: var(--sp-6);
+	min-height: var(--control-h-lg);
+	padding: var(--sp-6);
+	margin: 0;
+	text-align: left;
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-1);
+	color: var(--text-primary);
+	font-family: inherit;
+	cursor: pointer;
+	transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease),
+		transform var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+
+/*
+	The background is restated on both states: resets.css floods button:hover
+	with --bg-hover and button:active with --bg-active, which across a panel
+	this size reads as disabled rather than as pointed-at.
+*/
+.hub__import-action:hover {
+	background-color: var(--bg-surface);
+	border-color: var(--border-strong);
+	box-shadow: var(--shadow-2);
+	transform: translateY(-1px);
+}
+
+.hub__import-action:active {
+	background-color: var(--bg-surface);
+	box-shadow: var(--shadow-1);
+	transform: translateY(0);
+}
+
+.hub__import-action:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.hub__import-action[disabled],
+.hub__import-action[disabled]:hover {
+	background-color: var(--bg-disabled);
+	border-color: var(--border-subtle);
+	box-shadow: none;
+	color: var(--text-disabled);
+	transform: none;
+	cursor: default;
+}
+
+.hub__import-text {
+	display: grid;
+	gap: var(--sp-2);
+	min-width: 0;
+}
+
+/*
+	Each child states its own size and weight. resets.css sets both on `*`,
+	which beats inheritance - so a label that leans on its button's font-size
+	renders at the universal 13/400 instead. See the note on .hub-button span.
+*/
+.hub__import-title {
+	font-size: var(--fs-2xl);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+.hub__import-caption {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-normal);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+/* The arrow moves, which is the whole of the affordance on a surface this plain. */
+.hub__import-arrow {
+	display: inline-flex;
+	flex: 0 0 auto;
+	font-size: var(--fs-lg);
+	color: var(--icon-default);
+	transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease);
+}
+
+.hub__import-action:hover .hub__import-arrow {
+	color: var(--icon-strong);
+	transform: translateX(2px);
 }
 
 .hub__start-text {
@@ -1377,12 +1516,9 @@
 	color: var(--text-secondary);
 }
 
-.hub__drop-well .hub-button {
-	margin-top: var(--sp-2);
-}
-
-.hub__formats {
-	justify-content: center;
+.hub__create .hub-button {
+	justify-self: start;
+	margin-top: var(--sp-5);
 }
 
 /*
@@ -1402,12 +1538,6 @@
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
 	color: var(--icon-accent);
-}
-
-.hub__formats {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--sp-2);
 }
 
 /* --------------------------------------------------------

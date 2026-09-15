@@ -73,6 +73,7 @@ const hubViews = {
 	projects: { label: 'Your projects', icon: 'menu_projects', title: 'Your projects' },
 	learn: { label: 'Examples and guides', icon: 'book', title: 'Examples and guides' },
 	new: { label: 'New font', icon: 'plus', title: 'Start a new font' },
+	open: { label: 'Open a file', icon: 'upload', title: 'Open a file' },
 };
 
 /** The destinations the rail offers, in order. */
@@ -577,6 +578,7 @@ function renderHubView(root) {
 	else if (currentView === 'projects') body.appendChild(makeProjectsView());
 	else if (currentView === 'learn') body.appendChild(makeLearnView());
 	else if (currentView === 'new') body.appendChild(makeFormView('new'));
+	else if (currentView === 'open') body.appendChild(makeFormView('open'));
 }
 
 /**
@@ -587,7 +589,7 @@ function renderHubView(root) {
  * labelled text box alone on an empty screen, with nothing saying what it
  * would make and no way back to what you came from.
  *
- * @param {String} viewName - a key in hubViews; 'new' is the only one today
+ * @param {String} viewName - 'new' or 'open'
  * @returns {Element}
  */
 function makeFormView(viewName) {
@@ -597,12 +599,14 @@ function makeFormView(viewName) {
 	view.appendChild(
 		makeSectionHead(
 			hubViews[viewName].title,
-			'It is saved in this browser as you work, and stays there until you export it.'
+			viewName === 'new'
+				? 'It is saved in this browser as you work, and stays there until you export it.'
+				: 'Drop a file anywhere on this page, or choose one.'
 		)
 	);
 
 	const card = makeElement({ tag: 'div', className: 'studio-card hub__form-card' });
-	card.appendChild(makeNewProjectView());
+	card.appendChild(viewName === 'new' ? makeNewProjectView() : makeOpenFileView());
 	view.appendChild(card);
 
 	return view;
@@ -1135,21 +1139,12 @@ function makeSpecimenArt() {
 function makeStartCards() {
 	const row = makeElement({ tag: 'div', className: 'hub__start' });
 
-	/*
-		--- Create -----------------------------------------------------
-
-		Three rows, the same three the import card has: the eyebrow, the thing
-		itself, the action. Built that way rather than as one centred stack so
-		that the two cards' eyebrows start at the same height and their buttons
-		end at the same one - side by side, a centred stack beside a filled one
-		put the two labels forty pixels apart.
-	*/
+	// --- Create ---------------------------------------------------
 	const create = makeElement({ tag: 'div', className: 'studio-card hub__start-card hub__create' });
-	create.appendChild(
+	const createText = makeElement({ tag: 'div', className: 'hub__start-text' });
+	createText.appendChild(
 		makeElement({ tag: 'div', className: 'studio-eyebrow', content: 'Start from scratch' })
 	);
-
-	const createText = makeElement({ tag: 'div', className: 'hub__start-text' });
 	createText.appendChild(
 		makeElement({ tag: 'h2', className: 'hub__start-title', content: 'Create a new font' })
 	);
@@ -1160,9 +1155,7 @@ function makeStartCards() {
 			content: 'Give your ideas a character of their own.',
 		})
 	);
-	create.appendChild(createText);
-
-	create.appendChild(
+	createText.appendChild(
 		makeElement({
 			tag: 'button',
 			className: 'hub-button hub-button--primary hub-button--large',
@@ -1171,62 +1164,88 @@ function makeStartCards() {
 			onClick: () => switchHubView('new'),
 		})
 	);
-	create.appendChild(makeSpecimenArt());
+	addAsChildren(create, [createText, makeSpecimenArt()]);
 
 	/*
 		--- Import -----------------------------------------------------
 
-		The card is the drop target, which is the thing it was describing and
-		not offering. Dropping a font on this page has always worked - there is
-		a full-page overlay on dragenter - but nothing said so until you were
-		already dragging, and the screen that used to say it (the "Open a file"
-		view) became unreachable when the rail replaced the old sidebar.
+		One head line, and under it one object: the action itself, taking
+		whatever height the head leaves. It used to be a stack - eyebrow, a
+		plate beside a heading and a line of body, a button, a row of chips -
+		which is the shape of a description with a button at the bottom of it,
+		and it left 33px of unpainted card under the last chip, because a fixed
+		stack in a stretched row always leaves a remainder.
 
-		No drag listeners here on purpose. The overlay covers the whole page
-		the moment a file crosses it, so a second highlight underneath would
-		never be seen; what was missing is the resting state, and that is copy
-		and a well, not an event.
+		The plate went on its own merits: 48px, --r-lg, --icon-accent, holding
+		makeLineIcon('upload', 24), which is .drop-note__icon at 44px with
+		makeLineIcon('upload', 22). The card was drawing the drag overlay's own
+		icon, which is most of why it read as a drop zone.
 	*/
+	const spokenFormats = `${ACCEPTED_FORMATS.slice(0, -1).join(', ')} or ${
+		ACCEPTED_FORMATS[ACCEPTED_FORMATS.length - 1]
+	}`;
+
 	const importCard = makeElement({
 		tag: 'div',
 		className: 'studio-card hub__start-card hub__import',
 	});
-	importCard.appendChild(
+
+	const importHead = makeElement({ tag: 'div', className: 'hub__import-head' });
+	importHead.appendChild(
 		makeElement({ tag: 'div', className: 'studio-eyebrow', content: 'Import existing' })
 	);
+	/*
+		Not <code>. resets.css dresses every `code` in the app as a key cap -
+		20px tall, sunken, bordered - so a file extension rendered as one reads
+		as a key you are being told to press. One line of mono text says the
+		same thing and adds no box to a card whose argument is one soft corner.
 
-	const well = makeElement({ tag: 'div', className: 'hub__drop-well' });
-	well.appendChild(
-		makeElement({ tag: 'div', className: 'hub__plate', innerHTML: makeLineIcon('upload', 24) })
-	);
-	well.appendChild(
-		makeElement({ tag: 'h2', className: 'hub__start-title', content: 'Bring your font files' })
-	);
-	well.appendChild(
+		aria-hidden because the same list is spoken, punctuated, in the button's
+		own name below. Both are built from ACCEPTED_FORMATS, so what the picker
+		takes and what the card advertises cannot drift apart.
+	*/
+	importHead.appendChild(
 		makeElement({
 			tag: 'div',
-			className: 'hub__start-body',
-			content: 'Drop one anywhere on this page, or choose it.',
+			className: 'hub__import-formats',
+			attributes: { 'aria-hidden': 'true' },
+			content: ACCEPTED_FORMATS.join(' · '),
 		})
 	);
-	well.appendChild(
-		makeElement({
-			tag: 'button',
-			className: 'hub-button hub-button--large',
-			attributes: { type: 'button' },
-			innerHTML: `${hubIcons.upload}<span>Choose file</span>`,
-			onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
-		})
-	);
-	importCard.appendChild(well);
+	importCard.appendChild(importHead);
 
-	importCard.appendChild(
+	/*
+		The action. A button's content model is phrasing content, so everything
+		inside it is makeElement's default <span> - the one place in this file
+		where the default is the right tag - and the CSS supplies the box.
+	*/
+	const importAction = makeElement({
+		tag: 'button',
+		className: 'hub__import-action',
+		attributes: { type: 'button', 'aria-label': `Open a font file: ${spokenFormats}` },
+		onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
+	});
+
+	const importText = makeElement({ className: 'hub__import-text' });
+	importText.appendChild(
+		makeElement({ className: 'hub__import-title', content: 'Open a font file' })
+	);
+	importText.appendChild(
 		makeElement({
-			tag: 'div',
-			className: 'hub__formats',
-			innerHTML: ACCEPTED_FORMATS.map((extension) => `<code>${extension}</code>`).join(''),
+			className: 'hub__import-caption',
+			content: 'A saved project, or a typeface you already have.',
 		})
 	);
+
+	addAsChildren(importAction, [
+		importText,
+		makeElement({
+			className: 'hub__import-arrow',
+			attributes: { 'aria-hidden': 'true' },
+			innerHTML: '&rarr;',
+		}),
+	]);
+	importCard.appendChild(importAction);
 
 	addAsChildren(row, [create, importCard]);
 	return row;
@@ -1450,19 +1469,37 @@ function makeNewProjectView() {
 	return panel;
 }
 
-/*
-	makeOpenFileView was here, and hubViews.open with it.
+/**
+ * Drop zone plus file picker.
+ * @returns {Element}
+ */
+function makeOpenFileView() {
+	const panel = makeElement({ className: 'hub-panel hub-panel--wide' });
 
-	It was a dashed drop target and a "Choose a file" button, reached from an
-	"Open a file" row in the old hub sidebar. The rail replaced that sidebar
-	with three destinations and the import card's button went straight to the
-	OS picker, so nothing called switchHubView('open') any more - the view was
-	unreachable and its stylesheet block was dead with it.
+	const dropTarget = makeElement({
+		id: 'open-project__drop-target',
+		innerHTML: `
+			<div class="hub-drop__icon">${hubIcons.upload}</div>
+			<div class="hub-drop__title">Drop a font file anywhere on this page</div>
+			<div class="hub-drop__formats">
+				<code>.gs2</code> <code>.txt</code> Blue Rain Type project<br>
+				<code>.otf</code> <code>.ttf</code> <code>.woff</code> OpenType, TrueType, WOFF<br>
+				<code>.svg</code> SVG font
+			</div>
+		`,
+	});
 
-	Everything it said is on the home view now: the import card is the drop
-	affordance (.hub__drop-well) and carries the same list of formats, and the
-	full-page overlay still answers a drop anywhere on the page.
-*/
+	const openFileChooser = makeElement({
+		tag: 'button',
+		className: 'hub-button hub-button--primary hub-button--large',
+		attributes: { type: 'button' },
+		innerHTML: `${hubIcons.upload}<span>Choose a file</span>`,
+		onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
+	});
+
+	addAsChildren(panel, [dropTarget, openFileChooser]);
+	return panel;
+}
 
 /**
  * Shows an OS File Picker, then returns the selected files
