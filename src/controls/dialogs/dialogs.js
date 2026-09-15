@@ -6,6 +6,7 @@ import { makeLineIcon } from '../../common/icons.js';
 import { sXcX, sYcY } from '../../edit_canvas/edit_canvas.js';
 import { closeAllNavMenus } from '../../project_editor/navigator.js';
 import { closeAllMenuButtons } from '../menu-button/menu_button.js';
+import { attachTooltip } from '../tooltip/tooltip.js';
 
 // --------------------------------------------------------------
 // Generic dialog stuff
@@ -467,7 +468,10 @@ function makeOneContextMenuRow(data = {}) {
 	let row = makeElement({
 		tag: 'button',
 		className: data?.className || 'context-menu-row',
-		attributes: { type: 'button', role: data.selected === undefined ? 'menuitem' : 'menuitemradio' },
+		attributes: {
+			type: 'button',
+			role: data.selected === undefined ? 'menuitem' : 'menuitemradio',
+		},
 	});
 	if (isDisabled) row.setAttribute('disabled', '');
 
@@ -520,8 +524,12 @@ function makeOneContextMenuRow(data = {}) {
 		textCell.appendChild(
 			makeElement({ className: 'row-description', innerHTML: data.description })
 		);
-		/* A long file name ellipsises; the tooltip still carries all of it. */
-		row.setAttribute('title', `${data.name} — ${data.description}`);
+		/*
+			A long file name ellipsises; the tooltip still carries all of it -
+			the app's own, like every other hover label, rather than a browser
+			one arriving a second later in an OS font.
+		*/
+		attachTooltip(row, { name: data.name, body: data.description });
 	}
 	row.appendChild(textCell);
 

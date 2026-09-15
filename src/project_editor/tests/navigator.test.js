@@ -158,9 +158,14 @@ describe('Navigator: Page Navigation', () => {
 			The label shows the character itself with its code point beside it;
 			the full Unicode name lives in the tooltip. Both have to follow the
 			selection.
+
+			data-tip-name, not title: the breadcrumb wears the app's own hover
+			label now rather than the browser's, and attachTooltip moves the
+			text off the title attribute so the OS tooltip cannot appear over
+			it. Same string, read from where it now lives.
 		*/
 		expect(after).toEqual('B');
-		expect(itemButton?.getAttribute('title')).toEqual(
+		expect(itemButton?.getAttribute('data-tip-name')).toEqual(
 			editor.project.getItemName('glyph-0x42', true)
 		);
 

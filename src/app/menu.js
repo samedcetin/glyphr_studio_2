@@ -501,7 +501,10 @@ function makeProjectPreviewRow(projectID = 0) {
 	);
 
 	const bar = makeElement({ className: 'project-card__bar' });
-	bar.appendChild(makeElement({ className: 'project-card__name', content: name, title: name }));
+	const cardName = makeElement({ className: 'project-card__name', content: name });
+	/* A long project name ellipsises here; hovering is how you read it in full. */
+	attachTooltip(cardName, { name: name });
+	bar.appendChild(cardName);
 	/*
 		Two different things, so two different shapes. "Editing" is a status and is
 		written as one: plain text, no box. "Switch" is what happens if you press

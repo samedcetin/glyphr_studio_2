@@ -19,7 +19,7 @@
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
 import { showCommandPalette } from '../controls/command-palette/command_palette.js';
-import { attachTooltip } from '../controls/tooltip/tooltip.js';
+import { attachTooltip, attachTooltipsIn } from '../controls/tooltip/tooltip.js';
 import { navigateToPage } from '../project_editor/navigator.js';
 import { PRODUCT_NAME } from './brand.js';
 import { getCurrentProjectEditor } from './main.js';
@@ -67,6 +67,9 @@ export function makeLeftRail() {
 	/* Pushes the two workspace switches to the bottom of the column. */
 	rail.appendChild(makeElement({ className: 'left-rail__spacer' }));
 	rail.appendChild(makeRailGroup([makeRailSearchButton(), makeRailThemeToggle()]));
+
+	/* Catches anything built elsewhere that still carries a title. */
+	attachTooltipsIn(rail);
 
 	return rail;
 }
@@ -131,6 +134,9 @@ export function makeAppPageRail({ tabs = [], current = '', onSelect = () => {}, 
 
 	rail.appendChild(makeElement({ className: 'left-rail__spacer' }));
 	rail.appendChild(makeRailGroup([makeRailThemeToggle(), ...footer]));
+
+	/* Catches anything a caller passed in with a title of its own. */
+	attachTooltipsIn(rail);
 
 	return rail;
 }

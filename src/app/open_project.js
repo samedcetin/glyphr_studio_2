@@ -2,6 +2,7 @@ import { PRODUCT_NAME, PRODUCT_URL, UPSTREAM_HELP } from './brand.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
 import { makeAppPageRail, setAppPageRailTab } from './left_rail.js';
+import { attachTooltipsIn } from '../controls/tooltip/tooltip.js';
 import { closeEveryTypeOfDialog, showError, showToast } from '../controls/dialogs/dialogs.js';
 import { makeProgressIndicator } from '../controls/progress-indicator/progress_indicator.js';
 import { cancelDefaultEventActions } from '../edit_canvas/events.js';
@@ -610,6 +611,14 @@ function renderHubView(root) {
 	else if (currentView === 'learn') body.appendChild(makeLearnView());
 	else if (currentView === 'new') body.appendChild(makeFormView('new'));
 	else if (currentView === 'open') body.appendChild(makeFormView('open'));
+
+	/*
+		The app's hover label for whatever the view just built, in one sweep -
+		the same thing the toolbar, the breadcrumb and the panels do. Every view
+		on this page is rendered through here, so a card or a control added to
+		any of them gets it without its author having to remember.
+	*/
+	attachTooltipsIn(body);
 }
 
 /**

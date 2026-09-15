@@ -163,3 +163,24 @@ export function attachTooltip(element, text) {
 		sits on top of the menu. */
 	element.addEventListener('click', hideTooltip);
 }
+
+/**
+ * Give every titled element inside a subtree the app's tooltip.
+ *
+ * One sweep per surface rather than a call in each builder, which is how the
+ * canvas toolbar has done it since it was written: a control added later gets
+ * the app's label without anyone having to remember. Elements whose label
+ * changes under them have already set theirs through setTooltip and carry no
+ * title to read, so the sweep passes over them.
+ *
+ * @param {Element | Document | DocumentFragment} root - the subtree, included
+ */
+export function attachTooltipsIn(root) {
+	if (!root) return;
+
+	if (root instanceof HTMLElement && root.hasAttribute('title')) attachTooltip(root);
+
+	root.querySelectorAll('[title]').forEach((element) => {
+		if (element instanceof HTMLElement) attachTooltip(element);
+	});
+}

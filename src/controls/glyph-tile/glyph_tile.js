@@ -5,6 +5,7 @@ import { onThemeChange } from '../../common/theme.js';
 import { remove } from '../../common/functions.js';
 import { isWhitespace } from '../../lib/unicode/unicode_names.js';
 import { getItemNameWithFallback } from '../../pages/characters.js';
+import { attachTooltip } from '../tooltip/tooltip.js';
 import style from './glyph-tile.css?inline';
 
 /**
@@ -83,8 +84,23 @@ export class GlyphTile extends HTMLElement {
 		// Selection
 		if (this.hasAttribute('selected')) this.wrapper.setAttribute('selected', '');
 
+		/*
+			The app's hover label rather than the browser's, set once for both
+			branches below - they only ever wrote the same string twice.
+
+			attachTooltip rather than a title, because a tile relabels itself
+			every time its glyph changes: a title written back after the tooltip
+			took it away brings the OS one up over ours. A tile is also the most
+			hovered thing in the app - the coverage grid is ninety-five of them.
+		*/
+		const sessionNote = sessionMessage.trim();
+		attachTooltip(this, {
+			name: name,
+			body: sessionNote ? `${displayedItemID} — ${sessionNote}` : displayedItemID,
+		});
+		this.setAttribute('aria-label', `${name} ${displayedItemID}`);
+
 		if (this.glyph && this.glyph.hasChangedThisSession === true) {
-			this.setAttribute('title', `${name}\n${displayedItemID}${sessionMessage}`);
 			this.thumbnail = makeElement({
 				tag: 'span',
 				className: 'thumbnail',
@@ -94,7 +110,6 @@ export class GlyphTile extends HTMLElement {
 			// @ts-expect-error 'property does exist'
 			this.thumbnail.height = overallSize;
 		} else {
-			this.setAttribute('title', `${name}\n${displayedItemID}${sessionMessage}`);
 			this.thumbnail = makeElement({
 				className: 'thumbnail',
 			});

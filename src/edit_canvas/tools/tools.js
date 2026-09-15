@@ -1,4 +1,4 @@
-import { attachTooltip } from '../../controls/tooltip/tooltip.js';
+import { attachTooltip, attachTooltipsIn } from '../../controls/tooltip/tooltip.js';
 import { makeQuickActionsButton } from '../quick_actions.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
 import { addAsChildren, makeElement } from '../../common/dom.js';
@@ -92,7 +92,9 @@ export function makeEditToolsButtons() {
 	const onLigaturesPage = editor.nav.page === 'Ligatures';
 	const selectedItem = editor.selectedItem;
 	const canDrawNewShapes =
-		onGlyphEditPage || onLigaturesPage || (onComponentPage && selectedItem && !selectedItem.pathPoints);
+		onGlyphEditPage ||
+		onLigaturesPage ||
+		(onComponentPage && selectedItem && !selectedItem.pathPoints);
 
 	/*
 		Tools are grouped by what they are for rather than listed flat: one slot
@@ -121,9 +123,7 @@ export function makeEditToolsButtons() {
 		{
 			id: 'draw',
 			name: 'Draw',
-			members: pixelMode
-				? ['newPath', 'pathAddPoint', 'pixelPen']
-				: ['newPath', 'pathAddPoint'],
+			members: pixelMode ? ['newPath', 'pathAddPoint', 'pixelPen'] : ['newPath', 'pathAddPoint'],
 			available: canDrawNewShapes || onGlyphEditPage || onComponentPage || onLigaturesPage,
 		},
 	];
@@ -246,9 +246,12 @@ export function fillEditorToolBar(content, toolButtons = []) {
 		buttons whose label changes have already set theirs and are skipped,
 		because they carry no title to read.
 	*/
-	/** @type {NodeListOf<HTMLElement>} */
-	const titled = bar.querySelectorAll('button[title]');
-	titled.forEach((button) => attachTooltip(button));
+	/*
+		Everything titled, not only the buttons: the zoom readout is an <input>
+		and was the one control on the bar still waiting a second for an OS
+		tooltip.
+	*/
+	attachTooltipsIn(bar);
 
 	return true;
 }
@@ -865,7 +868,6 @@ export function isSideBearingHere(cx, cy, item) {
 // Tool button graphics
 // --------------------------------------------------------------
 
-
 /**
  * Makes a tool icon.
  *
@@ -881,4 +883,3 @@ export function isSideBearingHere(cx, cy, item) {
 export function makeToolButtonSVG(oa) {
 	return makeLineIcon(oa.name, 20);
 }
-

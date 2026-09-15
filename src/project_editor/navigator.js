@@ -20,6 +20,7 @@ import { livePreviewPageWindowResize, makePage_LivePreview } from '../pages/live
 import { makePage_Overview } from '../pages/overview.js';
 import { makePage_Settings } from '../pages/settings.js';
 import { makeSingleItemTypeChooserContent } from '../panels/item_chooser.js';
+import { attachTooltipsIn, setTooltip } from '../controls/tooltip/tooltip.js';
 
 // --------------------------------------------------------------
 // Navigation
@@ -182,6 +183,17 @@ export class Navigator {
 			if (breadcrumb) editorPage.appendChild(breadcrumb);
 		}
 
+		/*
+			The app's hover label for whatever the page built, in one sweep -
+			the same thing the toolbar, the breadcrumb, the panels and the hub
+			do. Every page in the editor is constructed through here, so a
+			control added to any of them gets it without its author having to
+			remember, and the value-type marks on Settings and the range tables
+			on Global actions stop being the last things in the app waiting a
+			second for an OS tooltip.
+		*/
+		attachTooltipsIn(pageContent);
+
 		// Append results
 		editorContent.appendChild(pageContent);
 
@@ -288,19 +300,35 @@ export function makeBreadcrumb() {
 			this it goes on saying whichever glyph happened to be open first.
 		*/
 		editor.subscribe({
-			topic: ['whichGlyphIsSelected', 'whichLigatureIsSelected', 'whichComponentIsSelected', 'whichKernGroupIsSelected'],
+			topic: [
+				'whichGlyphIsSelected',
+				'whichLigatureIsSelected',
+				'whichComponentIsSelected',
+				'whichKernGroupIsSelected',
+			],
 			subscriberID: 'breadcrumb.itemName',
 			callback: () => {
 				if (!itemButton.isConnected) return;
 				const newName = editor.project.getItemName(editor.selectedItemID || '', true);
 				itemButton.innerHTML = makeItemLabel(editor, newName) + breadcrumbChevron;
-				itemButton.setAttribute('title', newName);
+				/* setTooltip, not a title: the sweep below took the title away,
+					and writing one back brings the OS tooltip up over ours. */
+				setTooltip(itemButton, newName);
 				// The step buttons name where they go, so they change too.
 				refreshStepButton(previousButton, editor, -1);
 				refreshStepButton(nextButton, editor, 1);
 			},
 		});
 	}
+
+	/*
+		The app's hover label for the whole bar, in one sweep - the same thing
+		the canvas toolbar does, and for the same reason: the project name and
+		the item name are both truncated here, so hovering them is how you read
+		them in full, and a browser tooltip is a second of nothing followed by
+		an OS font.
+	*/
+	attachTooltipsIn(wrapper);
 
 	return wrapper;
 }
@@ -309,7 +337,7 @@ const breadcrumbChevron = `<svg class="breadcrumb__chevron" viewBox="0 0 16 16" 
 
 const stepChevron = {
 	'-1': `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.75 4 6.25 8l3.5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-	'1': `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.25 4 9.75 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+	1: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.25 4 9.75 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 };
 
 /**
@@ -352,12 +380,18 @@ function refreshStepButton(button, editor, delta) {
 	let label = delta < 0 ? 'Previous item' : 'Next item';
 	try {
 		const target = getAdjacentItem(editor.selectedItem, delta);
-		if (target) label = `${delta < 0 ? 'Previous' : 'Next'}: ${editor.project.getItemName(target.id, true)}`;
+		if (target)
+			label = `${delta < 0 ? 'Previous' : 'Next'}: ${editor.project.getItemName(target.id, true)}`;
 	} catch (error) {
 		// An item with no neighbours keeps the plain label.
 	}
 	const shortcut = delta < 0 ? 'Ctrl ,' : 'Ctrl .';
-	button.setAttribute('title', `${label}\n${shortcut}`);
+	/*
+		These relabel themselves every time the selection moves - they name
+		where they go - so they go through setTooltip rather than writing a
+		title the sweep has already taken away.
+	*/
+	setTooltip(button, label, `Shortcut ${shortcut}`);
 	button.setAttribute('aria-label', label);
 }
 

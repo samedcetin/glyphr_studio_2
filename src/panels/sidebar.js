@@ -14,6 +14,7 @@ import { makePanel_Layers } from './layers.js';
 import { handlePanelsKeyPress, handlePanelsKeyUp } from './panel_events.js';
 import { makePanel_QualityChecks } from './quality_checks.js';
 import { makePanel_Transforms } from './transforms.js';
+import { attachTooltipsIn } from '../controls/tooltip/tooltip.js';
 
 /**
 	SIDEBARS
@@ -256,6 +257,13 @@ function buildSectionBody(definition, host) {
 	try {
 		const content = definition.maker(editor.nav.page);
 		if (content) addAsChildren(host, content);
+		/*
+			The app's hover label for whatever the panel just built, in one
+			sweep - the same thing the canvas toolbar and the breadcrumb do.
+			Every panel is rebuilt through here, so a control added to any of
+			them gets it without its author having to remember.
+		*/
+		attachTooltipsIn(host);
 	} catch (error) {
 		console.warn(`Panel "${definition.id}" failed to build:`, error);
 		host.appendChild(
