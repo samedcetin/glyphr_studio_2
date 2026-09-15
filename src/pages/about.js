@@ -1,157 +1,178 @@
 import { emailLink } from '../app/app.js';
 import {
+	PRODUCT_ISSUES_URL,
 	PRODUCT_NAME,
+	PRODUCT_SOURCE_URL,
 	PRODUCT_URL,
 	UPSTREAM_HELP,
+	UPSTREAM_NAME,
+	UPSTREAM_RELEASES_URL,
+	UPSTREAM_SOURCE_URL,
 	UPSTREAM_URL,
 	VENDOR_NAME,
 } from '../app/brand.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
-import logoVertical from '../common/graphics/logo-wordmark-vertical.svg?raw';
+import { makeLineIcon } from '../common/icons.js';
 import { TabControl } from '../controls/tabs/tab_control.js';
-import { makeNavButton, toggleNavDropdown } from '../project_editor/navigator.js';
+
+/**
+	PAGE > ABOUT
+	------------
+	What this app is, who built it, and how it is licensed.
+
+	WHAT THIS PAGE WAS. The last content page still on the old shell: a 450px
+	column holding a dropdown that named the page you were already on, the
+	three tab names stacked under it, and a card of attribution - beside a
+	panel whose first screen was the upstream Glyphr Studio wordmark at 300px.
+	Our own About page led with someone else's logo.
+
+	WHAT IT IS. The shared page shell, the same one Overview, Live preview,
+	Global actions and Settings use: head, a segmented tab row, one card that
+	scrolls. The identity at the top is set in type from the brand constants
+	rather than drawn from an SVG, so it says what the product is called and
+	changes when that constant does.
+
+	Attribution to Matthew LaGrandeur and to Glyphr Studio is kept, and kept
+	prominent - the GPL requires the notices and the credit is owed besides.
+	See src/app/brand.js for the line between what is ours and what is theirs.
+ */
+
+/** The third-party code that ships inside the app, in load order. */
+const LIBRARIES = [
+	{
+		name: 'Font Flux JS',
+		repo: 'https://github.com/mattlag/Font-Flux-JS',
+		npm: 'https://www.npmjs.com/package/font-flux-js',
+	},
+	{
+		name: 'bezier-boolean',
+		repo: 'https://github.com/mattlag/bezier-boolean',
+		npm: 'https://www.npmjs.com/package/bezier-boolean',
+	},
+	{
+		name: 'SVG-to-Bézier',
+		repo: 'https://github.com/mattlag/SVG-to-Bezier',
+		npm: 'https://www.npmjs.com/package/svg-to-bezier',
+	},
+	{
+		name: 'XMLtoJSON',
+		repo: 'https://github.com/mattlag/XMLtoJSON',
+		npm: 'https://www.npmjs.com/package/@mattlag/xmltojson',
+	},
+];
+
+const GPL_URL = 'https://www.gnu.org/licenses/gpl.html';
 
 /**
  * Page > About
- * Information about the app..
+ * Information about the app.
  * @returns {Element} - page content
  */
 export function makePage_About() {
-	const content = makeElement({
-		tag: 'div',
-		id: 'app__page',
-		innerHTML: `
-		<div class="content__page">
-			<div class="content-page__left-area">
-				<div class="content-page__nav-area">
-					${makeNavButton({ level: 'l1', superTitle: 'PAGE', title: 'About' })}
-				</div>
-				<div id="content-page__panel"></div>
-			</div>
-			<div class="content-page__right-area"></div>
-		</div>
-	`,
-	});
+	const content = makeElement({ tag: 'div', id: 'app__page' });
+	const page = makeElement({ tag: 'div', className: 'studio-page about' });
+	content.appendChild(page);
 
-	// Page Selector
-	let l1 = content.querySelector('#nav-button-l1');
-	l1.addEventListener('click', function () {
-		toggleNavDropdown(l1);
-	});
+	// --- Head ----------------------------------------------------
+	const head = makeElement({ tag: 'div', className: 'studio-page__head' });
+	const titles = makeElement({ tag: 'div', className: 'studio-page__titles' });
+	titles.appendChild(makeElement({ tag: 'h1', className: 'studio-page__title', content: 'About' }));
+	titles.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'studio-page__subtitle',
+			content: 'What this app is, who built it, and how it is licensed.',
+		})
+	);
+	head.appendChild(titles);
+	page.appendChild(head);
 
-	const rightArea = content.querySelector('.content-page__right-area');
-	const tabControl = new TabControl(rightArea);
+	/*
+		No head context. The other pages put what you are working on up there -
+		which slice of the font is on screen - and this page is not about the
+		font. The product name and version belong to the identity block in the
+		first tab, and saying them twice sixty pixels apart said nothing.
+	*/
 
-	tabControl.registerTab('Version', makeVersionInfo);
-	tabControl.registerTab('Contact and socials', makeContactInfo);
-	tabControl.registerTab('License', makeLicenseInfo);
+	// --- Tabs, and what they switch ------------------------------
+	/* No .studio-tab-body: the page scrolls here, not the card. See .about. */
+	const body = makeElement({ tag: 'div', className: 'studio-card' });
+	const tabControl = new TabControl(body);
 
+	tabControl.registerTab('Version', makeVersionInfo, { icon: 'page_about' });
+	tabControl.registerTab('Contact', makeContactInfo, { icon: 'mail' });
+	tabControl.registerTab('License', makeLicenseInfo, { icon: 'label' });
+
+	const tabs = makeElement({ tag: 'div', className: 'studio-tabs about__tabs' });
+	addAsChildren(tabs, tabControl.makeTabs());
+	page.appendChild(tabs);
+
+	page.appendChild(body);
 	tabControl.selectTab('Version');
 
-	const panelArea = content.querySelector('#content-page__panel');
-	addAsChildren(panelArea, [tabControl.makeTabs(), makeContributeCard()]);
-
 	return content;
+}
+
+// --------------------------------------------------------------
+// Shared pieces
+// --------------------------------------------------------------
+
+/**
+ * One block inside a tab: a small caps title, then whatever it holds.
+ * @param {String} title - the eyebrow over the block
+ * @param {String} innerHTML - the block's content
+ * @returns {Element}
+ */
+function makeSection(title, innerHTML) {
+	const section = makeElement({ tag: 'section', className: 'about__section' });
+	section.appendChild(makeElement({ tag: 'div', className: 'studio-eyebrow', content: title }));
+	section.appendChild(makeElement({ tag: 'div', className: 'about__section-body', innerHTML }));
+	return section;
 }
 
 /**
- * Makes content for license info
- * @returns {Element}
+ * A label / value table.
+ *
+ * The third field says whether the value is a number: version numbers and
+ * project IDs are read a character at a time and compared down the column, so
+ * they are mono and tabular. A project's name is a name, and was harder to
+ * read set as though it were a serial number.
+ *
+ * @param {Array} rows - [label, value, isNumeric] triples
+ * @returns {String}
  */
-function makeLicenseInfo() {
-	const content = makeElement({
-		innerHTML: `
-		<h1>License</h1>
-		<h2>This app</h2>
-		<br>
-		<div class="page__card">
-			<h3>${PRODUCT_NAME}</h3>
-			<a href="${PRODUCT_URL}" target="_blank">bluerain.studio</a>
-			<br><br>
-			${PRODUCT_NAME} is a modified version of
-			<a href="${UPSTREAM_URL}" target="_blank">Glyphr Studio</a>, and like it is
-			licensed under a
-			<a href='https://www.gnu.org/licenses/gpl.html' target='_blank'>GNU General
-			Public License</a>, version 3 or later - a free / open source 'copyleft'
-			license. You are free to use, distribute, and modify it as long as this
-			license and its freeness stays intact.
-			<br><br>
-			<a href="https://github.com/samedcetin/glyphr_studio_2" target="_blank">Source
-			code for this version</a>
-			<br><br>
-			Copyright © 2010 - 2026 Matthew LaGrandeur, for Glyphr Studio<br>
-			Copyright © 2026 ${VENDOR_NAME}, for the modifications in ${PRODUCT_NAME}
-		</div>
-
-		<br><br><br>
-		<h2>Fonts you create</h2>
-		<p>
-			Any font you create belongs 100% to you, and you must decide how to license it.<br>
-			You can find out <a href="${UPSTREAM_HELP}/about/licensing.html" target="_blank">
-			more about licensing on the Glyphr Studio help site</a>.
-		</p>
-
-		<br>
-		<h2>Libraries</h2>
-		<p>${PRODUCT_NAME} includes the following 3rd party libraries:</p>
-
-		<div class="page__card">
-			<h3>Font Flux JS</h3>
-			Available on
-			<a href="https://github.com/mattlag/Font-Flux-JS" target="_blank">GitHub</a>
-			and
-			<a href="https://www.npmjs.com/package/font-flux-js" target="_blank">NPM</a>.
-			<br>
-			Licensed under a
-			<a href='https://www.gnu.org/licenses/gpl.html' target='_blank'>GNU General Public License</a>.
-			<br>
-			Copyright © 2026, Matthew LaGrandeur
-		</div>
-
-		<div class="page__card">
-			<h3>bezier-boolean</h3>
-			Available on
-			<a href="https://github.com/mattlag/bezier-boolean" target="_blank">GitHub</a>
-			and
-			<a href="https://www.npmjs.com/package/bezier-boolean" target="_blank">NPM</a>.
-			<br>
-			Licensed under a
-			<a href='https://www.gnu.org/licenses/gpl.html' target='_blank'>GNU General Public License</a>.
-			<br>
-			Copyright © 2026, Matthew LaGrandeur
-		</div>
-
-		<div class="page__card">
-			<h3>SVG-to-Bézier</h3>
-			Available on
-			<a href="https://github.com/mattlag/SVG-to-Bezier" target="_blank">GitHub</a>
-			and
-			<a href="https://www.npmjs.com/package/svg-to-bezier" target="_blank">NPM</a>.
-			<br>
-			Licensed under a
-			<a href='https://www.gnu.org/licenses/gpl.html' target='_blank'>GNU General Public License</a>.
-			<br>
-			Copyright © 2026, Matthew LaGrandeur
-		</div>
-
-		<div class="page__card">
-			<h3>XMLtoJSON</h3>
-			Available on
-			<a href="https://github.com/mattlag/XMLtoJSON" target="_blank">GitHub</a>
-			and
-			<a href="https://www.npmjs.com/package/@mattlag/xmltojson" target="_blank">NPM</a>.
-			<br>
-			Licensed under a
-			<a href='https://www.gnu.org/licenses/gpl.html' target='_blank'>GNU General Public License</a>.
-			<br>
-			Copyright © 2026, Matthew LaGrandeur
-		</div>
-	`,
-	});
-
-	return content;
+function specTable(rows) {
+	const cells = rows
+		.map(([label, value, isNumeric]) => {
+			const valueClass = isNumeric
+				? 'about__spec-value about__spec-value--mono'
+				: 'about__spec-value';
+			return `<dt class="about__spec-label">${label}</dt><dd class="${valueClass}">${value}</dd>`;
+		})
+		.join('');
+	return `<dl class="about__spec">${cells}</dl>`;
 }
+
+/**
+ * A row of links out of the app.
+ * @param {Array} rows - [label, href, display] triples
+ * @returns {String}
+ */
+function linkTable(rows) {
+	const cells = rows
+		.map(
+			([label, href, display]) =>
+				`<dt class="about__spec-label">${label}</dt>
+				<dd class="about__spec-value"><a href="${href}" target="_blank">${display}</a></dd>`
+		)
+		.join('');
+	return `<dl class="about__spec">${cells}</dl>`;
+}
+
+// --------------------------------------------------------------
+// Version
+// --------------------------------------------------------------
 
 /**
  * Makes content for version info
@@ -160,124 +181,216 @@ function makeLicenseInfo() {
 function makeVersionInfo() {
 	const editor = getCurrentProjectEditor();
 	const app = getGlyphrStudioApp();
-	const content = makeElement({
-		innerHTML: `
-			<div class="about-page__logo">
-				${logoVertical}
-			</div><br><br>
-			<h1>Version information</h1>
-			<div class="page__card">
-				<h3>${PRODUCT_NAME}</h3>
-				<label>Version name:</label> ${app.versionName}<br>
-				<label>Version number:</label> ${app.version}<br>
-				<label>Last updated on:</label> ${
-					app.versionDate ? new Date(app.versionDate).toDateString() : '[n/a - dev edition]'
-				}
-			</div>
+	const project = editor.project.settings.project;
 
-			<div class="page__card">
-				<h3>This project</h3>
-				<label>Project name:</label> ${editor.project.settings.project.name}<br>
-				<label>Unique project ID:</label> ${editor.project.settings.project.id}<br>
-				<label>Initially created with:</label> Version ${
-					editor.project.settings.project.initialVersion
-				}</span>
-			</div>
+	const content = makeElement({ tag: 'div', className: 'about__tab-content' });
 
-			<br><br>
+	/*
+		The identity, set in type. This is where the upstream wordmark used to
+		be - 300px of someone else's logo on our own About page. Setting the
+		name instead of drawing it means it follows PRODUCT_NAME, and it is
+		legible in both themes without a second asset.
+	*/
+	const identity = makeElement({ tag: 'div', className: 'about__identity' });
+	identity.appendChild(
+		makeElement({ tag: 'div', className: 'about__mark', innerHTML: makeLineIcon('appMark', 30) })
+	);
+	const identityText = makeElement({ tag: 'div', className: 'about__identity-text' });
+	identityText.appendChild(
+		makeElement({ tag: 'div', className: 'about__name', content: PRODUCT_NAME })
+	);
+	identityText.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'about__tagline',
+			content: `A font editor by ${VENDOR_NAME}, built on ${UPSTREAM_NAME}.`,
+		})
+	);
+	identity.appendChild(identityText);
+	identity.appendChild(makeElement({ tag: 'div', className: 'about__chip', content: app.version }));
+	content.appendChild(identity);
 
-			<h2>More details</h2>
-			<p>
-				${PRODUCT_NAME} is built on Glyphr Studio and its version numbers follow
-				that project. What changed in each of those versions is written up on the
-				<a href="https://github.com/glyphr-studio/Glyphr-Studio-2/releases"
-				target="_blank">Glyphr Studio releases</a> page and the
-				<a href="${UPSTREAM_HELP}/about/updates.html" target="_blank">Glyphr Studio
-				updates</a> page.
+	content.appendChild(makeElement({ tag: 'div', className: 'studio-rule' }));
+
+	const columns = makeElement({ tag: 'div', className: 'about__columns' });
+	columns.appendChild(
+		makeSection(
+			'This app',
+			specTable([
+				['Version name', app.versionName],
+				['Version number', app.version, true],
+				[
+					'Last updated',
+					app.versionDate ? new Date(app.versionDate).toDateString() : 'Not set — dev edition',
+				],
+			])
+		)
+	);
+	columns.appendChild(
+		makeSection(
+			'This project',
+			specTable([
+				['Project name', project.name],
+				['Project ID', project.id, true],
+				['Created with', `Version ${project.initialVersion}`],
+			])
+		)
+	);
+	content.appendChild(columns);
+
+	content.appendChild(makeElement({ tag: 'div', className: 'studio-rule' }));
+
+	content.appendChild(
+		makeSection(
+			`Built on ${UPSTREAM_NAME}`,
+			`<p class="about__prose">
+				${PRODUCT_NAME} is a modified version of
+				<a href="${UPSTREAM_URL}" target="_blank">${UPSTREAM_NAME}</a> by Matthew
+				LaGrandeur, released under the GPL. The years of work underneath this
+				editor are his, and the upstream project takes contributions at
+				<a href="${UPSTREAM_URL}" target="_blank">glyphrstudio.com</a> — that is
+				where they belong, not with us.
 			</p>
-
-
-		`,
-	});
+			<p class="about__prose">
+				Version numbers follow that project. What changed in each of them is
+				written up on the
+				<a href="${UPSTREAM_RELEASES_URL}" target="_blank">${UPSTREAM_NAME} releases</a>
+				page and the
+				<a href="${UPSTREAM_HELP}/about/updates.html" target="_blank">${UPSTREAM_NAME} updates</a>
+				page.
+			</p>`
+		)
+	);
 
 	return content;
 }
 
-/**
- * Makes content for contribution info in a card
- * @returns {Element}
- */
-export function makeContributeCard() {
-	const content = makeElement({
-		className: 'panel__card full-width more-padding',
-	});
-	content.appendChild(makeContributeContent());
-	return content;
-}
-
-/**
- * Makes content for contribution info
- * @returns {Element}
- */
-export function makeContributeContent() {
-	return makeElement({
-		tag: 'div',
-		attributes: { style: 'margin: 20px;' },
-		innerHTML: `
-			<h2>Built on Glyphr Studio</h2>
-			${PRODUCT_NAME} is a modified version of
-			<a href="${UPSTREAM_URL}" target="_blank">Glyphr Studio</a> by Matthew
-			LaGrandeur, released under the GPL. The years of work underneath this editor
-			are his.
-			<br><br>
-			The upstream project takes contributions at
-			<a href="${UPSTREAM_URL}" target="_blank">glyphrstudio.com</a>, and that is
-			where they belong - not with us.
-			<br><br>
-			<h2>Tell us what to fix</h2>
-			For anything specific to ${PRODUCT_NAME}, write to ${emailLink()}, or open an
-			issue on
-			<a href="https://github.com/samedcetin/glyphr_studio_2/issues"
-			target="_blank">GitHub</a>.
-			`,
-	});
-}
+// --------------------------------------------------------------
+// Contact
+// --------------------------------------------------------------
 
 /**
  * Makes content for contact info
  * @returns {Element}
  */
 function makeContactInfo() {
-	const content = makeElement({
-		innerHTML: `
-			<h1>Contact and socials</h1>
+	const content = makeElement({ tag: 'div', className: 'about__tab-content' });
 
-			<div class="about-page__contact-table">
-				<h2>Web</h2>
-				<span>Main site:</span>
-				<a href="${PRODUCT_URL}" target="_blank">bluerain.studio</a>
+	content.appendChild(
+		makeSection(
+			PRODUCT_NAME,
+			`<p class="about__prose">
+				For anything specific to ${PRODUCT_NAME} — a bug, a feature, something
+				that reads wrong — write to us or open an issue. Both reach the same
+				people.
+			</p>` +
+				linkTable([
+					['Site', PRODUCT_URL, 'bluerain.studio'],
+					['Source', PRODUCT_SOURCE_URL, 'github.com/samedcetin/glyphr_studio_2'],
+					['Issues', PRODUCT_ISSUES_URL, 'Report a bug or ask for a feature'],
+				]) +
+				`<dl class="about__spec">
+					<dt class="about__spec-label">Email</dt>
+					<dd class="about__spec-value">${emailLink()}</dd>
+				</dl>`
+		)
+	);
 
-				<span>Email:</span>
-				${emailLink()}
+	content.appendChild(makeElement({ tag: 'div', className: 'studio-rule' }));
 
-				<span>Source code:</span>
-				<a href="https://github.com/samedcetin/glyphr_studio_2" target="_blank">github.com/samedcetin/glyphr_studio_2</a>
+	content.appendChild(
+		makeSection(
+			UPSTREAM_NAME,
+			`<p class="about__prose">
+				The project this editor is built on. Its help still covers most of what
+				is here, and its channels are its own — questions about ${PRODUCT_NAME}
+				should not go to them.
+			</p>` +
+				linkTable([
+					['Help', UPSTREAM_HELP, 'glyphrstudio.com/help'],
+					['Site', UPSTREAM_URL, 'glyphrstudio.com'],
+					['Source', UPSTREAM_SOURCE_URL, 'github.com/glyphr-studio'],
+				])
+		)
+	);
 
-				<h2>Glyphr Studio</h2>
-				The project this editor is built on. Its help still covers most of
-				what is here, and its channels are its own - not ours.
+	return content;
+}
 
-				<span>Help:</span>
-				<a href="${UPSTREAM_HELP}" target="_blank">glyphrstudio.com/help</a>
+// --------------------------------------------------------------
+// License
+// --------------------------------------------------------------
 
-				<span>Site:</span>
-				<a href="${UPSTREAM_URL}" target="_blank">glyphrstudio.com</a>
+/**
+ * Makes content for license info
+ * @returns {Element}
+ */
+function makeLicenseInfo() {
+	const content = makeElement({ tag: 'div', className: 'about__tab-content' });
 
-				<span>Source:</span>
-				<a href="https://github.com/glyphr-studio" target="_blank">github.com/glyphr-studio</a>
+	content.appendChild(
+		makeSection(
+			'This app',
+			`<p class="about__prose">
+				${PRODUCT_NAME} is a modified version of
+				<a href="${UPSTREAM_URL}" target="_blank">${UPSTREAM_NAME}</a>, and like it
+				is licensed under a
+				<a href="${GPL_URL}" target="_blank">GNU General Public License</a>,
+				version 3 or later — a free, open source copyleft license. You are free
+				to use, distribute and modify it as long as this license and its
+				freeness stay intact.
+			</p>` +
+				linkTable([
+					['Site', PRODUCT_URL, 'bluerain.studio'],
+					['Source', PRODUCT_SOURCE_URL, 'github.com/samedcetin/glyphr_studio_2'],
+				]) +
+				`<p class="about__copyright">
+					Copyright © 2010–2026 Matthew LaGrandeur, for ${UPSTREAM_NAME}<br>
+					Copyright © 2026 ${VENDOR_NAME}, for the modifications in ${PRODUCT_NAME}
+				</p>`
+		)
+	);
+
+	content.appendChild(makeElement({ tag: 'div', className: 'studio-rule' }));
+
+	content.appendChild(
+		makeSection(
+			'Fonts you create',
+			`<p class="about__prose">
+				Any font you create belongs 100% to you, and you decide how to license
+				it. There is
+				<a href="${UPSTREAM_HELP}/about/licensing.html" target="_blank">more about
+				licensing on the ${UPSTREAM_NAME} help site</a>.
+			</p>`
+		)
+	);
+
+	content.appendChild(makeElement({ tag: 'div', className: 'studio-rule' }));
+
+	const libraryRows = LIBRARIES.map(
+		(library) => `
+		<div class="about__library">
+			<div class="about__library-name">${library.name}</div>
+			<div class="about__library-meta">
+				GNU General Public License · Copyright © 2026, Matthew LaGrandeur
 			</div>
-		`,
-	});
+			<div class="about__library-links">
+				<a href="${library.repo}" target="_blank">GitHub</a>
+				<a href="${library.npm}" target="_blank">NPM</a>
+			</div>
+		</div>`
+	).join('');
+
+	content.appendChild(
+		makeSection(
+			'Libraries',
+			`<p class="about__prose">
+				${PRODUCT_NAME} includes these third party libraries, each under a
+				<a href="${GPL_URL}" target="_blank">GNU General Public License</a>.
+			</p>
+			<div class="about__library-list">${libraryRows}</div>`
+		)
+	);
 
 	return content;
 }

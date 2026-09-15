@@ -57,28 +57,11 @@
 }
 
 /*
-	The wordmark on the About page. It was filled purple with a darker purple
-	stroke, which is the one place the old gradient palette still reached the
-	screen - and it did not change with the theme, so on a dark page it was a
-	purple mark on black.
+	.about-page__logo and .about-page__contact-table were here. The first drew
+	the upstream wordmark at 300px, which is what the About page led with; the
+	second was its contact grid. Both went when that page moved onto the
+	shared shell - see the ABOUT PAGE block at the end of this file.
 */
-.about-page__logo {
-	width: 300px;
-	fill: var(--text-primary);
-	stroke: none;
-}
-
-.about-page__contact-table {
-	display: grid;
-	grid-template-columns: max-content 1fr;
-	row-gap: 20px;
-	column-gap: 20px;
-}
-
-.about-page__contact-table h2 {
-	grid-column: -1 / 1;
-	margin-top: 20px;
-}
 
 .logoNote {
 	margin-top: 10px;
@@ -975,7 +958,7 @@ span.spacer {
 .studio-eyebrow {
 	font-size: var(--fs-2xs);
 	font-weight: var(--fw-semibold);
-	letter-spacing: var(--tracking-wide);
+	letter-spacing: var(--tracking-caps);
 	text-transform: uppercase;
 	color: var(--text-tertiary);
 }
@@ -1520,7 +1503,6 @@ span.spacer {
 	transform: translateX(2px);
 }
 
-
 /* --------------------------------------------------------------
 	LIVE PREVIEW PAGE
 
@@ -1812,15 +1794,12 @@ span.spacer {
 	color: var(--icon-default);
 }
 
-
-
-
 /* --------------------------------------------------------------
-	SETTINGS PAGE
+	TABBED PAGES - SETTINGS AND ABOUT
 
-	The head, the three tabs as a row, and whichever one is open in a card
-	that scrolls. See makePage_Settings for what the 450px column of tab names
-	became.
+	Both are the same shape: a head, the tabs as one row, and whichever tab is
+	open in a card that scrolls under them. See makePage_Settings and
+	makePage_About for what the 450px column of tab names became.
 	------------------------------------------------------------ */
 
 .settings {
@@ -1830,14 +1809,28 @@ span.spacer {
 }
 
 /*
-	A row of three. The control builds a stack of full-width tabs, which is
-	right in a narrow panel and is where the old page spent 450 pixels on the
-	words Project, Font and App - so the row is scoped here, and About and Help
-	keep the stack.
+	Same three rows, except the card takes its own height rather than the rest
+	of the window. Settings is one long form, so its card owns the scroll and
+	the head stays put; About is three tabs of very different lengths, and a
+	full-height card left the short one two thirds empty. Here the page
+	scrolls and the card ends where its content does.
+*/
+.about {
+	display: grid;
+	grid-template-rows: min-content min-content min-content;
+	align-content: start;
+	gap: var(--sp-6);
+}
+
+/*
+	A row, not a stack. The control builds full-width tabs, which is right in
+	a narrow panel and is where the old pages spent 450 pixels on three words
+	- so the row treatment lives on .studio-tabs, which a page opts into, and
+	Help keeps the stack until it moves too.
 
 	The container arrives carrying panel__card and full-width, which is the
 	card treatment it needed while it was one; those are answered rather than
-	removed at the source, since the other two pages still want them.
+	removed at the source, since Help still wants them.
 */
 /*
 	A segmented control, the way a macOS toolbar switches between views: one
@@ -1860,7 +1853,7 @@ span.spacer {
 	segment on the desktop rather than a form field.
 */
 
-.settings__tabs .tab-control__tab-container {
+.studio-tabs .tab-control__tab-container {
 	--seg-inset: 4px;
 	--seg-radius: var(--r-3xl);
 	--seg-tab-h: 36px;
@@ -1879,7 +1872,7 @@ span.spacer {
 	isolation: isolate;
 }
 
-.settings__tabs .tab-control__tab-container::before {
+.studio-tabs .tab-control__tab-container::before {
 	content: '';
 	position: absolute;
 	top: var(--seg-inset);
@@ -1897,20 +1890,19 @@ span.spacer {
 }
 
 /* Only once measured - a thumb sized from nothing would flash in at zero. */
-.settings__tabs .tab-control__tab-container[data-thumb-ready]::before {
+.studio-tabs .tab-control__tab-container[data-thumb-ready]::before {
 	opacity: 1;
-	transition:
-		transform var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1),
+	transition: transform var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1),
 		width var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.settings__tabs .tab-control__tab-container[data-thumb-ready]::before {
+	.studio-tabs .tab-control__tab-container[data-thumb-ready]::before {
 		transition: none;
 	}
 }
 
-.settings__tabs .tab-control__tab {
+.studio-tabs .tab-control__tab {
 	position: relative;
 	z-index: 1;
 	width: auto;
@@ -1927,52 +1919,58 @@ span.spacer {
 	transition: color var(--dur-fast) ease;
 }
 
-.settings__tabs .tab-control__tab:hover {
+.studio-tabs .tab-control__tab:hover {
 	background-color: transparent;
 	color: var(--text-primary);
 }
 
-.settings__tabs .tab-control__tab[selected] {
+.studio-tabs .tab-control__tab[selected] {
 	background-color: transparent;
 	color: var(--text-primary);
 	font-weight: var(--fw-semibold);
 }
 
-.settings__tabs .tab-control__tab .tab-control__icon {
+.studio-tabs .tab-control__tab .tab-control__icon {
 	color: var(--icon-default);
 	transition: color var(--dur-fast) ease;
 }
 
-.settings__tabs .tab-control__tab .tab-control__icon svg {
+.studio-tabs .tab-control__tab .tab-control__icon svg {
 	width: 18px;
 	height: 18px;
 }
 
-.settings__tabs .tab-control__tab[selected] .tab-control__icon,
-.settings__tabs .tab-control__tab:hover .tab-control__icon {
+.studio-tabs .tab-control__tab[selected] .tab-control__icon,
+.studio-tabs .tab-control__tab:hover .tab-control__icon {
 	color: var(--icon-accent);
 }
 
 /* --------------------------------------------------------------
 	The open tab
 
-	One card, because one tab is one panel of settings. It owns the scroll, so
-	the head and the tabs stay put while a long tab moves under them.
+	One card, because one tab is one panel. It owns the scroll, so the head
+	and the tabs stay put while a long tab moves under them.
 	------------------------------------------------------------ */
 
-.settings__body {
+.studio-tab-body {
 	min-height: 0;
 	overflow-y: auto;
 	scrollbar-width: none;
 }
 
-.settings__body::-webkit-scrollbar {
+.studio-tab-body::-webkit-scrollbar {
 	display: none;
 }
 
+/*
+	The content fills the card. It was capped at 900px, which left a third of
+	a wide card empty: the form columns are content-sized and stay left
+	whatever the cap says, so all the cap did was stop the range tables from
+	reaching the edge. Prose keeps its own measure below.
+*/
 .settings .settings-page__tab-content {
 	width: auto;
-	max-width: 900px;
+	max-width: none;
 }
 
 /*
@@ -1987,8 +1985,15 @@ span.spacer {
 	color: var(--text-primary);
 }
 
+/*
+	A hairline over each one. The tab is a single card holding four unrelated
+	groups of settings, and without a rule between them a heading is just
+	slightly bolder text in a column - the groups ran together.
+*/
 .settings .settings-page__tab-content h2 {
 	margin: var(--sp-8) 0 var(--sp-2) 0;
+	padding-top: var(--sp-7);
+	border-top: 1px solid var(--border-subtle);
 	font-size: var(--fs-md);
 	font-weight: var(--fw-semibold);
 	color: var(--text-primary);
@@ -2062,10 +2067,338 @@ span.spacer {
 /*
 	The range tables. Concentric inside the card - --r-3xl less its --sp-6 of
 	padding - and no longer carrying their own frame colour.
+
+	The 800px cap came off with the content cap above: these are the one thing
+	on the page that wants the width, and they now sit on the sunken ground so
+	the card can be read as holding them rather than as being them.
 */
 .settings .range-table__list-area {
+	max-width: none;
+	padding: 0 var(--sp-5) var(--sp-5) var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
 	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	overflow: hidden;
+	/*
+		The name column was 4fr against four 1fr columns, which was right at
+		800px and is not at the card's full width - it left the name alone on
+		the left and the numbers stranded two thirds of the way across. The
+		three numeric columns take what they need, the actions sit at the
+		right edge, and the name absorbs the rest.
+	*/
+	grid-template-columns: minmax(0, 1fr) repeat(3, minmax(max-content, 110px)) max-content;
+	column-gap: var(--sp-5);
+	row-gap: var(--sp-2);
 }
 
+.settings .range-table__list-area .list__column-header:nth-child(5),
+.settings .range-table__list-area .list__row-wrapper__static > *:nth-child(5) {
+	justify-self: end;
+	text-align: right;
+}
+
+.settings .range-table__list-area .list__column-header {
+	font-style: normal;
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: var(--tracking-caps);
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+	padding: var(--sp-5) 0 var(--sp-3) 0;
+	top: 0;
+	margin-bottom: 0;
+}
+
+/*
+	The row actions. They were bare anchors, so Edit, Hide and Delete read as
+	body links in the middle of a table and had no target of their own; these
+	are 24px tall with padding around the word, which is the floor.
+*/
+.settings .range-table__list-area a {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	margin-right: var(--sp-2);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-accent);
+	text-decoration: none;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.settings .range-table__list-area a:hover {
+	background-color: var(--bg-hover);
+	color: var(--accent-hover);
+}
+
+.settings .range-table__list-area a:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.settings .range-table__list-area a[danger] {
+	color: var(--text-danger);
+}
+
+.settings .range-table__list-area a[danger]:hover {
+	color: var(--text-danger);
+	background-color: var(--bg-hover);
+}
+
+/* The one that cannot be used, because a project needs a range left. */
+.settings .range-table__list-area span[disabled] {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	font-size: var(--fs-sm);
+	color: var(--text-disabled);
+	cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------
+	ABOUT PAGE
+
+	Shares the shell and the segmented tabs above. What is local to it is the
+	identity block, the label / value tables, and the library list.
+	------------------------------------------------------------ */
+
+.about__tab-content {
+	display: grid;
+	gap: var(--sp-6);
+	min-width: 0;
+}
+
+/*
+	The identity. This replaced a 300px SVG of the upstream wordmark, which
+	was the first thing on our own About page - set in type now, from the
+	brand constants, so it says what the product is actually called.
+*/
+.about__identity {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-5);
+	min-width: 0;
+}
+
+/*
+	--r-lg, which is the card's --r-3xl less its --sp-6 of padding: the plate
+	sits in the card's corner region and the two curves stay concentric.
+*/
+.about__mark {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 48px;
+	height: 48px;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	color: var(--icon-accent);
+}
+
+.about__identity-text {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+.about__name {
+	font-size: var(--fs-2xl);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+.about__tagline {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/* The version, which is a number, so it is mono and it lines up. */
+.about__chip {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	margin-left: auto;
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-4);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------
+	Sections and their tables
+	------------------------------------------------------------ */
+
+.about__section {
+	display: grid;
+	gap: var(--sp-4);
+	min-width: 0;
+}
+
+.about__section-body {
+	display: grid;
+	gap: var(--sp-4);
+	min-width: 0;
+}
+
+/* Two groups of facts side by side, one column when there is no room. */
+.about__columns {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: var(--sp-7);
+	min-width: 0;
+}
+
+/*
+	Label on the left, value on the right, down one column - so a version
+	number and a project ID can be compared a character at a time.
+*/
+.about__spec {
+	display: grid;
+	grid-template-columns: minmax(0, 140px) minmax(0, 1fr);
+	align-items: baseline;
+	gap: var(--sp-3) var(--sp-6);
+	margin: 0;
+	min-width: 0;
+}
+
+.about__spec-label {
+	margin: 0;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.about__spec-value {
+	margin: 0;
+	min-width: 0;
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	overflow-wrap: anywhere;
+	user-select: text;
+}
+
+/* Numbers only: a version, an ID. Names stay in the UI face. */
+.about__spec-value--mono {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+.about__prose {
+	margin: 0;
+	max-width: 80ch;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+.about__copyright {
+	margin: 0;
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------
+	Libraries
+
+	Four 400px cards before this, stacked two to a row at whatever width the
+	window happened to be. One row each, in a list, since what a reader wants
+	from them is the name and the two links.
+	------------------------------------------------------------ */
+
+.about__library-list {
+	display: grid;
+	gap: var(--sp-2);
+	min-width: 0;
+	/* The rows answer to this list's width, not the window's. */
+	container-type: inline-size;
+	container-name: about-libraries;
+}
+
+.about__library {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) min-content;
+	align-items: center;
+	gap: var(--sp-1) var(--sp-5);
+	padding: var(--sp-4) var(--sp-5);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+}
+
+.about__library-name {
+	grid-column: 1;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+}
+
+.about__library-meta {
+	grid-column: 1;
+	grid-row: 2;
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+.about__library-links {
+	grid-column: 2;
+	grid-row: 1 / span 2;
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+	white-space: nowrap;
+}
+
+.about__library-links a {
+	display: inline-flex;
+	align-items: center;
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-3);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-medium);
+	color: var(--text-accent);
+	text-decoration: none;
+	transition: var(--transition-color);
+}
+
+.about__library-links a:hover {
+	background-color: var(--bg-hover);
+	color: var(--accent-hover);
+}
+
+.about__library-links a:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+/* One column when the card is narrow: the links drop under the name. */
+@container about-libraries (max-width: 480px) {
+	.about__library {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.about__library-links {
+		grid-column: 1;
+		grid-row: 3;
+	}
+}

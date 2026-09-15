@@ -58,7 +58,7 @@ export function makePage_Settings() {
 	page.appendChild(head);
 
 	// --- Tabs, and what they switch ------------------------------
-	const body = makeElement({ className: 'studio-card settings__body' });
+	const body = makeElement({ className: 'studio-card studio-tab-body settings__body' });
 	const tabControl = new TabControl(body);
 
 	tabControl.registerTab('Project', makeSettingsTabContentProject, { icon: 'settings_project' });
@@ -67,10 +67,11 @@ export function makePage_Settings() {
 
 	/*
 		A segmented control - one track, the selected tab raised on a thumb
-		that slides between them - rather than three loose buttons. The
-		treatment is scoped to this page, so About and Help keep theirs.
+		that slides between them - rather than three loose buttons. .studio-tabs
+		is the shared treatment; About opts into the same one, and Help keeps
+		the stacked tabs until it moves onto this shell too.
 	*/
-	const tabs = makeElement({ className: 'settings__tabs' });
+	const tabs = makeElement({ className: 'studio-tabs settings__tabs' });
 	addAsChildren(tabs, tabControl.makeTabs());
 	page.appendChild(tabs);
 

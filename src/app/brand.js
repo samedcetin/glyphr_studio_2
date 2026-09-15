@@ -50,6 +50,16 @@ export const PRODUCT_URL = 'https://bluerain.studio/type';
 export const SUPPORT_EMAIL = 'hello@bluerain.studio';
 
 /**
+ * Where the source lives.
+ *
+ * The GPL obliges us to offer it, so the About page has to link it and the
+ * issue tracker under it is where bug reports go. Both were written out by
+ * hand in five places before this constant existed.
+ */
+export const PRODUCT_SOURCE_URL = 'https://github.com/samedcetin/glyphr_studio_2';
+export const PRODUCT_ISSUES_URL = `${PRODUCT_SOURCE_URL}/issues`;
+
+/**
  * Upstream's help site, kept on purpose.
  *
  * We have no documentation of our own, and theirs is real, maintained, and
@@ -63,3 +73,5 @@ export const SUPPORT_EMAIL = 'hello@bluerain.studio';
 export const UPSTREAM_NAME = 'Glyphr Studio';
 export const UPSTREAM_HELP = 'https://www.glyphrstudio.com/help';
 export const UPSTREAM_URL = 'https://www.glyphrstudio.com';
+export const UPSTREAM_SOURCE_URL = 'https://github.com/glyphr-studio';
+export const UPSTREAM_RELEASES_URL = 'https://github.com/glyphr-studio/Glyphr-Studio-2/releases';
