@@ -509,22 +509,63 @@ span.spacer {
 }
 
 /*
-	What the action will actually touch, and what it will skip. Amber because
-	it is a caveat rather than a failure - the same reading the quality checks
-	take - and it is concentric with the card: --r-3xl less the --sp-6 of
-	padding between them.
+	What the action will actually touch.
+
+	This was amber, filled, on every card - and it is the longest text in the
+	card, twice the length of the description above it. Thirteen of the
+	fourteen cards carried one, which is a warning lamp that is always on: it
+	stopped meaning "careful" and started meaning "this page is orange".
+
+	Worse, the amber ground sat at 1.14:1 against the card. It separated
+	itself almost entirely by hue and almost not at all by value, which is the
+	most tiring way to draw a box and the least legible way to structure one.
+
+	It is what its class name always said it was - a description - so it takes
+	the app's own treatment for supporting detail inside a card: the sunken
+	ground inside a hairline, which is what the range tables on Settings take.
+	The ground alone is only 1.07:1 against the card, so the hairline is what
+	actually draws the edge - value and a line, no hue at all. The caveat that
+	used to be buried in the middle of it is a separate thing now, below.
+
+	Concentric with the card: --r-3xl less the --sp-6 of padding between them.
 */
 .global-actions__card .global-actions__effect-description {
 	margin: 0;
 	padding: var(--sp-4) var(--sp-5);
-	background-color: var(--warn-bg);
-	color: var(--warn);
-	border: none;
-	border-left: 3px solid var(--warn);
+	background-color: var(--bg-surface-sunken);
+	color: var(--text-secondary);
+	border: 1px solid var(--border-subtle);
 	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	font-size: var(--fs-sm);
 	line-height: var(--lh-normal);
+}
+
+/*
+	The caveat, and the only amber left on the page.
+
+	Five of the thirteen effect descriptions ended in a "Note:" about
+	component instances being skipped or counted twice. That is a real
+	caveat and worth a colour - but it was mid-paragraph in a block that was
+	already entirely amber, so it had no way to stand out from its own
+	surroundings.
+
+	No fill: a rule down the edge and the word itself. Amber now marks five
+	short lines instead of washing 424,000 square pixels, which is what makes
+	it a signal again.
+*/
+.global-actions__card .global-actions__caveat {
+	margin: 0;
+	padding-left: var(--sp-5);
+	border-left: 2px solid var(--warn);
+	color: var(--text-secondary);
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+}
+
+.global-actions__card .global-actions__caveat strong {
+	color: var(--warn);
+	font-weight: var(--fw-semibold);
 }
 
 .global-actions__card .settings-table {

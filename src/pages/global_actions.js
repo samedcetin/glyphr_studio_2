@@ -91,6 +91,7 @@ export function makePage_GlobalActions() {
 			/* The cards build themselves - see global_actions_cards.js. All this
 				adds is the page's own card treatment. */
 			card.classList.add('studio-card');
+			liftCaveats(card);
 			grid.appendChild(card);
 		});
 		groups.appendChild(grid);
@@ -98,6 +99,42 @@ export function makePage_GlobalActions() {
 	page.appendChild(groups);
 
 	return content;
+}
+
+/**
+ * Takes the "Note:" caveat out of an effect description and gives it its own
+ * line under it.
+ *
+ * Five of the thirteen cards end their effect description with a sentence
+ * about component instances being skipped, or counted twice. That is the only
+ * genuine caution on this page - and it was buried mid-paragraph inside a
+ * block that was entirely amber, so it had nothing to stand out from.
+ *
+ * Done here rather than in each card because every card passes through this
+ * loop, and because the thirteen descriptions are easier to read in the source
+ * as the single strings they are. The marker is the same in all five.
+ *
+ * @param {Element} card - one global actions card
+ */
+function liftCaveats(card) {
+	const NOTE = /<strong>\s*Note:?\s*<\/strong>/i;
+
+	card.querySelectorAll('.global-actions__effect-description').forEach((block) => {
+		const match = block.innerHTML.match(NOTE);
+		if (!match) return;
+
+		const effect = block.innerHTML.slice(0, match.index).replace(/(?:<br\s*\/?>|\s)+$/i, '');
+		const caveat = block.innerHTML.slice(match.index + match[0].length).trim();
+		if (!effect || !caveat) return;
+
+		block.innerHTML = effect;
+		block.after(
+			makeElement({
+				className: 'global-actions__caveat',
+				innerHTML: `<strong>Note</strong> ${caveat}`,
+			})
+		);
+	});
 }
 
 /**
