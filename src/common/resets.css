@@ -301,10 +301,42 @@ svg {
 	font-size: var(--fs-sm);
 }
 
-label,
-label:focus,
-label:active {
+/*
+	A label is inline until a component says otherwise.
+
+	This rule used to be written as `label, label:focus, label:active`, and the
+	two extra selectors were a trap. They set nothing the bare `label` does not
+	already set - their only effect is specificity: (0,1,1) against a component
+	class's (0,1,0). So every component built on a <label> laid out correctly
+	until the pointer went down on it, at which point `display: inline` won and
+	the layout collapsed into one run of text. On mouse-up it came back.
+
+	That reached .dialog-option in the ligature dialog and
+	.atlas-export__checkbox in the bitmap export and anchor compose dialogs -
+	all three are labels carrying a grid or a flex row. It is invisible to any
+	test that measures after the click, because by then the state is gone.
+
+	One selector, one specificity a class can beat.
+*/
+label {
 	display: inline;
+}
+
+/*
+	`hidden` means hidden.
+
+	The browser's own [hidden] rule is `display: none` at the specificity of
+	one attribute, which any component class with a `display` in it beats - and
+	most of them have one. So an element the JS had hidden went on rendering:
+	the kern dialogs' results section kept its margin, its padding and its top
+	border, and drew a stray rule across an otherwise empty dialog.
+
+	!important is the reason this reset is written this way everywhere: the
+	attribute has to win, or it is not an attribute worth setting. It is not
+	the forbidden kind - that is !important used to settle a stacking order.
+*/
+[hidden] {
+	display: none !important;
 }
 
 label:hover {

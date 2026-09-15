@@ -10,7 +10,6 @@ import {
 } from '../controls/dialogs/dialogs.js';
 import { eventHandlerData } from '../edit_canvas/events.js';
 import { selectTool } from '../edit_canvas/tools/tools.js';
-import { makeSingleLabel } from '../panels/cards.js';
 import { makeAllItemTypeChooserContent } from '../panels/item_chooser.js';
 import { ComponentInstance } from '../project_data/component_instance.js';
 import { Glyph } from '../project_data/glyph.js';
@@ -445,11 +444,20 @@ export function showDialogChooseOtherItem(actionName = '') {
 	let onClick;
 	let itemChooserType = 'Characters';
 
+	/*
+		The three variants share one shell, so they share one description of it.
+		Each used to open with an <h2> and a sentence loose in the body, which
+		scrolled away with the glyph grid the moment you looked past the first
+		row. Both are in the frame's header now - see makeModalDialog - so what
+		you are choosing for stays on screen while you choose.
+	*/
+	let dialogTitle = '';
+	let dialogSubtitle = '';
+
 	if (actionName === 'copyPaths') {
-		content = makeElement({
-			innerHTML: `<h2>Copy paths from another glyph</h2>`,
-		});
-		content.innerHTML += `All the paths from the glyph you select will be copied and pasted into this glyph.<br><br>`;
+		dialogTitle = 'Copy paths from another glyph';
+		dialogSubtitle = 'Every path in the glyph you pick is copied into this one.';
+		content = makeElement({ className: 'dialog-layout' });
 		addCopyActionsForChooseOtherItem(content);
 		onClick = (itemID) => {
 			const editor = getCurrentProjectEditor();
@@ -477,10 +485,10 @@ export function showDialogChooseOtherItem(actionName = '') {
 	if (actionName === 'addAsComponentInstance') {
 		// log(`Dialog addAsComponentInstance`, 'start');
 		itemChooserType = 'Components';
-		content = makeElement({
-			innerHTML: `<h2>Add another glyph as a component instance</h2>`,
-		});
-		content.innerHTML += `The glyph you select will be treated as a root component, and added to this glyph as a component instance.<br><br>`;
+		dialogTitle = 'Add another glyph as a component instance';
+		dialogSubtitle =
+			'The glyph you pick becomes a root component, and this glyph gets an instance of it.';
+		content = makeElement({ className: 'dialog-layout' });
 		addCopyActionsForChooseOtherItem(content);
 
 		onClick = (itemID) => {
@@ -521,10 +529,9 @@ export function showDialogChooseOtherItem(actionName = '') {
 	}
 
 	if (actionName === 'linkAsComponent') {
-		content = makeElement({
-			innerHTML: `<h2>Link this component to another glyph</h2>`,
-		});
-		content.innerHTML += `This component will be linked to the glyph you select as a component instance.<br><br>`;
+		dialogTitle = 'Link this component to another glyph';
+		dialogSubtitle = 'The glyph you pick gets an instance of this component.';
+		content = makeElement({ className: 'dialog-layout' });
 		onClick = (itemID) => {
 			const editor = getCurrentProjectEditor();
 			let destinationItem = editor.project.getItem(itemID);
@@ -554,39 +561,90 @@ export function showDialogChooseOtherItem(actionName = '') {
 		};
 	}
 
-	const chooserArea = makeAllItemTypeChooserContent(onClick, itemChooserType);
+	/*
+		The grid is the only thing that scrolls. It is wrapped rather than left
+		loose in the body so the option above it stays put: a checkbox that
+		scrolls off the top while you are still choosing is a setting you have
+		to go back for.
+	*/
+	const chooserArea = makeElement({ tag: 'div', className: 'dialog-chooser' });
+	/*
+		The same grid the Overview page shows, at the same size. These are the
+		two places in the app where you pick a glyph out of a wall of them, and
+		the wall was two different things: 52px thumbnails on plates here,
+		140px cards there. You choose by recognising a letterform, so the tile
+		is as large as the surface can give it - see :host([large]) in
+		glyph-tile.css, and .overview .item-chooser__tile-grid for the grid.
+	*/
+	chooserArea.appendChild(
+		makeAllItemTypeChooserContent(onClick, itemChooserType, getCurrentProjectEditor(), {
+			tileSize: 'large',
+			/* The row is the select's, so the count goes inside it. */
+			countPlacement: 'inside',
+		})
+	);
 	content.appendChild(chooserArea);
-	showModalDialog(content);
+
+	const cancelButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		innerHTML: 'Cancel',
+		onClick: closeEveryTypeOfDialog,
+	});
+
+	/*
+		Wide enough for six of those tiles and the gaps between them -
+		6 x 140 + 5 x 6, plus the body's 20px insets and the frame's hairline.
+		At the old 760 the same grid fell to four columns, and space-between
+		pushed 53px of air between them.
+	*/
+	showModalDialog(content, 912, {
+		title: dialogTitle,
+		subtitle: dialogSubtitle,
+		actions: [cancelButton],
+	});
 	// log(`showDialogChooseOtherItem`, 'end');
 }
 
+/**
+ * The one option these dialogs carry, as the app's option row.
+ *
+ * It was a bold "Copy options:" with a colon, a <br>, a bare checkbox, a
+ * label sitting two pixels above its own line, and two more <br>s. The heading
+ * named a group of one.
+ *
+ * @param {Element} parent - where to put it
+ */
 export function addCopyActionsForChooseOtherItem(parent) {
-	parent.appendChild(
-		makeElement({
-			tag: 'strong',
-			content: 'Copy options:',
-			style: 'display: inline-block; margin-bottom: 10px;',
-		})
-	);
-	parent.appendChild(makeElement({ tag: 'br' }));
-	parent.appendChild(
+	const option = makeElement({ tag: 'label', className: 'dialog-option' });
+	option.appendChild(
 		makeElement({
 			tag: 'input',
-			attributes: { type: 'checkbox' },
-			className: 'copy-shapes-options__checkbox',
-			id: 'checkbox-maintain-rsb',
+			attributes: {
+				type: 'checkbox',
+				id: 'checkbox-maintain-rsb',
+				'aria-labelledby': 'checkbox-maintain-rsb-title',
+				'aria-describedby': 'checkbox-maintain-rsb-hint',
+			},
 		})
 	);
-	parent.appendChild(
-		makeSingleLabel(
-			`Maintain right side bearing, accounting for the width of the added items.`,
-			false,
-			'checkbox-maintain-rsb',
-			'copy-shapes-options__label'
-		)
+	option.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'dialog-option__title',
+			id: 'checkbox-maintain-rsb-title',
+			content: 'Keep the right side bearing',
+		})
 	);
-	parent.appendChild(makeElement({ tag: 'br' }));
-	parent.appendChild(makeElement({ tag: 'br' }));
+	option.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'dialog-option__hint',
+			id: 'checkbox-maintain-rsb-hint',
+			content: 'Hold this glyph’s spacing where it is, whatever width arrives with the paths.',
+		})
+	);
+	parent.appendChild(option);
 }
 
 export function showDialogChooseItemFromOtherProject() {

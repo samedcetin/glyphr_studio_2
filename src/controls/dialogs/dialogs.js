@@ -590,13 +590,39 @@ export function showError(message) {
 // --------------------------------------------------------------
 
 /**
+	THE MODAL FRAME.
+
+	Three rows: a header that names the dialog, a body that scrolls, and a
+	footer that holds what you can do. The header and the footer stay put while
+	the body moves, which is the whole reason the frame owns them rather than
+	each dialog drawing its own.
+
+	Both are optional, and both are empty by default. A dialog written before
+	they existed passes only a content node, gets a bare close button and no
+	footer, and looks exactly as it did - which is what the eighteen call sites
+	that have not been rewritten yet rely on.
+
+	The third parameter used to be a boolean with two names: `noPadding` where
+	it is declared and `openProjectDialog` where it is used. It still accepts
+	that boolean. It also accepts an options object, which is how a dialog asks
+	for a real header and footer:
+
+		showModalDialog(body, 500, {
+			title: 'Create a new ligature',
+			subtitle: 'Two or more characters, drawn as one.',
+			actions: [cancelButton, createButton],
+		});
+ */
+
+/**
  * Shows a big dialog that blurs the UI behind it.
  * @param {Element} contentNode - HTML to show in the dialog
  * @param {Number =} maxWidth - limit the dialog width
- * @param {Boolean =} noPadding - turn on or off padding
+ * @param {Boolean | Object =} options - legacy openProjectDialog flag, or
+ *	{ openProjectDialog, title, subtitle, actions }
  */
-export function showModalDialog(contentNode, maxWidth, noPadding) {
-	let modal = makeModalDialog(contentNode, maxWidth, noPadding);
+export function showModalDialog(contentNode, maxWidth, options) {
+	let modal = makeModalDialog(contentNode, maxWidth, options);
 	closeEveryTypeOfDialog();
 	document.body.appendChild(modal);
 }
@@ -605,27 +631,29 @@ export function showModalDialog(contentNode, maxWidth, noPadding) {
  * Makes a modal dialog and returns it
  * @param {Element} contentNode - Main content area for the dialog
  * @param {Number =} maxWidth - limit the width of the dialog
- * @param {Boolean} openProjectDialog - is this the Open Project dialog?
+ * @param {Boolean | Object =} options - legacy openProjectDialog flag, or
+ *	{ openProjectDialog, title, subtitle, actions }
  * @returns {Element}
  */
-export function makeModalDialog(contentNode, maxWidth, openProjectDialog = false) {
-	// log(`makeModalDialog`, 'start');
-	// log(`\n⮟contentNode⮟`);
-	// log(contentNode);
-	// log(`maxWidth: ${maxWidth}`);
+export function makeModalDialog(contentNode, maxWidth, options = false) {
+	const settings = typeof options === 'object' && options !== null ? options : {};
+	const openProjectDialog = typeof options === 'boolean' ? options : !!settings.openProjectDialog;
+	const actions = Array.isArray(settings.actions) ? settings.actions.filter(Boolean) : [];
+
 	let modal = makeElement({
 		tag: 'dialog',
 		id: 'modal-dialog',
 		innerHTML: `
 		<div class="modal-dialog__content">
 			<div class="modal-dialog__header">
-				<span></span>
+				<div class="modal-dialog__titles"></div>
 				<button class="modal-dialog__close-button" type="button" title="Close" aria-label="Close">${makeLineIcon(
 					'close',
 					20
 				)}</button>
 			</div>
 			<div class="modal-dialog__body"></div>
+			<div class="modal-dialog__footer"></div>
 		</div>
 		`,
 	});
@@ -639,20 +667,37 @@ export function makeModalDialog(contentNode, maxWidth, openProjectDialog = false
 		if (clickTarget.getAttribute('id') === 'modal-dialog') closeEveryTypeOfDialog();
 	});
 
-	if (openProjectDialog) {
-		let contentArea = modal.querySelector('.modal-dialog__content');
-		contentArea.classList.add('modal-dialog__open-new-project');
+	const content = modal.querySelector('.modal-dialog__content');
+
+	// --- The header's title, when there is one --------------------
+	const titles = modal.querySelector('.modal-dialog__titles');
+	if (settings.title) {
+		/* textContent: a dialog's name is a sentence, not markup. */
+		const heading = makeElement({ tag: 'h2', className: 'modal-dialog__title' });
+		heading.textContent = settings.title;
+		titles.appendChild(heading);
+
+		if (settings.subtitle) {
+			const sub = makeElement({ tag: 'div', className: 'modal-dialog__subtitle' });
+			sub.textContent = settings.subtitle;
+			titles.appendChild(sub);
+		}
+		content.classList.add('modal-dialog--titled');
 	}
+
+	// --- The footer, when there is one ----------------------------
+	const footer = modal.querySelector('.modal-dialog__footer');
+	if (actions.length) {
+		addAsChildren(footer, actions);
+		content.classList.add('modal-dialog--actioned');
+	}
+
+	if (openProjectDialog) content.classList.add('modal-dialog__open-new-project');
 
 	addAsChildren(modal.querySelector('.modal-dialog__body'), contentNode);
 	if (maxWidth) {
-		/** @type {HTMLElement} */
-		const content = modal.querySelector('.modal-dialog__content');
-		content.style.maxWidth = `${maxWidth}px`;
+		/** @type {HTMLElement} */ (content).style.maxWidth = `${maxWidth}px`;
 	}
 
-	// log(`\n⮟modal⮟`);
-	// log(modal);
-	// log(`makeModalDialog`, 'end');
 	return modal;
 }

@@ -339,46 +339,130 @@ export function makeLigatureID(sequence = '') {
 /**
  * Makes the Add Ligature dialog and shows it.
  */
+/**
+	CREATE A NEW LIGATURE.
+
+	The first dialog onto the frame's header and footer. What it was: an <h2>
+	and a sentence loose in the body, a checkbox sitting in a sidebar row grid
+	with its label stranded across a 96px gutter, a 90% input with the info
+	bubble hanging off its right, two <br>s, and a button floating at the
+	bottom of the scroll.
+
+	What it is: the dialog's name in the header where the frame keeps it, one
+	field with a label, the option under it as an option, and Cancel / Create
+	in a footer that does not move. See makeModalDialog.
+
+	The name still changes with the checkbox - one ligature or many - so the
+	heading and the commit button are held rather than written once.
+ */
 export function showAddLigatureDialog() {
 	const content = makeElement({
 		innerHTML: `
-			<h2 id="ligatures__new-ligature-title">Create a new ligature</h2>
-			Create a new ligature by specifying two or more individual characters.
-			<br>
-			<div class="panel__card no-card">
-				<input type="checkbox" id="ligatures__multi-input-checkbox" style="margin: 0 0 15px 0;"/>
-				<label for="ligatures__multi-input-checkbox" style="grid-column-start: 2;">Create many ligatures at once with a comma separated list.<br>Ligatures cannot contain commas or spaces if you use this option.</label>
+			<div class="dialog-field">
+				<label class="dialog-field__label" for="ligatures__new-ligature-input">Characters</label>
+				<div class="dialog-field__control">
+					<!--
+						aria-describedby, because the hint is not decoration here: ticking
+						"Create many at once" rewrites it, so what you are required to type
+						changes. Without the link a screen reader hears the checkbox's new
+						name and is never told the format changed.
+					-->
+					<input id="ligatures__new-ligature-input" type="text"
+						aria-describedby="ligatures__new-ligature-hint"
+						autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+					/>
+					<info-bubble>
+						Ligature characters can be specified in three different formats:
+						<ul>
+							<li>By just typing characters: <code>ff</code></li>
+							<li>Specifying Unicode code points: <code>U+66U+66</code></li>
+							<li>Specifying Hexadecimal format: <code>0x660x66</code></li>
+						</ul>
+						<br><br>
+						Hexadecimal, Unicode, and regular character formats cannot be mixed - choose one type!
+						<br><br>
+						<b>Warning!</b><br>
+						Specifying ligature characters beyond the Basic Multilingual Plane
+						(above Unicode <code>U+FFFF</code>) will cause errors!
+					</info-bubble>
+				</div>
+				<div class="dialog-field__hint" id="ligatures__new-ligature-hint">
+					Two or more characters, like <code>ff</code> or <code>ffi</code>.
+				</div>
 			</div>
-			<input id="ligatures__new-ligature-input" type="text" style="width: 90%;"
-				autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-			/>
-			<info-bubble style="display: inline-block; margin-left: 10px;">
-				Ligature characters can be specified in three different formats:
-				<ul>
-					<li>By just typing characters: <code>ff</code></li>
-					<li>Specifying Unicode code points: <code>U+66U+66</code></li>
-					<li>Specifying Hexadecimal format: <code>0x660x66</code></li>
-				</ul>
-				<br><br>
-				Hexadecimal, Unicode, and regular character formats cannot be mixed - choose one type!
-				<br><br>
-				<b>Warning!</b><br>
-				Specifying ligature characters beyond the Basic Multilingual Plane
-				(above Unicode <code>U+FFFF</code>) will cause errors!
-			</info-bubble>
-			<br><br>
-			<fancy-button disabled id="ligatures__add-new-ligature-button">Create ligature</fancy-button>
+
 		`,
 	});
 
+	/*
+		The option, built rather than written as a string.
+
+		It was a bordered box holding a nested span of two more spans, with the
+		label carrying a `for` that pointed at the input inside it - two ways of
+		associating the same control, which is one more than the spec needs. The
+		box was 458px around 208px of text, so three quarters of it was empty,
+		and it brought its own hover, focus and checked states to sit beside the
+		checkbox's, which is what made the row read as coming apart.
+
+		This is the shape the atlas export and anchor compose dialogs already
+		use: a plain label row. No border, no second set of states, and the ring
+		goes on the checkbox the way it does everywhere else in the app.
+	*/
+	/*
+		The name and the description are different things, and a <label> that
+		wraps its control does not know that: it builds the name out of its
+		whole subtree, so the hint was being read as part of the checkbox's
+		name - "Create many at once Type a list instead of one ligature at a
+		time., checkbox, not checked", every time it took focus. The two
+		attributes below split them: the title names it, the hint describes it,
+		and both spans stay inside the label so the whole row is still a target.
+	*/
+	const option = makeElement({ tag: 'label', className: 'dialog-option' });
+	const multiLigatureCheckbox = makeElement({
+		tag: 'input',
+		attributes: {
+			type: 'checkbox',
+			id: 'ligatures__multi-input-checkbox',
+			'aria-labelledby': 'ligatures__multi-input-title',
+			'aria-describedby': 'ligatures__multi-input-hint',
+		},
+	});
+	option.appendChild(multiLigatureCheckbox);
+	option.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'dialog-option__title',
+			id: 'ligatures__multi-input-title',
+			content: 'Create many at once',
+		})
+	);
+	option.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'dialog-option__hint',
+			id: 'ligatures__multi-input-hint',
+			content: 'Type a list instead of one ligature at a time.',
+		})
+	);
+	content.appendChild(option);
+
+	const cancelButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		innerHTML: 'Cancel',
+		onClick: closeEveryTypeOfDialog,
+	});
+
 	/** @type {HTMLElement} */
-	const submitButton = content.querySelector('#ligatures__add-new-ligature-button');
+	const submitButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { disabled: '' },
+		innerHTML: 'Create ligature',
+	});
+
 	/** @type {HTMLInputElement} */
 	const newLigatureInput = content.querySelector('#ligatures__new-ligature-input');
-	/** @type {HTMLInputElement} */
-	const multiLigatureCheckbox = content.querySelector('#ligatures__multi-input-checkbox');
-	/** @type {HTMLInputElement} */
-	const title = content.querySelector('#ligatures__new-ligature-title');
+	const hint = content.querySelector('#ligatures__new-ligature-hint');
 
 	newLigatureInput.addEventListener('keyup', () => {
 		// Use spread operator to count actual characters, not code units (for surrogate pairs)
@@ -389,14 +473,32 @@ export function showAddLigatureDialog() {
 		}
 	});
 
+	/*
+		Four things say singular or plural, and they change together.
+
+		The header's subtitle is one of them. It used to be written once and
+		left, so ticking the box gave "Create new ligatures" over "Two or more
+		characters, drawn as one" - a plural title above a singular sentence.
+
+		The hint under the field owns the format, and the option under it owns
+		what the switch does. They used to overlap: with the box ticked the
+		hint said "separated by commas" and the option said "a comma separated
+		list", twenty pixels apart.
+	*/
 	multiLigatureCheckbox.addEventListener('change', () => {
-		if (multiLigatureCheckbox.checked) {
-			title.innerHTML = 'Create new ligatures';
-			submitButton.innerHTML = 'Create ligatures';
-		} else {
-			title.innerHTML = 'Create a new ligature';
-			submitButton.innerHTML = 'Create ligature';
+		const many = multiLigatureCheckbox.checked;
+		const title = document.querySelector('.modal-dialog__title');
+		const subtitle = document.querySelector('.modal-dialog__subtitle');
+		if (title) title.textContent = many ? 'Create new ligatures' : 'Create a new ligature';
+		if (subtitle) {
+			subtitle.textContent = many
+				? 'Several at once, from one list.'
+				: 'Two or more characters, drawn as one.';
 		}
+		submitButton.innerHTML = many ? 'Create ligatures' : 'Create ligature';
+		hint.innerHTML = many
+			? 'Separate each one with a comma — <code>ff, fi, ffl</code>. No spaces.'
+			: 'Two or more characters, like <code>ff</code> or <code>ffi</code>.';
 	});
 
 	submitButton.addEventListener('click', () => {
@@ -441,5 +543,10 @@ export function showAddLigatureDialog() {
 		// log(`showAddLigatureDialog button click handler`, 'end');
 	});
 
-	showModalDialog(content, 500);
+	showModalDialog(content, 500, {
+		title: 'Create a new ligature',
+		subtitle: 'Two or more characters, drawn as one.',
+		actions: [cancelButton, submitButton],
+	});
+	newLigatureInput.focus();
 }

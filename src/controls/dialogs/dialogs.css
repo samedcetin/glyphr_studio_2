@@ -295,6 +295,21 @@ dialog {
 }
 
 /*
+	A dropdown is as wide as the control it came out of.
+
+	The 420 above is for the menus that float free - the rail's shell menus and
+	the canvas right-click menu - where the rows are the only thing setting the
+	width and a long label would run the box across the window. A dropdown is
+	not free: showOptions measures its entry point and writes that width here,
+	and a list narrower than the control it dropped out of reads as a second,
+	unrelated thing. Measured on the character chooser in Copy paths, where an
+	870px select opened a 420px list against its left edge.
+*/
+.context-menu__dropdown#context-menu {
+	max-width: none;
+}
+
+/*
 	The box is a container, not a stop. Focus goes to a row, so removing the
 	outline here removes nothing a keyboard can reach.
 */
@@ -602,7 +617,7 @@ dialog {
 */
 .modal-dialog__content {
 	display: grid;
-	grid-template-rows: min-content minmax(0, 1fr);
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
 	width: clamp(500px, 66vw, 1000px);
 	max-height: calc(100vh - var(--sp-10) * 2);
 	margin: var(--sp-10) auto;
@@ -623,14 +638,42 @@ dialog {
 	box clipped one axis, the browser gave the other one a scrollbar: a grey
 	rule across the bottom of every dialog in the app, which read as the
 	content being cut off. Measured on Create a new ligature.
-
-	--sp-2 in from the corner is what keeps the button's --r-md concentric
-	with the dialog's --r-2xl at this size.
 */
 .modal-dialog__header {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) var(--control-h-lg);
-	padding: var(--sp-2);
+	padding: var(--sp-5);
+}
+
+/*
+	With no title there is nothing for the header to hold but the button, and a
+	row spent on one 32px control is a band of empty surface above every
+	dialog. It floats in the corner instead - which is what the open-project
+	dialog has always done, and what lets the body start at the top.
+
+	--sp-5 on both axes, the same inset the titled header uses, and for the
+	same reason: --r-2xl less the button's --r-md is 12. It used to sit at
+	--sp-2, which was neither concentric nor on the dialog's gutter.
+*/
+.modal-dialog__content:not(.modal-dialog--titled) {
+	position: relative;
+}
+
+.modal-dialog__content:not(.modal-dialog--titled) .modal-dialog__header {
+	/*
+		No z-index. A positioned element paints above the in-flow content of
+		its siblings on its own, and nothing in a dialog body is positioned, so
+		a stacking number here would only be a number.
+	*/
+	position: absolute;
+	top: var(--sp-5);
+	right: var(--sp-5);
+	display: block;
+	padding: 0;
+}
+
+.modal-dialog__content:not(.modal-dialog--titled) .modal-dialog__body {
+	padding-top: var(--sp-7);
 }
 
 .modal-dialog__body {
@@ -638,6 +681,120 @@ dialog {
 	min-height: 0;
 	overflow-y: auto;
 	padding: 0 var(--sp-7) var(--sp-7) var(--sp-7);
+}
+
+/* --------------------------------------------------------------
+	A NAMED HEADER, AND A FOOTER THAT HOLDS THE ACTIONS
+
+	Both are empty unless the dialog asks for them, so a dialog written before
+	they existed is unchanged: no title, no footer, and a header that is still
+	just a close button in a corner.
+
+	When a dialog does ask, the frame owns them. That is what makes the body
+	the only thing that scrolls - the name of the dialog and the button that
+	commits it stay where they were put, which on a long dialog is the
+	difference between a form and a wall of text with a button lost at the
+	bottom of it.
+	------------------------------------------------------------ */
+
+/*
+	Two numbers hold this frame together.
+
+	--sp-7 is the gutter: the title, every field, the option box and the footer
+	buttons all start and end on it, so one vertical line runs down each side
+	of the dialog from the header to the footer.
+
+	--sp-5 is the close button's inset, and it is not a choice - it is what
+	makes the button's corner concentric with the dialog's. --r-2xl less the
+	button's --r-md is 12, which is --sp-5 exactly. The button used to sit at
+	--sp-2 from the right and --sp-6 from the top: off the gutter, off the
+	concentric inset, and different on each axis.
+
+	The vertical rhythm is symmetric about the body. Header bottom --sp-5 plus
+	body top --sp-6 is 28 above the first field; body bottom --sp-6 plus footer
+	top --sp-5 is 28 under the last one.
+*/
+.modal-dialog--titled .modal-dialog__header {
+	align-items: start;
+	gap: var(--sp-6);
+	padding: var(--sp-5) var(--sp-5) var(--sp-5) var(--sp-7);
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-dialog--titled .modal-dialog__body {
+	padding-top: var(--sp-6);
+	padding-bottom: var(--sp-6);
+}
+
+.modal-dialog__titles {
+	min-width: 0;
+}
+
+.modal-dialog__title {
+	margin: 0;
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+.modal-dialog__subtitle {
+	margin-top: var(--sp-2);
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+/*
+	Right-aligned, because the commit is the last thing read and the last thing
+	pressed. It wraps rather than overflowing: three buttons and a note is a
+	real footer on the wider dialogs.
+*/
+.modal-dialog__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: var(--sp-4);
+	padding: var(--sp-5) var(--sp-7);
+	border-top: 1px solid var(--border-subtle);
+	background-color: var(--bg-surface-raised);
+	/*
+		The dialog's own corner, less the border it sits inside. The content box
+		stopped clipping its children when the scroll moved into the body, so a
+		square-cornered bar painted straight over the rounded bottom corners -
+		two hard corners on a --r-2xl box. Derived, so it follows if the frame's
+		radius moves.
+	*/
+	border-bottom-left-radius: calc(var(--r-2xl) - 1px);
+	border-bottom-right-radius: calc(var(--r-2xl) - 1px);
+	corner-shape: var(--corner-smooth);
+}
+
+/* Nothing in it, nothing of it: no rule, no padding, no row. */
+.modal-dialog__footer:empty {
+	display: none;
+}
+
+/*
+	fancy-button carries a --sp-4 right margin of its own, for the inline rows
+	it was written for. In a flex footer with its own gap that reads as a
+	ragged right edge.
+*/
+.modal-dialog__footer fancy-button {
+	margin-right: 0;
+}
+
+/*
+	Anything that is not a button - a note, a count - takes the left of the
+	row and pushes the buttons to the right.
+*/
+.modal-dialog__footer-note {
+	margin-right: auto;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
 }
 
 /*
@@ -785,18 +942,6 @@ dialog {
 	font-size: var(--fs-sm);
 }
 
-/*
-	A single character, so it is sized to one: at full width these read as
-	fields waiting for a word. Centred, because a lone glyph in the left corner
-	of a 200px box looks like a mistake.
-*/
-.modal-dialog__body input[type='text'][maxlength='1'] {
-	width: var(--control-h-lg);
-	padding: 0;
-	font-family: var(--font-mono);
-	text-align: center;
-}
-
 .modal-dialog__body hr {
 	height: 1px;
 	margin: var(--sp-7) 0;
@@ -827,32 +972,6 @@ dialog {
 	margin-top: var(--sp-5);
 }
 
-/* --------------------------------------------------------------
-	THE LETTER-PAIR FIELDS
-
-	Two single-character inputs under their two labels, in Find a letter pair
-	and Delete letter pairs.
-
-	They arrived as a .list__two-column with `style="max-width: 100px"` on it -
-	a two-column grid holding two labels and two fields, given 100 pixels to do
-	it in. "Left group letter" broke over three lines, the fields ended up
-	18px wide, and the whole block sat in the corner of an 800px dialog. The
-	cap was inline, so no stylesheet could answer it; it is a class now.
-
-	The fields are one character wide (see input[maxlength='1'] above) and the
-	columns are the labels' own width, so the block is as wide as its widest
-	word and no wider.
-	------------------------------------------------------------ */
-
-.kerning__letter-pair-fields {
-	display: grid;
-	grid-template-columns: repeat(2, max-content);
-	column-gap: var(--sp-6);
-	row-gap: 0;
-	width: max-content;
-	margin-bottom: var(--sp-5);
-}
-
 /*
 	A checkbox and its label, in Create a new ligature.
 
@@ -876,4 +995,546 @@ dialog {
 
 .modal-dialog__body .panel__card.no-card label {
 	max-width: 62ch;
+}
+
+/* --------------------------------------------------------------
+	DIALOG FIELDS
+
+	A labelled control and an option, for dialogs on the header/footer frame.
+	Shared rather than per-dialog: the twelve of them ask the same two
+	questions in the same two shapes, and the atlas, icon and anchor dialogs
+	each wrote their own copy of this before there was one to use.
+	------------------------------------------------------------ */
+
+/*
+	The last field owns no space below it: the body's own --sp-6 is what sits
+	between it and the footer, which is the same --sp-6 that sits between the
+	header and the first one. Without this the gap under the last field was
+	--sp-6 twice over, and a three-field dialog sat visibly low in its frame.
+*/
+.dialog-field:last-child {
+	margin-bottom: 0;
+}
+
+/*
+	A field holding a number rather than words. Narrow, because a kern value is
+	four characters and a 458px box for four characters reads as a field that
+	wants a sentence - and the hint below it keeps the full width, so the
+	measure of the prose does not follow the measure of the input.
+*/
+.dialog-field--narrow .dialog-field__control {
+	max-width: 140px;
+}
+
+/*
+	Numbers are the product: mono and tabular, so digits line up when the value
+	is read against another one.
+*/
+.dialog-field--numeric input[type='text'] {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+	The unit, inside the field where the value is. pointer-events: none so it
+	is not a target - clicking "Em" puts the caret in the field, which is what
+	someone aiming at a field expects.
+*/
+.dialog-field__suffix {
+	position: absolute;
+	top: 50%;
+	right: var(--sp-4);
+	transform: translateY(-50%);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+	pointer-events: none;
+}
+
+.dialog-field__control:has(.dialog-field__suffix) input[type='text'] {
+	padding-right: var(--sp-9);
+}
+
+.dialog-field {
+	display: grid;
+	gap: var(--sp-2);
+	margin-bottom: var(--sp-6);
+}
+
+.modal-dialog__body .dialog-field__label {
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+}
+
+/*
+	The field, with its explanation inside it rather than floating off its
+	right edge - where the bubble read as a separate control that happened to
+	be nearby, and the field had to be given a guessed 90% so the two would
+	fit on one line.
+
+	The mark is 18px drawn inside a --control-h target, which clears the 24px
+	pointer floor the 12px default has never met. The field's right padding is
+	that same target plus a gap, so the text stops before the mark rather than
+	running under it - derived from one value, not measured off a screenshot.
+*/
+.dialog-field__control {
+	position: relative;
+	display: block;
+}
+
+.dialog-field__control input[type='text'] {
+	width: 100%;
+	padding-right: calc(var(--control-h) + var(--sp-4));
+}
+
+.dialog-field__control info-bubble {
+	position: absolute;
+	top: 50%;
+	right: var(--sp-1);
+	transform: translateY(-50%);
+	width: var(--control-h);
+	height: var(--control-h);
+	--info-bubble-mark: var(--icon-size-lg);
+	--info-bubble-mark-font: var(--fs-xs);
+}
+
+/*
+	text-wrap: pretty on the three lines that change as a dialog is used - the
+	subtitle, this hint, and the option's hint. A string that fits on one line
+	in one state wraps in the other, so no wording gets it right for both:
+	ticking "Create many at once" used to leave the word "this." alone on a
+	second line of a 458px box.
+*/
+.modal-dialog__body .dialog-field__hint {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+.modal-dialog__body .dialog-field__hint code {
+	height: var(--icon-size-lg);
+	min-width: var(--icon-size-lg);
+	padding: 0 var(--sp-2);
+	font-size: var(--fs-2xs);
+	cursor: default;
+}
+
+/* --------------------------------------------------------------
+	A CHECKBOX AND THE WORDS IT APPLIES TO
+
+	Written as a bordered box first, and that was the mistake. The box was
+	458px around 208px of text, so three quarters of it stood empty; it
+	carried its own hover, focus and checked states next to the ones the
+	checkbox already has, so two things lit up for one action; and a ring round
+	the box plus the app's universal ring round the 14px checkbox put two rings
+	on screen at once.
+
+	It is a plain label row now - the shape .atlas-export__checkbox already
+	ships in the bitmap export and anchor compose dialogs. One control, one set
+	of states, the ring where every other checkbox in the app wears it.
+
+	The grid is what holds it together. Two columns: the checkbox, then the
+	words. The title sits in the second column of the first row and the hint in
+	the second column of the second, so the hint indents to the title's left
+	edge without anyone measuring a checkbox and adding a gap. align-items:
+	center on the first row is what levels the checkbox against the title -
+	the old row faked it with `margin-top: 2px`, a nudge that would have been
+	wrong the moment the title's size changed.
+	------------------------------------------------------------ */
+
+.dialog-option {
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr);
+	align-items: center;
+	column-gap: var(--sp-3);
+	row-gap: var(--sp-1);
+	padding: var(--sp-4);
+	margin: 0;
+	border: 1px solid var(--border-subtle);
+	/*
+		Derived, not picked. The checkbox is the corner-adjacent child - grid
+		column 1, row 1 - so the box's corner is concentric with it only if the
+		radius is the checkbox's own plus the distance between them, which is
+		this padding. 5 + 8. Written as the sum so it follows if either token
+		moves, rather than as the 13 it currently computes to.
+	*/
+	border-radius: calc(var(--r-sm) + var(--sp-4));
+	corner-shape: var(--corner-smooth);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.dialog-option:hover {
+	background-color: var(--bg-hover);
+	border-color: var(--border-default);
+}
+
+/*
+	One ring, and it goes round the box.
+
+	The whole box is the target, so that is what the ring has to show - a ring
+	round the 14px checkbox would report a fraction of what you can hit. The
+	`outline: none` below is legal for the one reason it ever is: the rule
+	above draws the visible ring for the same state. Without it resets.css's
+	universal ring draws a second one inside this, two rings deep.
+*/
+.dialog-option:has(input:focus-visible) {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.dialog-option input[type='checkbox']:focus-visible {
+	outline: none;
+}
+
+/*
+	WHERE EACH PART SITS IS NOT NEGOTIABLE, so it is stated on the part itself.
+
+	These three rules carried a .modal-dialog__body prefix at first, because
+	the typography needs one - resets.css states font-size and font-weight on
+	the universal selector, which beats inheritance, so a class on its own
+	loses. Putting the grid placement in the same rule made the row's structure
+	depend on where it was mounted: anything that stopped that descendant
+	selector matching dropped both spans back to auto-flow, and a label with
+	two inline spans in it renders as one run of text - the title and the hint
+	side by side, touching, with the checkbox in front of them.
+
+	So the two concerns are separated. Placement is unconditional and belongs
+	to the component. Size and weight, which have to out-specify a universal
+	rule, keep the prefix and are only ever cosmetic: if they were ever to
+	stop matching, the row would be the wrong size and still be a row.
+*/
+.dialog-option input[type='checkbox'] {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.dialog-option__title {
+	grid-column: 2;
+	grid-row: 1;
+	color: var(--text-primary);
+}
+
+/* Second row, second column: aligned with the title, clear of the checkbox. */
+.dialog-option__hint {
+	grid-column: 2;
+	grid-row: 2;
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+/*
+	Only what has to out-specify a universal rule lives behind the prefix, and
+	that is font-weight alone: resets.css states font-size and font-weight on
+	`*`, and the body's own :where() list already gives every span in here
+	--fs-sm, so the title needs neither restated. `color` is on no universal
+	rule at all, so it sits with the placement above, where the hint's colour
+	already was.
+*/
+.modal-dialog__body .dialog-option__title {
+	font-weight: var(--fw-medium);
+}
+
+.modal-dialog__body .dialog-option__hint {
+	font-size: var(--fs-xs);
+}
+
+/* --------------------------------------------------------------
+	THE LETTER PAIR, AND WHAT SEARCHING FOR IT FINDS
+	------------------------------------------------------------ */
+
+/*
+	Two boxes side by side, because a kern pair is one thing with two halves,
+	not two fields that happen to be near each other. They used to sit in a
+	.list__two-column grid under two column headers - "Left group letter" and
+	"Right group letter" - which took three lines to say what the shape of the
+	control says on its own.
+*/
+.dialog-pair {
+	display: flex;
+	align-items: center;
+	/*
+		Nearly touching, because the two boxes stand for two letters that sit
+		next to each other - which is the thing the dialog is about.
+	*/
+	gap: var(--sp-2);
+}
+
+/*
+	Sized like what they are: the subject of the dialog, holding one character
+	each. At --control-h-lg they were the same 32px as a text field with a
+	sentence in it, and the one thing this dialog is for read as its smallest
+	control.
+
+	56 is a one-off on the 4px grid - there is no control token above 32,
+	because the app has no other control this size. --r-xl for the corner,
+	which is the radius the app gives a box in this range: the menu rows are
+	40px at 16.
+*/
+.dialog-pair input[type='text'] {
+	/*
+		Half the row each, rather than 56px each with the rest of the dialog
+		empty beside them. flex-basis 0 so the two halves are equal whatever is
+		typed in them, and the height stays the fixed one - this is a pair of
+		boxes that fills its row, not a box that grows.
+	*/
+	flex: 1 1 0;
+	min-width: 0;
+	height: 56px;
+	padding: 0;
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xl);
+	text-align: center;
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+}
+
+/* --------------------------------------------------------------
+	Results
+	------------------------------------------------------------ */
+
+/*
+	No rule across the top. The results arrive under a count of their own and
+	after a gap wider than anything inside the form, which is already two ways
+	of saying "a new thing starts here" - a hairline was a third.
+*/
+.dialog-results {
+	display: grid;
+	gap: var(--sp-4);
+	margin-top: var(--sp-8);
+}
+
+.dialog-results__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--sp-5);
+}
+
+/*
+	A bounded list. Five kern groups is a list; fifty is a dialog that has
+	grown past the window, so it scrolls inside the section rather than
+	pushing the footer off the bottom.
+*/
+.dialog-results__list {
+	display: grid;
+	gap: var(--sp-1);
+	max-height: 240px;
+	overflow-y: auto;
+}
+
+/*
+	An empty state, not a placeholder. It says what was looked for and what
+	was not found, so it is only ever drawn after a search.
+*/
+.modal-dialog__body .dialog-empty {
+	padding: var(--sp-6) 0;
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	text-align: center;
+	text-wrap: pretty;
+}
+
+/*
+	A note attached to a result, in the app's warn tint - the same one Global
+	actions uses for a caveat, at the same weight: a rule down the side rather
+	than a filled block.
+*/
+.modal-dialog__body .dialog-note {
+	padding-left: var(--sp-5);
+	border-left: 2px solid var(--warn);
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+/* --------------------------------------------------------------
+	A DIALOG THAT CHOOSES FROM A GRID
+
+	The body normally scrolls as one thing, which is right when it is a form.
+	It is wrong when the body is a setting above a grid of ninety-five glyphs:
+	the setting scrolls away the moment you look past the first row, and you
+	have to come back up for it.
+
+	So when a dialog carries a chooser, the body stops scrolling and the
+	chooser starts: the option holds its place, the grid moves under it, and
+	the header and footer are already fixed by the frame. Four fixed edges and
+	one moving middle.
+	------------------------------------------------------------ */
+
+/*
+	The split goes on the dialog's own wrapper, not on the body.
+
+	addAsChildren gives the body one child - the node the dialog built - so a
+	grid declared on the body has exactly one item in it: the first row took
+	everything and the second resolved to 0px, measured as
+	`grid-template-rows: 907.844px 0px`. The chooser then sized itself to its
+	ninety-five tiles and was clipped by the body rather than scrolling inside
+	it, which looked like a grid with its last row cut off.
+*/
+.modal-dialog__body:has(.dialog-chooser) {
+	overflow: hidden;
+}
+
+.dialog-layout:has(.dialog-chooser) {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr);
+	gap: var(--sp-6);
+	height: 100%;
+	min-height: 0;
+}
+
+/*
+	Two of the three variants pin an option above the grid; "Link this
+	component to another glyph" has none, and there the grid is the only row.
+	Left at the two-row template it landed in the min-content one, took its
+	full content height, and the body scrolled instead of the chooser - which
+	is the scroll box whose bar is hidden.
+*/
+.dialog-layout:has(.dialog-chooser):not(:has(.dialog-option)) {
+	grid-template-rows: minmax(0, 1fr);
+}
+
+.dialog-chooser {
+	min-height: 0;
+	overflow-y: auto;
+	/*
+		The glyph tiles carry their own focus rings, and a ring is drawn
+		outside the element it belongs to - so the scroll box holds the ring's
+		width off its own edge rather than clipping it against the wall.
+	*/
+	padding: var(--focus-offset) var(--focus-offset) var(--sp-1) var(--focus-offset);
+	margin: calc(var(--focus-offset) * -1);
+}
+
+/* --------------------------------------------------------------
+	The chooser, in the language Overview already speaks
+
+	Same grid, same gaps, same hidden bar - see .overview .item-chooser__* in
+	pages/content-pages.css. The two are the only places in the app that show
+	a wall of glyphs to pick from, and there is no reason for them to be two
+	different things.
+	------------------------------------------------------------ */
+
+/*
+	Sized to its grid, not to the window.
+
+	Every other dialog takes 66vw between 500 and 1000, which is right for a
+	form - it is as wide as the screen can spare. This one is a wall of fixed
+	140px tiles, so a width picked from the viewport lands part-way through a
+	column and `space-between` shares the remainder out: at 1380px wide the
+	same grid showed five columns with 26px between them, and at 1500 it
+	showed five with 60. 912 is six columns and their six-pixel gaps, plus
+	the body's 20px insets and the frame's hairline.
+*/
+.modal-dialog__content:has(.dialog-chooser) {
+	width: min(912px, calc(100vw - var(--sp-10) * 2));
+}
+
+.dialog-chooser .item-chooser__wrapper {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr);
+	gap: var(--sp-5);
+	height: 100%;
+	min-height: 0;
+	padding: 0;
+	background-color: transparent;
+	border-radius: 0;
+}
+
+/*
+	The range select is the row - one control, edge to edge over the grid it
+	governs. It was sized by its longest option name, "Latin Extended
+	Additional", with the count beside it, so the row read as two things laid
+	out by accident; the count is inside the box now.
+*/
+.dialog-chooser .item-chooser__header {
+	display: flex;
+	align-items: center;
+	padding: 0;
+	margin: 0;
+}
+
+/*
+	The whole row, and a size to match it.
+
+	In a panel this control is 28px of mono beside a number field, and that is
+	right there. Here it is the only control between the option above it and
+	870px of glyphs below, so it is the head of the grid rather than a field in
+	a form. It takes the UI face - what it holds is a range name, which is
+	words - and the count rides inside it at the far end; see .selection-note
+	in option-chooser.css.
+
+	40 is a one-off on the 4px grid, the same way the kern pair's 56 is: there
+	is no control token above 32, because the app has no other control this
+	size.
+
+	THE CORNER. --r-lg, which is the tile's own radius - the select and the
+	grid it governs are one object, and the head of it cannot be rounder than
+	the things under it. It lands one pixel under the option row above, whose
+	13 is its checkbox's 5 plus the 8 it is inset by, so the three boxes in
+	this column read as 13 · 12 · 12.
+
+	And the text moves in with the corner. --sp-3 of inner padding on top of
+	the control's own --sp-3 puts the range name 12px in from the inside of the
+	hairline - the radius exactly, so it starts where the curve finishes. At
+	the control's default 6 it sat inside the turn. The chevron lands 9 in
+	rather than 12: it is centred in a 20px column and there is no knob for
+	that, and an icon sitting a hair closer to the edge than text is the usual
+	optical correction anyway.
+*/
+.dialog-chooser .item-chooser__header option-chooser {
+	--option-chooser-h: 40px;
+	--option-chooser-radius: var(--r-lg);
+	--option-chooser-pad-x: var(--sp-3);
+	--option-chooser-font: var(--font-ui);
+	--option-chooser-font-size: var(--fs-md);
+	display: block;
+	flex: 1 1 auto;
+	width: auto;
+	min-width: 0;
+	max-width: none;
+}
+
+/*
+	auto-fill at the tile's own width with space-between: the columns land in
+	the same place on every row, so the grid reads down as well as across, and
+	the leftover width goes into the gaps rather than a ragged right edge.
+*/
+.dialog-chooser .item-chooser__tile-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 140px);
+	justify-content: space-between;
+	align-content: start;
+	/*
+		More between the rows than between the columns, same as Overview: a
+		tile is a letterform with its code point written under it, so the row
+		gap has to read as larger than the space inside a tile.
+	*/
+	gap: var(--sp-4) var(--sp-3);
+	min-height: 0;
+	animation: none;
+}
+
+.dialog-chooser .item-chooser__tile-grid glyph-tile {
+	display: block;
+	margin: 0;
+}
+
+/* No bar down the right edge of the one thing this dialog exists to show. */
+.dialog-chooser {
+	scrollbar-width: none;
+}
+
+.dialog-chooser::-webkit-scrollbar {
+	display: none;
+}
+
+.dialog-chooser .item-chooser__page-control {
+	grid-column: 1 / -1;
+	margin: 0 0 var(--sp-3) 0;
 }

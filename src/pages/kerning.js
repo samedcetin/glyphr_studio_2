@@ -9,6 +9,7 @@ import {
 	closeEveryTypeOfDialog,
 	showError,
 	showModalDialog,
+	showToast,
 } from '../controls/dialogs/dialogs.js';
 import { fillEditorToolBar, makeKernToolButton } from '../edit_canvas/tools/tools.js';
 import { getUnicodeName } from '../lib/unicode/unicode_names.js';
@@ -232,37 +233,65 @@ export function showAddEditKernGroupDialog(kernGroup) {
 
 	const content = makeElement({
 		innerHTML: `
-		<h2>${kernGroup ? 'Edit this' : 'Create a new'} kern group</h2>
-		Specify which characters should be in the left-side group,
-		the right-side group, then what distance in <code>Em</code>
-		units should be used for the kern value.
-		<br><br>
+		<div class="dialog-field">
+			<label class="dialog-field__label" for="kerning__add-new-kern-group__left-group">Left group</label>
+			<div class="dialog-field__control">
+				<input id="kerning__add-new-kern-group__left-group" type="text"
+					aria-describedby="kerning__add-new-kern-group__left-hint"
+					value="${kernGroup ? kernGroup.leftGroupAsString : ''}"
+					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+				/>
+			</div>
+			<div class="dialog-field__hint" id="kerning__add-new-kern-group__left-hint">
+				Every character that can sit on the left of the pair.
+			</div>
+		</div>
 
-		<h3>Left group</h3>
-		<input id="kerning__add-new-kern-group__left-group" type="text"
-		value="${kernGroup ? kernGroup.leftGroupAsString : ''}"
-		autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-		/>
-		<br><br>
-		<h3>Right group</h3>
-		<input id="kerning__add-new-kern-group__right-group" type="text"
-		value="${kernGroup ? kernGroup.rightGroupAsString : ''}"
-		autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-		/>
-		<br><br>
-		<h3>Value</h3>
-		<input id="kerning__add-new-kern-group__value" type="text"
-			value="${kernGroup ? kernGroup.value : '0'}"
-			autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-		/>
-		<br><br>
-		<fancy-button disabled id="kerning__add-new-kern-group__submit-button">
-			${kernGroup ? 'Save changes' : 'Create kern group'}
-		</fancy-button>
+		<div class="dialog-field">
+			<label class="dialog-field__label" for="kerning__add-new-kern-group__right-group">Right group</label>
+			<div class="dialog-field__control">
+				<input id="kerning__add-new-kern-group__right-group" type="text"
+					aria-describedby="kerning__add-new-kern-group__right-hint"
+					value="${kernGroup ? kernGroup.rightGroupAsString : ''}"
+					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+				/>
+			</div>
+			<div class="dialog-field__hint" id="kerning__add-new-kern-group__right-hint">
+				Every character that can sit on the right. The group kerns all of the
+				pairs the two lists make between them.
+			</div>
+		</div>
+
+		<div class="dialog-field dialog-field--narrow dialog-field--numeric">
+			<label class="dialog-field__label" for="kerning__add-new-kern-group__value">Value</label>
+			<div class="dialog-field__control">
+				<input id="kerning__add-new-kern-group__value" type="text" inputmode="numeric"
+					aria-describedby="kerning__add-new-kern-group__value-hint"
+					value="${kernGroup ? kernGroup.value : '0'}"
+					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+				/>
+				<span class="dialog-field__suffix" aria-hidden="true">Em</span>
+			</div>
+			<div class="dialog-field__hint" id="kerning__add-new-kern-group__value-hint">
+				How far to move the pair. Negative pulls the two characters together.
+			</div>
+		</div>
 		`,
 	});
 
-	const submitButton = content.querySelector('#kerning__add-new-kern-group__submit-button');
+	const cancelButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		innerHTML: 'Cancel',
+		onClick: closeEveryTypeOfDialog,
+	});
+
+	const submitButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { disabled: '' },
+		innerHTML: kernGroup ? 'Save changes' : 'Create kern group',
+	});
+
 	/** @type {HTMLInputElement} */
 	const leftGroupInput = content.querySelector('#kerning__add-new-kern-group__left-group');
 	/** @type {HTMLInputElement} */
@@ -328,114 +357,295 @@ export function showAddEditKernGroupDialog(kernGroup) {
 		// log(`showAddEditKernGroupDialog button click handler`, 'end');
 	}
 
-	showModalDialog(content, 500);
+	showModalDialog(content, 500, {
+		title: `${kernGroup ? 'Edit this' : 'Create a new'} kern group`,
+		subtitle: 'Two lists of characters, and one distance applied to every pair they make.',
+		actions: [cancelButton, submitButton],
+	});
+	leftGroupInput.focus();
 	// log(`showAddEditKernGroupDialog`, 'end');
 }
 
-/**
- * Makes the content for the Find Single Letter Pair dialog, and shows it.
+/*
+	FIND A LETTER PAIR.
+
+	What it was: a title and two paragraphs of prose, then two single-character
+	fields under two long column headers, then Search floating in the middle of
+	the body, then a rule, then the words "Search results..." in italics - a
+	placeholder standing in for a result set that did not exist yet.
+
+	Four things changed beyond the frame.
+
+	Search is in the footer, where the thing you press to commit a dialog goes.
+	It was in the body, halfway down, while the footer stood empty.
+
+	The results are a section that appears when there are results, with a count
+	at the top of it. Nothing stands in for them beforehand: an empty area
+	labelled "Search results..." tells you less than an empty area does.
+
+	The advice about duplicates - "the value that actually gets used may not be
+	the expected one" - is shown when the search returns more than one group,
+	which is the only moment it is about anything. It used to be the second
+	paragraph you read before you had searched for anything.
+
+	And Enter searches, which is what Enter in a search field is for.
  */
 export function showFindSingleLetterPairDialog() {
 	const content = makeElement({
 		innerHTML: `
-		<h2>Find a letter pair</h2>
-		Specify a pair of letters below, and search will return all the Kern Groups
-		that contain that pair. Clicking on a search result will select that Kern Group
-		behind the dialog box.
-		<br><br>
-		It is good to not have duplicate values for a letter pair - the value that actually
-		gets used may not be the expected one.
-		<br><br>
-
-		<div class="list__two-column kerning__letter-pair-fields">
-			<div class="list__column-header">Left group letter</div>
-			<div class="list__column-header">Right group letter</div>
-			<input
-				id="kerning__letter-pair__left-group" type="text" value=""
-				autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="1"
-				onclick="this.select();"
-			/>
-			<input
-				id="kerning__letter-pair__right-group" type="text" value=""
-				autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="1"
-				onclick="this.select();"
-			/>
+		<div class="dialog-field">
+			<span class="dialog-field__label" id="kerning__letter-pair__label">Letter pair</span>
+			<div class="dialog-pair">
+				<input
+					id="kerning__letter-pair__left-group" type="text" value=""
+					aria-label="Left character" aria-describedby="kerning__letter-pair__hint"
+					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="1"
+				/>
+				<input
+					id="kerning__letter-pair__right-group" type="text" value=""
+					aria-label="Right character" aria-describedby="kerning__letter-pair__hint"
+					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="1"
+				/>
+			</div>
+			<div class="dialog-field__hint" id="kerning__letter-pair__hint">
+				One character on each side. Selecting a result selects that kern group
+				behind this dialog.
+			</div>
 		</div>
-		<br>
 
-		<fancy-button disabled id="kerning__letter-pair__search-button">
-			Search
-		</fancy-button>
-		<br><br>
-		<hr/>
-		<br>
-		<div id="kerning__letter-pair__results">
-			<i>Search results...</i>
-		</div>
+		<div class="dialog-results" id="kerning__letter-pair__results" hidden></div>
 		`,
 	});
 
 	const leftSearch = content.querySelector('#kerning__letter-pair__left-group');
-	leftSearch.addEventListener('change', updateSearchButton);
-	leftSearch.addEventListener('keyup', updateSearchButton);
 	const rightSearch = content.querySelector('#kerning__letter-pair__right-group');
-	rightSearch.addEventListener('change', updateSearchButton);
-	rightSearch.addEventListener('keyup', updateSearchButton);
 
-	const searchButton = content.querySelector('#kerning__letter-pair__search-button');
-	searchButton.addEventListener('click', searchForLetterPairs);
-	showModalDialog(content, 800);
+	const closeButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		innerHTML: 'Close',
+		onClick: closeEveryTypeOfDialog,
+	});
+
+	const searchButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { disabled: '', id: 'kerning__letter-pair__search-button' },
+		innerHTML: 'Search',
+		onClick: searchForLetterPairs,
+	});
+
+	[leftSearch, rightSearch].forEach((field) => {
+		field.addEventListener('change', updateSearchButton);
+		field.addEventListener('keyup', updateSearchButton);
+		/* Was an inline onclick attribute on each field. */
+		field.addEventListener('focus', () => field.select());
+		field.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter' && !searchButton.hasAttribute('disabled')) {
+				searchForLetterPairs();
+			}
+		});
+	});
+
+	showModalDialog(content, 560, {
+		title: 'Find a letter pair',
+		subtitle: 'Every kern group that contains the pair.',
+		actions: [closeButton, searchButton],
+	});
+	leftSearch.focus();
 }
 
 /**
  * Makes the content for the Delete Single Letter Pair dialog, and shows it.
  */
+/**
+	DELETE LETTER PAIRS.
+
+	This deleted without showing you what it was about to delete. One button
+	said "Find and delete", and pressing it did both: the finding was the
+	deleting. What was going to be removed, and from which groups, was only
+	ever legible afterwards.
+
+	It is two steps now. Find shows the groups the pair will be taken out of,
+	and the ones it cannot be taken out of, and only then does the destructive
+	button appear - in the footer, in the app's danger colour, naming the
+	number it is about to change.
+
+	The five-line Note about multi-member groups is gone from the top of the
+	dialog and is shown as a list instead: those groups are named, when there
+	are any, under a line saying why they cannot be touched. A caveat you read
+	before you have typed anything is a caveat about nothing.
+ */
 export function showDeleteSingleLetterPairDialog() {
 	const content = makeElement({
 		innerHTML: `
-		<h2>Delete letter pairs</h2>
-		Specify a pair of letters below, and search will find and attempt to delete all
-		the letter pairs from the applicable Kern Groups.
-		<br><br>
-		<b>Note</b>: This will only affect Kern Groups where either the left group or the right group has only one member. Kern Groups affect all possible permutations of left group / right group.
-		Because of this, if a left group and a right group both have multiple members, including
-		the specified letter pair, removing the letters from the letter pair would remove more
-		than just the kern value for those two letters.
-		<br><br>
-
-		<div class="list__two-column kerning__letter-pair-fields">
-			<div class="list__column-header">Left group letter</div>
-			<div class="list__column-header">Right group letter</div>
-			<input
-				id="kerning__letter-pair__left-group" type="text" value=""
-				autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="1"
-				onclick="this.select();"
-			/>
-			<input
-				id="kerning__letter-pair__right-group" type="text" value=""
-				autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="1"
-				onclick="this.select();"
-			/>
+		<div class="dialog-field">
+			<span class="dialog-field__label">Letter pair</span>
+			<div class="dialog-pair">
+				<input
+					id="kerning__letter-pair__left-group" type="text" value=""
+					aria-label="Left character" aria-describedby="kerning__delete-pair__hint"
+					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="1"
+				/>
+				<input
+					id="kerning__letter-pair__right-group" type="text" value=""
+					aria-label="Right character" aria-describedby="kerning__delete-pair__hint"
+					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="1"
+				/>
+			</div>
+			<div class="dialog-field__hint" id="kerning__delete-pair__hint">
+				One character on each side. Find first — nothing is removed until you
+				have seen what it would be removed from.
+			</div>
 		</div>
-		<br>
 
-		<fancy-button disabled danger id="kerning__letter-pair__search-button">
-			Find and delete
-		</fancy-button>
-		<div id="kerning__result-message"></div>
+		<div class="dialog-results" id="kerning__letter-pair__results" hidden></div>
 		`,
 	});
 
 	const leftSearch = content.querySelector('#kerning__letter-pair__left-group');
-	leftSearch.addEventListener('change', updateSearchButton);
-	leftSearch.addEventListener('keyup', updateSearchButton);
 	const rightSearch = content.querySelector('#kerning__letter-pair__right-group');
-	rightSearch.addEventListener('change', updateSearchButton);
-	rightSearch.addEventListener('keyup', updateSearchButton);
+	const resultsArea = content.querySelector('#kerning__letter-pair__results');
 
-	const searchButton = content.querySelector('#kerning__letter-pair__search-button');
-	searchButton.addEventListener('click', deleteLetterPairs);
-	showModalDialog(content, 800);
+	const cancelButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		innerHTML: 'Cancel',
+		onClick: closeEveryTypeOfDialog,
+	});
+
+	/*
+		One action button with two states. It starts as Find; once a search has
+		shown what would go, it becomes the destructive one and says how many.
+		Changing either field puts it back, because the preview it was standing
+		on no longer describes what is in the fields.
+	*/
+	const actionButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { disabled: '', id: 'kerning__letter-pair__search-button' },
+		innerHTML: 'Find pairs',
+	});
+
+	let removableIDs = [];
+
+	function resetToFind() {
+		removableIDs = [];
+		actionButton.removeAttribute('danger');
+		actionButton.innerHTML = 'Find pairs';
+		resultsArea.innerHTML = '';
+		resultsArea.setAttribute('hidden', '');
+		updateSearchButton();
+	}
+
+	function runFind() {
+		const leftLetter = leftSearch.value.charAt(0);
+		const rightLetter = rightSearch.value.charAt(0);
+		const found = findLetterPairMatches(leftLetter, rightLetter);
+		removableIDs = found.removable;
+
+		resultsArea.innerHTML = '';
+		resultsArea.removeAttribute('hidden');
+		const pair = `${leftLetter}${rightLetter}`;
+
+		if (!found.removable.length && !found.blocked.length) {
+			resultsArea.appendChild(
+				makeElement({
+					className: 'dialog-empty',
+					innerHTML: `No kern group contains <code>${pair}</code>.`,
+				})
+			);
+			return;
+		}
+
+		if (found.removable.length) {
+			const head = makeElement({ className: 'dialog-results__head' });
+			head.appendChild(
+				makeElement({
+					className: 'studio-eyebrow',
+					content:
+						found.removable.length === 1
+							? 'Will be removed from 1 group'
+							: `Will be removed from ${found.removable.length} groups`,
+				})
+			);
+			resultsArea.appendChild(head);
+
+			const list = makeElement({ className: 'dialog-results__list' });
+			found.removable.forEach((id) => list.appendChild(makeOneKernGroupRow(id)));
+			resultsArea.appendChild(list);
+
+			actionButton.setAttribute('danger', '');
+			actionButton.innerHTML =
+				found.removable.length === 1
+					? 'Remove from 1 group'
+					: `Remove from ${found.removable.length} groups`;
+		}
+
+		if (found.blocked.length) {
+			resultsArea.appendChild(
+				makeElement({
+					className: 'dialog-note',
+					innerHTML: `${
+						found.blocked.length === 1 ? 'One group has' : `${found.blocked.length} groups have`
+					} more than one character on both sides, so
+						<code>${pair}</code> cannot be taken out on its own — removing a character would
+						change every pair it makes. Edit ${
+							found.blocked.length === 1 ? 'it' : 'them'
+						} by hand instead: ${found.blocked.join(', ')}.`,
+				})
+			);
+		}
+	}
+
+	actionButton.addEventListener('click', () => {
+		if (removableIDs.length) deleteLetterPairs(removableIDs);
+		else runFind();
+	});
+
+	[leftSearch, rightSearch].forEach((field) => {
+		field.addEventListener('change', resetToFind);
+		field.addEventListener('keyup', resetToFind);
+		field.addEventListener('focus', () => field.select());
+		field.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter' && !actionButton.hasAttribute('disabled')) actionButton.click();
+		});
+	});
+
+	showModalDialog(content, 560, {
+		title: 'Delete letter pairs',
+		subtitle: 'Take one pair out of the kern groups that carry it.',
+		actions: [cancelButton, actionButton],
+	});
+	leftSearch.focus();
+}
+
+/**
+ * Which kern groups carry a letter pair, and which of those the pair can
+ * actually be taken out of.
+ *
+ * A group can only lose a pair when one of its two sides has a single member:
+ * a group is every permutation of its two lists, so removing a character from
+ * a side that has several would change every pair that character makes, not
+ * just this one.
+ *
+ * @param {String} leftLetter
+ * @param {String} rightLetter
+ * @returns {Object} - { removable: Array<String>, blocked: Array<String> }
+ */
+function findLetterPairMatches(leftLetter, rightLetter) {
+	const groups = getCurrentProject().kerning;
+	const leftHex = charToHex(leftLetter);
+	const rightHex = charToHex(rightLetter);
+	const removable = [];
+	const blocked = [];
+
+	Object.keys(groups).forEach((id) => {
+		const { leftGroup, rightGroup } = groups[id];
+		if (!leftGroup.includes(leftHex) || !rightGroup.includes(rightHex)) return;
+		if (leftGroup.length === 1 || rightGroup.length === 1) removable.push(id);
+		else blocked.push(id);
+	});
+
+	return { removable, blocked };
 }
 
 /**
@@ -483,102 +693,105 @@ function searchForLetterPairs() {
 		}
 	});
 
-	// log(`\n⮟results⮟`);
-	// log(results);
+	/*
+		The section exists only once there is something in it. Before the first
+		search it is hidden rather than showing the words "Search results..." -
+		a label for an absence, which told the reader less than the absence did.
+	*/
 	const resultsArea = document.querySelector('#kerning__letter-pair__results');
 	resultsArea.innerHTML = '';
+	resultsArea.removeAttribute('hidden');
 
-	if (results.length) {
-		const selectedKernGroupID = getCurrentProjectEditor().selectedKernGroupID;
-		results.forEach((id) => {
-			let row = makeOneKernGroupRow(id);
-			row.addEventListener('click', () => {
-				const editor = getCurrentProjectEditor();
-				editor.selectedItemID = id;
-				editor.history.addState(`Navigated to ${editor.project.getItemName(id, true)}`);
-				let resultRows = document.querySelectorAll('.kern-group-chooser__row');
-				resultRows.forEach((result) => result.removeAttribute('selected'));
-				row.setAttribute('selected', '');
-			});
-			if (id === selectedKernGroupID) row.setAttribute('selected', '');
-			resultsArea.appendChild(row);
+	const pair = `${leftLetter}${rightLetter}`;
+
+	if (!results.length) {
+		resultsArea.appendChild(
+			makeElement({
+				className: 'dialog-empty',
+				innerHTML: `No kern group contains <code>${pair}</code>.`,
+			})
+		);
+		return;
+	}
+
+	/* A count, because "how many" is the first thing a result set is asked. */
+	const head = makeElement({ className: 'dialog-results__head' });
+	head.appendChild(
+		makeElement({
+			className: 'studio-eyebrow',
+			content: results.length === 1 ? '1 kern group' : `${results.length} kern groups`,
+		})
+	);
+	resultsArea.appendChild(head);
+
+	const list = makeElement({ className: 'dialog-results__list' });
+	const selectedKernGroupID = getCurrentProjectEditor().selectedKernGroupID;
+	results.forEach((id) => {
+		let row = makeOneKernGroupRow(id);
+		row.addEventListener('click', () => {
+			const editor = getCurrentProjectEditor();
+			editor.selectedItemID = id;
+			editor.history.addState(`Navigated to ${editor.project.getItemName(id, true)}`);
+			let resultRows = document.querySelectorAll('.kern-group-chooser__row');
+			resultRows.forEach((result) => result.removeAttribute('selected'));
+			row.setAttribute('selected', '');
 		});
-	} else {
-		resultsArea.innerHTML = '<i>No Kern Groups exist with that letter pair</i>';
+		if (id === selectedKernGroupID) row.setAttribute('selected', '');
+		list.appendChild(row);
+	});
+	resultsArea.appendChild(list);
+
+	/*
+		The duplicates warning, at the one moment it is about something. It used
+		to be the second paragraph of the dialog, read before you had searched
+		for anything - advice about a situation you could not yet be in.
+	*/
+	if (results.length > 1) {
+		resultsArea.appendChild(
+			makeElement({
+				className: 'dialog-note',
+				innerHTML: `More than one group covers <code>${pair}</code>, so which value is
+					used may not be the one you expect. It is worth leaving the pair in only one
+					of them.`,
+			})
+		);
 	}
 	// log(`searchForLetterPairs`, 'end');
 }
 
 /**
- * Deletes letter pairs
+ * Removes a letter pair from the kern groups the preview said it could come
+ * out of, and says what happened.
+ *
+ * It takes the list rather than searching again: the list is what the user was
+ * shown and agreed to, and a second search could disagree with it.
+ *
+ * @param {Array<String>} kernIDs - ids from findLetterPairMatches().removable
  */
-function deleteLetterPairs() {
-	// log(`deleteLetterPairs`, 'start');
+function deleteLetterPairs(kernIDs) {
 	/** @type {HTMLInputElement} */
 	const leftGroup = document.querySelector('#kerning__letter-pair__left-group');
-	const leftLetter = leftGroup.value.charAt(0);
-	// log(`leftLetter: ${leftLetter} : ${charToHex(leftLetter)}`);
 	/** @type {HTMLInputElement} */
 	const rightGroup = document.querySelector('#kerning__letter-pair__right-group');
+	const leftLetter = leftGroup.value.charAt(0);
 	const rightLetter = rightGroup.value.charAt(0);
-	// log(`rightLetter: ${rightLetter} : ${charToHex(rightLetter)}`);
 
-	const resultMessage = document.querySelector('#kerning__result-message');
-	resultMessage.innerHTML = '';
+	const removed = kernIDs.filter((id) => deleteLetterPair(leftLetter, rightLetter, id));
 
-	const groups = getCurrentProject().kerning;
-	let result;
-	let errors = [];
-	let success = [];
-
-	Object.keys(groups).forEach((id) => {
-		// log(`checking ${groups[id].leftGroup} | ${groups[id].rightGroup}`);
-		if (
-			groups[id].leftGroup.includes(charToHex(leftLetter)) &&
-			groups[id].rightGroup.includes(charToHex(rightLetter))
-		) {
-			result = deleteLetterPair(leftLetter, rightLetter, id);
-			if (result) success.push(id);
-			else errors.push(id);
-		}
-	});
-
-	// log(`After search`);
-	// log(`success.toString(): ${success.toString()}`);
-	// log(`errors.toString(): ${errors.toString()}`);
-
-	if (errors.length) {
-		resultMessage.innerHTML = `
-			<br><br>
-			<b>Warning</b><br>
-			The following Kern Groups contain the specified letter pair, but
-			the letters could not be removed because both the left group and
-			the right group contain multiple members.
-			<br><br>
-			${errors.join(', ')}
-			<br><br>
-			<hr>
-		`;
+	if (!removed.length) {
+		showToast(`Nothing was removed.<br>${leftLetter}${rightLetter} was not found.`);
+		return;
 	}
 
-	if (success.length > 0) {
-		resultMessage.innerHTML += `
-			<br>
-			Successfully removed letter pair from Kern Group${success.length > 1 ? 's:' : ':'}
-			<br><br>
-			${success.join(', ')}
-		`;
-		getCurrentProjectEditor().navigate();
-	} else {
-		if (!errors.length) {
-			resultMessage.innerHTML += `
-				<br>
-				<i>No Kern Groups with the specified letter pair was found.</i>
-			`;
-		}
-	}
-
-	// log(`deleteLetterPairs`, 'end');
+	const editor = getCurrentProjectEditor();
+	editor.history.addWholeProjectChangePostState();
+	showToast(
+		`Removed ${leftLetter}${rightLetter} from<br>${removed.length} kern group${
+			removed.length > 1 ? 's' : ''
+		}`
+	);
+	/* navigate() closes every dialog, so this is also what dismisses this one. */
+	editor.navigate();
 }
 
 /**

@@ -824,7 +824,12 @@
 	height: auto;
 }
 
-.modal-dialog__open-new-project .modal-dialog__header > span {
+/*
+	This dialog writes its own title inside the body, so the frame's title slot
+	stays empty and out of the way. It was `> span` until the slot became a
+	div with a class; the class is what it answers to now.
+*/
+.modal-dialog__open-new-project .modal-dialog__titles {
 	display: none;
 }
 
@@ -1643,13 +1648,28 @@
 	Section heads, and the controls in them
 -------------------------------------------------------- */
 
+/*
+	A section's name, and what it labels.
+
+	The margin-bottom that used to be here was added on top of .hub__home's own
+	--sp-9 row gap, so a head stood 48px above the thing it names and 32 below
+	the section before it. It read as belonging to what was above it: measured
+	on Examples and guides, where the Guides head and its one banner sat
+	further apart than the banner and the card grid above them.
+
+	The gap is the head-to-content distance now, and the separation between
+	sections is stated once, on the head that starts a new one.
+*/
 .hub__section-head {
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
 	gap: var(--sp-6);
 	flex-wrap: wrap;
-	margin-bottom: var(--sp-6);
+}
+
+.hub__section-head:not(:first-child) {
+	margin-top: var(--sp-7);
 }
 
 .hub__section-title {
@@ -2149,6 +2169,21 @@
 	gap: var(--sp-6);
 	padding: var(--sp-7) var(--sp-8);
 	min-width: 0;
+}
+
+/*
+	The banner carries --sp-7 of padding above its own title, so a section head
+	sitting the standard --sp-9 above it reads as 52px of space rather than 32:
+	the eye measures to the words, not to the box. Every other thing a head
+	introduces is a card grid whose specimens run to the card's edge, where the
+	two distances are the same.
+
+	So the card's own top padding comes back off the gap. It is the same token
+	the rule above spends, not a number picked to look right - move the padding
+	and this follows it.
+*/
+.hub__section-head + .hub__guide {
+	margin-top: calc(var(--sp-7) * -1);
 }
 
 .hub__guide-text {

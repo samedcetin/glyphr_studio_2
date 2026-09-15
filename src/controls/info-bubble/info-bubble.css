@@ -29,20 +29,29 @@
 	the same value in both themes, which made it nearly invisible on a dark
 	panel and heavier than the label beside it on a light one.
 */
+/*
+	The host owns the size - see the info-bubble rule in resets.css - and the
+	mark fills it, which is right where the bubble sits beside a label.
+
+	Two call-site properties for where it does not. A bubble inside a text
+	field has to be a pointer target of its own, and 12px is half the 24px
+	floor; setting the host to a real target then drew a 28px circle in a 32px
+	field. These let the target and the drawn mark be two sizes: the host is
+	what you can hit, --info-bubble-mark is what you see.
+*/
 #entryPoint {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	/* The host owns the size - see the info-bubble rule in resets.css. */
-	width: 100%;
-	height: 100%;
+	width: var(--info-bubble-mark, 100%);
+	height: var(--info-bubble-mark, 100%);
 	box-sizing: border-box;
 	border: 1px solid var(--icon-default);
 	border-radius: 50%;
 	background-color: transparent;
 	color: var(--icon-default);
 	font-family: var(--font-ui);
-	font-size: 9px;
+	font-size: var(--info-bubble-mark-font, 9px);
 	font-weight: var(--fw-semibold);
 	line-height: 1;
 	transition: var(--transition-color);

@@ -450,25 +450,20 @@ body.is-resizing-sidebar * {
 	text-align: center;
 }
 
-/* Kern Groups */
-#kerning__add-new-kern-group__left-group,
-#kerning__add-new-kern-group__right-group {
-	width: 100%;
-}
+/*
+	The kern dialogs used to be laid out from here, by id.
 
-#kerning__letter-pair__left-group,
-#kerning__letter-pair__right-group {
-	width: 30px;
-	margin: 0px 10px 0px 4px;
-	text-align: center;
-	padding: 0px;
-}
+	Three rules: two that gave the add/edit fields their width, two that made
+	the letter-pair boxes 30px with a 10px right margin, and one that made the
+	results a grid. They were written against markup those dialogs no longer
+	have, and being ids they outranked everything - the letter-pair boxes were
+	still 30px wide after their own component asked for 56, because (1,0,0)
+	beats a class no matter which file it is in or how late it loads.
 
-#kerning__letter-pair__results {
-	display: grid;
-	grid-template-columns: 1fr;
-	row-gap: 10px;
-}
+	The dialogs own their own layout now: .dialog-field, .dialog-pair and
+	.dialog-results in controls/dialogs/dialogs.css, which is also where the
+	next dialog will look for them.
+*/
 
 
 /* --------------------------------------------------------------

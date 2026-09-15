@@ -12,16 +12,19 @@
 	should be indistinguishable from the number field next to it until you
 	click it.
 
-	FOUR THINGS A CALL SITE MAY OVERRIDE, the way panels.css overrides
+	SIX THINGS A CALL SITE MAY OVERRIDE, the way panels.css overrides
 	--fancy-button-h: --option-chooser-h, --option-chooser-radius,
-	--option-chooser-bg and --option-chooser-font. Each falls back to what is
-	written here, so every existing call site is untouched.
+	--option-chooser-pad-x, --option-chooser-bg, --option-chooser-font and
+	--option-chooser-font-size. Each falls back to what is written here, so
+	every existing call site is untouched.
 
 	They exist because "one surface, one control radius" cuts across this
 	control: on a page whose other controls are 32px at --r-lg, a 28px --r-md
 	chooser is the one thing out of step. The font is the other half of it -
 	the display is mono because what this usually holds is a code point range,
-	and a chooser holding words wants the UI face.
+	and a chooser holding words wants the UI face. The inset is the third: a
+	corner and the text inside it are one measurement, so a call site that
+	rounds the box further has to move the text in with it.
 */
 
 * {
@@ -30,10 +33,16 @@
 
 .wrapper {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 20px;
+	grid-template-columns: minmax(0, 1fr) min-content 20px;
 	align-items: center;
 	margin: 0;
-	padding: 0;
+	/*
+		The box holds its contents off its own corners. Zero by default, so a
+		--r-md chooser in a panel is the control it always was; a call site that
+		rounds it further sets an inset to match - see the dialog chooser, which
+		is --r-lg and insets by --sp-3, so the text starts where the curve ends.
+	*/
+	padding: 0 var(--option-chooser-pad-x, 0);
 	height: var(--option-chooser-h, var(--control-h));
 	background-color: var(--option-chooser-bg, var(--bg-surface-sunken));
 	border: 1px solid var(--border-strong);
@@ -83,7 +92,7 @@
 	border: 0;
 	color: inherit;
 	font-family: var(--option-chooser-font, var(--font-mono));
-	font-size: var(--fs-sm);
+	font-size: var(--option-chooser-font-size, var(--fs-sm));
 	font-variant-numeric: tabular-nums;
 	line-height: 1;
 	text-align: left;
@@ -103,7 +112,7 @@
 }
 
 .downArrow {
-	grid-column: 2;
+	grid-column: 3;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -128,4 +137,38 @@
 	width: 14px;
 	height: 14px;
 	display: block;
+}
+
+/* --------------------------------------------------------------
+	The note
+
+	A fact about the selection, held at the far end of the box - what the
+	character chooser writes its count into. Mono and tabular because that is
+	what it holds, and secondary because the selection is the answer and this
+	is a footnote to it.
+
+	It is not a tab stop, it is aria-hidden, and it never takes the pointer:
+	the whole box is one control, and a strip of text inside it that swallows
+	a click is a dead spot in the middle of a select.
+	------------------------------------------------------------ */
+
+.selection-note {
+	grid-column: 2;
+	padding-right: var(--sp-3);
+	color: var(--text-secondary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+/* Nothing to say, no column. */
+.selection-note:empty {
+	display: none;
+}
+
+.wrapper[disabled] .selection-note {
+	color: var(--text-disabled);
 }

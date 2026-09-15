@@ -274,10 +274,21 @@ export class Glyph extends GlyphElement {
 
 	/**
 	 * get contextCharacters
+	 *
+	 * Always a string, which this said it was and was not. An item with no
+	 * character of its own - a Component, whose id is `comp-0` rather than a
+	 * code point - gets `false` back from hexesToChars, so `char` is `false`
+	 * and this handed that straight to the Context characters panel, which
+	 * wrote it into the field: every component opened with the word "false"
+	 * sitting in its Characters input.
+	 *
+	 * hexesToChars returning false is right - it is answering "this is not a
+	 * hex id" - so the coercion belongs here, where the contract is declared.
+	 *
 	 * @returns {String}
 	 */
 	get contextCharacters() {
-		if (!this._contextCharacters || this._contextCharacters === this.char) return this.char;
+		if (!this._contextCharacters || this._contextCharacters === this.char) return this.char || '';
 		else return this._contextCharacters;
 	}
 

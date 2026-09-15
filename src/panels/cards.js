@@ -162,8 +162,25 @@ export function makeSingleInput(item, property, thisTopic, tagName, additionalLi
 		attributes: { 'pubsub-topic': topics[0] },
 	});
 
-	let value = tagName === 'input' ? item[property] : round(item[property], 3);
-	newInput.setAttribute('value', value);
+	/*
+		A field shows a value or nothing.
+
+		setAttribute stringifies whatever it is handed, so an item that does not
+		carry this property put the word "undefined" in the box - seen on the
+		Kerning page, where the Context characters card asks every selected item
+		for contextCharacters and a KernGroup has none. A Component showed
+		"false" for the same reason, from a getter that returned its missing
+		character. Both read as data the user had typed.
+
+		Numbers pass through untouched; it is only the absences that are blank.
+	*/
+	const rawValue = tagName === 'input' ? item[property] : round(item[property], 3);
+	const isMissing =
+		rawValue === undefined ||
+		rawValue === null ||
+		typeof rawValue === 'boolean' ||
+		(typeof rawValue === 'number' && isNaN(rawValue));
+	newInput.setAttribute('value', isMissing ? '' : rawValue);
 
 	if (item.isLockable) {
 		newInput.setAttribute('is-locked', item.isLocked(property));

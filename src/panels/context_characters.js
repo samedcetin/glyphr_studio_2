@@ -117,40 +117,58 @@ export function makePanel_ContextCharacters() {
 	// --------------------------------------------------------------
 
 	/*
-		A label, not a placeholder. A placeholder leaves the moment you type,
-		so the one thing this field needed to keep saying was the one thing it
-		stopped saying as soon as it had a value in it.
+		Only for items that carry a string of their own.
+
+		A KernGroup does not: it has a left group and a right group, and no
+		contextCharacters anywhere on it. The field was still drawn on the
+		Kerning page, showing the word "undefined" and writing whatever you
+		typed onto a property that drawContextCharacters never reads - a
+		control that looked live and did nothing. The pair already shows its
+		own neighbours, from the groups.
+
+		The rest of the card stays on that page, because the rest of it works:
+		the opacity sliders and the guide toggles drive how those neighbours
+		are drawn.
 	*/
-	const charsLabel = makeSingleLabel('Characters');
-	charsLabel.classList.add('context-card__field-label');
-	card.appendChild(charsLabel);
+	const hasOwnContextString = typeof editor.selectedItem?.contextCharacters === 'string';
 
-	const charsInput = makeSingleInput(
-		editor.selectedItem,
-		'contextCharacters',
-		'editCanvasView',
-		'input',
-		['input']
-	);
-	charsInput.classList.add('context-card__input');
-	attachTooltip(charsInput, {
-		name: 'Context characters',
-		body: 'Kept with this character, so every glyph can have its own spacing string.',
-	});
-	card.appendChild(charsInput);
+	if (hasOwnContextString) {
+		/*
+			A label, not a placeholder. A placeholder leaves the moment you type,
+			so the one thing this field needed to keep saying was the one thing it
+			stopped saying as soon as it had a value in it.
+		*/
+		const charsLabel = makeSingleLabel('Characters');
+		charsLabel.classList.add('context-card__field-label');
+		card.appendChild(charsLabel);
 
-	const splitLine = makeElement({ className: 'context-card__split' });
-	fillSplitPreview(splitLine, editor.selectedItem?.contextCharacters || '', currentChar);
-	card.appendChild(splitLine);
-
-	charsInput.addEventListener('input', () => {
-		getCurrentProjectEditor().autoFitView();
-		fillSplitPreview(
-			splitLine,
-			/** @type {HTMLInputElement} */ (charsInput).value,
-			currentChar
+		const charsInput = makeSingleInput(
+			editor.selectedItem,
+			'contextCharacters',
+			'editCanvasView',
+			'input',
+			['input']
 		);
-	});
+		charsInput.classList.add('context-card__input');
+		attachTooltip(charsInput, {
+			name: 'Context characters',
+			body: 'Kept with this character, so every glyph can have its own spacing string.',
+		});
+		card.appendChild(charsInput);
+
+		const splitLine = makeElement({ className: 'context-card__split' });
+		fillSplitPreview(splitLine, editor.selectedItem?.contextCharacters || '', currentChar);
+		card.appendChild(splitLine);
+
+		charsInput.addEventListener('input', () => {
+			getCurrentProjectEditor().autoFitView();
+			fillSplitPreview(
+				splitLine,
+				/** @type {HTMLInputElement} */ (charsInput).value,
+				currentChar
+			);
+		});
+	}
 
 	// --------------------------------------------------------------
 	// How much of it you see

@@ -93,9 +93,17 @@ export function showItemRange(editor, target) {
 	else if (target === 'Components') tileGrid.replaceWith(makeComponentChooserTileGrid(editor));
 	else tileGrid.replaceWith(makeCharacterChooserTileGrid(editor, isCompact));
 
-	// The count belongs to the range, so it changes with it.
+	/*
+		The count belongs to the range, so it changes with it - wherever the
+		chooser was built to carry it. See `countPlacement` in
+		makeAllItemTypeChooserContent: in a row of its own, or inside the
+		select at the far end of the box.
+	*/
+	const countText = rangeCountText(editor, target);
 	const count = wrapper.querySelector('.item-chooser__count');
-	if (count) count.textContent = rangeCountText(editor, target);
+	if (count) count.textContent = countText;
+	const boxedCount = wrapper.querySelector('option-chooser[selected-note]');
+	if (boxedCount) boxedCount.setAttribute('selected-note', countText);
 
 	const name = typeof target === 'string' ? target : target.name;
 
@@ -122,14 +130,15 @@ export function showItemRange(editor, target) {
  * @param {Function} clickHandler - what a tile does when clicked
  * @param {String} itemType - force a type rather than reading the page
  * @param {Object} editor - project editor
- * @param {Object} options - { tileSize: '' | 'large', filters: 'menu' | 'chips' }
+ * @param {Object} options - { tileSize: '' | 'large', filters: 'menu' | 'chips',
+ *   countPlacement: 'row' | 'inside' }
  * @returns {Element}
  */
 export function makeAllItemTypeChooserContent(
 	clickHandler,
 	itemType = '',
 	editor = getCurrentProjectEditor(),
-	{ tileSize = '', filters = 'menu' } = {}
+	{ tileSize = '', filters = 'menu', countPlacement = 'row' } = {}
 ) {
 	// log(`makeAllItemTypeChooserContent`, 'start');
 	// log(`Project Name: ${editor.project.settings.project.name}`);
@@ -139,20 +148,31 @@ export function makeAllItemTypeChooserContent(
 
 	let wrapper = makeElement({ tag: 'div', className: 'item-chooser__wrapper' });
 	let header = makeElement({ tag: 'div', className: 'item-chooser__header' });
-	header.appendChild(
+	const rangeControl =
 		filters === 'chips'
 			? makeRangeFilterChips(editor, itemType)
-			: makeRangeAndItemTypeChooser(editor, itemType)
-	);
+			: makeRangeAndItemTypeChooser(editor, itemType);
+	header.appendChild(rangeControl);
+
 	/*
 		The same count the breadcrumb's dropdown carries. It was only in the
 		compact one, which is the smaller of the two places you need it: the
 		dropdown shows a range in a box you can see the end of, and the page
 		shows it in a grid that runs off the bottom of the screen.
+
+		Two places it can sit. Beside the control, which is right when the
+		control is as wide as its longest option name and the row has width
+		left over; or inside it, at the far end of the box, which is the only
+		way the select can have the whole row - see .selection-note in
+		option-chooser.css.
 	*/
-	header.appendChild(
-		makeElement({ className: 'item-chooser__count', content: rangeCountText(editor) })
-	);
+	const boxedCount = countPlacement === 'inside' && rangeControl.tagName === 'OPTION-CHOOSER';
+	if (boxedCount) rangeControl.setAttribute('selected-note', rangeCountText(editor));
+	else {
+		header.appendChild(
+			makeElement({ className: 'item-chooser__count', content: rangeCountText(editor) })
+		);
+	}
 	wrapper.appendChild(header);
 
 	let show = itemType || editor.nav.page;

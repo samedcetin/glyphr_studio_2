@@ -237,18 +237,34 @@ export function makeComponentID() {
 export function showAddComponentDialog() {
 	const content = makeElement({
 		innerHTML: `
-			<h2>Create a new component</h2>
-				Specify a name to create a new component:
-				<br><br>
-				<input id="components__new-component-input" type="text"
-					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-				/>
-				<br><br>
-				<fancy-button disabled id="components__add-new-component-button">Create component</fancy-button>
+			<div class="dialog-field">
+				<label class="dialog-field__label" for="components__new-component-input">Name</label>
+				<div class="dialog-field__control">
+					<input id="components__new-component-input" type="text"
+						aria-describedby="components__new-component-hint"
+						autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+					/>
+				</div>
+				<div class="dialog-field__hint" id="components__new-component-hint">
+					What you will call it in the Layers panel and the component list.
+				</div>
+			</div>
 		`,
 	});
 
-	const submitButton = content.querySelector('#components__add-new-component-button');
+	const cancelButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		innerHTML: 'Cancel',
+		onClick: closeEveryTypeOfDialog,
+	});
+
+	const submitButton = makeElement({
+		tag: 'fancy-button',
+		attributes: { disabled: '' },
+		innerHTML: 'Create component',
+	});
+
 	/** @type {HTMLInputElement} */
 	const newComponentInput = content.querySelector('#components__new-component-input');
 
@@ -275,5 +291,10 @@ export function showAddComponentDialog() {
 		}
 	});
 
-	showModalDialog(content, 500);
+	showModalDialog(content, 500, {
+		title: 'Create a new component',
+		subtitle: 'A shape you draw once and re-use in any number of characters.',
+		actions: [cancelButton, submitButton],
+	});
+	newComponentInput.focus();
 }

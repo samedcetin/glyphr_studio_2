@@ -41,6 +41,23 @@ export class OptionChooser extends HTMLElement {
 		// @ts-expect-error 'property does exist'
 		this.selectionDisplay.elementRoot = this;
 
+		/*
+			A fact about what is selected, held at the far end of the box.
+
+			The character chooser's count - "95 characters · 94 drawn" - used to
+			sit beside the control as a second element in the row, which made a
+			full-width select impossible: the two shared the row, so one of them
+			was always short. It belongs to the selection rather than to the row,
+			so it is part of the control, the way the prefix already is.
+		*/
+		this.selectionNote = makeElement({
+			className: 'selection-note',
+			attributes: { tabIndex: -1, 'aria-hidden': 'true' },
+			innerHTML: this.getAttribute('selected-note') || '',
+		});
+		// @ts-expect-error 'property does exist'
+		this.selectionNote.elementRoot = this;
+
 		this.downArrow = makeElement({
 			className: 'downArrow',
 			/* The same chevron the breadcrumb and the toolbar draw, on
@@ -57,6 +74,7 @@ export class OptionChooser extends HTMLElement {
 		shadow.appendChild(styles);
 
 		this.wrapper.appendChild(this.selectionDisplay);
+		this.wrapper.appendChild(this.selectionNote);
 		this.wrapper.appendChild(this.downArrow);
 
 		if (!this.disabled) this.addAllEventListeners();
@@ -70,7 +88,7 @@ export class OptionChooser extends HTMLElement {
 	 * Specify which attributes are observed and trigger attributeChangedCallback
 	 */
 	static get observedAttributes() {
-		return ['disabled', 'selected-id', 'selected-name', 'deployed'];
+		return ['disabled', 'selected-id', 'selected-name', 'selected-note', 'deployed'];
 	}
 
 	/**
@@ -117,6 +135,10 @@ export class OptionChooser extends HTMLElement {
 
 		if (attributeName === 'selected-id') {
 			this.dispatchEvent(new Event('change'));
+		}
+
+		if (attributeName === 'selected-note') {
+			this.selectionNote.innerHTML = newValue || '';
 		}
 
 		if (attributeName === 'selected-name') {

@@ -43,10 +43,29 @@ import { selectTool } from './tools/tools.js';
  */
 export function handleKeyPress(event) {
 	// log('handleKeyPress', 'start');
+	const key = getKeyFromEvent(event);
+
+	/*
+		Escape before the guard, not after it.
+
+		Everything below returns early when focus is in a field, which is right
+		for the canvas shortcuts - a letter typed into an input must not also
+		select a tool. But Escape was left on the far side of that return, so
+		the one key whose whole job is "get me out of this" did nothing from
+		inside a dialog. Every dialog in the app puts focus in its first field
+		on open, so that was the normal case, not the edge one.
+
+		Nothing in this app binds Escape inside a field - it does not revert an
+		edit or clear a value - so there is no meaning being taken away.
+	*/
+	if (key === 'Escape') {
+		closeEveryTypeOfDialog();
+		return;
+	}
+
 	if (isFocusedOnInput()) return;
 
 	const editor = getCurrentProjectEditor();
-	const key = getKeyFromEvent(event);
 	// log(`KEY ${key} from ${event.which}`);
 	// log(event);
 
@@ -110,10 +129,6 @@ export function handleKeyPress(event) {
 		// Space - Pan
 		cancelDefaultEventActions(event);
 		if (!ehd.isPanning) togglePanOn(event);
-	}
-
-	if (key === 'Escape') {
-		closeEveryTypeOfDialog();
 	}
 
 	// Ctrl+Shift+Z or Ctrl+Y - Redo (must come before plain Ctrl+Z check)
