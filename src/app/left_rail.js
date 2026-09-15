@@ -44,6 +44,17 @@ export function makeLeftRail() {
 	});
 
 	rail.appendChild(makeRailMark(navigateToHub));
+
+	/*
+		A spacer above the destinations as well as below them, so they sit in
+		the middle of the column - the same shape the hub's rail has, and for
+		the same reason. The editor's list is longer but it is not long enough
+		to fill the column: on a 1270px window it ran out 800px short, which
+		left the whole of the navigation crowded into the top third with the
+		mark and nothing under it.
+	*/
+	rail.appendChild(makeElement({ className: 'left-rail__spacer' }));
+
 	rail.appendChild(makeRailGroup(RAIL_MENUS.map(makeRailMenuButton)));
 	rail.appendChild(makeElement({ className: 'left-rail__divider' }));
 
@@ -89,12 +100,9 @@ export function makeAppPageRail({ tabs = [], current = '', onSelect = () => {}, 
 
 	/*
 		A spacer on each side of the destinations, so they sit in the middle of
-		the column rather than stacked under the mark.
-
-		The editor's rail fills its column - twelve buttons and three dividers -
-		and starts at the top because that is where the list starts. The hub has
-		three, and three buttons pinned to the top of a tall empty column read as
-		the top of a list that was cut off.
+		the column rather than stacked under the mark. The editor's rail is
+		built the same way - see makeLeftRail - so the navigation is in the same
+		place whichever of the two you are looking at.
 	*/
 	rail.appendChild(makeElement({ className: 'left-rail__spacer' }));
 
