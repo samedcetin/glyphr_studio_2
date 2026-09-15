@@ -1970,24 +1970,63 @@
 	text-align: center;
 }
 
-/*
-	In list layout the tile turns with the cards: the plate takes the column
-	the specimen takes, and the words sit beside it.
-*/
+/* --------------------------------------------------------
+	The tile in list layout
+
+	It has to be a sibling of the rows around it, not a centred card squashed
+	into a row. A list card is two blocks: a 132px specimen on a sunken ground
+	with a hairline down its right, and beside it one line of text with the
+	name at the left and the meta pushed to the right. The tile is built the
+	same way, out of the same numbers, so the column edge and the text baseline
+	run straight down the list.
+-------------------------------------------------------- */
+
 .hub-grid--list .hub-new-tile {
 	grid-template-columns: 132px minmax(0, 1fr);
-	justify-items: start;
-	align-items: center;
-	gap: var(--sp-5);
-	padding: var(--sp-5) var(--sp-6);
+	justify-items: stretch;
+	align-items: stretch;
+	align-content: stretch;
+	gap: 0;
+	padding: 0;
+	/* The left block is square-cornered, so the tile clips it the way a card
+		clips its specimen. */
+	overflow: hidden;
 	text-align: left;
 }
 
+/*
+	The plate stops being a plate and becomes the row's left block - the same
+	ground, the same hairline and the same 72px as .hub-card__preview in this
+	layout, because it is standing in the same column.
+*/
 .hub-grid--list .hub-new-tile__plate {
-	justify-self: center;
+	width: auto;
+	height: auto;
+	min-height: 72px;
+	border: none;
+	border-right: 1px solid var(--border-subtle);
+	border-radius: 0;
+	background-color: var(--bg-surface-sunken);
 }
 
-.hub-grid--list .hub-new-tile__title,
+.hub-grid--list .hub-new-tile:hover .hub-new-tile__plate {
+	border-color: var(--border-subtle);
+}
+
+/* One line, like the card's: the name at the left, the rest pushed right. */
+.hub-grid--list .hub-new-tile__text {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: var(--sp-5);
+	padding: var(--sp-6);
+}
+
+.hub-grid--list .hub-new-tile__title {
+	flex: 1 1 auto;
+	text-align: left;
+}
+
 .hub-grid--list .hub-new-tile__caption {
 	text-align: left;
 }
