@@ -315,55 +315,14 @@
 	color: var(--text-tertiary);
 	max-width: 44ch;
 }
-
 /* --------------------------------------------------------
-	Drop target and drop overlay
+	Drop overlay
+
+	#open-project__drop-target and the .hub-drop__* group were here, styling
+	the "Open a file" view. That view lost its last caller when the rail
+	replaced the hub sidebar, and the affordance it carried now lives in the
+	import card - see .hub__drop-well.
 -------------------------------------------------------- */
-
-#open-project__drop-target {
-	display: grid;
-	justify-items: center;
-	gap: var(--sp-4);
-	width: 100%;
-	margin: 0;
-	background-color: var(--bg-surface);
-	border: 1px dashed var(--border-strong);
-	border-radius: var(--r-lg);
-	corner-shape: var(--corner-smooth);
-	color: var(--text-secondary);
-	padding: var(--sp-9);
-	text-align: center;
-	line-height: var(--lh-normal);
-}
-
-.hub-drop__icon svg {
-	width: 28px;
-	height: 28px;
-	color: var(--icon-default);
-}
-
-.hub-drop__title {
-	font-size: var(--fs-lg);
-	font-weight: var(--fw-medium);
-	color: var(--text-primary);
-}
-
-.hub-drop__formats {
-	font-size: var(--fs-sm);
-	color: var(--text-tertiary);
-	line-height: 2;
-}
-
-.hub-drop__formats code {
-	font-family: var(--font-mono);
-	font-size: var(--fs-xs);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	padding: 1px var(--sp-2);
-	margin-right: 2px;
-}
 
 /*
 	The drop overlay.
@@ -1321,26 +1280,81 @@
 	overflow: hidden;
 }
 
+/*
+	--sp-6 of padding on both, not --sp-8.
+
+	The import card holds a well in its corner region, and inner = outer -
+	padding: at --sp-8 that is 28 - 24 = 4, a well with no corner at all. At
+	--sp-6 it is 12, which is a shape. The create card takes the same padding
+	because the two sit side by side and their eyebrows would otherwise start
+	at different insets. See "The radius question" in the design skill.
+*/
+/*
+	Eyebrow, the thing itself, the action - the same three rows the import
+	card has, so the two read as one pair rather than as two designs. The
+	artwork spans all three down the right.
+*/
 .hub__create {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) min-content;
-	align-items: center;
-	gap: var(--sp-6);
-	padding: var(--sp-8);
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
+	column-gap: var(--sp-6);
+	row-gap: var(--sp-5);
+	padding: var(--sp-6);
+}
+
+.hub__create > .studio-eyebrow {
+	grid-area: 1 / 1;
+}
+
+.hub__create > .hub__start-text {
+	grid-area: 2 / 1;
+	align-content: center;
+}
+
+.hub__create > .hub-button {
+	grid-area: 3 / 1;
+	justify-self: start;
+}
+
+.hub__create > .hub__art {
+	grid-area: 1 / 2 / -1 / 2;
+	align-self: center;
 }
 
 .hub__import {
 	display: grid;
-	align-content: start;
+	/* The well takes whatever the eyebrow and the formats leave. */
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
 	gap: var(--sp-5);
-	padding: var(--sp-8);
+	padding: var(--sp-6);
 }
 
-.hub__import-row {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--sp-5);
-	min-width: 0;
+/*
+	The well. Dashed, because that is how this page already says "put
+	something here" - the empty state over the project grid is the same
+	treatment, and the two never mean different things.
+*/
+.hub__drop-well {
+	display: grid;
+	justify-items: center;
+	align-content: center;
+	gap: var(--sp-4);
+	padding: var(--sp-6);
+	min-height: 0;
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	text-align: center;
+}
+
+/*
+	resets.css carries `* { text-align: left }`, which beats an inherited
+	value - so the well's children each need it. Same trap as .hub-empty.
+*/
+.hub__drop-well .hub__start-title,
+.hub__drop-well .hub__start-body {
+	text-align: center;
 }
 
 .hub__start-text {
@@ -1363,13 +1377,12 @@
 	color: var(--text-secondary);
 }
 
-.hub__create .hub-button {
-	justify-self: start;
-	margin-top: var(--sp-5);
+.hub__drop-well .hub-button {
+	margin-top: var(--sp-2);
 }
 
-.hub__import .hub-button {
-	justify-self: start;
+.hub__formats {
+	justify-content: center;
 }
 
 /*
