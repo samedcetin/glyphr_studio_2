@@ -1334,18 +1334,25 @@
 }
 
 /*
-	Matched to the import card, and for one reason only: the two eyebrows are
-	the first thing the eye hits on each half of a deliberately matched pair,
-	and at different paddings they sit at different insets across the gutter.
-	The number is decided next door, by the corner nesting. Nothing else about
-	this card changes.
+	--sp-8, and it is not the import card's business.
+
+	I had this following the import card so the two eyebrows would line up
+	across the gutter, which was the wrong reference: the import card's padding
+	is dictated by the corner its action nests into, and letting that drag the
+	sibling put this card's content 12px out of line with the guide banner
+	directly below it - and those two DO share a left edge, so that stagger runs
+	down the page where anyone can see it.
+
+	The banner is the reference. It is --sp-8 across (see .hub__guide), so this
+	is --sp-8, and the pair's eyebrows sit at different insets on purpose:
+	they are different kinds of object.
 */
 .hub__create {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) min-content;
 	align-items: center;
 	gap: var(--sp-6);
-	padding: var(--sp-5);
+	padding: var(--sp-8);
 }
 
 /*
@@ -1359,6 +1366,10 @@
 	a corner as soft as --r-3xl - the two curves are concentric arithmetically
 	and do not look it. Closing the gap one step to --sp-5 puts the inner corner
 	at --r-xl 16, which is where the pair starts reading as one shape.
+
+	This is the only card on the page whose padding is decided by geometry
+	rather than by the page's rhythm, and it does not travel: the create card
+	beside it keeps --sp-8 and lines up with the guide banner instead.
 */
 .hub__import {
 	display: grid;
