@@ -93,7 +93,7 @@ describe('Navigator: Page Navigation', () => {
 		navigator.navigate(true);
 		const pageContent = navigator.makePageContent();
 		expect(pageContent.id).toBe('app__main-content');
-		expect(pageContent.querySelector('.nav-button__title').innerHTML).toBe('Help');
+		expect(pageContent.querySelector('.studio-page__title').innerHTML).toBe('Help');
 	});
 
 	/**

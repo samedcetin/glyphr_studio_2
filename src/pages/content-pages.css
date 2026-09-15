@@ -1,220 +1,25 @@
-.content__page {
-	height: calc(100% - 10px);
-	min-height: 100%;
-	width: 100%;
-	min-width: 100%;
-	display: grid;
-	grid-template-columns: 450px 1fr;
-	grid-template-rows: 100%;
-	column-gap: 10px;
-	padding: 0px 10px 10px 10px;
-}
-
-.content-page__left-area {
-	grid-column: 1;
-	display: grid;
-	grid-template-rows: min-content max-content;
-	row-gap: 2px;
-	width: 100%;
-}
-
-.content-page__nav-area {
-	display: grid;
-	grid-template-columns: 1fr;
-	grid-template-rows: 1fr;
-	gap: 2px;
-}
-
-.content-page__nav-area #nav-button-l1 {
-	width: 100%;
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-}
-
-#content-page__panel {
-	grid-row: 3;
-	width: 450px;
-	height: 100%;
-	overflow-y: auto;
-	overflow-x: hidden;
-}
-
-.content-page__right-area {
-	border: 1px solid var(--border-subtle);
-	background-color: var(--bg-app);
-	grid-column: 2;
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	width: 100%;
-	overflow-x: hidden;
-	overflow-y: auto;
-	box-shadow: var(--shadow-3);
-	padding: 20px;
-}
-
-.content-page__right-area display-canvas {
-	display: inline-block;
-}
-
 /*
-	.about-page__logo and .about-page__contact-table were here. The first drew
-	the upstream wordmark at 300px, which is what the About page led with; the
-	second was its contact grid. Both went when that page moved onto the
-	shared shell - see the ABOUT PAGE block at the end of this file.
+	CONTENT PAGES
+	-------------
+	Overview, Live preview, Global actions, Settings, Help and About.
+
+	THE OLD SHELL IS GONE. Each of those pages used to be a 450px column
+	holding a dropdown that named the page you were already on, the tab names
+	stacked under it, and the content in a bordered box beside it. All six are
+	on .studio-page now - head, tabs, cards - so this file starts at the first
+	thing that is still drawn. The shared primitives are near the bottom:
+	.studio-page, .studio-card, .studio-eyebrow, .studio-rule, .studio-link.
+
+	WHAT WENT WITH THE LAST OF THEM (Help): .content__page and its four
+	sub-areas; .page__card, its help-link grid, its logo box and the
+	family-card variant; and .keyboardShortcutTable, which was a second design
+	for the Ctrl+/ shortcut sheet - that sheet is built in
+	controls/command-palette/command_palette.js and is the one that ships.
+
+	Four more went with them that no JS had referenced in some time: .logoNote,
+	.donateLinkButton, code.arrow-key and span.spacer. The `code` rule below
+	stays: it is the key cap, and Help, the menus and the dialogs all draw it.
 */
-
-.logoNote {
-	margin-top: 10px;
-	font-size: 0.8em;
-	color: var(--text-secondary);
-	font-style: italic;
-}
-
-.donateLinkButton {
-	border: 0px;
-}
-
-.page__card {
-	/* display: grid;
-	grid-template-columns: clamp(110px, 150px, 190px) 1fr;
-	align-items: center;
-	justify-items: left;
-	row-gap: 5px;
-	column-gap: 11px; */
-	width: 400px;
-	display: inline-block;
-	margin-bottom: 5px;
-	margin-right: 0px;
-
-	border: 1px solid var(--border-subtle);
-	padding: 10px 10px 15px 10px;
-	background-color: var(--bg-surface);
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	box-shadow: var(--shadow-2);
-	vertical-align: top;
-}
-
-.page__card__help-links {
-	display: grid;
-	grid-template-rows: repeat(4, 1fr);
-	gap: 5px;
-}
-
-.page__card__logo-image {
-	width: 100px;
-	height: 100px;
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	overflow: hidden;
-	margin-right: 10px;
-}
-
-.page__card.family-card {
-	width: 600px;
-	display: grid;
-	grid-template-columns: min-content 1fr;
-	column-gap: 12px;
-	padding-right: 20px;
-	padding-bottom: 4px;
-}
-
-.page__card.family-card h3 {
-	grid-column: 1 / -1;
-}
-
-.page__card.family-card a {
-	display: inline-block;
-	padding-bottom: 8px;
-}
-
-.content-page__right-area p {
-	margin-bottom: 10px;
-	margin-left: 1px;
-	max-width: 800px;
-}
-
-.content-page__right-area label {
-	color: var(--text-secondary);
-	margin-right: 4px;
-}
-
-/* --------------------------------------------------------
-	Keyboard shortcut reference
-
-	The old one. It predates the token system and the key cap: Courier New on
-	a dead grey, at 1.1em !important, in a 30px-wide box, with everything in
-	the row nudged into place by hand - `position: relative; top: 5px` on the
-	icons, `top: 7px` on the cursors, 4px of top padding standing in for
-	vertical centring. It is the same information the Ctrl+/ sheet shows, and
-	it should not be a second design for it.
--------------------------------------------------------- */
-
-.keyboardShortcutTable {
-	display: grid;
-	grid-template-columns: max-content minmax(0, 1fr);
-	align-items: center;
-	row-gap: var(--sp-3);
-	column-gap: var(--sp-7);
-}
-
-/* An eyebrow, the same one the sheet and the menus use. */
-.keyboardShortcutTable h3 {
-	grid-column: 1 / -1;
-	margin: var(--sp-7) 0 var(--sp-1) 0;
-	font-size: var(--fs-2xs);
-	font-weight: var(--fw-semibold);
-	letter-spacing: var(--tracking-caps);
-	text-transform: uppercase;
-	color: var(--text-secondary);
-}
-
-.keyboardShortcutTable h3:first-child {
-	margin-top: 0;
-}
-
-/*
-	The keys cell. A flex row, so the caps, the separators and the tool icons
-	space themselves instead of being carried by the 2px margin every <code>
-	used to have.
-*/
-.keyboardShortcutTable > span {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--sp-2);
-	min-height: var(--control-h);
-}
-
-.keyboardShortcutTable label {
-	margin: 0;
-	padding: 0;
-	color: var(--text-secondary);
-	font-size: var(--fs-sm);
-	line-height: 1.4;
-}
-
-.keyboardShortcutTable svg {
-	position: static;
-	width: var(--icon-size-lg);
-	height: var(--icon-size-lg);
-	color: var(--icon-default);
-	flex: 0 0 auto;
-}
-
-.keyboardShortcutTable img {
-	display: inline-block;
-	height: 20px;
-	margin: 0;
-	position: static;
-	flex: 0 0 auto;
-}
-
-/* A word standing in for a gesture - "drag", "click" - not a key. */
-.keyboardShortcutTable i {
-	font-style: normal;
-	color: var(--text-secondary);
-	font-size: var(--fs-sm);
-}
 
 /*
 	The app's key cap, at the size that sits on a line of text. Menus and the
@@ -238,21 +43,6 @@ code {
 	font-size: var(--fs-2xs);
 	line-height: 1;
 	text-align: center;
-}
-
-/* Centred by the flex box it is in now, rather than by a 1px nudge. */
-code.arrow-key {
-	font-weight: var(--fw-semibold);
-	position: static;
-}
-
-/* The "+" between two keys. */
-span.spacer {
-	display: inline-block;
-	width: auto;
-	text-align: center;
-	color: var(--text-tertiary);
-	font-size: var(--fs-xs);
 }
 
 /* Settings page */
@@ -2460,4 +2250,255 @@ span.spacer {
 		grid-column: 1;
 		grid-row: 3;
 	}
+}
+
+/* --------------------------------------------------------------
+	HELP PAGE
+
+	Three cards: what you can do, who to ask, and then the reading.
+
+	The page scrolls rather than the cards - there is no reason to pin a head
+	above a list of links - so this is a plain column and .studio-page's own
+	overflow handles the rest.
+	------------------------------------------------------------ */
+
+.help {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-7);
+}
+
+/*
+	The two cards sit side by side, and stack when one of them would fall under
+	280px. auto-fit rather than a media query, because the window's width is
+	not this row's width - the rail takes some of it, and the shell's own
+	min-width is being argued with elsewhere. This asks the grid.
+
+	It was a container query first, which cannot work: @container styles the
+	descendants of a container, never the container itself, so a rule naming
+	.help__actions from inside its own container never matched. Measured at
+	768px, where the cards should have stacked and did not.
+*/
+.help__actions {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: var(--sp-6);
+}
+
+/*
+	A column, so the action sits on the floor of the card whichever of the two
+	has the longer sentence and the row stays level.
+*/
+.help__card {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.help__card-title {
+	margin: var(--sp-3) 0 0 0;
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+/*
+	resets.css states font-size and font-weight on `*`, which beats
+	inheritance whatever the specificity - so the paragraph has to say its own
+	size, and so does the <code> inside it, or both come back at 13/400.
+*/
+.help__card-body {
+	margin: var(--sp-3) 0 var(--sp-6) 0;
+	max-width: 46ch;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+/*
+	The key cap is drawn by the `code` rule at the top of this file, and then
+	undrawn by `p code` in resets.css, which is written for a cap sitting in a
+	paragraph of help prose: it replaces the cap's 20px box with 1.3em - 13px
+	at this font size - and makes it a pointer, as though it could be pressed.
+	These are key names being read, not buttons, so the box comes back and the
+	cursor stays a cursor. A class beats the two elements resets.css uses.
+*/
+.help__card-body code {
+	height: 20px;
+	margin: 0 1px;
+	padding-top: 0;
+	font-size: var(--fs-2xs);
+	cursor: default;
+}
+
+/*
+	Pushed to the floor of the card by the column above it, so the two actions
+	sit on one line whichever card has the longer sentence.
+
+	The gap above it belongs to .help__card-body, not here: in one card this
+	class is on the button itself, and .hub-button states `padding: 0 var(--sp-5)`
+	from app-pages.css - a later sheet at equal specificity - so a padding-top
+	written here would be dropped on that card and kept on the other.
+*/
+.help__card-action {
+	margin-top: auto;
+}
+
+/*
+	--control-h-lg, which is what .hub-button stands at. Both cards floor their
+	action, so matching the heights is what puts the button and this link on
+	one line rather than two a few pixels apart.
+*/
+.help__card-action .mailto {
+	display: inline-flex;
+	align-items: center;
+	height: var(--control-h-lg);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-accent);
+	transition: var(--transition-color);
+}
+
+.help__card-action .mailto:hover {
+	color: var(--accent-hover);
+}
+
+/* --------------------------------------------------------------
+	The documentation
+	------------------------------------------------------------ */
+
+.help__docs-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-6);
+}
+
+.help__docs-head .studio-link svg {
+	width: 13px;
+	height: 13px;
+}
+
+.help__docs-note {
+	margin: var(--sp-3) 0 var(--sp-7) 0;
+	max-width: 68ch;
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+/*
+	Three columns of guides. auto-fit rather than a fixed three, so the card
+	re-columns on its own width instead of on the window's - see .help__actions
+	for why that distinction matters here.
+
+	The track caps at 280px instead of taking 1fr. At 1fr the three groups
+	divided the whole card between them and stood 420px apart, which read as a
+	table with most of its cells empty; capped, they pack to the left at a
+	width the labels actually use, and the leftover stays leftover.
+*/
+.help__groups {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(190px, 280px));
+	gap: var(--sp-7) var(--sp-6);
+	align-items: start;
+}
+
+.help__group-title {
+	margin: 0 0 var(--sp-3) 0;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+.help__links {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+/*
+	resets.css states `ul li { margin-left: 20px; margin-top: 10px }`, which is
+	for a bulleted list in prose. Zeroing the indent is what puts each link on
+	the same x as the heading over it; without it the columns read as though
+	they were nested one level in.
+*/
+.help__links li {
+	margin: 0;
+}
+
+/*
+	The page index. Eleven short names, and they wrap rather than sitting in a
+	grid: on a grid wide enough for all of them, "Open project" and "Overview"
+	ended up 250px apart with nothing in between, because the track was sized
+	by the card and not by the longest name in it. Wrapping packs them at the
+	width they are.
+*/
+.help__links--index {
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: var(--sp-5);
+	row-gap: var(--sp-1);
+}
+
+/*
+	--control-h-sm is the 24px pointer floor. The link is inline-flex so the
+	row is that tall whatever the label does, and the negative inset lets the
+	hover ground sit a little wider than the text without moving the column's
+	left edge.
+*/
+.help__link {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sp-2);
+	min-height: var(--control-h-sm);
+	margin-left: calc(var(--sp-3) * -1);
+	padding: 0 var(--sp-3);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	text-decoration: none;
+	transition: var(--transition-color);
+}
+
+.help__link span {
+	font-size: inherit;
+}
+
+/*
+	No underline here, and the class pair is what it takes to say so - resets.css
+	underlines every a:hover, at a specificity a single class loses to. A
+	standalone link like the one in the head above keeps it; these rows already
+	answer with a ground, a colour and an arrow, and a rule under every one of
+	twenty-three of them was the fourth signal saying the same thing.
+*/
+.help__link:hover {
+	background-color: var(--bg-hover);
+	color: var(--text-accent);
+	text-decoration: none;
+}
+
+.help__link:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+/*
+	Drawn at rest and hidden with opacity, not display: it holds its width
+	either way, so twenty-three rows do not reflow under the pointer.
+*/
+.help__link-arrow {
+	display: inline-flex;
+	align-items: center;
+	opacity: 0;
+	color: var(--icon-default);
+	transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.help__link:hover .help__link-arrow,
+.help__link:focus-visible .help__link-arrow {
+	opacity: 1;
 }
