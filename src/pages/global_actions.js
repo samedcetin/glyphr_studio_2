@@ -1,6 +1,6 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { decToHex } from '../common/character_ids.js';
-import { addAsChildren, makeElement, textToNode } from '../common/dom.js';
+import { addAsChildren, makeElement } from '../common/dom.js';
 import { remove } from '../common/functions.js';
 import {
 	closeAllModalDialogs,
@@ -395,114 +395,184 @@ function updateFilterCard() {
 	if (display) display.textContent = rangeCountLabel();
 }
 
+/**
+ * Which character ranges the actions on this page reach.
+ *
+ * WHAT IT WAS. An <h1> and a paragraph loose in the body, a five column table
+ * whose header cells were italic with a rule under them and whose first one
+ * was an &emsp;, two of those columns spent writing one fact - a range is a
+ * span, and it was `Start` and `End` set as two separate code chips - and the
+ * two buttons at the bottom of the scroll, separated by another &emsp;. Only
+ * the 13px checkbox was clickable. `Select all` closed the dialog and built a
+ * new one, so the list flashed and went back to the top.
+ *
+ * WHAT IT IS. The frame's header and footer, so the title and the way out
+ * hold still while the list scrolls. One row per range, and the whole row is
+ * the target. A count of what you have picked, in characters as well as
+ * ranges - which is the number the actions actually operate on and was
+ * written nowhere. And it says so when you have picked nothing, because an
+ * empty scope is a page of buttons that silently do nothing.
+ */
 function showFilterDialog() {
-	// log(`showFilterDialog`, 'start');
-	// log(`\n⮟itemFilterInputs⮟`);
-	// log(itemFilterInputs);
+	const project = getCurrentProject();
 
-	const dialogContent = makeElement({
-		tag: 'div',
-		innerHTML: `
-		<h1>Select character ranges</h1>
-		<p>
-			The selected character ranges below will be included
-			in the global actions that you perform. If you want
-			different character ranges than what are shown here, you can
-			add or edit character ranges on the Settings > Project page.
-		</p>
-		<br>
-		`,
+	/*
+		A project with no ranges at all gets Basic Latin, so the scope is never
+		an empty list you cannot fill from here. Pre-existing, and kept: the
+		alternative is a dialog that can only tell you to go somewhere else.
+	*/
+	const projectRanges = project.settings.project.characterRanges;
+	if (projectRanges.length === 0) {
+		projectRanges.unshift(
+			new CharacterRange({ name: 'Basic Latin', begin: 0x20, end: 0x7f, enabled: true })
+		);
+	}
+
+	updateAllCharacterRangeCounts();
+	const ranges = projectRanges.filter((range) => range.enabled);
+
+	const content = makeElement({ className: 'dialog-layout dialog-layout--checklist' });
+
+	// --- What you have picked, and the way to pick all of it ------
+	const toolbar = makeElement({ className: 'dialog-checklist__toolbar' });
+	const summary = makeElement({ className: 'dialog-checklist__summary' });
+	const toggleAll = makeElement({
+		tag: 'button',
+		className: 'studio-link',
+		attributes: { type: 'button' },
+	});
+	addAsChildren(toolbar, [summary, toggleAll]);
+
+	// --- The ranges -----------------------------------------------
+	const list = makeElement({ className: 'dialog-checklist' });
+	const head = makeElement({ className: 'dialog-checklist__head' });
+	addAsChildren(head, [
+		/* The checkbox column's header. Nothing to say, and saying it with an
+			&emsp; made it a cell of whitespace that could be selected. */
+		makeElement({ tag: 'span' }),
+		makeElement({ tag: 'span', content: 'Range' }),
+		makeElement({ tag: 'span', content: 'Code points' }),
+		makeElement({ tag: 'span', content: 'Characters' }),
+	]);
+	list.appendChild(head);
+
+	/*
+		Nothing to show, said out loud. A range has to be enabled on the
+		Settings page before it can be in a scope, so a project whose ranges
+		are all hidden gets an empty list here - which looks exactly like a
+		list that failed to build.
+	*/
+	const empty = makeElement({
+		className: 'dialog-empty',
+		content:
+			'No character ranges are enabled in this project.<br>Enable one on Settings &rsaquo; Project, then come back.',
 	});
 
-	const rangeTable = makeElement({
-		tag: 'div',
-		className: 'range-table__list-area',
+	const note = makeElement({
+		className: 'dialog-note',
+		content:
+			'Nothing is selected, so the actions on this page have nothing to change. Pick at least one range.',
 	});
 
-	rangeTable.classList.add('range-selection');
+	/** @type {HTMLInputElement[]} */
+	const boxes = [];
 
-	const saveButton = makeElement({
+	ranges.forEach((range) => {
+		const row = makeElement({ tag: 'label', className: 'dialog-checklist__row' });
+
+		const box = makeElement({ tag: 'input', attributes: { type: 'checkbox' } });
+		if (itemFilterInputs.characterRanges.includes(range.id)) box.setAttribute('checked', '');
+		box.addEventListener('change', () => {
+			/*
+				The old handler read the index once and then branched on the
+				checkbox: unchecking a range that was not in the list ran
+				splice(-1, 1), which drops whatever happens to be last. Ticking
+				twice fast was enough to make the scope lose a range nobody
+				touched.
+			*/
+			const index = itemFilterInputs.characterRanges.indexOf(range.id);
+			// @ts-expect-error 'property does exist'
+			if (box.checked) {
+				if (index === -1) itemFilterInputs.characterRanges.push(range.id);
+			} else if (index !== -1) {
+				itemFilterInputs.characterRanges.splice(index, 1);
+			}
+			refresh();
+		});
+		// @ts-expect-error 'HTMLInputElement'
+		boxes.push(box);
+
+		const name = makeElement({ tag: 'span', className: 'dialog-checklist__name' });
+		/* textContent, not content: a range name is typed by hand on the
+			Settings page and arrives here as whatever was typed. */
+		name.textContent = range.name;
+
+		const span = makeElement({ tag: 'span', className: 'dialog-checklist__span' });
+		span.textContent = `${decToHex(range.begin)} – ${decToHex(range.end)}`;
+
+		const count = makeElement({ tag: 'span', className: 'dialog-checklist__count' });
+		count.textContent = `${range.count}`;
+
+		addAsChildren(row, [box, name, span, count]);
+		list.appendChild(row);
+	});
+
+	/**
+	 * The summary, the all/none control and the empty-scope note all say the
+	 * same thing about the same state, so they are written in one place and
+	 * run after anything that changes it.
+	 */
+	function refresh() {
+		const selected = ranges.filter((range) => itemFilterInputs.characterRanges.includes(range.id));
+		const characters = selected.reduce((total, range) => total + (range.count || 0), 0);
+
+		summary.textContent = ranges.length
+			? `${selected.length} of ${ranges.length} range${
+					ranges.length === 1 ? '' : 's'
+			  } · ${characters} character${characters === 1 ? '' : 's'}`
+			: '';
+
+		const all = ranges.length > 0 && selected.length === ranges.length;
+		toggleAll.textContent = all ? 'Clear all' : 'Select all';
+		toggleAll.hidden = ranges.length === 0;
+
+		note.hidden = ranges.length === 0 || selected.length > 0;
+	}
+
+	toggleAll.addEventListener('click', () => {
+		const all =
+			ranges.length > 0 &&
+			ranges.every((range) => itemFilterInputs.characterRanges.includes(range.id));
+		/*
+			The boxes are ticked where they stand. It used to call this function
+			again, which closed the dialog and built a second one - so the list
+			flashed, and a list you had scrolled halfway down came back at the
+			top.
+		*/
+		if (all) itemFilterInputs.characterRanges = [];
+		else selectAllRanges();
+
+		boxes.forEach((box, index) => {
+			box.checked = itemFilterInputs.characterRanges.includes(ranges[index].id);
+		});
+		refresh();
+	});
+
+	addAsChildren(content, ranges.length ? [toolbar, list, note] : [empty]);
+	refresh();
+
+	const doneButton = makeElement({
 		tag: 'fancy-button',
-		content: 'Close',
+		content: 'Done',
 		onClick: () => {
 			closeAllModalDialogs();
 			updateFilterCard();
 		},
 	});
 
-	const selectAllButton = makeElement({
-		tag: 'fancy-button',
-		attributes: { secondary: '' },
-		content: 'Select all',
-		onClick: () => {
-			selectAllRanges();
-			showFilterDialog();
-		},
+	showModalDialog(content, 640, {
+		title: 'Select character ranges',
+		subtitle: 'Global actions only change glyphs inside the ranges you pick here.',
+		actions: [doneButton],
 	});
-
-	addAsChildren(rangeTable, [
-		textToNode('<span class="list__column-header">&emsp;</span>'),
-		textToNode('<span class="list__column-header" style="padding-left: 10px;">Range name</span>'),
-		textToNode('<span class="list__column-header">Start</span>'),
-		textToNode('<span class="list__column-header">End</span>'),
-		textToNode('<span class="list__column-header">Characters</span>'),
-	]);
-
-	updateAllCharacterRangeCounts();
-	const project = getCurrentProject();
-	const projectRanges = project.settings.project.characterRanges;
-	if (projectRanges.length === 0) {
-		projectRanges.unshift(
-			new CharacterRange({
-				name: 'Basic Latin',
-				begin: 0x20,
-				end: 0x7f,
-				enabled: true,
-			})
-		);
-	}
-
-	projectRanges.forEach((range) => {
-		if (!range.enabled) return;
-		// log(itemFilterInputs.characterRanges.includes(range.id));
-		const rangeCheckbox = makeElement({
-			tag: 'input',
-			attributes: {
-				type: 'checkbox',
-			},
-		});
-
-		rangeCheckbox.addEventListener('change', () => {
-			const index = itemFilterInputs.characterRanges.indexOf(range.id);
-			// @ts-expect-error	'property does exist'
-			if (index === -1 && rangeCheckbox.checked) {
-				itemFilterInputs.characterRanges.push(range.id);
-			} else {
-				itemFilterInputs.characterRanges.splice(index, 1);
-			}
-		});
-
-		if (itemFilterInputs.characterRanges.includes(range.id)) {
-			rangeCheckbox.setAttribute('checked', '');
-		}
-
-		addAsChildren(rangeTable, [
-			rangeCheckbox,
-			textToNode(`<span style="padding-left: 10px;">${range.name}</span>`),
-			textToNode(`<code>${decToHex(range.begin)}</code>`),
-			textToNode(`<code>${decToHex(range.end)}</code>`),
-			textToNode(`<span>${range.count}</span>`),
-		]);
-	});
-
-	addAsChildren(dialogContent, [
-		rangeTable,
-		textToNode('<br>'),
-		saveButton,
-		textToNode('<span>&emsp;</span>'),
-		selectAllButton,
-	]);
-
-	showModalDialog(dialogContent, 850);
-	// log(`showFilterDialog`, 'end');
 }

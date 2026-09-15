@@ -54,7 +54,6 @@ dialog {
 	animation: var(--dur-slow) var(--ease-out) toast-in;
 }
 
-
 /*
 	The emphatic toast. It used to be a purple gradient at 1.2em - a different
 	visual language from anything else in the app, arriving for two seconds and
@@ -1537,4 +1536,150 @@ dialog {
 .dialog-chooser .item-chooser__page-control {
 	grid-column: 1 / -1;
 	margin: 0 0 var(--sp-3) 0;
+}
+
+/* --------------------------------------------------------------
+	A DIALOG THAT PICKS SEVERAL THINGS OFF A LIST
+
+	The scope picker on Global actions is the first of these: a row per
+	character range, each one in or out. It is not .dialog-option repeated -
+	that row is a setting with a sentence under it, and thirty of them would
+	be a wall. This is a list: one line each, the columns lined up so the
+	numbers can be read down, and the whole line is the target.
+	------------------------------------------------------------ */
+
+/*
+	Three rows: what you have picked, the list, and the note that appears when
+	you have picked nothing. The list is the only one that grows, so it is the
+	only one that scrolls - the summary and the all/none control hold still,
+	which is the point of putting them above it rather than at the end.
+*/
+.dialog-layout--checklist {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
+	gap: var(--sp-5);
+	height: 100%;
+	min-height: 0;
+}
+
+.dialog-checklist__toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-5);
+}
+
+.modal-dialog__body .dialog-checklist__summary {
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
+.dialog-checklist {
+	display: grid;
+	align-content: start;
+	gap: var(--sp-1);
+	min-height: 0;
+	overflow-y: auto;
+}
+
+/*
+	ONE TEMPLATE, STATED TWICE - on the header and on the row - rather than on
+	the list with the rows as `display: contents`. The rows need a box of their
+	own for hover and for the focus ring, and a row that is `contents` has no
+	box to draw.
+
+	Which is why the two right-hand tracks are declared rather than left to
+	`max-content`: head and rows are separate grids, so a track that sizes
+	itself sizes to different content in each of them and the columns stop
+	lining up. 128 holds `0x10FFFF - 0x10FFFF`, the widest span Unicode can
+	produce; 64 holds the word `Characters` over it, which is wider than any
+	count that will ever sit underneath.
+*/
+.dialog-checklist__head,
+.dialog-checklist__row {
+	display: grid;
+	grid-template-columns: var(--icon-size) minmax(0, 1fr) 128px 64px;
+	align-items: center;
+	column-gap: var(--sp-5);
+	padding: 0 var(--sp-4);
+}
+
+/*
+	The column labels. .list__column-header arrives italic with a rule under
+	it, which is a table caption from the old settings pages; these are labels
+	over four columns, so they are set like every other label in the app.
+*/
+.modal-dialog__body .dialog-checklist__head {
+	padding-bottom: var(--sp-3);
+	margin-bottom: var(--sp-2);
+	border-bottom: 1px solid var(--border-subtle);
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-medium);
+	color: var(--text-secondary);
+}
+
+.dialog-checklist__row {
+	/*
+		32, not the 24px floor: the row is one line of text and this is a list
+		you read down, so the line needs room above and below it more than the
+		pointer needs a bigger target. Both are satisfied at 32.
+	*/
+	min-height: var(--control-h-lg);
+	margin: 0;
+	/*
+		Derived. The checkbox is the corner-adjacent child, so the box's corner
+		is concentric with it only at the checkbox's own radius plus the
+		distance between them - 5 + 6. Same arithmetic as .dialog-option, at
+		this row's smaller inset.
+	*/
+	border-radius: calc(var(--r-sm) + var(--sp-3));
+	corner-shape: var(--corner-smooth);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.dialog-checklist__row:hover {
+	background-color: var(--bg-hover);
+}
+
+/*
+	One ring, round the box - the whole row is the target, so a ring round the
+	14px checkbox would report a fraction of what you can hit. The
+	`outline: none` below is legal for the one reason it ever is: the rule
+	above draws the visible ring for the same state.
+*/
+.dialog-checklist__row:has(input:focus-visible) {
+	outline: var(--focus-style);
+	outline-offset: calc(var(--focus-offset) * -1);
+}
+
+.dialog-checklist__row input[type='checkbox']:focus-visible {
+	outline: none;
+}
+
+.modal-dialog__body .dialog-checklist__name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .dialog-checklist__span,
+.modal-dialog__body .dialog-checklist__count {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
+/*
+	Numbers line up on the right, where a column of numbers is read from - and
+	the label goes with them, or it labels the wrong edge. The prefix is here
+	because resets.css states text-align on the universal selector, which a
+	class on its own loses to.
+*/
+.modal-dialog__body .dialog-checklist__count,
+.modal-dialog__body .dialog-checklist__head > span:last-child {
+	text-align: right;
 }
