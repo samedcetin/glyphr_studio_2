@@ -247,7 +247,19 @@
 	--sp-9: 32px;
 	--sp-10: 40px;
 
-	/* Radius */
+	/*
+		Radius.
+
+		Pick by how big the box is, never by what the component is called:
+		under 24px takes --r-xs/--r-sm, a 24-32px control --r-md or --r-lg, a
+		floating strip --r-xl, a menu --r-2xl, a page-sized card --r-3xl. One
+		control radius per surface. A child in the parent's corner derives
+		inner = outer - padding. Every radius but --r-pill is followed by
+		`corner-shape: var(--corner-smooth);` on the next line.
+
+		The whole rule, with the reasoning and the failure each clause stops,
+		is "The radius question" in section 4.3 of the glyphr-design skill.
+	*/
 	--r-xs: 3px;
 	--r-sm: 5px;
 	--r-md: 8px;

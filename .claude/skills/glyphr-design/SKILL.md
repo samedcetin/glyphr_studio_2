@@ -191,14 +191,82 @@ components   --font-*  --fs-*  --sp-*  --r-*  --control-h*  --row-h  --icon-size
 | Line height | `--lh-tight` 1.2 · `--lh-normal` 1.45 | `1` for single-line controls, tight for headings, normal for prose. **Never a px line-height** — centre with `display:flex; align-items:center` plus a height token |
 | Weight / tracking | `--fw-normal` / `--fw-medium` / `--fw-semibold`; `--tracking-tight`, `--tracking-caps` 0.06em | Uppercase labels are always `--fs-2xs` + `--tracking-caps` + `--fw-semibold` — four of the five shipped eyebrows already are (`command-palette.css:72` and `:227`, `sidebar.css:147`, `nav.css:139`); `app-pages.css:306` is the lone `--fw-medium` outlier and migrates on the line you touch |
 | Font | `--font-ui` everywhere; `--font-mono` for numbers, codepoints, key caps, code | Always write `var(--font-mono)` — bare `monospace` resolves to Courier New on Windows, where most of this audience is. Never use `--font-brand` / FiraGo for UI or canvas text |
-| Radius | `--r-xs` 3 · `--r-sm` 5 · `--r-md` 8 · `--r-lg` 12 · `--r-pill` 999 | Inputs and in-row controls `--r-xs`; buttons, chips, swatches `--r-sm`; cards, menus, popovers `--r-md`; dialogs and floating panels `--r-lg`; strips and pills `--r-pill`. An off-scale radius you encounter migrates to the nearest step on the line you touch. Asymmetric radius only to join two physically touching controls, as `input-number.css` does |
+| Radius | `--r-xs` 3 · `--r-sm` 5 · `--r-md` 8 · `--r-lg` 12 · `--r-xl` 16 · `--r-2xl` 20 · `--r-3xl` 28 · `--r-pill` 999 | **See "The radius question" below — do not pick from this list by feel.** An off-scale radius you encounter migrates to the nearest step on the line you touch. Asymmetric radius only to join two physically touching controls, as `input-number.css` does |
 | Heights | `--control-h-sm` 24 · `--control-h` 28 · `--control-h-lg` 32 · `--row-h` 28 · `--tool-size` 32 · `--topbar-h` 44 | §1 property 2 |
 | Icons | `--icon-size` 16 · `--icon-size-lg` 20 | Two sizes only. Icons are inline SVG on a 16- or 20-unit viewBox, `fill="currentColor"`, `aria-hidden="true"` — never an `<img>` |
 | Borders | **(target)** `1px`, with `--focus-ring-width` (2px) the only 2px that survives migration. Seven literal 2px borders still ship (`app-pages.css:468`, `resets.css:121` and `:297`, `command-palette.css:170`, `panels.css:643`, `:652`, `:832`) | Never a new 2px border. Never 3/5/10/12px — `panels.css:539` and `:546` carry `border-left-width: 10px`. Never `border-image-width` |
 | Motion | `--dur-fast` 90ms · `--dur-base` 140ms · `--dur-slow` 220ms; `--ease`, `--ease-out`; bundle `--transition-color` | Entrances and moves **decelerate** (`--ease-out`); exits and state changes use `--ease`. Only `opacity`, `transform`, `background-color`, `border-color`, `color`, `fill`, `box-shadow`, `outline-color` may animate. Nothing in editor chrome exceeds 250ms. *Using* the currently-unused `--dur-slow` / `--ease-out` is correct; adding a fourth duration is not |
 | Prose measure | `max-width: 62ch` | Never a px measure on a text block |
 
-**Declared but unread** — do not treat them as endorsement: `--fs-3xl`, `--lh-loose`, `--sp-0`, `--sp-10`, `--font-brand`, `--focus-ring-offset`, and eight of the sixteen `--canvas-*` tokens. All sixteen are listed in `CANVAS_TOKENS` and returned by `getCanvasColors()`, so nothing is missing there — the eight no draw code reads are `inkMuted`, `metric`, `guide`, `selectionFill`, `handleStroke`, `handleLine`, `point` and `snap`, exactly the complement of the eight in §4.2. Delete a `--canvas-*` nothing reads rather than leaving it as decoration.
+**Declared but unread** — do not treat them as endorsement: `--lh-loose`, `--sp-0`, `--font-brand`, `--focus-ring-offset`, and eight of the sixteen `--canvas-*` tokens. All sixteen are listed in `CANVAS_TOKENS` and returned by `getCanvasColors()`, so nothing is missing there — the eight no draw code reads are `inkMuted`, `metric`, `guide`, `selectionFill`, `handleStroke`, `handleLine`, `point` and `snap`, exactly the complement of the eight in §4.2. Delete a `--canvas-*` nothing reads rather than leaving it as decoration.
+
+#### The radius question
+
+Radius is the scale that gets re-litigated every time something is built,
+because the rule used to name components — "buttons `--r-sm`, cards `--r-md`" —
+and components keep turning out to be several sizes. **Ask how big the box is,
+not what it is called.** A corner needs a long enough run of edge to read as a
+shape: below that it is a rectangle with the corners taken off, above it the
+corner eats the control.
+
+| How big the box is | Radius |
+|---|---|
+| An inline chip, swatch or link hit area — under 24px | `--r-xs` 3 or `--r-sm` 5 |
+| Any control 24–32px: button, input, select, icon button, rail button | `--r-md` 8 in dense chrome — panels, dialogs, the toolbar. `--r-lg` 12 on a surface built out of `--r-3xl` cards, where 8 reads as an older system |
+| A floating strip or bar — breadcrumb, toolbar | `--r-xl` 16 |
+| A menu or popover — the things that sit *above* the page | `--r-2xl` 20 |
+| A page-sized card or panel, hundreds of px across | `--r-3xl` 28 |
+| A track that fully encloses a pill, and the pill in it | `--r-pill` |
+
+**One thing sits off this table on purpose:** the key cap, `code` in
+`resets.css`, is 20px tall at `--r-md` 8. It is meant to read as a key rather
+than as a chip, and it is the app's one deliberate exception — do not migrate
+it, and do not cite it as precedent for anything else under 24px.
+
+**One surface, one control radius.** Whatever a surface picks for its 24–32px
+controls, every control on it takes — a row of four controls in four shapes is
+the failure this rule exists to stop. Heights go the same way: §1 property 2.
+
+**Nesting: inner = outer − padding.** A child sitting *in* the parent's corner
+region derives its radius from the gap, written as `calc()` whenever the
+parent's padding is a variable so the two cannot drift apart:
+
+```css
+/* .studio-card: --r-3xl 28 at --sp-6 16 of padding leaves 12 */
+.studio-card .plate { border-radius: var(--r-lg); }
+/* .studio-tabs, .hub__view-switch: stated, so it cannot be got wrong */
+.thumb { border-radius: calc(var(--seg-radius) - var(--seg-inset)); }
+```
+
+A child that is **not** corner-adjacent — a plate in the middle of a card, a
+row halfway down it — is not bound by this and takes its own size's radius from
+the table. Say which case you are in when the two would differ, because the
+next reader applies the rule mechanically otherwise.
+
+**The corner follows the radius.** Every `border-radius` is followed by
+`corner-shape: var(--corner-smooth);` as its own declaration on the next line.
+Never folded into the radius, never before it: only Chromium ships
+`corner-shape`, and everywhere else the whole declaration is dropped — written
+first or merged, the radius goes with it. Two exceptions, both already
+consistent in the tree: `--r-pill` (all fifteen of them; a semicircle has no
+corner to smooth) and icons, whose geometry is in the path data so they get the
+same corner in every browser.
+
+The check, over the diff or the tree:
+
+```bash
+awk '/border-radius:/ { if ($0 ~ /--r-pill|: *0(px)?;|50%/) next
+  l=$0; f=FILENAME; n=FNR; getline x
+  if (x !~ /corner-shape/) { gsub(/^[ \t]+/,"",l); printf "%s:%d  %s\n", f, n, l } }' \
+  $(find src -name '*.css' -not -path '*/node_modules/*')
+```
+
+It reports **27** across the tree as this was written, every one of them
+pre-token legacy — so a run that names a file you touched is yours, and a run
+that names one you did not is a migration for the line you touch, not a task.
+
+See also the ban in §7: 12–16px on a control **shorter** than 32px is a Blue
+Rain density signal and does not enter the tool.
 
 ### 4.4 Contrast, non-negotiable
 
@@ -450,13 +518,14 @@ Never "letter" or "outline" in UI copy. Write **sidebearing**, one word, lowerca
 
 1. **Grep gates in §2** return zero new hits over the diff.
 2. **No undefined `var()`** — every custom property you wrote has a declaration you can point at.
-3. **Contrast computed**, not eyeballed: ≥ 4.5:1 text, ≥ 3:1 non-text, both themes, composited alpha. Show the numbers.
-4. **Both theme blocks** — every colour you added exists on bare `:root` and in `:root[data-theme='dark']`, and none was first defined inside a `[data-theme]` or media block.
-5. **Keyboard contract, by reading:** a `keydown` handler for Enter and Space on anything with `tabindex`, `event.key` not `keyCode`, exactly one tab stop, no positive `tabindex`, Escape routed to the global handler, and the `:focus-visible` snippet present in any shadow-DOM stylesheet.
-6. **Reduced motion:** any JS-driven animation reads `prefers-reduced-motion` itself.
-7. **Registered:** new custom element → `registerCustomComponents()` **and** `isFocusedOnInput()`; new `--canvas-*` → `CANVAS_TOKENS`; new command → `collectCommands()` with a `searchText` string in game-developer vocabulary; new dismissible surface → `closeEveryTypeOfDialog()`; new stylesheet → `src/index.html` in order.
-8. **Second document:** any new window or shadow root loads `tokens.css` first and mirrors `data-theme`.
-9. **Copy read aloud:** sentence case, lowercase domain nouns, fixed terminology, three-part errors, no hardcoded product name — and the nine §1 tests that do not need a browser, answered for this change.
+3. **Radius, by §4.3's "The radius question":** each new `border-radius` picked from the size of its box, one control radius across the surface, a nested corner derived as outer − padding, and a `corner-shape: var(--corner-smooth);` on the line after every one of them that is not `--r-pill` or `0`.
+4. **Contrast computed**, not eyeballed: ≥ 4.5:1 text, ≥ 3:1 non-text, both themes, composited alpha. Show the numbers.
+5. **Both theme blocks** — every colour you added exists on bare `:root` and in `:root[data-theme='dark']`, and none was first defined inside a `[data-theme]` or media block.
+6. **Keyboard contract, by reading:** a `keydown` handler for Enter and Space on anything with `tabindex`, `event.key` not `keyCode`, exactly one tab stop, no positive `tabindex`, Escape routed to the global handler, and the `:focus-visible` snippet present in any shadow-DOM stylesheet.
+7. **Reduced motion:** any JS-driven animation reads `prefers-reduced-motion` itself.
+8. **Registered:** new custom element → `registerCustomComponents()` **and** `isFocusedOnInput()`; new `--canvas-*` → `CANVAS_TOKENS`; new command → `collectCommands()` with a `searchText` string in game-developer vocabulary; new dismissible surface → `closeEveryTypeOfDialog()`; new stylesheet → `src/index.html` in order.
+9. **Second document:** any new window or shadow root loads `tokens.css` first and mirrors `data-theme`.
+10. **Copy read aloud:** sentence case, lowercase domain nouns, fixed terminology, three-part errors, no hardcoded product name — and the nine §1 tests that do not need a browser, answered for this change.
 
 ### 9.2 Hand these to the owner before merge — never claim you ran them
 
