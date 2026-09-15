@@ -80,16 +80,36 @@ const hubViews = {
 const RAIL_TABS = ['home', 'projects', 'learn'];
 
 /**
+ * Which destination the new-font form belongs to.
+ *
+ * It is reached from two places - the create card on home, and the tile in
+ * Your projects - and it has to go back to whichever one you came from. It
+ * used to always claim home, so starting a font from Your projects moved the
+ * rail out from under you and offered "Home" as the way back to a view you
+ * had never been on.
+ */
+let formOrigin = 'home';
+
+/**
  * Which rail tab is lit for a given view.
  *
- * The new-font form and the file drop are reached from the home view and go
- * back to it, so they keep its tab lit rather than darkening the whole rail.
+ * The form keeps its origin's tab lit rather than darkening the whole rail.
  *
  * @param {String} viewName - a key in hubViews
  * @returns {String} - a key in RAIL_TABS
  */
 function railTabFor(viewName) {
-	return RAIL_TABS.includes(viewName) ? viewName : 'home';
+	if (RAIL_TABS.includes(viewName)) return viewName;
+	return RAIL_TABS.includes(formOrigin) ? formOrigin : 'home';
+}
+
+/**
+ * Opens the new-font form, remembering where it was opened from.
+ * @param {String} origin - a key in RAIL_TABS
+ */
+function startNewFont(origin) {
+	formOrigin = origin;
+	switchHubView('new');
 }
 
 /** How the project grid is sorted: 'recent' | 'name'. */
@@ -594,7 +614,8 @@ function renderHubView(root) {
  */
 function makeFormView(viewName) {
 	const view = makeElement({ tag: 'div', className: 'hub__home' });
-	view.appendChild(makeBackToList('home', 'Home'));
+	/* Back to whichever destination opened the form, named as the rail names it. */
+	view.appendChild(makeBackToList(formOrigin, hubViews[formOrigin].label));
 
 	view.appendChild(
 		makeSectionHead(
@@ -853,15 +874,26 @@ function makeSavedProjectCards(limit = 0) {
  * @param {Number =} limit - how many cards, or 0 for all of them
  * @returns {Element}
  */
-function makeProjectGrid(limit = 0) {
+function makeProjectGrid(limit = 0, withNewTile = false) {
 	const grid = makeElement({
 		tag: 'div',
 		className: `hub-grid hub-grid--${hubLayout}`,
 		id: 'hub__project-grid',
-		attributes: { 'data-limit': String(limit) },
+		attributes: {
+			'data-limit': String(limit),
+			'data-new-tile': withNewTile ? 'true' : 'false',
+		},
 	});
 
 	const cards = makeSavedProjectCards(limit);
+
+	/*
+		First cell, and outside the sort: a grid of things you can open should
+		hold the thing that makes another one. Your projects had no way to start
+		a font at all once you had one - the empty state's button was the only
+		one on the view, and it goes the moment the view stops being empty.
+	*/
+	if (withNewTile) grid.appendChild(makeNewProjectTile());
 
 	if (cards.length) {
 		addAsChildren(grid, cards);
@@ -873,17 +905,56 @@ function makeProjectGrid(limit = 0) {
 				content: `No project here is called “${hubQuery}”.`,
 			})
 		);
-	} else {
+	} else if (!withNewTile) {
+		/*
+			No empty state where the tile is. The tile says the same thing in
+			the same place, and two "create" buttons on one empty view is one
+			too many - the note under the grid still explains where projects
+			come from.
+		*/
 		grid.appendChild(
 			makeEmptyState(
 				`Nothing saved yet. Projects you work on are auto-saved in this browser and show up here.`,
 				'Create your first font',
-				() => switchHubView('new')
+				() => startNewFont('home')
 			)
 		);
 	}
 
 	return grid;
+}
+
+/**
+ * The cell that makes a new project.
+ *
+ * A card, not a button in the head: it is the same size and shape as the
+ * things it sits among, which is what says it belongs to the grid rather than
+ * to the chrome. It does not carry a specimen, because it is not a font yet -
+ * one plate, one label, and that difference in kind is what stops it being
+ * mistaken for a project at a glance.
+ *
+ * @returns {Element}
+ */
+function makeNewProjectTile() {
+	const tile = makeElement({
+		tag: 'button',
+		className: 'hub-new-tile',
+		attributes: { type: 'button', title: 'Start a new font' },
+		onClick: () => startNewFont('projects'),
+	});
+
+	tile.appendChild(
+		makeElement({ className: 'hub-new-tile__plate', innerHTML: makeLineIcon('plus', 20) })
+	);
+
+	const text = makeElement({ className: 'hub-new-tile__text' });
+	text.appendChild(makeElement({ className: 'hub-new-tile__title', content: 'New font' }));
+	text.appendChild(
+		makeElement({ className: 'hub-new-tile__caption', content: 'Start from an empty project.' })
+	);
+	tile.appendChild(text);
+
+	return tile;
 }
 
 /**
@@ -893,7 +964,12 @@ function makeProjectGrid(limit = 0) {
 function refreshProjectGrid() {
 	const grid = document.querySelector('#hub__project-grid');
 	if (!grid) return;
-	grid.replaceWith(makeProjectGrid(Number(grid.getAttribute('data-limit')) || 0));
+	grid.replaceWith(
+		makeProjectGrid(
+			Number(grid.getAttribute('data-limit')) || 0,
+			grid.getAttribute('data-new-tile') === 'true'
+		)
+	);
 }
 
 /**
@@ -1161,7 +1237,7 @@ function makeStartCards() {
 			className: 'hub-button hub-button--primary hub-button--large',
 			attributes: { type: 'button' },
 			innerHTML: `${hubIcons.plus}<span>New font</span>`,
-			onClick: () => switchHubView('new'),
+			onClick: () => startNewFont('home'),
 		})
 	);
 	addAsChildren(create, [createText, makeSpecimenArt()]);
@@ -1343,14 +1419,19 @@ function makeHomeView() {
 function makeProjectsView() {
 	const view = makeElement({ tag: 'div', className: 'hub__home' });
 
+	/*
+		Not "newest first" - the sort control right beside this sentence can
+		make it name-first, and a subtitle that contradicts the control under
+		the reader's hand is worse than one that says less.
+	*/
 	view.appendChild(
-		makeSectionHead('Your projects', 'Auto-saved in this browser, newest first.', [
+		makeSectionHead('Your projects', 'Auto-saved in this browser as you work.', [
 			makeProjectSearch(),
 			makeSortSelect(),
 			makeViewSwitch(),
 		])
 	);
-	view.appendChild(makeProjectGrid());
+	view.appendChild(makeProjectGrid(0, true));
 
 	view.appendChild(
 		makeElement({

@@ -1818,6 +1818,140 @@
 
 .hub-grid--grid {
 	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	/*
+		Stretch, so the new-font tile is exactly as tall as the cards it sits
+		among rather than shrinking to its own two lines - and so two cards
+		whose names wrap differently still end level.
+	*/
+	align-items: stretch;
+}
+
+/* --------------------------------------------------------
+	The new-font tile
+
+	The first cell of Your projects. Same size and shape as the cards around
+	it, which is what says it belongs to the grid rather than to the chrome -
+	but with a plate and a label where they carry a specimen, so it is not
+	mistaken for a font at a glance.
+
+	Raised and lifting on hover, the same gesture the project cards and the
+	import action answer a pointer with. No accent: this is one of several
+	ways in on this page, not the page's headline.
+-------------------------------------------------------- */
+
+.hub-new-tile {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	justify-items: center;
+	align-content: center;
+	gap: var(--sp-5);
+	min-height: 0;
+	padding: var(--sp-6);
+	margin: 0;
+	text-align: center;
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-3xl);
+	corner-shape: var(--corner-smooth);
+	box-shadow: none;
+	color: var(--text-primary);
+	font-family: inherit;
+	cursor: pointer;
+	transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease),
+		transform var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+
+/* resets.css floods button:hover with --bg-hover; a cell this size reads as
+	disabled under it, so the surface is restated on both states. */
+.hub-new-tile:hover {
+	background-color: var(--bg-surface);
+	border-color: var(--border-strong);
+	box-shadow: var(--shadow-2);
+	transform: translateY(-1px);
+}
+
+.hub-new-tile:active {
+	background-color: var(--bg-surface);
+	box-shadow: none;
+	transform: translateY(0);
+}
+
+.hub-new-tile:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+/*
+	--r-lg against the tile's --r-3xl at --sp-6 of padding: 28 - 16 = 12. The
+	plate is corner-adjacent in the centred layout only in the sense that it is
+	the tile's own inner shape, and 12 is what the nesting rule gives.
+*/
+/*
+	48px, which is .hub__plate's size and what makes the list row come out at
+	exactly the card's height: 48 + --sp-5 top and bottom + the border is the
+	74 a list card measures.
+*/
+.hub-new-tile__plate {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	color: var(--icon-strong);
+	transition: var(--transition-color);
+}
+
+.hub-new-tile:hover .hub-new-tile__plate {
+	border-color: var(--border-strong);
+	color: var(--text-primary);
+}
+
+.hub-new-tile__text {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+/* Each states its own size and weight: resets.css sets both on `*`, which
+	beats inheritance. */
+.hub-new-tile__title {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+	text-align: center;
+}
+
+.hub-new-tile__caption {
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-normal);
+	color: var(--text-secondary);
+	text-align: center;
+}
+
+/*
+	In list layout the tile turns with the cards: the plate takes the column
+	the specimen takes, and the words sit beside it.
+*/
+.hub-grid--list .hub-new-tile {
+	grid-template-columns: 132px minmax(0, 1fr);
+	justify-items: start;
+	align-items: center;
+	gap: var(--sp-5);
+	padding: var(--sp-5) var(--sp-6);
+	text-align: left;
+}
+
+.hub-grid--list .hub-new-tile__plate {
+	justify-self: center;
+}
+
+.hub-grid--list .hub-new-tile__title,
+.hub-grid--list .hub-new-tile__caption {
+	text-align: left;
 }
 
 /*
