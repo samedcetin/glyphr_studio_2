@@ -9,7 +9,7 @@ import {
 	round,
 } from '../common/functions.js';
 import style from './display-canvas.css?inline';
-import { getCanvasFonts, onThemeChange } from '../common/theme.js';
+import { getCanvasColors, getCanvasFonts, onThemeChange } from '../common/theme.js';
 import { drawGlyph } from './draw_paths.js';
 import { TextBlock } from './text_block.js';
 import { TextBlockOptions } from './text_block_options.js';
@@ -429,14 +429,37 @@ export class DisplayCanvas extends HTMLElement {
 			});
 		} else {
 			if (this.textBlockOptions.showPlaceholderMessage) {
-				this.ctx.fillStyle = uiColors.disabled.text;
+				/*
+					Centred on both axes. It used to start at the text block's
+					left margin on a baseline of its own, which put it hard
+					against the left edge of a canvas that is itself centred in
+					its card - so the one sentence on an empty preview sat well
+					off to the left of everything around it.
+
+					getCanvasColors rather than uiColors: that palette is
+					theme-blind, so the message came out the same grey on a dark
+					canvas as on a light one.
+				*/
+				this.ctx.fillStyle = getCanvasColors().inkMuted;
 				this.ctx.font = `14px ${getCanvasFonts().ui}`;
+				this.ctx.textAlign = 'center';
 				this.ctx.textBaseline = 'middle';
-				let x = this.textBlock.canvasMaxes.xMin;
-				let y = this.height / 2;
-				this.ctx.fillText('Project preview text will be shown here.', x, y);
+				this.ctx.fillText(
+					'Project preview text will be shown here.',
+					this.width / 2,
+					this.height / 2
+				);
+				/* Left as found, for every other path that draws on this ctx. */
+				this.ctx.textAlign = 'left';
 			}
 		}
+
+		/*
+			Says whether anything was drawn, so a page holding more than one of
+			these can take a blank one out of its layout rather than leave an
+			invisible box in the middle of a card. See .overview__specimen-line.
+		*/
+		this.toggleAttribute('blank', !this.textBlock.hasDrawableCharacters);
 
 		// log('DisplayCanvas.redraw', 'end');
 	}

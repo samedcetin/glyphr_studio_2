@@ -978,6 +978,19 @@ span.spacer {
 	max-width: 100%;
 }
 
+/*
+	The pangram line takes itself out of the stage when it has nothing to draw.
+
+	On a font with no outlines yet it rendered as an invisible 65px box under
+	the headline, which is a third of the stage - so the one thing that IS on
+	screen, the placeholder message, was pushed 41px above the centre it was
+	supposed to be sitting on. The headline keeps its space in every state,
+	because it is the one that carries the message.
+*/
+.overview__specimen-line[blank] {
+	display: none;
+}
+
 /* --------------------------------------------------------------
 	Specimen controls
 
