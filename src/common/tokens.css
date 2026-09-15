@@ -204,8 +204,7 @@
 	*/
 	--font-ui: Geist, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
 		sans-serif;
-	--font-mono: 'Geist Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas,
-		monospace;
+	--font-mono: 'Geist Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
 
 	--fs-2xs: 10px;
 	--fs-xs: 11px;
@@ -215,6 +214,14 @@
 	--fs-xl: 18px;
 	--fs-2xl: 22px;
 	--fs-3xl: 28px;
+	/*
+		One step above the largest page title, for the one headline in the app
+		that is not a page title: the hub's. A landing headline set at --fs-3xl
+		is the same size as the words "Project settings", which makes the first
+		screen read as another panel rather than as the front of the product.
+		Nothing inside the editor may use this.
+	*/
+	--fs-4xl: 36px;
 
 	--lh-tight: 1.2;
 	--lh-normal: 1.45;

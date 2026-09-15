@@ -18,7 +18,7 @@ import {
 	getProjectEditorImportTarget,
 	setCurrentProjectEditor,
 } from './main.js';
-import { makePage_OpenProject } from './open_project.js';
+import { makeHubRail, makePage_OpenProject } from './open_project.js';
 
 /**
  * Creates a new Glyphr Studio Application
@@ -124,7 +124,7 @@ export class GlyphrStudioApp {
 		if (dev.mode && dev.currentPage) {
 			editor.navigate();
 		} else {
-			this.appPageNavigate(makePage_OpenProject);
+			this.appPageNavigate(makePage_OpenProject, makeHubRail);
 		}
 		this.fadeOutLandingPage();
 
@@ -203,9 +203,17 @@ export class GlyphrStudioApp {
 	/**
 	 * App Pages are 'above' Project Editor Pages, so we need a custom navigation
 	 * handler for Open Project and Cross Project Actions pages
+	 *
+	 * A page may bring a rail. The hub does - the same one the editor carries,
+	 * with its own destinations in it - so the app's one piece of persistent
+	 * chrome is there from the first screen rather than appearing when you open
+	 * a project. A page that brings none is still laid out full width by the
+	 * `#app__main-content:only-child` rule in app.css.
+	 *
 	 * @param {Function} pageMaker - function that creates app page content
+	 * @param {Function =} railMaker - function that creates the page's rail
 	 */
-	appPageNavigate(pageMaker) {
+	appPageNavigate(pageMaker, railMaker = undefined) {
 		const mainContent = makeElement({
 			tag: 'div',
 			id: 'app__main-content',
@@ -213,6 +221,7 @@ export class GlyphrStudioApp {
 		mainContent.appendChild(pageMaker());
 		const wrapper = document.querySelector('#app__wrapper');
 		wrapper.innerHTML = '';
+		if (railMaker) wrapper.appendChild(railMaker());
 		wrapper.appendChild(mainContent);
 	}
 

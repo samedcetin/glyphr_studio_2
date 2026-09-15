@@ -58,6 +58,73 @@ export function makeLeftRail() {
 }
 
 /**
+ * The same rail, for an app page that is not the editor.
+ *
+ * The hub had a 260px sidebar of its own - a wordmark, four labelled rows and
+ * a legal footer - which meant the first screen of the app taught a piece of
+ * chrome that then disappeared the moment you opened a project. This is the
+ * rail you land on and the rail you keep.
+ *
+ * It takes its destinations rather than reading the navigator, because an app
+ * page's tabs are its own and there is no project to have pages of.
+ *
+ * @param {Object} args
+ * @param {Array<Object>} args.tabs - [{ id, icon, label }]
+ * @param {String} args.current - which tab id is selected
+ * @param {Function} args.onSelect - called with a tab id
+ * @param {Array<Element>=} args.footer - buttons pinned to the bottom, after
+ *     the theme toggle
+ * @returns {Element}
+ */
+export function makeAppPageRail({ tabs = [], current = '', onSelect = () => {}, footer = [] }) {
+	const rail = makeElement({
+		tag: 'nav',
+		id: 'app__left-rail',
+		attributes: { 'aria-label': 'Main' },
+	});
+
+	rail.appendChild(makeRailMark());
+
+	rail.appendChild(
+		makeRailGroup(
+			tabs.map((tab) => {
+				const isCurrent = tab.id === current;
+				return makeElement({
+					tag: 'button',
+					className: `left-rail__button${isCurrent ? ' left-rail__button--current' : ''}`,
+					innerHTML: makeLineIcon(tab.icon, 20),
+					attributes: {
+						type: 'button',
+						title: tab.label,
+						'aria-label': tab.label,
+						'aria-current': isCurrent ? 'page' : 'false',
+						'data-rail-tab': tab.id,
+					},
+					onClick: () => onSelect(tab.id),
+				});
+			})
+		)
+	);
+
+	rail.appendChild(makeElement({ className: 'left-rail__spacer' }));
+	rail.appendChild(makeRailGroup([makeRailThemeToggle(), ...footer]));
+
+	return rail;
+}
+
+/**
+ * Marks which rail tab is current, for a page that switches views in place.
+ * @param {String} tabID - the id that is now selected
+ */
+export function setAppPageRailTab(tabID) {
+	document.querySelectorAll('#app__left-rail [data-rail-tab]').forEach((button) => {
+		const isCurrent = button.getAttribute('data-rail-tab') === tabID;
+		button.classList.toggle('left-rail__button--current', isCurrent);
+		button.setAttribute('aria-current', isCurrent ? 'page' : 'false');
+	});
+}
+
+/**
  * @param {Array<Element>} children
  * @returns {Element}
  */

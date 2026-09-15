@@ -1,7 +1,7 @@
-import { PRODUCT_URL } from './brand.js';
+import { PRODUCT_NAME, PRODUCT_URL, UPSTREAM_HELP } from './brand.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
-import logoHorizontal from '../common/graphics/logo-wordmark-horizontal-small.svg?raw';
+import { makeAppPageRail, setAppPageRailTab } from './left_rail.js';
 import { closeEveryTypeOfDialog, showError, showToast } from '../controls/dialogs/dialogs.js';
 import { makeProgressIndicator } from '../controls/progress-indicator/progress_indicator.js';
 import { cancelDefaultEventActions } from '../edit_canvas/events.js';
@@ -20,23 +20,28 @@ import {
 	getProjectEditorImportTarget,
 	setCurrentProjectEditor,
 } from './main.js';
-import { cycleThemePreference, getThemePreference, onThemeChange } from '../common/theme.js';
 import { makeFontPreviewSVG, projectFromSavedData } from './project_preview.js';
 
 /**
 	PAGE > OPEN PROJECT
 	-------------------
-	The first screen you see, rebuilt as a file hub rather than a splash page.
+	The first screen you see: the hub.
 
-	It used to be a marketing panel on the left and four tabs on the right, with
-	auto-saved projects hidden behind a tab called "Restore" and shown as a list
-	of ids and timestamps. Which meant the thing you almost always want - the
-	font you were working on ten minutes ago - took two clicks and looked like
-	a database row.
+	WHAT IT WAS. A 260px sidebar carrying the upstream wordmark, four labelled
+	rows and a legal footer, beside one view at a time - so the first screen of
+	the app taught a piece of chrome that vanished the moment you opened a
+	project, and you landed on a different view depending on how many projects
+	you happened to have.
 
-	Now it opens on your projects, as cards showing their own letterforms, with
-	the create and open actions where a file browser puts them. Same handlers
-	underneath; what changed is what you land on.
+	WHAT IT IS. The app's own rail, with the hub's three destinations in it,
+	beside a page that always opens on the same thing: the headline, the two
+	ways in as cards, the projects you already have, and the guide. The cards
+	take the same --r-3xl shape the rebuilt content pages take, so the hub and
+	the editor are recognisably one product.
+
+	The dialog variant - Projects > Open - is a second shell in this same file
+	and was left alone. It shares the cards, the sections and the handlers; it
+	does not share the page's layout, because a dialog is not a page.
  */
 
 /** True when opening a second project alongside the current one. */
@@ -53,19 +58,51 @@ let isSecondProject = false;
  */
 let isModal = false;
 
-/** Which view the hub is showing: 'recents' | 'examples' | 'new' | 'open'. */
-let currentView = 'recents';
+/** Which view the hub is showing. */
+let currentView = 'home';
 
 /**
- * Sidebar / view definitions.
- * `title` heads the content area, `action` is the primary button beside it.
+ * View definitions. `title` heads the view; `label` names its rail tab.
+ *
+ * Three of these are destinations in the rail. `new` and `open` are not: they
+ * are what the two cards on the home view lead to, and a rail tab for each
+ * would be a second way to reach the thing you are looking at.
  */
 const hubViews = {
-	recents: { label: 'Your projects', icon: 'clock', title: 'Your projects' },
-	examples: { label: 'Examples', icon: 'sparkle', title: 'Example projects' },
+	home: { label: 'Home', icon: 'home', title: 'Home' },
+	projects: { label: 'Your projects', icon: 'menu_projects', title: 'Your projects' },
+	learn: { label: 'Examples and guides', icon: 'book', title: 'Examples and guides' },
 	new: { label: 'New font', icon: 'plus', title: 'Start a new font' },
 	open: { label: 'Open a file', icon: 'upload', title: 'Open a file' },
 };
+
+/** The destinations the rail offers, in order. */
+const RAIL_TABS = ['home', 'projects', 'learn'];
+
+/**
+ * Which rail tab is lit for a given view.
+ *
+ * The new-font form and the file drop are reached from the home view and go
+ * back to it, so they keep its tab lit rather than darkening the whole rail.
+ *
+ * @param {String} viewName - a key in hubViews
+ * @returns {String} - a key in RAIL_TABS
+ */
+function railTabFor(viewName) {
+	return RAIL_TABS.includes(viewName) ? viewName : 'home';
+}
+
+/** How the project grid is sorted: 'recent' | 'name'. */
+let hubSort = 'recent';
+
+/** How the project grid is laid out: 'grid' | 'list'. */
+let hubLayout = 'grid';
+
+/** What is typed into the project search, lower-cased. */
+let hubQuery = '';
+
+/** The file types the hub can open, for the copy that lists them. */
+const ACCEPTED_FORMATS = ['.gs2', '.otf', '.ttf', '.woff', '.svg'];
 
 /**
  * Hub icons, by name, from the one line set.
@@ -77,52 +114,16 @@ const hubViews = {
  * @type {Object<string, string>}
  */
 const hubIcons = {};
-['clock', 'sparkle', 'plus', 'upload', 'system', 'light', 'dark'].forEach((name) => {
+['plus', 'upload'].forEach((name) => {
 	hubIcons[name] = makeLineIcon(name, 20);
 });
 
-const themeLabels = {
-	system: 'Theme: follow system',
-	light: 'Theme: light',
-	dark: 'Theme: dark',
-};
-
-/**
- * Theme control for the hub.
- *
- * The hub covers the app's top bar, so the toggle up there is out of reach
- * here - which would strand anyone who lands on the wrong theme before they
- * have even opened a project.
- *
- * @returns {Element}
- */
-function makeHubThemeToggle() {
-	const button = makeElement({
-		tag: 'button',
-		className: 'hub-button hub-button--icon',
-		attributes: {
-			type: 'button',
-			title: themeLabels[getThemePreference()],
-			'aria-label': themeLabels[getThemePreference()],
-		},
-		innerHTML: hubIcons[getThemePreference()],
-	});
-
-	const render = () => {
-		const preference = getThemePreference();
-		button.innerHTML = hubIcons[preference];
-		button.setAttribute('title', themeLabels[preference]);
-		button.setAttribute('aria-label', themeLabels[preference]);
-	};
-
-	button.addEventListener('click', () => {
-		cycleThemePreference();
-		render();
-	});
-
-	onThemeChange(render);
-	return button;
-}
+/*
+	The hub used to build its own theme toggle, because it covered the app's
+	top bar and the one up there was out of reach. It carries the app's rail
+	now, and the rail has that control at the bottom of it - so the page and
+	the editor change the theme with the same button in the same place.
+*/
 
 /**
  * Page Maker for the Open Project page
@@ -134,12 +135,15 @@ export function makePage_OpenProject(secondProjectFlag = false, modalFlag = fals
 	isSecondProject = secondProjectFlag;
 	isModal = modalFlag;
 
-	// Land on whatever is most useful: your own work if you have any, the
-	// new-font form on a genuinely first run.
-	currentView = countAutoSaves() ? 'recents' : 'new';
-	// Restoring an auto-save into a second editor is not supported, so that
-	// view is not offered there.
-	if (isSecondProject) currentView = 'new';
+	/*
+		The home view, always. It is the one that holds everything: the two
+		ways in, the projects you already have, and the guide - so there is no
+		state where landing on it is landing on nothing. The old page picked
+		between two views on a count, which meant a first run and a tenth run
+		opened on different screens.
+	*/
+	currentView = 'home';
+	hubQuery = '';
 	/*
 		The dialog opens on its list and nothing else. It is titled "Open a
 		project"; landing on a box asking you to name a new one contradicts the
@@ -151,12 +155,13 @@ export function makePage_OpenProject(secondProjectFlag = false, modalFlag = fals
 	/*
 		Two shells, because a dialog is not a page.
 
-		The page gets the file-browser layout: a rail of destinations down the
-		left, a heading and the app's own identity. Inside a dialog all of that
-		is furniture you already have - you are three feet from the app's left
-		rail and its theme toggle, and you know which app you are in. What a
-		dialog needs is a title that says what pressing something here will do,
-		one row of places to look, and the thing you came for.
+		The page is a scrolling column under a bar, beside the app's own rail -
+		the same rail the editor carries, so the chrome you learn on the first
+		screen is the chrome you keep. Inside a dialog all of that is furniture
+		you already have: you are three feet from that rail and its theme
+		toggle, and you know which app you are in. What a dialog needs is a
+		title that says what pressing something here will do, one row of places
+		to look, and the thing you came for.
 	*/
 	const content = makeElement({
 		tag: 'div',
@@ -171,12 +176,10 @@ export function makePage_OpenProject(secondProjectFlag = false, modalFlag = fals
 			</div>
 		`
 			: `
-			<div id="open-project__page">
-				<div id="open-project__sidebar"></div>
-				<div id="open-project__main">
-					<header id="open-project__header"></header>
-					<div id="open-project__body"></div>
-				</div>
+			<div id="open-project__page" class="hub">
+				<header id="open-project__header" class="hub__bar"></header>
+				<div id="open-project__body" class="hub__body"></div>
+				<footer class="hub__footer"></footer>
 				<div id="open-project__drop-note"></div>
 			</div>
 		`,
@@ -186,7 +189,7 @@ export function makePage_OpenProject(secondProjectFlag = false, modalFlag = fals
 		content.querySelector('#open-project__header').appendChild(makeModalHeading());
 		content.querySelector('#open-project__footer').appendChild(makeModalFooter());
 	} else {
-		content.querySelector('#open-project__sidebar').appendChild(makeHubSidebar());
+		content.querySelector('.hub__footer').appendChild(makeHubFooter());
 	}
 	renderHubView(content);
 
@@ -233,79 +236,124 @@ function getAutoSaves() {
 	return getGlyphrStudioApp().getLocalStorage()?.autoSaves || {};
 }
 
-/**
- * @returns {Number} - how many auto-saved projects exist
- */
-function countAutoSaves() {
-	return Object.keys(getAutoSaves()).length;
-}
+/*
+	countAutoSaves() was here. It existed to pick which view the page opened
+	on and which one an import error returned you to; both land on home now,
+	whatever you have saved.
+*/
 
 // --------------------------------------------------------------
 // Hub shell
 // --------------------------------------------------------------
 
 /**
- * The left rail: identity at the top, views in the middle, version at the foot.
+ * The hub's rail.
+ *
+ * Built here rather than in left_rail.js because the destinations are the
+ * hub's own; the rail itself - the mark, the button, the current state, the
+ * theme toggle at the foot - is the app's, and comes from there unchanged.
+ *
+ * Restoring an auto-save into a second editor is not supported, so the
+ * projects tab is not offered when that is what you are doing.
+ *
  * @returns {Element}
  */
-function makeHubSidebar() {
-	const app = getGlyphrStudioApp();
-	const wrapper = makeElement({ className: 'hub-sidebar' });
+export function makeHubRail() {
+	const tabs = RAIL_TABS.filter((id) => !(isSecondProject && id === 'projects')).map((id) => ({
+		id: id,
+		icon: hubViews[id].icon,
+		label: hubViews[id].label,
+	}));
 
-	const brand = makeElement({
-		className: 'hub-sidebar__brand',
-		innerHTML: logoHorizontal,
+	return makeAppPageRail({
+		tabs: tabs,
+		current: railTabFor(currentView),
+		onSelect: switchHubView,
+		footer: [
+			makeElement({
+				tag: 'button',
+				className: 'left-rail__button',
+				innerHTML: makeLineIcon('menu_help', 20),
+				attributes: {
+					type: 'button',
+					title: 'Help',
+					'aria-label': 'Help — opens the documentation in a new tab',
+				},
+				/*
+					Out to the docs, not in to the Help page. The in-app one is
+					a project editor page, and reaching it from here would build
+					an editor around an empty project nobody asked for.
+				*/
+				onClick: () => window.open(UPSTREAM_HELP, '_blank', 'noopener'),
+			}),
+		],
 	});
+}
 
-	const nav = makeElement({ tag: 'nav', className: 'hub-sidebar__nav' });
-	const availableViews = isSecondProject
-		? ['new', 'open', 'examples']
-		: ['recents', 'examples', 'new', 'open'];
+// --------------------------------------------------------------
+// The bar, and the foot
+// --------------------------------------------------------------
 
-	availableViews.forEach((viewName) => {
-		const view = hubViews[viewName];
-		const count = viewName === 'recents' ? countAutoSaves() : 0;
+/**
+ * The top bar: who you are looking at, a way to search, and the one action
+ * that does not need a card to explain it.
+ * @returns {Element}
+ */
+function makeHubTopBar() {
+	const bar = makeElement({ tag: 'div', className: 'hub__bar-inner' });
 
-		const button = makeElement({
+	const identity = makeElement({ tag: 'div', className: 'hub__identity' });
+	identity.appendChild(
+		makeElement({ tag: 'span', className: 'hub__product', content: PRODUCT_NAME })
+	);
+	identity.appendChild(makeElement({ tag: 'span', className: 'hub__status-dot' }));
+	identity.appendChild(
+		makeElement({ tag: 'span', className: 'hub__status', content: 'Font design workspace' })
+	);
+	bar.appendChild(identity);
+
+	const actions = makeElement({ tag: 'div', className: 'hub__bar-actions' });
+	actions.appendChild(makeProjectSearch({ wide: true }));
+	actions.appendChild(
+		makeElement({
 			tag: 'button',
-			className: 'hub-sidebar__nav-item',
-			attributes: { type: 'button', 'data-view': viewName },
-			innerHTML: `
-				${hubIcons[view.icon]}
-				<span class="hub-sidebar__nav-label">${view.label}</span>
-				${count ? `<span class="hub-sidebar__nav-count">${count}</span>` : ''}
-			`,
-		});
+			className: 'hub-button',
+			attributes: { type: 'button' },
+			innerHTML: `${hubIcons.upload}<span>Open file</span>`,
+			onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
+		})
+	);
+	bar.appendChild(actions);
 
-		if (viewName === currentView) button.setAttribute('selected', '');
-		button.addEventListener('click', () => switchHubView(viewName));
-		nav.appendChild(button);
-	});
+	return bar;
+}
 
-	const recent = 1000 * 60 * 60 * 24 * 7; // seven days in milliseconds
-	const isRecentlyUpdated = Date.now() - app.versionDate < recent;
+/**
+ * The foot of the page: what this is, and whose it is.
+ * @returns {Element}
+ */
+function makeHubFooter() {
+	const app = getGlyphrStudioApp();
+	const footer = makeElement({ tag: 'div', className: 'hub__footer-inner' });
 
-	const footer = makeElement({
-		className: 'hub-sidebar__footer',
-		innerHTML: `
-			<div class="hub-sidebar__version">
-				Version ${app.version}
-				${
-					isRecentlyUpdated
-						? ` &middot; <a href="https://www.glyphrstudio.com/help/about/updates.html" target="_blank">what's new</a>`
-						: ''
-				}
-			</div>
-			<div class="hub-sidebar__legal">
-				Free and open source under the
-				<a href="https://www.gnu.org/licenses/gpl.html" target="_blank">GNU GPL</a>.
-				<a href="${PRODUCT_URL}" target="_blank">bluerain.studio</a>
-			</div>
-		`,
-	});
+	footer.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'hub__footer-left',
+			innerHTML: `Free and open source under the
+				<a href="https://www.gnu.org/licenses/gpl.html" target="_blank">GNU GPL</a>`,
+		})
+	);
+	footer.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'hub__footer-right',
+			innerHTML: `<a href="${PRODUCT_URL}" target="_blank">${PRODUCT_NAME}</a>
+				<span class="hub__footer-version">${app.version}</span>`,
+		})
+	);
 
-	addAsChildren(wrapper, [brand, nav, footer]);
-	return wrapper;
+	return footer;
 }
 
 // --------------------------------------------------------------
@@ -452,16 +500,18 @@ function makeHubSection(label, cards, emptyNote = '') {
 }
 
 /**
- * The back link out of the new-font form.
+ * The way back out of a form.
+ * @param {String =} target - the view to go back to
+ * @param {String =} label - what the link says
  * @returns {Element}
  */
-function makeBackToList() {
+function makeBackToList(target = 'list', label = 'All projects') {
 	return makeElement({
 		tag: 'button',
 		className: 'hub-back',
 		attributes: { type: 'button' },
-		innerHTML: `${makeLineIcon('back', 16)}<span>All projects</span>`,
-		onClick: () => switchHubView('list'),
+		innerHTML: `${makeLineIcon('back', 16)}<span>${label}</span>`,
+		onClick: () => switchHubView(target),
 	});
 }
 
@@ -472,14 +522,19 @@ function makeBackToList() {
 function switchHubView(viewName) {
 	// 'list' only exists in the dialog, where it is everything the page splits
 	// across recents and examples.
-	if (viewName !== 'list' && !hubViews[viewName]) return;
+	/*
+		'list' is the dialog's view and has no entry in hubViews. Letting it
+		through on the page used to leave the body empty and say nothing,
+		because every branch in renderHubView missed.
+	*/
+	if (viewName === 'list' ? !isModal : !hubViews[viewName]) return;
 	currentView = viewName;
 
-	document
-		.querySelectorAll('.hub-sidebar__nav-item, .hub-modal__footer-actions [data-view]')
-		.forEach((item) => {
-			item.toggleAttribute('selected', item.getAttribute('data-view') === viewName);
-		});
+	document.querySelectorAll('.hub-modal__footer-actions [data-view]').forEach((item) => {
+		item.toggleAttribute('selected', item.getAttribute('data-view') === viewName);
+	});
+
+	if (!isModal) setAppPageRailTab(railTabFor(viewName));
 
 	renderHubView(document);
 }
@@ -496,41 +551,13 @@ function renderHubView(root) {
 	body.innerHTML = '';
 
 	/*
-		The dialog's header is built once and stays: its title is about what the
-		dialog does, which does not change with what is in the body.
+		Both headers are built once and stay. The dialog's is a title about what
+		the dialog does; the page's is the app bar, which is about the app - and
+		neither is about which view is open. Rebuilding the page's would also
+		take the focus and the typed text out of the search field in it every
+		time a key changed the grid underneath.
 	*/
-	if (!isModal) {
-		header.innerHTML = '';
-		header.appendChild(
-			makeElement({
-				tag: 'h1',
-				className: 'hub-header__title',
-				content: hubViews[currentView].title,
-			})
-		);
-
-		// Create and open stay reachable from every view, the way a file browser
-		// keeps its "new" button in the corner regardless of which folder you are in.
-		const actions = makeElement({ className: 'hub-header__actions' });
-		addAsChildren(actions, [
-			makeHubThemeToggle(),
-			makeElement({
-				tag: 'button',
-				className: 'hub-button hub-button--primary',
-				attributes: { type: 'button' },
-				innerHTML: `${hubIcons.plus}<span>New font</span>`,
-				onClick: () => switchHubView('new'),
-			}),
-			makeElement({
-				tag: 'button',
-				className: 'hub-button',
-				attributes: { type: 'button' },
-				innerHTML: `${hubIcons.upload}<span>Open file</span>`,
-				onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
-			}),
-		]);
-		header.appendChild(actions);
-	}
+	if (!isModal && !header.firstElementChild) header.appendChild(makeHubTopBar());
 
 	if (isModal && currentView === 'list') {
 		body.appendChild(makeModalListView());
@@ -547,10 +574,42 @@ function renderHubView(root) {
 		return;
 	}
 
-	if (currentView === 'recents') body.appendChild(makeRecentsView());
-	else if (currentView === 'examples') body.appendChild(makeExamplesView());
-	else if (currentView === 'new') body.appendChild(makeNewProjectView());
-	else if (currentView === 'open') body.appendChild(makeOpenFileView());
+	if (currentView === 'home') body.appendChild(makeHomeView());
+	else if (currentView === 'projects') body.appendChild(makeProjectsView());
+	else if (currentView === 'learn') body.appendChild(makeLearnView());
+	else if (currentView === 'new') body.appendChild(makeFormView('new'));
+	else if (currentView === 'open') body.appendChild(makeFormView('open'));
+}
+
+/**
+ * A form, with a heading over it and the way back out above that.
+ *
+ * The page's bar says what the app is and stays put, so a view that is not
+ * the landing has to name itself. Without this the new-font form was a
+ * labelled text box alone on an empty screen, with nothing saying what it
+ * would make and no way back to what you came from.
+ *
+ * @param {String} viewName - 'new' or 'open'
+ * @returns {Element}
+ */
+function makeFormView(viewName) {
+	const view = makeElement({ tag: 'div', className: 'hub__home' });
+	view.appendChild(makeBackToList('home', 'Home'));
+
+	view.appendChild(
+		makeSectionHead(
+			hubViews[viewName].title,
+			viewName === 'new'
+				? 'It is saved in this browser as you work, and stays there until you export it.'
+				: 'Drop a file anywhere on this page, or choose one.'
+		)
+	);
+
+	const card = makeElement({ tag: 'div', className: 'studio-card hub__form-card' });
+	card.appendChild(viewName === 'new' ? makeNewProjectView() : makeOpenFileView());
+	view.appendChild(card);
+
+	return view;
 }
 
 /**
@@ -560,7 +619,7 @@ export function resetOpenProjectTabs() {
 	const page = document.querySelector('#open-project__page');
 	if (!page) return;
 	if (isModal) switchHubView('list');
-	else switchHubView(countAutoSaves() && !isSecondProject ? 'recents' : 'new');
+	else switchHubView('home');
 }
 
 // --------------------------------------------------------------
@@ -569,14 +628,21 @@ export function resetOpenProjectTabs() {
 
 /**
  * One project card: preview on top, name and meta underneath.
+ *
+ * The second meta line is the page's. A card there says what the font is -
+ * its style and how much of it is drawn - and then when it was last touched,
+ * which are two different questions and read badly run together. The dialog
+ * passes one line and gets the row it had.
+ *
  * @param {Object} args - card options
  * @param {String} args.title - project name
  * @param {String} args.meta - secondary line, e.g. a relative time
+ * @param {String =} args.subMeta - a third line, under the meta
  * @param {String} args.previewHTML - inline SVG for the thumbnail
  * @param {(event: Event) => void} args.onClick - what opening the card does
  * @returns {Element}
  */
-function makeProjectCard({ title, meta, previewHTML, onClick }) {
+function makeProjectCard({ title, meta, subMeta = '', previewHTML, onClick }) {
 	const card = makeElement({
 		tag: 'button',
 		className: 'hub-card',
@@ -593,17 +659,85 @@ function makeProjectCard({ title, meta, previewHTML, onClick }) {
 		innerHTML: previewHTML || `<span class="hub-card__preview-empty">No outlines yet</span>`,
 	});
 
-	const info = makeElement({
-		className: 'hub-card__info',
-		innerHTML: `
-			<span class="hub-card__title">${title}</span>
-			<span class="hub-card__meta">${meta}</span>
-		`,
+	/*
+		Text, not markup. A project's name is whatever someone typed - or
+		whatever family name was in an OTF they opened - and it was being
+		interpolated into innerHTML, so a name with a '<' in it broke the card
+		and a crafted one from a font file put arbitrary HTML on the page.
+	*/
+	const info = makeElement({ tag: 'div', className: 'hub-card__info' });
+	const lines = [
+		{ className: 'hub-card__title', text: title },
+		{ className: 'hub-card__meta', text: meta },
+	];
+	if (subMeta) lines.push({ className: 'hub-card__meta hub-card__meta--sub', text: subMeta });
+
+	lines.forEach((line) => {
+		const span = makeElement({ tag: 'span', className: line.className });
+		span.textContent = line.text;
+		info.appendChild(span);
 	});
 
 	addAsChildren(card, [preview, info]);
 	card.addEventListener('click', onClick);
 	return card;
+}
+
+/**
+ * What a project card says about the font itself.
+ *
+ * The count is of glyphs that have outlines, not of slots in the project: a
+ * new project has a thousand empty characters in it, and reporting that as
+ * "1046 characters" would describe work nobody has done.
+ *
+ * @param {Object | false} project - a GlyphrStudioProject, or false
+ * @returns {String}
+ */
+function describeProject(project) {
+	if (!project) return '';
+
+	const style = project?.settings?.font?.style || 'Regular';
+	const glyphs = project?.glyphs || {};
+	const drawn = Object.keys(glyphs).filter((id) => glyphs[id]?.shapes?.length).length;
+
+	/* The character, not the entity: this is set as text, not as markup. */
+	return `${style} · ${drawn} character${drawn === 1 ? '' : 's'}`;
+}
+
+/**
+ * What a card needs about one auto-save, worked out once.
+ *
+ * Every card builds a whole GlyphrStudioProject to draw its own letterforms,
+ * which project_preview.js warns is fine for a handful and not for a loop.
+ * The grid is rebuilt on every keystroke in the search, every sort change and
+ * every layout toggle - so without this, typing five letters re-instantiated
+ * every stored project five times.
+ *
+ * Keyed by the save's own timestamp as well as its id, so an entry goes stale
+ * the moment the project behind it is saved again.
+ *
+ * @type {Map<String, Object>}
+ */
+const projectSummaryCache = new Map();
+
+/**
+ * @param {String} id - the auto-save's id
+ * @param {Object} save - the auto-save record
+ * @returns {Object} - { meta, previewHTML }
+ */
+function summarizeSave(id, save) {
+	const key = `${id}:${save?.time || 0}`;
+	const cached = projectSummaryCache.get(key);
+	if (cached) return cached;
+
+	const project = projectFromSavedData(save?.project);
+	const summary = {
+		meta: describeProject(project),
+		previewHTML: makeFontPreviewSVG(project, { width: 300, height: 120, maxGlyphs: 6 }),
+	};
+
+	projectSummaryCache.set(key, summary);
+	return summary;
 }
 
 /**
@@ -661,58 +795,535 @@ function makeEmptyState(message, actionLabel, onAction) {
 // Views
 // --------------------------------------------------------------
 
+// --------------------------------------------------------------
+// The project grid, and the three controls over it
+// --------------------------------------------------------------
+
 /**
- * Grid of auto-saved projects, newest first.
+ * The auto-saved project ids, filtered by the search and in sort order.
+ * @returns {Array<String>}
+ */
+function sortedSaveIDs() {
+	const saves = getAutoSaves();
+	let ids = Object.keys(saves);
+
+	if (hubQuery) {
+		ids = ids.filter((id) => (saves[id]?.name || 'Untitled').toLowerCase().includes(hubQuery));
+	}
+
+	if (hubSort === 'name') {
+		ids.sort((a, b) =>
+			(saves[a]?.name || 'Untitled').localeCompare(saves[b]?.name || 'Untitled', undefined, {
+				sensitivity: 'base',
+			})
+		);
+	} else {
+		ids.sort((a, b) => (saves[b]?.time || 0) - (saves[a]?.time || 0));
+	}
+
+	return ids;
+}
+
+/**
+ * Cards for the auto-saved projects.
+ * @param {Number =} limit - how many to build, or 0 for all of them
+ * @returns {Array<Element>}
+ */
+function makeSavedProjectCards(limit = 0) {
+	const saves = getAutoSaves();
+	let ids = sortedSaveIDs();
+	if (limit) ids = ids.slice(0, limit);
+
+	return ids.map((id) => {
+		const save = saves[id];
+		const summary = summarizeSave(id, save);
+
+		return makeProjectCard({
+			title: save?.name || 'Untitled',
+			meta: summary.meta,
+			subMeta: describeTimeAgo(save?.time),
+			previewHTML: summary.previewHTML,
+			onClick: () => loadProjectFromAutoSave(id),
+		});
+	});
+}
+
+/**
+ * The grid itself, which the three controls above it replace in place.
+ * @param {Number =} limit - how many cards, or 0 for all of them
  * @returns {Element}
  */
-function makeRecentsView() {
-	const saves = getAutoSaves();
-	const ids = Object.keys(saves).sort((a, b) => (saves[b]?.time || 0) - (saves[a]?.time || 0));
+function makeProjectGrid(limit = 0) {
+	const grid = makeElement({
+		tag: 'div',
+		className: `hub-grid hub-grid--${hubLayout}`,
+		id: 'hub__project-grid',
+		attributes: { 'data-limit': String(limit) },
+	});
 
-	if (!ids.length) {
-		return makeEmptyState(
-			`Nothing saved yet. Projects you work on are auto-saved in this browser and show up here.`,
-			// "Your first font" is only true on the page, where this is a first
-			// run. In the dialog you are looking at this with a project open.
-			isModal ? 'Start a new font' : 'Create your first font',
-			() => switchHubView('new')
+	const cards = makeSavedProjectCards(limit);
+
+	if (cards.length) {
+		addAsChildren(grid, cards);
+	} else if (hubQuery) {
+		grid.appendChild(
+			makeElement({
+				tag: 'div',
+				className: 'hub-section__empty',
+				content: `No project here is called “${hubQuery}”.`,
+			})
+		);
+	} else {
+		grid.appendChild(
+			makeEmptyState(
+				`Nothing saved yet. Projects you work on are auto-saved in this browser and show up here.`,
+				'Create your first font',
+				() => switchHubView('new')
+			)
 		);
 	}
 
-	const grid = makeElement({ className: 'hub-grid' });
+	return grid;
+}
 
-	ids.forEach((id) => {
-		const save = saves[id];
-		const project = projectFromSavedData(save?.project);
+/**
+ * Rebuilds the grid without touching the controls over it, so the search
+ * field keeps the focus and the caret it had.
+ */
+function refreshProjectGrid() {
+	const grid = document.querySelector('#hub__project-grid');
+	if (!grid) return;
+	grid.replaceWith(makeProjectGrid(Number(grid.getAttribute('data-limit')) || 0));
+}
 
-		grid.appendChild(
-			makeProjectCard({
-				title: save?.name || 'Untitled',
-				meta: describeTimeAgo(save?.time),
-				previewHTML: makeFontPreviewSVG(project),
-				onClick: () => loadProjectFromAutoSave(id),
-			})
-		);
+/**
+ * The project search.
+ * @param {Object =} args
+ * @param {Boolean =} args.wide - the bar's copy, which has room for more
+ * @returns {Element}
+ */
+function makeProjectSearch({ wide = false } = {}) {
+	const field = makeElement({
+		tag: 'div',
+		className: `hub__search${wide ? ' hub__search--wide' : ''}`,
+	});
+	field.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'hub__search-icon',
+			innerHTML: makeLineIcon('search', 16),
+		})
+	);
+
+	const input = makeElement({
+		tag: 'input',
+		className: 'hub__search-input',
+		attributes: {
+			type: 'search',
+			placeholder: 'Search projects…',
+			spellcheck: 'false',
+			'aria-label': 'Search projects',
+			value: hubQuery,
+		},
 	});
 
-	const note = makeElement({
-		className: 'hub-note',
-		innerHTML: `Auto-saves live in this browser only. Use <b>File &rsaquo; Save</b> to keep a copy you can move between machines.`,
+	input.addEventListener('input', (event) => {
+		// @ts-expect-error 'property does exist'
+		const typed = event.target.value || '';
+		hubQuery = typed.trim().toLowerCase();
+
+		/*
+			The bar's copy is on screen everywhere, including the views that
+			have no project grid under them - so typing there took the query
+			and silently did nothing. Searching for a project means you want to
+			see projects.
+		*/
+		if (!document.querySelector('#hub__project-grid')) {
+			if (hubQuery) switchHubView('projects');
+		} else {
+			refreshProjectGrid();
+		}
+
+		/* Both copies of the field are one control; keep them saying the same thing. */
+		document.querySelectorAll('.hub__search-input').forEach((other) => {
+			// @ts-expect-error 'property does exist'
+			if (other.value !== typed) other.value = typed;
+		});
 	});
 
-	const wrapper = makeElement();
-	addAsChildren(wrapper, [grid, note]);
+	field.appendChild(input);
+	return field;
+}
+
+/**
+ * Sort order. A native select, taking the app's field treatment.
+ * @returns {Element}
+ */
+function makeSortSelect() {
+	const wrapper = makeElement({ tag: 'div', className: 'hub__sort' });
+	wrapper.appendChild(
+		makeElement({
+			tag: 'label',
+			className: 'hub__sort-label',
+			content: 'Sort',
+			attributes: { for: 'hub__sort-select' },
+		})
+	);
+
+	const select = makeElement({
+		tag: 'select',
+		id: 'hub__sort-select',
+		className: 'studio-select hub__sort-select',
+		/*
+			"Last edited", not "last opened". The timestamp is written by the
+			auto-saver on a history step; nothing in the app records when a
+			project was opened, and the line on every card under this select
+			already says "Edited N ago".
+		*/
+		innerHTML: `
+			<option value="recent">Last edited</option>
+			<option value="name">Name</option>
+		`,
+	});
+	select.value = hubSort;
+
+	select.addEventListener('change', (event) => {
+		// @ts-expect-error 'property does exist'
+		hubSort = event.target.value;
+		refreshProjectGrid();
+	});
+
+	wrapper.appendChild(select);
 	return wrapper;
 }
 
 /**
- * The two bundled sample projects, as cards.
+ * Grid or list.
+ *
+ * Two buttons on one sunken track with the selected one raised, the way the
+ * Settings tabs work - built from an attribute rather than a measured thumb,
+ * because two equal segments need no measuring.
+ *
  * @returns {Element}
  */
-function makeExamplesView() {
-	const grid = makeElement({ className: 'hub-grid' });
+function makeViewSwitch() {
+	const track = makeElement({
+		tag: 'div',
+		className: 'hub__view-switch',
+		attributes: {
+			role: 'group',
+			'aria-label': 'How projects are laid out',
+			'data-layout': hubLayout,
+		},
+	});
+
+	const options = [
+		{ id: 'grid', icon: 'viewGrid', label: 'Grid' },
+		{ id: 'list', icon: 'viewList', label: 'List' },
+	];
+
+	options.forEach((option) => {
+		const button = makeElement({
+			tag: 'button',
+			className: 'hub__view-button',
+			innerHTML: makeLineIcon(option.icon, 16),
+			attributes: {
+				type: 'button',
+				title: option.label,
+				'aria-label': option.label,
+				'aria-pressed': String(hubLayout === option.id),
+				'data-layout': option.id,
+			},
+			onClick: () => {
+				hubLayout = option.id;
+				track.setAttribute('data-layout', hubLayout);
+				track.querySelectorAll('.hub__view-button').forEach((other) => {
+					other.setAttribute(
+						'aria-pressed',
+						String(other.getAttribute('data-layout') === hubLayout)
+					);
+				});
+				refreshProjectGrid();
+			},
+		});
+		track.appendChild(button);
+	});
+
+	return track;
+}
+
+// --------------------------------------------------------------
+// Views
+// --------------------------------------------------------------
+
+/**
+ * A section heading with its controls on the same line.
+ * @param {String} title - the heading
+ * @param {String} subtitle - the sentence under it
+ * @param {Array<Element> =} tools - controls, right aligned
+ * @returns {Element}
+ */
+function makeSectionHead(title, subtitle, tools = []) {
+	const head = makeElement({ tag: 'div', className: 'hub__section-head' });
+
+	const titles = makeElement({ tag: 'div', className: 'hub__section-titles' });
+	titles.appendChild(makeElement({ tag: 'h2', className: 'hub__section-title', content: title }));
+	if (subtitle) {
+		titles.appendChild(
+			makeElement({ tag: 'div', className: 'hub__section-subtitle', content: subtitle })
+		);
+	}
+	head.appendChild(titles);
+
+	if (tools.length) {
+		const toolbar = makeElement({ tag: 'div', className: 'hub__section-tools' });
+		addAsChildren(toolbar, tools);
+		head.appendChild(toolbar);
+	}
+
+	return head;
+}
+
+/**
+ * The letterform decoration on the create card.
+ *
+ * Type and the curve under it, which is the whole of what this app does. Set
+ * in the app's own face rather than a display serif, for the same reason
+ * every other surface is: this is the product, not an advert for it.
+ *
+ * @returns {Element}
+ */
+function makeSpecimenArt() {
+	return makeElement({
+		tag: 'div',
+		className: 'hub__art',
+		attributes: { 'aria-hidden': 'true' },
+		innerHTML: `
+			<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" focusable="false">
+				<text class="hub__art-letters" x="120" y="126" text-anchor="middle">Aa</text>
+				<g class="hub__art-curve">
+					<path d="M30 122C60 44 180 44 210 122"/>
+					<path class="hub__art-handle" d="M30 122L60 58M210 122L180 58"/>
+					<circle cx="60" cy="58" r="4.5"/>
+					<circle cx="180" cy="58" r="4.5"/>
+					<rect x="25.5" y="117.5" width="9" height="9" rx="1.5"/>
+					<rect x="205.5" y="117.5" width="9" height="9" rx="1.5"/>
+				</g>
+			</svg>
+		`,
+	});
+}
+
+/**
+ * The two ways in, side by side.
+ * @returns {Element}
+ */
+function makeStartCards() {
+	const row = makeElement({ tag: 'div', className: 'hub__start' });
+
+	// --- Create ---------------------------------------------------
+	const create = makeElement({ tag: 'div', className: 'studio-card hub__start-card hub__create' });
+	const createText = makeElement({ tag: 'div', className: 'hub__start-text' });
+	createText.appendChild(
+		makeElement({ tag: 'div', className: 'studio-eyebrow', content: 'Start from scratch' })
+	);
+	createText.appendChild(
+		makeElement({ tag: 'h2', className: 'hub__start-title', content: 'Create a new font' })
+	);
+	createText.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'hub__start-body',
+			content: 'Give your ideas a character of their own.',
+		})
+	);
+	createText.appendChild(
+		makeElement({
+			tag: 'button',
+			className: 'hub-button hub-button--primary hub-button--large',
+			attributes: { type: 'button' },
+			innerHTML: `${hubIcons.plus}<span>New font</span>`,
+			onClick: () => switchHubView('new'),
+		})
+	);
+	addAsChildren(create, [createText, makeSpecimenArt()]);
+
+	// --- Import ---------------------------------------------------
+	const importCard = makeElement({
+		tag: 'div',
+		className: 'studio-card hub__start-card hub__import',
+	});
+	importCard.appendChild(
+		makeElement({ tag: 'div', className: 'studio-eyebrow', content: 'Import existing' })
+	);
+
+	const importRow = makeElement({ tag: 'div', className: 'hub__import-row' });
+	importRow.appendChild(
+		makeElement({ tag: 'div', className: 'hub__plate', innerHTML: makeLineIcon('upload', 24) })
+	);
+	const importText = makeElement({ tag: 'div', className: 'hub__start-text' });
+	importText.appendChild(
+		makeElement({ tag: 'h2', className: 'hub__start-title', content: 'Bring your font files' })
+	);
+	importText.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'hub__start-body',
+			content: 'Open a project or import an existing typeface.',
+		})
+	);
+	importRow.appendChild(importText);
+	importCard.appendChild(importRow);
+
+	importCard.appendChild(
+		makeElement({
+			tag: 'button',
+			className: 'hub-button hub-button--large',
+			attributes: { type: 'button' },
+			innerHTML: `${hubIcons.upload}<span>Choose file</span>`,
+			onClick: () => getFilesFromFilePicker(handleOpenProjectPageFileInput),
+		})
+	);
+	importCard.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'hub__formats',
+			innerHTML: ACCEPTED_FORMATS.map((extension) => `<code>${extension}</code>`).join(''),
+		})
+	);
+
+	addAsChildren(row, [create, importCard]);
+	return row;
+}
+
+/**
+ * The guide, along the foot of the home view.
+ * @returns {Element}
+ */
+function makeGuideBanner() {
+	const banner = makeElement({ tag: 'div', className: 'studio-card hub__guide' });
+
+	banner.appendChild(
+		makeElement({ tag: 'div', className: 'hub__plate', innerHTML: makeLineIcon('book', 24) })
+	);
+
+	const text = makeElement({ tag: 'div', className: 'hub__guide-text' });
+	text.appendChild(
+		makeElement({ tag: 'div', className: 'hub__guide-title', content: 'Make your first font' })
+	);
+	text.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'hub__guide-body',
+			content: 'A practical guide from first glyph to export.',
+		})
+	);
+	banner.appendChild(text);
+
+	banner.appendChild(
+		makeElement({
+			tag: 'a',
+			className: 'studio-link hub__guide-link',
+			attributes: { href: `${UPSTREAM_HELP}/`, target: '_blank' },
+			innerHTML: `<span>Read the guide</span><span class="studio-link-arrow">&rarr;</span>`,
+		})
+	);
+
+	return banner;
+}
+
+/**
+ * The landing view: the headline, the two ways in, what you already have,
+ * and the guide.
+ * @returns {Element}
+ */
+function makeHomeView() {
+	const view = makeElement({ tag: 'div', className: 'hub__home' });
+
+	const hero = makeElement({ tag: 'div', className: 'hub__hero' });
+	hero.appendChild(
+		makeElement({
+			tag: 'h1',
+			className: 'hub__hero-title',
+			content: 'Your next typeface starts here.',
+		})
+	);
+	hero.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'hub__hero-subtitle',
+			content: 'Create a font, open a file, or pick up where you left off.',
+		})
+	);
+	view.appendChild(hero);
+
+	view.appendChild(makeStartCards());
+
+	/*
+		An auto-save cannot be restored into a second editor, so the projects
+		you have are not offered when that is what you are doing.
+	*/
+	if (!isSecondProject) {
+		const recents = makeElement({ tag: 'section', className: 'hub__recents' });
+		recents.appendChild(
+			makeSectionHead('Recent projects', 'Continue where you left off.', [
+				makeProjectSearch(),
+				makeSortSelect(),
+				makeViewSwitch(),
+			])
+		);
+		/* Three, because the rest of the page is what this one is for. */
+		recents.appendChild(makeProjectGrid(3));
+		view.appendChild(recents);
+	}
+
+	view.appendChild(makeGuideBanner());
+	return view;
+}
+
+/**
+ * Everything auto-saved in this browser.
+ * @returns {Element}
+ */
+function makeProjectsView() {
+	const view = makeElement({ tag: 'div', className: 'hub__home' });
+
+	view.appendChild(
+		makeSectionHead('Your projects', 'Auto-saved in this browser, newest first.', [
+			makeProjectSearch(),
+			makeSortSelect(),
+			makeViewSwitch(),
+		])
+	);
+	view.appendChild(makeProjectGrid());
+
+	view.appendChild(
+		makeElement({
+			tag: 'div',
+			className: 'hub-note',
+			innerHTML: `Auto-saves live in this browser only. Use <b>File &rsaquo; Save</b> to keep a copy you can move between machines.`,
+		})
+	);
+
+	return view;
+}
+
+/**
+ * The bundled sample projects, and the documentation.
+ * @returns {Element}
+ */
+function makeLearnView() {
+	const view = makeElement({ tag: 'div', className: 'hub__home' });
+
+	view.appendChild(makeSectionHead('Examples', 'Open a finished project and take it apart.'));
+	const grid = makeElement({ tag: 'div', className: 'hub-grid hub-grid--grid' });
 	addAsChildren(grid, makeExampleCards());
-	return grid;
+	view.appendChild(grid);
+
+	view.appendChild(makeSectionHead('Guides', 'How to get from a first glyph to an exported font.'));
+	view.appendChild(makeGuideBanner());
+
+	return view;
 }
 
 /**

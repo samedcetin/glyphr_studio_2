@@ -220,7 +220,6 @@ export function wrapLineIcon(content, size = 20) {
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" ${ICON_ATTRS} stroke-width="${DEFAULT_STROKE}" aria-hidden="true" focusable="false" pointer-events="none">${content}</svg>`;
 }
 
-
 // --------------------------------------------------------------
 // Canvas tools
 // --------------------------------------------------------------
@@ -306,7 +305,8 @@ lineIcons.newPath = [
 iconStrokeWidth.newPath = 1.5;
 
 /* Pencil over the pixel it lands on. */
-lineIcons.pixelPen = `<path d="M20.2 6.8a2 2 0 0 0-2.8-2.8L9 12.4V15h2.6z"/>` + squirclePath(3, 16, 5, 5, 1.6);
+lineIcons.pixelPen =
+	`<path d="M20.2 6.8a2 2 0 0 0-2.8-2.8L9 12.4V15h2.6z"/>` + squirclePath(3, 16, 5, 5, 1.6);
 
 /* Two sidebearing walls, and the space between them. */
 lineIcons.kern = `<path d="M6 4v16M18 4v16"/><path d="M10.5 12h3"/>`;
@@ -357,7 +357,8 @@ lineIcons.panel_guides = `<path d="M3 8.5h18"/><path d="M8.5 3v18"/>`;
 
 lineIcons.panel_anchors = `<circle cx="12" cy="12" r="2.5"/><path d="M12 3v5.5M12 15.5V21M3 12h5.5M15.5 12H21"/>`;
 
-lineIcons.panel_transforms = squirclePath(3, 3, 13, 13, 3) + `<path d="M13.5 21H18a3 3 0 0 0 3-3v-4.5"/>`;
+lineIcons.panel_transforms =
+	squirclePath(3, 3, 13, 13, 3) + `<path d="M13.5 21H18a3 3 0 0 0 3-3v-4.5"/>`;
 
 lineIcons.panel_contextCharacters = `<path d="M4 5v14M20 5v14"/>` + squirclePath(8.5, 6, 7, 12, 2);
 
@@ -371,7 +372,6 @@ lineIcons.panel_characterInfo = `<circle cx="12" cy="12" r="8.5"/><path d="M12 1
 
 /* The same circle as the info mark, with the bar and the dot swapped. */
 lineIcons.alert = `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.3v.3"/>`;
-
 
 lineIcons.panel_view = `<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>`;
 
@@ -401,7 +401,8 @@ lineIcons.command_verticalBar = `<path d="M12 3.5v17"/>`;
 
 lineIcons.command_horizontalBar = `<path d="M3.5 12h17"/>`;
 
-lineIcons.command_crossProjectActions = squirclePath(3, 3, 12, 12, 3) + `<path d="M9.5 21H18a3 3 0 0 0 3-3V9.5"/>`;
+lineIcons.command_crossProjectActions =
+	squirclePath(3, 3, 12, 12, 3) + `<path d="M9.5 21H18a3 3 0 0 0 3-3V9.5"/>`;
 
 // --------------------------------------------------------------
 // Pages
@@ -464,7 +465,8 @@ lineIcons.selected = `<path d="M5 12.6l4.6 4.6L19 6.8"/>`;
 */
 lineIcons.notSelected = `<path d="M12 12h.01" stroke="none"/>`;
 
-lineIcons.keyboard = squirclePath(2.5, 6, 19, 12, 3) + `<path d="M7 10.5h.3M11 10.5h.3M15 10.5h.3M8.5 14.5h7"/>`;
+lineIcons.keyboard =
+	squirclePath(2.5, 6, 19, 12, 3) + `<path d="M7 10.5h.3M11 10.5h.3M15 10.5h.3M8.5 14.5h7"/>`;
 
 /* A tag on a string: the name hung off a thing, which is what a label is. */
 lineIcons.label = `<path d="M11.5 3.5H5.5A2 2 0 0 0 3.5 5.5v6a2 2 0 0 0 .6 1.4l7 7a2 2 0 0 0 2.8 0l6-6a2 2 0 0 0 0-2.8l-7-7a2 2 0 0 0-1.4-.6Z"/><path d="M7.5 7.5h.01"/>`;
@@ -475,15 +477,19 @@ lineIcons.label = `<path d="M11.5 3.5H5.5A2 2 0 0 0 3.5 5.5v6a2 2 0 0 0 .6 1.4l7
 
 const clipboardBody = `<path d="M9 4.5H7a2.5 2.5 0 0 0-2.5 2.5v12A2.5 2.5 0 0 0 7 21.5h10a2.5 2.5 0 0 0 2.5-2.5V7A2.5 2.5 0 0 0 17 4.5h-2"/>`;
 
-lineIcons.copy = squirclePath(9, 3, 12, 12, 3) + `<path d="M15 17.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.5"/>`;
+lineIcons.copy =
+	squirclePath(9, 3, 12, 12, 3) +
+	`<path d="M15 17.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.5"/>`;
 
 lineIcons.paste = clipboardBody + squirclePath(8.5, 2.5, 7, 4, 1.5);
 
 lineIcons.clearClipboard = clipboardBody + `<path d="M9.5 11.5l5 5M14.5 11.5l-5 5"/>`;
 
-lineIcons.pastePathsFromAnotherGlyph = clipboardBody + `<path d="M8.5 13.5h7M13 11l2.5 2.5L13 16"/>`;
+lineIcons.pastePathsFromAnotherGlyph =
+	clipboardBody + `<path d="M8.5 13.5h7M13 11l2.5 2.5L13 16"/>`;
 
-lineIcons.pastePathsFromAnotherProject = clipboardBody + `<path d="M15.5 8.5h5v5"/><path d="M20.5 8.5L14 15"/>`;
+lineIcons.pastePathsFromAnotherProject =
+	clipboardBody + `<path d="M15.5 8.5h5v5"/><path d="M20.5 8.5L14 15"/>`;
 
 lineIcons.undo = `<path d="M3.5 8h11a5.75 5.75 0 0 1 0 11.5H8"/><path d="M7 4.5L3.5 8 7 11.5"/>`;
 
@@ -501,7 +507,9 @@ lineIcons.addShape = squirclePath(3, 3, 13, 13, 3) + `<path d="M18 14v6.5M14.75 
 	the contrast rules rule out - a state cannot be carried by hue alone.
 */
 lineIcons.addComponentInstance =
-	squirclePath(2.5, 2.5, 11, 11, 3) + squirclePath(8, 8, 11, 11, 3) + `<path d="M20 15.5v5M17.5 18h5"/>`;
+	squirclePath(2.5, 2.5, 11, 11, 3) +
+	squirclePath(8, 8, 11, 11, 3) +
+	`<path d="M20 15.5v5M17.5 18h5"/>`;
 
 lineIcons.deleteShape = squirclePath(3, 3, 13, 13, 3) + `<path d="M14.75 17.25h6.5"/>`;
 
@@ -589,7 +597,8 @@ lineIcons.combine_intersect = boolA + boolB + boolFill('M10 10h4v4h-4z');
 
 lineIcons.combine_subtract = boolFill('M4 4h10v6h-4v4H4z') + boolB;
 
-lineIcons.combine_exclude = boolFill(`${unionOutline} M10 10h4v4h-4z`, 'evenodd') + `<path d="${unionOutline}"/>`;
+lineIcons.combine_exclude =
+	boolFill(`${unionOutline} M10 10h4v4h-4z`, 'evenodd') + `<path d="${unionOutline}"/>`;
 
 lineIcons.combine_divide = boolA + boolB + `<path d="M10 10h4v4h-4z"/>`;
 
@@ -609,12 +618,18 @@ lineIcons.moveLayerBottom = `<path d="M3.5 20.5h17"/><path d="M12 3v12.5M6.5 10L
 // bars on purpose: two equal ones would look aligned whatever the setting.
 // --------------------------------------------------------------
 
-lineIcons.align_left = `<path d="M3.5 3v18"/>` + squirclePath(6.5, 6, 13, 4, 1.5) + squirclePath(6.5, 14, 8, 4, 1.5);
-lineIcons.align_center = `<path d="M12 3v18"/>` + squirclePath(5.5, 6, 13, 4, 1.5) + squirclePath(8, 14, 8, 4, 1.5);
-lineIcons.align_right = `<path d="M20.5 3v18"/>` + squirclePath(4.5, 6, 13, 4, 1.5) + squirclePath(9.5, 14, 8, 4, 1.5);
-lineIcons.align_top = `<path d="M3 3.5h18"/>` + squirclePath(6, 6.5, 4, 13, 1.5) + squirclePath(14, 6.5, 4, 8, 1.5);
-lineIcons.align_middle = `<path d="M3 12h18"/>` + squirclePath(6, 5.5, 4, 13, 1.5) + squirclePath(14, 8, 4, 8, 1.5);
-lineIcons.align_bottom = `<path d="M3 20.5h18"/>` + squirclePath(6, 4.5, 4, 13, 1.5) + squirclePath(14, 9.5, 4, 8, 1.5);
+lineIcons.align_left =
+	`<path d="M3.5 3v18"/>` + squirclePath(6.5, 6, 13, 4, 1.5) + squirclePath(6.5, 14, 8, 4, 1.5);
+lineIcons.align_center =
+	`<path d="M12 3v18"/>` + squirclePath(5.5, 6, 13, 4, 1.5) + squirclePath(8, 14, 8, 4, 1.5);
+lineIcons.align_right =
+	`<path d="M20.5 3v18"/>` + squirclePath(4.5, 6, 13, 4, 1.5) + squirclePath(9.5, 14, 8, 4, 1.5);
+lineIcons.align_top =
+	`<path d="M3 3.5h18"/>` + squirclePath(6, 6.5, 4, 13, 1.5) + squirclePath(14, 6.5, 4, 8, 1.5);
+lineIcons.align_middle =
+	`<path d="M3 12h18"/>` + squirclePath(6, 5.5, 4, 13, 1.5) + squirclePath(14, 8, 4, 8, 1.5);
+lineIcons.align_bottom =
+	`<path d="M3 20.5h18"/>` + squirclePath(6, 4.5, 4, 13, 1.5) + squirclePath(14, 9.5, 4, 8, 1.5);
 
 // --------------------------------------------------------------
 // Panel actions - path points
@@ -676,7 +691,8 @@ lineIcons.dark = `<path d="M20.5 14.3A8.7 8.7 0 0 1 9.7 3.5a8.5 8.5 0 1 0 10.8 1
 	Deliberately generic. The published mark is a brand decision and the Blue
 	Rain wordmark lives in the other repo - see the skill's section 7.
 */
-lineIcons.appMark = squirclePath(3, 3, 18, 18, 5) + `<path d="M8.5 16.5L12 7.5l3.5 9M9.9 13.6h4.2"/>`;
+lineIcons.appMark =
+	squirclePath(3, 3, 18, 18, 5) + `<path d="M8.5 16.5L12 7.5l3.5 9M9.9 13.6h4.2"/>`;
 
 /* The three shell menus, as icons for the rail. */
 lineIcons.menu_file = `<path d="M13.5 3.5H7A2.5 2.5 0 0 0 4.5 6v12A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5V9.5z"/><path d="M13.5 3.5v6h6"/>`;
@@ -684,6 +700,36 @@ lineIcons.menu_file = `<path d="M13.5 3.5H7A2.5 2.5 0 0 0 4.5 6v12A2.5 2.5 0 0 0
 lineIcons.menu_projects = `<path d="M3.5 8.5V6A2.5 2.5 0 0 1 6 3.5h3.2a2 2 0 0 1 1.6.8l1.2 1.6a2 2 0 0 0 1.6.8H18A2.5 2.5 0 0 1 20.5 9.3"/><path d="M3.5 8.5h17A1.5 1.5 0 0 1 22 10.2l-1.3 8A2.5 2.5 0 0 1 18.2 20.5H5.8a2.5 2.5 0 0 1-2.5-2.3l-1.3-8A1.5 1.5 0 0 1 3.5 8.5z"/>`;
 
 lineIcons.menu_help = lineIcons.command_help;
+
+/*
+	The hub rail's three destinations.
+
+	A house for where you land, the shell's folder for the projects themselves
+	- the same drawing the Projects menu uses, because it is the same idea -
+	and an open book for the examples and the guide. A book rather than a
+	graduation cap or a lightbulb: those mean "course" and "idea", and what is
+	behind that tab is documentation and sample files.
+*/
+lineIcons.home = `<path d="M3.5 10.2 12 3.5l8.5 6.7"/><path d="M5.5 9.3V18a2.5 2.5 0 0 0 2.5 2.5h8a2.5 2.5 0 0 0 2.5-2.5V9.3"/>`;
+
+lineIcons.book = `<path d="M12 6.8v12.7"/><path d="M12 6.8C10.3 5.5 8.2 4.8 6 4.8H3.5v12.7H6c2.2 0 4.3.7 6 2 1.7-1.3 3.8-2 6-2h2.5V4.8H18c-2.2 0-4.3.7-6 2Z"/>`;
+
+/*
+	Grid and list, for the switch over the project cards.
+
+	Four squares is what a grid switch has been for twenty years and there is
+	no three-element version of it that still reads as a grid - so this one
+	takes a lighter stroke instead, which is what iconStrokeWidth is for. The
+	list is rows with their bullets, drawn as two paths rather than six.
+*/
+lineIcons.viewGrid =
+	squirclePath(3.5, 3.5, 7, 7, 2) +
+	squirclePath(13.5, 3.5, 7, 7, 2) +
+	squirclePath(3.5, 13.5, 7, 7, 2) +
+	squirclePath(13.5, 13.5, 7, 7, 2);
+iconStrokeWidth.viewGrid = 1.75;
+
+lineIcons.viewList = `<path d="M9 6.5h11.5M9 12h11.5M9 17.5h11.5"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01"/>`;
 
 /* A plain magnifier. zoomIn carries a plus and means something else. */
 lineIcons.search = `<circle cx="10.5" cy="10.5" r="7"/><path d="M20.5 20.5l-5-5"/>`;

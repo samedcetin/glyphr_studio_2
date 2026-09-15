@@ -29,10 +29,13 @@
 }
 
 /*
-	App pages - the project hub and cross-project actions - replace the whole
-	wrapper and bring their own sidebar, so no rail is built for them. Without
-	this the content stayed in column 2 and the rail's 56px column sat empty
-	down the left of the screen.
+	An app page that brings no rail takes the whole width, so the rail's 56px
+	column does not sit empty down the left of the screen.
+
+	Cross-project actions is the one that needs this. The hub used to as well,
+	and does not any more: it is mounted with a rail of its own (see
+	appPageNavigate's railMaker, and makeHubRail), so it has a sibling and
+	this rule stops matching it - which is the intent, not an oversight.
 */
 #app__wrapper > #app__main-content:only-child {
 	grid-column: 1 / -1;
@@ -155,10 +158,6 @@
 /*
 	Project Preview menu
 */
-
-
-
-
 
 /* --------------------------------------------------------
 	Breadcrumb
