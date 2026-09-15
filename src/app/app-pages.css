@@ -1224,6 +1224,40 @@
 }
 
 /* --------------------------------------------------------
+	Controls
+
+	One height and one radius for everything on this page you can click or
+	type into. There were three heights - 32 for the bar, 36 for the two card
+	buttons and the view switch, 28 for the switch's own segments - and 8px
+	corners on all of them except the switch's 12, so a row of four controls
+	was four different shapes.
+
+	--control-h-lg, 32px, which is the app's tallest control. The card actions
+	keep their weight through padding and the accent fill rather than through
+	a height nothing else in the app has.
+
+	--r-lg, 12px. The page is built out of --r-3xl cards and 8px corners on
+	the controls inside them read as an older system; 12 on a 32px control is
+	as far as it goes before the shape stops being a button.
+
+	Scoped to .hub on purpose. .hub-button is also worn by the compose, atlas
+	export and icon-font dialogs and by the Open a project modal - dense
+	surfaces, where the app's standard 8px corner is right.
+-------------------------------------------------------- */
+
+.hub .hub-button,
+.hub .hub-button--large {
+	min-height: var(--control-h-lg);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+}
+
+/* The one difference left between them: how much room the label gets. */
+.hub .hub-button--large {
+	padding: 0 var(--sp-6);
+}
+
+/* --------------------------------------------------------
 	The scrolling middle
 -------------------------------------------------------- */
 
@@ -1473,7 +1507,7 @@
 	padding: 0 var(--sp-4) 0 var(--sp-9);
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	color: var(--text-primary);
 	font-family: var(--font-ui);
@@ -1513,6 +1547,8 @@
 .hub__sort-select {
 	height: var(--control-h-lg);
 	border-color: var(--border-default);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 }
 
 /* --------------------------------------------------------
@@ -1523,11 +1559,17 @@
 	rather than measured, because two equal segments need no measuring.
 -------------------------------------------------------- */
 
+/*
+	--sp-1 of inset against a --control-h-lg track leaves --control-h segments,
+	so the switch is the same 32px tall as the field and the select beside it
+	and its buttons are still a real control height rather than a remainder.
+*/
 .hub__view-switch {
-	--seg-inset: 3px;
+	--seg-inset: var(--sp-1);
 	position: relative;
 	display: inline-flex;
-	align-items: center;
+	align-items: stretch;
+	height: var(--control-h-lg);
 	padding: var(--seg-inset);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
@@ -1563,7 +1605,13 @@
 	align-items: center;
 	justify-content: center;
 	width: var(--control-h);
-	height: var(--control-h);
+	/*
+		The track states the height and the segments take what is left of it
+		after the inset, so the switch is exactly as tall as the field beside
+		it rather than that plus its own border.
+	*/
+	height: auto;
+	flex: 0 0 auto;
 	min-height: 0;
 	padding: 0;
 	border: none;
@@ -1672,6 +1720,34 @@
 	padding: var(--sp-8);
 	max-width: 640px;
 	min-width: 0;
+}
+
+/*
+	The field takes the page's control shape, and sits on the surface rather
+	than in a well: it is inside a raised card, and a sunken field in a raised
+	card is two directions at once. Overview, Live preview and Settings each
+	answered the same thing the same way.
+*/
+.hub .hub-panel__input,
+.hub #input__new-project-name {
+	height: var(--control-h-lg);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-strong);
+	font-size: var(--fs-sm);
+}
+
+.hub .hub-panel__input:hover,
+.hub #input__new-project-name:hover {
+	border-color: var(--accent);
+}
+
+.hub .hub-panel__input:focus-visible,
+.hub #input__new-project-name:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+	border-color: var(--accent);
 }
 
 /* The heading names the view; the label under it would say it twice. */
