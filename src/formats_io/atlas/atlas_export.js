@@ -112,7 +112,8 @@ export function showAtlasExportDialog() {
 
 	const engineSelect = makeSelect(
 		'atlas-export__engine',
-		Object.keys(enginePresets).map((id) => ({ value: id, label: enginePresets[id].label }))
+		Object.keys(enginePresets).map((id) => ({ value: id, label: enginePresets[id].label })),
+		() => applyPreset()
 	);
 	const engineNote = makeElement({ className: 'dialog-field__hint' });
 	/*
@@ -125,15 +126,26 @@ export function showAtlasExportDialog() {
 	const engineCaveat = makeElement({ className: 'dialog-note' });
 	engineCaveat.hidden = true;
 
-	const fieldSelect = makeSelect('atlas-export__field-type', [
-		{ value: 'bitmap', label: 'Bitmap — plain coverage' },
-		{ value: 'msdf', label: 'MSDF — scalable distance field' },
-	]);
+	const fieldSelect = makeSelect(
+		'atlas-export__field-type',
+		[
+			{ value: 'bitmap', label: 'Bitmap — plain coverage' },
+			{ value: 'msdf', label: 'MSDF — scalable distance field' },
+		],
+		() => {
+			updateFieldTypeVisibility();
+			scheduleRebuild();
+		}
+	);
 
-	const formatSelect = makeSelect('atlas-export__descriptor', [
-		{ value: 'text', label: 'Text — classic .fnt' },
-		{ value: 'xml', label: 'XML — .xml, for Phaser and PixiJS' },
-	]);
+	const formatSelect = makeSelect(
+		'atlas-export__descriptor',
+		[
+			{ value: 'text', label: 'Text — classic .fnt' },
+			{ value: 'xml', label: 'XML — .xml, for Phaser and PixiJS' },
+		],
+		() => redrawFilePlan()
+	);
 
 	const sizeInput = makeNumberField('atlas-export__pixel-size', defaults.pixelSize, 4, 512);
 	const pageInput = makeNumberField('atlas-export__texture-size', defaults.pageSize, 64, 4096);
@@ -170,7 +182,13 @@ export function showAtlasExportDialog() {
 	// --- Characters -------------------------------------------------
 	const presetSelect = makeSelect(
 		'atlas-export__character-preset',
-		Object.keys(characterPresets).map((label) => ({ value: label, label: label }))
+		Object.keys(characterPresets).map((label) => ({ value: label, label: label })),
+		(chosen) => {
+			if (chosen === CUSTOM_PRESET_LABEL) return;
+			/** @type {HTMLTextAreaElement} */ (charactersInput).value = characterPresets[chosen] || '';
+			syncPresetSelect();
+			scheduleRebuild();
+		}
 	);
 	/*
 		A slot for "none of the above". Two other things write into the
@@ -178,12 +196,8 @@ export function showAtlasExportDialog() {
 		reset this one, so it went on reading `ASCII printable` over a list
 		that was no longer ASCII printable.
 	*/
-	const customPresetOption = makeElement({
-		tag: 'option',
-		content: CUSTOM_PRESET_LABEL,
-		attributes: { value: CUSTOM_PRESET_LABEL },
-	});
-	customPresetOption.hidden = true;
+	const customPresetOption = makeElement({ tag: 'option', innerHTML: CUSTOM_PRESET_LABEL });
+	customPresetOption.setAttribute('selection-id', CUSTOM_PRESET_LABEL);
 
 	const charactersInput = makeElement({
 		tag: 'textarea',
@@ -198,20 +212,15 @@ export function showAtlasExportDialog() {
 		const match = Object.keys(characterPresets).find((label) => characterPresets[label] === value);
 		if (match) {
 			customPresetOption.remove();
-			/** @type {HTMLSelectElement} */ (presetSelect).value = match;
+			presetSelect.set(match);
 		} else {
-			if (!customPresetOption.parentElement) presetSelect.appendChild(customPresetOption);
-			/** @type {HTMLSelectElement} */ (presetSelect).value = CUSTOM_PRESET_LABEL;
+			/* The slot only exists while it is the answer, so the list never
+				offers "Custom" as something you can pick. */
+			if (!customPresetOption.parentElement) presetSelect.element.appendChild(customPresetOption);
+			presetSelect.element.setAttribute('selected-name', CUSTOM_PRESET_LABEL);
+			presetSelect.element.setAttribute('selected-id', CUSTOM_PRESET_LABEL);
 		}
 	}
-
-	presetSelect.addEventListener('change', () => {
-		const chosen = `${/** @type {HTMLSelectElement} */ (presetSelect).value}`;
-		if (chosen === CUSTOM_PRESET_LABEL) return;
-		/** @type {HTMLTextAreaElement} */ (charactersInput).value = characterPresets[chosen] || '';
-		syncPresetSelect();
-		scheduleRebuild();
-	});
 
 	charactersInput.addEventListener('change', () => {
 		syncPresetSelect();
@@ -280,8 +289,8 @@ export function showAtlasExportDialog() {
 			spacing: spacingInput.value(),
 			powerOfTwo: potToggle.checked(),
 			includeKerning: kerningToggle.checked(),
-			fieldType: `${/** @type {HTMLSelectElement} */ (fieldSelect).value}`,
-			descriptorFormat: `${/** @type {HTMLSelectElement} */ (formatSelect).value}`,
+			fieldType: fieldSelect.get(),
+			descriptorFormat: formatSelect.get(),
 			pxRange: rangeInput.value(),
 			characters: `${/** @type {HTMLTextAreaElement} */ (charactersInput).value}`,
 		};
@@ -501,7 +510,7 @@ export function showAtlasExportDialog() {
 	 * the dialog saying where they came from.
 	 */
 	function applyPreset() {
-		const id = `${/** @type {HTMLSelectElement} */ (engineSelect).value}`;
+		const id = engineSelect.get();
 		const base = { ...defaults, characters: readOptions().characters };
 		const applied = applyEnginePreset(base, id);
 
@@ -511,8 +520,8 @@ export function showAtlasExportDialog() {
 		spacingInput.set(applied.spacing);
 		potToggle.set(applied.powerOfTwo);
 		kerningToggle.set(applied.includeKerning);
-		/** @type {HTMLSelectElement} */ (fieldSelect).value = applied.fieldType;
-		/** @type {HTMLSelectElement} */ (formatSelect).value = applied.descriptorFormat;
+		fieldSelect.set(applied.fieldType);
+		formatSelect.set(applied.descriptorFormat);
 		rangeInput.set(applied.pxRange);
 
 		const preset = getEnginePreset(id);
@@ -529,18 +538,12 @@ export function showAtlasExportDialog() {
 	 * than left on screen doing nothing.
 	 */
 	function updateFieldTypeVisibility() {
-		rangeField.hidden = `${/** @type {HTMLSelectElement} */ (fieldSelect).value}` !== 'msdf';
+		rangeField.hidden = fieldSelect.get() !== 'msdf';
 	}
 
 	// --------------------------------------------------------------
 	// Wiring
 	// --------------------------------------------------------------
-
-	engineSelect.addEventListener('change', applyPreset);
-	fieldSelect.addEventListener('change', () => {
-		updateFieldTypeVisibility();
-		scheduleRebuild();
-	});
 
 	[sizeInput, pageInput, paddingInput, spacingInput, rangeInput].forEach((field) => {
 		field.input.addEventListener('change', () => {
@@ -554,22 +557,18 @@ export function showAtlasExportDialog() {
 
 	/*
 		Two that change nothing about the build. The descriptor format picks
-		between two strings build_atlas has already written; the instructions
-		checkbox only adds a file. Both still redraw the file list.
+		between two strings build_atlas has already written on every call; the
+		instructions checkbox only adds a file. Both still redraw the file list.
 	*/
-	formatSelect.addEventListener('change', () => {
-		if (lastResult) {
-			lastOptions = readOptions();
-			previewFiles.innerHTML = '';
-			describeFiles();
-		}
-	});
-	instructionsToggle.input.addEventListener('change', () => {
-		if (lastResult) {
-			previewFiles.innerHTML = '';
-			describeFiles();
-		}
-	});
+	instructionsToggle.input.addEventListener('change', redrawFilePlan);
+
+	/** The file list, without rebuilding the atlas it describes. */
+	function redrawFilePlan() {
+		if (!lastResult || !lastResult.stats.glyphCount) return;
+		lastOptions = readOptions();
+		previewFiles.innerHTML = '';
+		describeFiles();
+	}
 
 	exportButton.addEventListener('click', () => {
 		/* No showError here. It closes every dialog, so the one validation this
@@ -577,7 +576,7 @@ export function showAtlasExportDialog() {
 			button is disabled whenever there is nothing to export. */
 		if (exportButton.hasAttribute('disabled') || !lastResult) return;
 		saveAtlasFiles(lastResult, lastOptions, {
-			presetId: `${/** @type {HTMLSelectElement} */ (engineSelect).value}`,
+			presetId: engineSelect.get(),
 			withInstructions: instructionsToggle.checked(),
 		});
 	});
@@ -595,7 +594,7 @@ export function showAtlasExportDialog() {
 		);
 	}
 
-	const engineField = makeField('Target engine', engineSelect, '');
+	const engineField = makeField('Target engine', engineSelect.element, '');
 	engineField.appendChild(engineNote);
 	engineField.appendChild(engineCaveat);
 
@@ -609,12 +608,12 @@ export function showAtlasExportDialog() {
 		engineField,
 		makeField(
 			'Field type',
-			fieldSelect,
+			fieldSelect.element,
 			'Bitmap for classic 2D engines, MSDF when the text is scaled or needs effects.'
 		),
 		makeField(
 			'Descriptor',
-			formatSelect,
+			formatSelect.element,
 			'Identical data either way. Phaser 3 and PixiJS parse the XML form; almost everything else reads the text form.'
 		),
 		makeField('Pixel size', sizeInput.input, 'The em square, in pixels.'),
@@ -632,7 +631,7 @@ export function showAtlasExportDialog() {
 		instructionsToggle.wrapper,
 		makeField(
 			'Characters',
-			makeStack([presetSelect, charactersInput]),
+			makeStack([presetSelect.element, charactersInput]),
 			'Leave empty for everything. Paste your game’s strings to ship only what you draw.',
 			charactersInput
 		),
@@ -660,7 +659,7 @@ export function showAtlasExportDialog() {
 	*/
 	syncPresetSelect();
 	applyPreset();
-	/** @type {HTMLElement} */ (engineSelect).focus();
+	/** @type {HTMLElement} */ (engineSelect.element).focus();
 }
 
 /**
@@ -1174,14 +1173,41 @@ function makeOptionRow(id, title, hint, initial) {
  * @param {Array} entries - the options
  * @returns {Element}
  */
-function makeSelect(id, entries) {
-	const select = makeElement({ tag: 'select', id: id, className: 'dialog-select' });
-	entries.forEach((entry) => {
-		select.appendChild(
-			makeElement({ tag: 'option', content: entry.label, attributes: { value: entry.value } })
-		);
+function makeSelect(id, entries, onChange) {
+	const chooser = makeElement({
+		tag: 'option-chooser',
+		id: id,
+		className: 'dialog-select',
 	});
-	return select;
+
+	let current = entries[0] ? entries[0].value : '';
+
+	entries.forEach((entry) => {
+		const option = makeElement({ tag: 'option', innerHTML: entry.label });
+		/*
+			The value, not the label. showOptions builds each row's id out of
+			the option's own text unless the option names one - and these
+			labels are sentences, "Bitmap — plain coverage", while the value
+			the build reads is "bitmap".
+		*/
+		option.setAttribute('selection-id', entry.value);
+		option.addEventListener('click', () => {
+			current = entry.value;
+			if (onChange) onChange(entry.value);
+		});
+		chooser.appendChild(option);
+	});
+
+	const apply = (value) => {
+		const entry = entries.find((one) => one.value === value) || entries[0];
+		if (!entry) return;
+		current = entry.value;
+		chooser.setAttribute('selected-name', entry.label);
+		chooser.setAttribute('selected-id', entry.value);
+	};
+	apply(current);
+
+	return { element: chooser, get: () => current, set: apply };
 }
 
 /**
@@ -1204,7 +1230,21 @@ function makeField(label, control, hint, labelFor = undefined) {
 		content: label,
 	});
 	const target = labelFor || (control.id ? control : control.querySelector('[id]'));
-	if (target && target.id) labelElement.setAttribute('for', target.id);
+	if (target && target.id) {
+		/*
+			A chooser cannot be pointed at with `for`. Its tab stop is the
+			wrapper inside its shadow root, so the host is not a labelable
+			element and the browser drops the association - which would leave
+			the control with no accessible name at all, where these four
+			started.
+		*/
+		if (target.tagName === 'OPTION-CHOOSER') {
+			labelElement.id = `${target.id}__label`;
+			target.setAttribute('aria-labelledby', labelElement.id);
+		} else {
+			labelElement.setAttribute('for', target.id);
+		}
+	}
 	field.appendChild(labelElement);
 
 	field.appendChild(control);

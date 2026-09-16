@@ -129,7 +129,7 @@ function showPanoseBuilderDialog() {
 	familyField.appendChild(
 		makeElement({ className: 'dialog-field__label', content: 'Family kind' })
 	);
-	const familyChooser = makeElement({ tag: 'option-chooser', className: 'panose__chooser' });
+	const familyChooser = makeElement({ tag: 'option-chooser', className: 'dialog-select' });
 	familyField.appendChild(familyChooser);
 	familyField.appendChild(
 		makeElement({
@@ -249,7 +249,7 @@ function refreshPanoseBuilder(parts) {
 			makeElement({ tag: 'span', className: 'panose__name', content: position.name })
 		);
 
-		const chooser = makeElement({ tag: 'option-chooser', className: 'panose__chooser' });
+		const chooser = makeElement({ tag: 'option-chooser', className: 'dialog-select' });
 		addAsChildren(chooser, makePanoseOptions(position.values, digit, parts));
 
 		/*

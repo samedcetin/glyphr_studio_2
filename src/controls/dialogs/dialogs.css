@@ -2317,65 +2317,6 @@ dialog {
 	font-size: var(--fs-2xs);
 }
 
-/*
-	The same chooser the block picker's range select is: 40px, --r-lg, and the
-	text 12px in from the inside of the hairline, which is the radius exactly.
-	One answer for "a chooser in a dialog" rather than two.
-
-	NO GROUND OF ITS OWN. Everywhere else this control takes the sunken fill,
-	which reads as a well cut into a panel - right beside a number field in a
-	sidebar. Ten of them down the middle of a dialog read as ten holes in it.
-	Here the dialog is the surface and the border is the whole control.
-
-	They also hold the names of shapes - `Obtuse Square Cove` - rather than
-	code points, so they take the UI face. The control's default is mono,
-	which is right where it usually sits.
-*/
-.panose__chooser {
-	--option-chooser-h: 40px;
-	--option-chooser-radius: var(--r-lg);
-	--option-chooser-pad-x: var(--sp-3);
-	--option-chooser-bg: transparent;
-	--option-chooser-font: var(--font-ui);
-	--option-chooser-font-size: var(--fs-md);
-	display: block;
-	width: 100%;
-}
-
-/* --------------------------------------------------------------
-	A NATIVE SELECT AND A TEXTAREA, AT DIALOG SCALE
-
-	option-chooser is the app's select and is right in a panel, where it sits
-	beside a number field at --control-h. A dialog form is a different size,
-	and some of its choices are plain two-option lists that do not need a
-	custom control at all - so these are the native elements, wearing the same
-	40px box, --r-lg corner and transparent ground the dialog's choosers wear.
-	------------------------------------------------------------ */
-
-.modal-dialog__body .dialog-select {
-	width: 100%;
-	height: var(--control-h-lg);
-	padding: 0 var(--sp-4);
-	background-color: transparent;
-	border: 1px solid var(--border-strong);
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	color: var(--text-primary);
-	font-family: var(--font-ui);
-	font-size: var(--fs-md);
-	transition: var(--transition-color);
-}
-
-.dialog-select:hover {
-	border-color: var(--accent);
-	cursor: pointer;
-}
-
-.dialog-select:focus-visible {
-	outline: var(--focus-style);
-	outline-offset: var(--focus-offset);
-}
-
 .modal-dialog__body .dialog-textarea {
 	width: 100%;
 	min-height: 64px;
@@ -2394,4 +2335,38 @@ dialog {
 .dialog-textarea:focus-visible {
 	outline: var(--focus-style);
 	outline-offset: var(--focus-offset);
+}
+
+/* --------------------------------------------------------------
+	THE SELECT IN A DIALOG
+
+	One control, one size, one corner, wherever a dialog asks you to pick one
+	of a list. option-chooser at its panel default is 28px of mono on the
+	sunken ground, which is right beside a number field in a sidebar and wrong
+	as the only control on a line in a dialog.
+
+	40px, --r-lg, and the text 12px in from the inside of the hairline - the
+	radius exactly, so the words start where the curve finishes.
+
+	NO GROUND OF ITS OWN. The sunken fill reads as a well cut into a panel. A
+	column of them down the middle of a dialog reads as a column of holes;
+	here the dialog is the surface and the border is the whole control.
+
+	And the UI face, because what a dialog's list holds is words - `Obtuse
+	Square Cove`, `Bitmap — plain coverage`. The control's mono default is for
+	the code point ranges it usually carries.
+
+	The list it drops is the app's own menu, so it is as wide as this box and
+	carries no scrollbar - see .context-menu__dropdown.
+	------------------------------------------------------------ */
+
+.dialog-select {
+	--option-chooser-h: 40px;
+	--option-chooser-radius: var(--r-lg);
+	--option-chooser-pad-x: var(--sp-3);
+	--option-chooser-bg: transparent;
+	--option-chooser-font: var(--font-ui);
+	--option-chooser-font-size: var(--fs-md);
+	display: block;
+	width: 100%;
 }

@@ -249,6 +249,19 @@ export class OptionChooser extends HTMLElement {
 	}
 
 	/**
+	 * Takes focus.
+	 *
+	 * The tab stop is the wrapper inside the shadow root, not the host - so a
+	 * caller asking this element to take focus was asking a non-focusable
+	 * element, and nothing happened and nothing said so. Tab reaches the
+	 * wrapper on its own either way; this is for the dialogs that put the
+	 * caret in their first field on open.
+	 */
+	focus() {
+		if (this.wrapper instanceof HTMLElement) this.wrapper.focus();
+	}
+
+	/**
 	 * Add all event listeners to elements
 	 */
 	addAllEventListeners() {
