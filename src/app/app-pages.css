@@ -851,105 +851,139 @@
 
 /* --------------------------------------------------------
 	Cross Project Actions page
+
+	An always-dark surface: it sets color-scheme, and tokens.css gives the id its
+	own dark token block, so everything below reads the semantic names and gets
+	the dark values under both themes.
+
+	WHAT THIS WAS. The ground was pinned with theme-invariant primitives while
+	the text came from the colors.css -l## ramps, which invert between themes:
+	--l90 is 88% light and 16% dark. So under a dark theme the body text computed
+	to 1.16:1 against its own background and the page was, literally, unreadable,
+	while --blue-l15 inverted the other way and lit the rules up to near-white.
+	Bright lines around invisible words. theme.js defaults to system, so that was
+	the default experience for anyone whose OS is dark.
 -------------------------------------------------------- */
 #cross-project-actions__page {
-	background: linear-gradient(140deg, var(--n-90), var(--n-96));
+	/*
+		Both stops are this page's own dark tokens, so the ground cannot drift
+		away from the text the way the primitives did.
+	*/
+	background: linear-gradient(140deg, var(--bg-app), var(--bg-surface-sunken));
 	color-scheme: dark;
 	display: grid;
 	grid-template-rows: max-content 1fr max-content;
-	row-gap: 10px;
-	padding: 20px;
+	row-gap: var(--sp-5);
+	padding: var(--sp-7);
 	position: relative;
-	/* Same offset, same fix - and this one had guessed 40 against a 44px bar. */
 	width: 100%;
 	height: 100%;
 	column-gap: 0;
-	color: var(--gray-l90);
+	color: var(--text-primary);
 }
 
 .cross-project-actions__page-header {
 	grid-row: 1;
 	display: grid;
-	grid-template-columns: 400px 1fr 50px;
+	grid-template-columns: 400px 1fr var(--control-h-lg);
+	gap: var(--sp-5);
+	align-items: start;
 }
 
 #cross-project-actions__page-content {
 	grid-row: 2;
-	overflow-x: auto;
+	overflow: auto;
 }
 
 #cross-project-actions__page-footer {
 	grid-row: 3;
-	border-width: 1px 0px 0px 0px;
+	border-width: 1px 0 0 0;
 	border-style: solid;
-	border-color: var(--blue-l15);
-	padding: 20px 0px 0px 0px;
+	border-color: var(--border-subtle);
+	padding: var(--sp-7) 0 0 0;
 }
 
 .cross-project-actions__welcome-content {
 	max-width: 600px;
-	margin-top: 20px;
+	margin-top: var(--sp-7);
 }
 
 #cross-project-actions__welcome-flipper {
-	padding: 2px 15px 0px 15px;
-	margin: 10px 0px 0px -1px;
+	padding: var(--sp-1) var(--sp-6) 0 var(--sp-6);
+	margin: var(--sp-5) 0 0 -1px;
 	display: inline-block;
-	border-radius: 8px;
-	background-color: hsla(285, 100%, 17%, 0.2); /* purple l15 */
-	border: 1px solid var(--blue-l15);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
 }
 
 .cross-project-actions__page-header option-chooser {
 	max-width: 400px;
-	font-size: 1.2em;
-	margin-top: 10px;
-	margin-bottom: 20px;
+	margin-top: var(--sp-5);
+	margin-bottom: var(--sp-7);
 }
 
 #cross-project-actions__project-flipper {
-	font-size: 1.2em;
+	font-size: var(--fs-lg);
 	display: block;
-	padding: 10px 0px;
+	padding: var(--sp-5) 0;
 }
 
 #cross-project-actions__project-flipper code,
 .cross-project-actions__welcome-content code {
-	background-color: hsla(285, 100%, 17%, 0.1); /* purple l15 */
-	border-color: var(--blue-l15);
-	color: white;
+	background-color: var(--bg-surface-sunken);
+	border-color: var(--border-subtle);
+	color: var(--text-primary);
 }
 
+/*
+	The flip control swaps which project is the source. It is a real action, so
+	it takes the 24px floor and a focus ring rather than being a coloured word.
+*/
 #cross-project-actions__project-flipper .flip-button {
-	display: inline-block;
-	color: var(--purple-l80);
-	background-color: hsla(285, 100%, 17%, 0.2); /* purple l15 */
-	padding: 1px 6px;
-	position: relative;
-	top: 2px;
-	border: 1px solid hsla(285, 100%, 17%, 0.2);
-	border-radius: 4px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: var(--control-h-sm);
+	color: var(--text-accent);
+	background-color: var(--bg-surface-sunken);
+	padding: 0 var(--sp-4);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	text-align: center;
+	transition: var(--transition-color);
 }
 
 #cross-project-actions__project-flipper .flip-button:hover {
 	cursor: pointer;
-	color: white;
-	border-color: var(--purple-l80);
+	color: var(--text-primary);
+	border-color: var(--text-accent);
+}
+
+#cross-project-actions__project-flipper .flip-button:active {
+	background-color: var(--bg-active);
+}
+
+#cross-project-actions__project-flipper .flip-button:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
 }
 
 .cross-project-actions__scale-warning {
-	margin: 0px 0px 10px 0px;
-	background-color: hsla(285, 100%, 17%, 0.3); /* purple l15 */
-	padding: 10px;
-	border-radius: 4px;
+	margin: 0 0 var(--sp-5) 0;
+	background-color: var(--bg-surface-sunken);
+	padding: var(--sp-5);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	display: inline-block;
 	max-width: 800px;
 	width: auto;
 }
 
 .cross-project-actions__page-header h1 {
-	color: var(--purple-l90);
+	color: var(--text-primary);
 	display: inline;
 }
 
@@ -959,51 +993,61 @@
 
 #cross-project-actions__page-content h2,
 .cross-project-actions__column-layout h2 {
-	color: var(--gray-l80);
-	border-width: 0px 0px 1px 0px;
+	color: var(--text-primary);
+	border-width: 0 0 1px 0;
 	border-style: solid;
-	border-color: var(--blue-l15);
+	border-color: var(--border-subtle);
 }
 
 #cross-project-actions__page-content h3,
 .cross-project-actions__column-layout h3 {
-	color: var(--gray-l90);
+	color: var(--text-primary);
 }
 
 #cross-project-actions__close-button {
-	display: block;
-	height: 30px;
-	width: 30px;
-	margin: 5px 0px 0px 10px;
-	padding: 5px 5px 5px 5px;
-	color: var(--purple-l80);
-	background-color: var(--purple-l15);
-	border: 1px solid var(--purple-l05);
-	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--control-h-lg);
+	width: var(--control-h-lg);
+	margin: 0 0 0 var(--sp-5);
+	color: var(--text-accent);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
 	text-align: center;
+	transition: var(--transition-color);
 }
 
 #cross-project-actions__close-button:hover,
 #cross-project-actions__close-button:active {
 	cursor: pointer;
-	background-color: var(--purple-l20);
-	border-color: var(--purple-l15);
-	color: white;
+	background-color: var(--bg-hover);
+	border-color: var(--border-strong);
+	color: var(--text-primary);
 }
 
+#cross-project-actions__close-button:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+/*
+	resets.css draws the box, including its checkmark, at 14px. Nothing here
+	resizes it - the 24px pointer target is bought on the wrapper instead, so
+	the drawn control keeps the proportions the mark was calibrated against.
+*/
 .copy-shapes-options__checkbox,
-#cross-project-actions__page-content > input {
-	width: 14px;
-	height: 14px;
+#cross-project-actions__page-content > input[type='checkbox'] {
+	flex: none;
 }
 
 .copy-shapes-options__label,
 #cross-project-actions__page-content > label {
 	display: inline-block;
-	padding: 0px 0px 0px 10px;
-	line-height: 20px;
-	position: relative;
-	top: -2px;
+	padding: 0 0 0 var(--sp-5);
+	line-height: var(--lh-normal);
 }
 
 .cross-project-actions__range-chooser {
@@ -1014,77 +1058,81 @@
 .cross-project-actions__column-layout {
 	width: 100%;
 	display: grid;
-	grid-template-columns: 20px max-content max-content 70px min-content 70px;
-	row-gap: 10px;
-	margin-top: 20px;
+	grid-template-columns: var(--control-h-sm) max-content max-content 70px min-content 70px;
+	row-gap: var(--sp-5);
+	margin-top: var(--sp-7);
 }
 
 .cross-project-actions__column-header {
-	font-size: 0.8em;
-	border-bottom: 1px solid var(--blue-l20);
-	padding-left: 20px;
-	padding-bottom: 2px;
-	font-style: italic;
-	color: var(--gray-l60);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	border-bottom: 1px solid var(--border-subtle);
+	padding-left: var(--sp-7);
+	padding-bottom: var(--sp-1);
+	color: var(--text-tertiary);
 }
 
 #cross-project-actions__item-count {
-	font-size: 1.2em;
-	margin: 14px 0px 0px 20px;
+	font-size: var(--fs-lg);
+	font-variant-numeric: tabular-nums;
+	margin: var(--sp-6) 0 0 var(--sp-7);
 }
 
 .cross-project-actions__column-layout .text-value {
-	font-family: monospace;
-	color: var(--gray-l60);
-	padding-left: 20px;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	padding-left: var(--sp-7);
 }
 
 .cross-project-actions__column-layout .glyph-id {
 	grid-column: 3;
-	font-family: monospace;
-	color: var(--gray-l60);
-	padding-left: 20px;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	padding-left: var(--sp-7);
 }
 
 .cross-project-actions__column-layout .glyph-name {
 	grid-column: 2;
-	font-size: 1.4em;
-	padding-left: 20px;
+	font-size: var(--fs-xl);
+	padding-left: var(--sp-7);
 	font-variant-ligatures: none;
 }
 
 .cross-project-actions__column-layout .connector {
 	grid-column: 5;
-	font-size: 1.4em;
-	padding-left: 20px;
-	color: var(--gray-l60);
+	font-size: var(--fs-xl);
+	padding-left: var(--sp-7);
+	color: var(--text-secondary);
 }
 
+/* The pointer target, at the 24px floor, around a box drawn at 14px. */
 .cross-project-actions__column-layout .checkbox-wrapper {
 	height: 100%;
-	width: 20px;
+	min-height: var(--control-h-sm);
+	width: var(--control-h-sm);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	grid-column: 1;
-}
-.cross-project-actions__column-layout .checkbox-wrapper input {
-	height: 20px;
-	width: 20px;
-	accent-color: var(--purple-l60);
+	cursor: pointer;
 }
 
 .cross-project-actions__column-layout .kern-chip-wrapper {
 	width: min-content;
-	padding-left: 10px;
+	padding-left: var(--sp-5);
 }
+
 .cross-project-actions__column-layout .kern-chip-wrapper code {
-	background-color: transparent;
-	background-color: hsla(285, 100%, 17%, 0.2); /* purple l15 */
-	border: 1px solid var(--blue-l20);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
 }
+
 .cross-project-actions__column-layout .kern-chip-wrapper .kern-group-chooser__members-divider {
-	color: var(--blue-l40);
+	color: var(--text-tertiary);
 }
 
 .cross-project-actions__column-layout label,
@@ -1097,60 +1145,18 @@
 }
 
 #cross-project-actions__page label:hover {
-	color: white;
+	color: var(--text-primary);
 }
 
 .cross-project-actions__column-layout .thumbnail {
-	background-color: white;
-	width: 50px;
-	height: 50px;
+	background-color: var(--canvas-bg);
+	width: 48px;
+	height: 48px;
 	overflow: hidden;
-	border-radius: 4px;
-	margin-left: 20px;
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	margin-left: var(--sp-7);
 }
-
-/*
-.item-preview__row {
-	border: 1px solid var(--blue-l20);
-	padding: 2px 3px;
-	background-color: hsla(285, 100%, 17%, 0.1); /* purple l15
-	border-radius: 4px;
-	width: 100%;
-	max-width: 430px;
-	height: 58px;
-	overflow: hidden;
-	display: grid;
-	column-gap: 10px;
-	row-gap: 4px;
-	grid-template-columns: min-content max-content;
-	grid-template-rows: 2fr 1fr;
-	align-items: center;
-	grid-column: -1 / 1;
-}
-
-.item-preview__thumbnail {
-	background-color: white;
-	grid-column: 1;
-	grid-row: -1 / 1;
-	width: 50px;
-	height: 50px;
-	overflow: hidden;
-}
-
-.item-preview__title {
-	display: block;
-	height: min-content;
-	grid-column: 2;
-	font-size: 1.2em;
-	margin-top: 10px;
-}
-
-.item-preview__subtitle {
-	font-size: 0.8em;
-	margin-bottom: 4px;
-	color: var(--gray-l50);
-}
-*/
 
 /*
 	.hub-button--icon was here. It dressed one button - the hub's own theme

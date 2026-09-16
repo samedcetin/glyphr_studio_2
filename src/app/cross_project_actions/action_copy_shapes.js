@@ -148,7 +148,7 @@ export function updateCharacterCopyTable(table) {
 	table.appendChild(
 		makeElement({
 			className: 'cross-project-actions__column-header',
-			innerHTML: 'toggle selection for all rows',
+			innerHTML: 'character',
 		})
 	);
 

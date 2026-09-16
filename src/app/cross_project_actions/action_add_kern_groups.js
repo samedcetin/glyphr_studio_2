@@ -88,7 +88,7 @@ export function updateAddItemTable(table) {
 	table.appendChild(
 		makeElement({
 			className: 'cross-project-actions__column-header',
-			innerHTML: 'toggle selection for all rows',
+			innerHTML: 'kern group',
 		})
 	);
 
