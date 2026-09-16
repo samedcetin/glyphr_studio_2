@@ -51,7 +51,8 @@
 	background-color: var(--bg-surface-raised);
 	color: var(--text-primary);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	/* The floating-strip radius: the toast, the error panel and the toolbar wear it too. */
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 	font-size: var(--fs-sm);
