@@ -355,6 +355,41 @@ export function makeContextMenu(rows = [], x, y, width, height, isDropdown = fal
 		if (firstRow) /** @type {HTMLElement} */ (firstRow).focus();
 	});
 
+	/*
+		ANYTHING THAT MOVES THE CONTROL CLOSES THE MENU.
+
+		The menu is placed from coordinates measured once, and hung on
+		#app__wrapper, which does not scroll. So when the thing it came out of
+		moves, the menu does not: scroll a dialog body and the select goes up
+		while its open list stays exactly where it was, floating over whatever
+		is now underneath it. Reposition is the other answer, and the wrong one
+		here - a list that follows its control up the screen while you are
+		scrolling past it is a list you have to dismiss anyway.
+
+		Capture, because scroll does not bubble. A scroll inside the dialog's
+		body never reaches the document on the way up, only on the way down.
+
+		A scroll inside the menu itself is the one that does not count: a list
+		longer than the window is meant to be scrolled.
+
+		The listeners take themselves off the first time they fire after the
+		menu has gone, which is the cheapest teardown that cannot leak: there
+		is no close hook to hang one on, and until then they cost a bounds
+		check on a scroll.
+	*/
+	const closeOnMove = (event) => {
+		if (event?.target instanceof Node && element.contains(event.target)) return;
+		if (!element.isConnected) {
+			document.removeEventListener('scroll', closeOnMove, true);
+			window.removeEventListener('resize', closeOnMove);
+			return;
+		}
+		if (isDropdown) closeAllOptionChoosers();
+		else closeAllContextMenus();
+	};
+	document.addEventListener('scroll', closeOnMove, true);
+	window.addEventListener('resize', closeOnMove);
+
 	// log(`makeContextMenu`, 'end');
 	return element;
 }
