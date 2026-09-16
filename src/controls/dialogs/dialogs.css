@@ -225,11 +225,13 @@ dialog {
 
 #notation {
 	display: none;
-	position: absolute;
-	right: 900px;
-	top: 400px;
+	/* Placed in window pixels by showNotation, from the canvas's position. */
+	position: fixed;
+	left: 0;
+	top: 0;
 	width: auto;
 	height: auto;
+	pointer-events: none;
 	/* Was a 5px border in the surface colour, standing in for padding. */
 	padding: var(--sp-3) var(--sp-4);
 	z-index: var(--z-alert);

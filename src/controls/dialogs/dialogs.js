@@ -244,9 +244,37 @@ export function showNotation(content, x, y) {
 		document.body.appendChild(notation);
 	}
 	notation.innerHTML = content;
-	notation.style.top = y - 10 + 'px';
-	notation.style.right = `calc(100% - ${x + 515}px)`;
+
+	/*
+		x and y are canvas pixels - the same frame the tool's mouse position is
+		in - so they become window pixels by adding where the canvas sits. The
+		box used to be placed from `x + 515`, a measurement of a window layout
+		that no longer exists, which put it a few hundred pixels to the right
+		of the point it described.
+
+		It sits below and to the right of the point, clear of the cursor and
+		of the point itself, and flips to the other side of either axis when
+		that would run it off the window.
+	*/
+	const editor = getCurrentProjectEditor();
+	const canvasRect = editor.editCanvas
+		? editor.editCanvas.getBoundingClientRect()
+		: { left: 0, top: 0 };
+	const gap = 14;
+	const pointX = canvasRect.left + x;
+	const pointY = canvasRect.top + y;
+
 	notation.style.display = 'block';
+	const width = notation.offsetWidth;
+	const height = notation.offsetHeight;
+
+	let left = pointX + gap;
+	if (left + width > window.innerWidth - gap) left = pointX - gap - width;
+	let top = pointY + gap;
+	if (top + height > window.innerHeight - gap) top = pointY - gap - height;
+
+	notation.style.left = `${Math.round(left)}px`;
+	notation.style.top = `${Math.round(top)}px`;
 }
 
 /**
