@@ -274,9 +274,13 @@
 	enough to count by eye.
 */
 .modal-dialog__body .compose__input {
-	min-height: 76px;
 	font-size: var(--fs-md);
-	line-height: 1.7;
+	/*
+		Looser than the shared textarea: a run of accented capitals carries
+		marks above the cap line, and at the normal leading the marks of one
+		row touch the descenders of the row above.
+	*/
+	line-height: var(--lh-loose);
 }
 
 .modal-dialog__body .compose__summary {

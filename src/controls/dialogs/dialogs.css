@@ -2328,24 +2328,71 @@ dialog {
 	font-size: var(--fs-2xs);
 }
 
+/* --------------------------------------------------------------
+	THE TEXTAREA IN A DIALOG
+
+	The same box as .dialog-select and .dialog-number: transparent ground,
+	--r-lg, one hairline, and the text 12px in from the inside of it - the
+	radius exactly, so the first character starts where the curve finishes
+	and the block of text sits concentric with the corner.
+
+	No native resize grip. It was the one piece of browser chrome left in
+	these dialogs - a hatched triangle that no token reaches - and it was
+	there to do a job the box can do itself: grow with what is typed. So the
+	box is sized by its content, between a floor and a ceiling, and scrolls
+	past the ceiling. Where `field-sizing` is not supported the box holds the
+	floor and scrolls, which is what the grip's default state was anyway.
+
+	Hover and focus match the other two controls: accent hairline, then the
+	ring. --sp-5 is 12px - the same number as --r-lg, which is the point.
+	------------------------------------------------------------ */
+
 .modal-dialog__body .dialog-textarea {
+	display: block;
 	width: 100%;
-	min-height: 64px;
-	padding: var(--sp-4);
-	background-color: var(--bg-surface-sunken);
+	box-sizing: border-box;
+	/*
+		`height: auto` explicitly: resets.css gives every textarea the 28px
+		control height, and a fixed height is the one thing that stops
+		`field-sizing` from measuring the content.
+	*/
+	height: auto;
+	min-height: 80px;
+	max-height: 240px;
+	padding: var(--sp-5);
+	background-color: transparent;
 	border: 1px solid var(--border-strong);
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	color: var(--text-primary);
 	font-family: var(--font-mono);
-	font-size: var(--fs-xs);
+	font-size: var(--fs-sm);
 	line-height: var(--lh-normal);
-	resize: vertical;
+	resize: none;
+	field-sizing: content;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	transition: var(--transition-color);
 }
 
-.dialog-textarea:focus-visible {
+.modal-dialog__body .dialog-textarea::placeholder {
+	color: var(--text-tertiary);
+}
+
+.modal-dialog__body .dialog-textarea:hover {
+	border-color: var(--accent);
+}
+
+.modal-dialog__body .dialog-textarea:focus-visible {
+	border-color: var(--accent);
 	outline: var(--focus-style);
 	outline-offset: var(--focus-offset);
+}
+
+.modal-dialog__body .dialog-textarea:disabled {
+	color: var(--text-disabled);
+	border-color: var(--border-subtle);
+	cursor: not-allowed;
 }
 
 /* --------------------------------------------------------------
