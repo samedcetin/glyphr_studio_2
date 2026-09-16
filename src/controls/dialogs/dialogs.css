@@ -2255,9 +2255,10 @@ dialog {
 	color: var(--text-primary);
 }
 
+/* Taller rows need more between them, or ten 40px boxes read as one block. */
 .panose__rows {
 	display: grid;
-	gap: var(--sp-2);
+	gap: var(--sp-3);
 }
 
 /*
@@ -2303,12 +2304,26 @@ dialog {
 }
 
 /*
-	These hold the names of shapes - `Obtuse Square Cove` - rather than code
-	points, so they take the UI face. The control's default is mono, which is
-	right where it usually sits.
+	The same chooser the block picker's range select is: 40px, --r-lg, and the
+	text 12px in from the inside of the hairline, which is the radius exactly.
+	One answer for "a chooser in a dialog" rather than two.
+
+	NO GROUND OF ITS OWN. Everywhere else this control takes the sunken fill,
+	which reads as a well cut into a panel - right beside a number field in a
+	sidebar. Ten of them down the middle of a dialog read as ten holes in it.
+	Here the dialog is the surface and the border is the whole control.
+
+	They also hold the names of shapes - `Obtuse Square Cove` - rather than
+	code points, so they take the UI face. The control's default is mono,
+	which is right where it usually sits.
 */
 .panose__chooser {
+	--option-chooser-h: 40px;
+	--option-chooser-radius: var(--r-lg);
+	--option-chooser-pad-x: var(--sp-3);
+	--option-chooser-bg: transparent;
 	--option-chooser-font: var(--font-ui);
+	--option-chooser-font-size: var(--fs-md);
 	display: block;
 	width: 100%;
 }

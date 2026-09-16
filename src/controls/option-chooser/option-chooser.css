@@ -65,7 +65,14 @@
 	and floats free, so the control stayed a broken-off box for no reason.
 */
 .wrapper[deployed] {
-	background-color: var(--bg-surface);
+	/*
+		Through the override, so a call site that gave this control its own
+		ground keeps it while the list is open. Hard-coded, a chooser sitting
+		transparent on a raised dialog surface filled itself with --bg-surface
+		the moment you clicked it, which on a dark theme is a different colour
+		from the dialog it is drawn on.
+	*/
+	background-color: var(--option-chooser-bg, var(--bg-surface));
 	border-color: var(--accent);
 }
 
