@@ -980,10 +980,21 @@ dialog {
 	color: var(--text-secondary);
 }
 
-/* The row of buttons a dialog ends on. */
-.modal-dialog__body fancy-button {
-	margin-top: var(--sp-5);
-}
+/*
+	NO BLANKET MARGIN ON A BUTTON IN A BODY.
+
+	This was a --sp-5 top margin on every fancy-button inside the body,
+	written for the dialogs that ended on a loose button row inside their own
+	body. The frame owns the footer now, and every button still in a body sits
+	in a row that spaces its own children - so the rule had stopped describing
+	anything and had started pushing buttons out of alignment with whatever
+	they sit beside.
+
+	Measured on the icon import drop zone: the button was 6px below the centre
+	line of the label next to it, and the box it sat in was 12px taller than
+	its contents. The cross-project footer was paying it too, on top of the
+	20px of its own it already had.
+*/
 
 /*
 	A checkbox and its label, in Create a new ligature.

@@ -12,6 +12,10 @@
 	part that is genuinely this dialog's: the drop zone and the plan table.
 */
 
+/*
+	Room for the plan table, so the dialog does not resize the moment files
+	are chosen. The map dialog next door does not want it - see below.
+*/
 .icon-import {
 	min-height: min(520px, calc(100vh - 240px));
 }
@@ -176,9 +180,13 @@
 
 /* --------------------------------------------------------
 	The name map
+
+	Its own root, not the import dialog's. They shared one class, so the
+	height the import dialog needs for its plan table was also being paid by
+	a dialog whose empty state is one sentence.
 -------------------------------------------------------- */
 
-.modal-dialog__body .icon-import__preview {
+.modal-dialog__body .icon-map__preview {
 	margin: 0;
 	padding: var(--sp-5);
 	max-height: 300px;
@@ -192,7 +200,7 @@
 	color: var(--text-secondary);
 }
 
-.icon-import__formats {
+.icon-map__formats {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--sp-3);

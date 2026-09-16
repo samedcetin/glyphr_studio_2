@@ -302,7 +302,7 @@ export function showIconImportDialog() {
 	}
 
 	fileInput.addEventListener('change', () => {
-		loadFiles([.../** @type {HTMLInputElement} */ ((fileInput).files || [])]);
+		loadFiles([.../** @type {HTMLInputElement} */ (fileInput.files || [])]);
 		/* Cleared, so picking the same folder twice fires change the second
 			time. */
 		/** @type {HTMLInputElement} */ (fileInput).value = '';
@@ -316,7 +316,7 @@ export function showIconImportDialog() {
 	dropZone.addEventListener('drop', (event) => {
 		event.preventDefault();
 		dropZone.removeAttribute('dragging');
-		loadFiles([.../** @type {DragEvent} */ ((event).dataTransfer?.files || [])]);
+		loadFiles([.../** @type {DragEvent} */ (event.dataTransfer?.files || [])]);
 	});
 
 	/*
@@ -429,7 +429,7 @@ export function showIconMapDialog() {
 	const entries = collectIconMap(project);
 	const family = project.settings.font.family || 'Icons';
 
-	const content = makeElement({ className: 'dialog-layout dialog-form icon-import' });
+	const content = makeElement({ className: 'dialog-layout dialog-form icon-map' });
 
 	if (!entries.length) {
 		content.appendChild(
@@ -449,12 +449,12 @@ export function showIconMapDialog() {
 		content.appendChild(
 			makeElement({
 				tag: 'pre',
-				className: 'icon-import__preview',
+				className: 'icon-map__preview',
 				content: makeIconMapTable(entries),
 			})
 		);
 
-		const formats = makeElement({ className: 'icon-import__formats' });
+		const formats = makeElement({ className: 'icon-map__formats' });
 		addAsChildren(formats, [
 			makeExportButton(
 				'JSON',
