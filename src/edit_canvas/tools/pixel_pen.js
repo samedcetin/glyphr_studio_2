@@ -1,4 +1,5 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
+import { shortcutLabel } from '../../common/keyboard.js';
 import { cellIndex, cellKey, getUnitsPerPixel } from '../../pixel_font/index.js';
 import { isOnGrid } from '../../pixel_font/pixel_grid.js';
 import { readGlyphCells, writeGlyphCells } from '../../pixel_font/pixelate.js';
@@ -142,7 +143,12 @@ export class Tool_PixelPen {
 			but it should never be a surprise.
 		*/
 		if (!isGlyphAlreadyPixels(item, this.unitsPerPixel)) {
-			showToast(`${item.name || 'This glyph'} was redrawn as pixels<br>Ctrl+Z puts the curves back.`);
+			showToast(
+				`${item.name || 'This glyph'} was redrawn as pixels<br>${shortcutLabel([
+					'Ctrl',
+					'Z',
+				])} puts the curves back.`
+			);
 		}
 
 		// Whole shapes get rebuilt under this tool, so a stale shape

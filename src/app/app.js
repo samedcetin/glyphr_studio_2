@@ -1,6 +1,7 @@
 import { PRODUCT_NAME, SUPPORT_EMAIL } from './brand.js';
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
+import { shortcutLabel } from '../common/keyboard.js';
 import { copyToClipboard, countItems } from '../common/functions.js';
 import { closeEveryTypeOfDialog, showToast } from '../controls/dialogs/dialogs.js';
 import { parseSemVer } from '../formats_io/validate_file_input.js';
@@ -498,7 +499,11 @@ export function showAppErrorPage(friendlyMessage = '', errorObject = { message: 
 			selection?.removeAllRanges();
 			selection?.addRange(range);
 		}
-		if (label) label.textContent = trace ? 'Selected — press Ctrl C' : 'Could not copy';
+		if (label) {
+			label.textContent = trace
+				? `Selected — press ${shortcutLabel(['Ctrl', 'C'])}`
+				: 'Could not copy';
+		}
 	});
 	actions.appendChild(copyButton);
 

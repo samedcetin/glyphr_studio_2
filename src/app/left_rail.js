@@ -18,6 +18,7 @@
 
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
+import { shortcutLabel } from '../common/keyboard.js';
 import { showCommandPalette } from '../controls/command-palette/command_palette.js';
 import { attachTooltip, attachTooltipsIn } from '../controls/tooltip/tooltip.js';
 import { navigateToPage } from '../project_editor/navigator.js';
@@ -296,9 +297,8 @@ function makeRailPageButtons() {
 
 /** The command palette, at the bottom where a search box would sit. */
 function makeRailSearchButton() {
-	const isMac = navigator.platform.toLowerCase().includes('mac');
 	const name = 'Search commands, characters and pages';
-	const shortcut = `Shortcut ${isMac ? '⌘' : 'Ctrl'} K`;
+	const shortcut = `Shortcut ${shortcutLabel(['Ctrl', 'K'])}`;
 
 	const button = makeElement({
 		tag: 'button',

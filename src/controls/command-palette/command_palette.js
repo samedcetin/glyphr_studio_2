@@ -1,5 +1,6 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
 import { addAsChildren, makeElement } from '../../common/dom.js';
+import { keyLabel } from '../../common/keyboard.js';
 import { cycleThemePreference } from '../../common/theme.js';
 import { showAtlasExportDialog } from '../../formats_io/atlas/atlas_export.js';
 import { refreshEditToolsArea } from '../../edit_canvas/tools/tools.js';
@@ -144,7 +145,8 @@ function collectCommands() {
 			commands = commands.concat(commandsFromActionGroup('layerActions', 'Arrange'));
 			commands = commands.concat(commandsFromActionGroup('alignShapeActions', 'Align'));
 		}
-		if (shapeCount > 1) commands = commands.concat(commandsFromActionGroup('boolActions', 'Combine'));
+		if (shapeCount > 1)
+			commands = commands.concat(commandsFromActionGroup('boolActions', 'Combine'));
 		commands = commands.concat(commandsFromActionGroup('glyphActions', 'Glyph'));
 
 		// Groups overlap - Copy is both a universal and a shape action - so the
@@ -222,8 +224,7 @@ function collectCommands() {
 		{
 			name: 'Update all metric keys',
 			category: 'Edit',
-			searchText:
-				'update metric keys sidebearings spacing linked metrics respace sync bearings',
+			searchText: 'update metric keys sidebearings spacing linked metrics respace sync bearings',
 			run: () => {
 				const project = getCurrentProject();
 				editor.history.addWholeProjectChangePreState('Update all metric keys');
@@ -256,8 +257,7 @@ function collectCommands() {
 		{
 			name: 'Import SVG icons',
 			category: 'File',
-			searchText:
-				'import svg icons icon font private use area PUA glyph set ui symbols game hud',
+			searchText: 'import svg icons icon font private use area PUA glyph set ui symbols game hud',
 			run: showIconImportDialog,
 		},
 		{
@@ -269,8 +269,7 @@ function collectCommands() {
 		{
 			name: 'Toggle pixel font mode',
 			category: 'View',
-			searchText:
-				'pixel font mode bitmap grid retro 8-bit game sprite snap texel low resolution',
+			searchText: 'pixel font mode bitmap grid retro 8-bit game sprite snap texel low resolution',
 			run: () => {
 				const project = getCurrentProject();
 				const settings = getPixelMode(project);
@@ -419,7 +418,7 @@ function renderResults(list) {
 		if (command.shortcut) {
 			const keys = makeElement({ className: 'command-palette__row-keys' });
 			command.shortcut.forEach((key) =>
-				keys.appendChild(makeElement({ tag: 'code', content: key }))
+				keys.appendChild(makeElement({ tag: 'code', content: keyLabel(key) }))
 			);
 			trailing.appendChild(keys);
 		}
@@ -668,7 +667,7 @@ export function showKeyboardShortcuts() {
 			row.appendChild(makeElement({ className: 'shortcut-sheet__label', content: String(label) }));
 			const keyWrapper = makeElement({ className: 'shortcut-sheet__keys' });
 			/** @type {Array} */ (keys).forEach((key) =>
-				keyWrapper.appendChild(makeElement({ tag: 'code', content: String(key) }))
+				keyWrapper.appendChild(makeElement({ tag: 'code', content: keyLabel(key) }))
 			);
 			row.appendChild(keyWrapper);
 			group.appendChild(row);

@@ -3,6 +3,7 @@ import { addAsChildren, makeElement, textToNode } from '../../common/dom.js';
 import { round } from '../../common/functions.js';
 import { makeIcon } from '../../common/graphics.js';
 import { makeLineIcon } from '../../common/icons.js';
+import { keyLabel } from '../../common/keyboard.js';
 import { sXcX, sYcY } from '../../edit_canvas/edit_canvas.js';
 import { closeAllNavMenus } from '../../project_editor/navigator.js';
 import { closeAllMenuButtons } from '../menu-button/menu_button.js';
@@ -575,11 +576,11 @@ function makeOneContextMenuRow(data = {}) {
 	if (data.note) {
 		if (typeof data.note === 'string' && data.note.charAt(0) === '[') {
 			JSON.parse(data.note).forEach((key) =>
-				noteWrapper.appendChild(makeElement({ tag: 'code', innerHTML: key }))
+				noteWrapper.appendChild(makeElement({ tag: 'code', innerHTML: keyLabel(key) }))
 			);
 		} else if (Array.isArray(data.note)) {
 			data.note.forEach((key) =>
-				noteWrapper.appendChild(makeElement({ tag: 'code', innerHTML: key }))
+				noteWrapper.appendChild(makeElement({ tag: 'code', innerHTML: keyLabel(key) }))
 			);
 		} else {
 			noteWrapper.appendChild(textToNode(`<span>${data.note}</span>`));
