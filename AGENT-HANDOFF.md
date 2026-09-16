@@ -45,7 +45,12 @@ kusursuz olmalı."*
 
 ## 4. Nerede kaldık
 
-**33 / ~40 tamamlandı.** Son biten ekran: **Cross-project actions**.
+**43 / ~44 tamamlandı.** Son biten ekran: **Pop-out önizleme penceresi** (`02c7612`).
+16 Eyl akşam oturumunda (bu makine) bitenler: 33 Cross-project actions (baştan,
+`49e9e67`), 34 komut paleti, 35 klavye kısayolları (Mac'te ⌘/⇧/⌥/⌫ — `common/keyboard.js`,
+`9b92af1`), 36 bağlam menüsü (`d4a3a71`), 37 rail menüleri, 38 toast (`6897bbf`), 39 hata
+paneli (`26a8324`, `60abf3c`), 40 notation (`5f7216b`), 41 tooltip (`f785ece`), 42 info
+bubble (`b09354b`), 43 pop-out (`02c7612`). Kalan: boot splash; crash screen'i sor.
 
 Bu oturumda (24→33) bitenler ve commit'leri:
 
