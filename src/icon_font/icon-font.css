@@ -1,131 +1,199 @@
 /*
 	ICON FONT DIALOGS
+
 	The import table is the important part: one row per file, showing the name
 	it will get and the code point it will land on, before anything is written.
+
+	WHAT THIS FILE WAS. Its own scroll box and its own --sp-7 of padding inside
+	the frame's, plus a header block and an actions row that the frame owns -
+	and a form built out of the atlas export dialog's row, label, hint and
+	select classes, so when those were rebuilt this dialog lost its grid and
+	the file button landed on top of its own label. What is left here is the
+	part that is genuinely this dialog's: the drop zone and the plan table.
 */
 
 .icon-import {
-	display: grid;
-	gap: var(--sp-6);
-	padding: var(--sp-7);
-	max-height: 78vh;
-	overflow-y: auto;
+	min-height: min(520px, calc(100vh - 240px));
 }
 
-.icon-import__header h2 {
-	margin-bottom: var(--sp-3);
-}
+/* --------------------------------------------------------
+	Files
+-------------------------------------------------------- */
 
-.icon-import__header p {
-	max-width: 62ch;
-	margin: 0;
-	font-size: var(--fs-sm);
-	line-height: var(--lh-normal);
-	color: var(--text-secondary);
-}
-
-.icon-import__header code {
-	font-family: var(--font-mono);
-	font-size: var(--fs-xs);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
-	padding: 0 var(--sp-1);
-}
-
-.icon-import__form {
-	display: grid;
+/*
+	A folder of icons arrives as a folder, so it can be dropped. The dialog
+	had a file picker and nothing else, which means opening a chooser to
+	navigate back to the directory already open in the window behind it.
+*/
+.icon-import__drop {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 	gap: var(--sp-5);
+	padding: var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border: 1px dashed var(--border-strong);
+	/* Derived: the button inside is --r-md and this insets it by --sp-5. */
+	border-radius: calc(var(--r-md) + var(--sp-5));
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
 }
 
-.icon-import__summary {
+.icon-import__drop[dragging] {
+	background-color: var(--bg-selected);
+	border-color: var(--accent);
+	border-style: solid;
+}
+
+.modal-dialog__body .icon-import__drop-label {
 	font-size: var(--fs-sm);
 	color: var(--text-secondary);
 }
 
-.icon-import__summary:empty {
-	display: none;
+/* --------------------------------------------------------
+	The plan
+-------------------------------------------------------- */
+
+.icon-import__plan {
+	display: grid;
+	gap: var(--sp-3);
+}
+
+.icon-import__plan-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--sp-5);
+	min-height: var(--control-h-sm);
+}
+
+.modal-dialog__body .icon-import__summary {
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
+/*
+	One template, stated once and worn by the header row and every file row,
+	so the four columns line up without either of them measuring the other.
+*/
+.icon-import__row {
+	display: grid;
+	grid-template-columns: minmax(0, 1.1fr) 160px 88px minmax(0, 1.3fr);
+	align-items: center;
+	gap: var(--sp-4);
+	padding: var(--sp-2) var(--sp-4);
+}
+
+.modal-dialog__body .icon-import__columns {
+	padding-bottom: var(--sp-3);
+	border-bottom: 1px solid var(--border-subtle);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
 }
 
 .icon-import__table {
 	display: grid;
-	gap: 1px;
+	gap: var(--sp-1);
 	/*
-		A long set would otherwise push the Import button off the bottom of the
-		dialog, which is the one control that has to stay reachable.
+		A long set would otherwise push everything under it off the bottom.
+		The footer is the frame's now, so the Import button cannot be pushed
+		anywhere - but a two hundred row table between the settings and the
+		explanation still buries both.
 	*/
-	max-height: 260px;
+	max-height: 280px;
 	overflow-y: auto;
-	background-color: var(--border-subtle);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-sm);
 }
 
-.icon-import__table:empty {
-	display: none;
+.icon-import__row:not(.icon-import__columns) {
+	min-height: var(--control-h-lg);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 }
 
-.icon-import__row {
-	display: grid;
-	grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 80px minmax(0, 1.4fr);
-	align-items: center;
-	gap: var(--sp-4);
-	padding: var(--sp-2) var(--sp-4);
-	background-color: var(--bg-surface);
-	font-size: var(--fs-xs);
+.icon-import__row:not(.icon-import__columns):hover {
+	background-color: var(--bg-hover);
 }
 
-.icon-import__file {
-	color: var(--text-secondary);
-	font-family: var(--font-mono);
+/*
+	A file that cannot be used stays in the list, greyed. Dropping it would
+	leave you counting your own files to work out which one is missing.
+*/
+.icon-import__row[skipped] .icon-import__file,
+.icon-import__row[skipped] .icon-import__code {
+	color: var(--text-tertiary);
+}
+
+.modal-dialog__body .icon-import__file {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
 }
 
-.icon-import__name {
+.modal-dialog__body .icon-import__name {
 	width: 100%;
 	height: var(--control-h);
-	padding: 0 var(--sp-2);
+	padding: 0 var(--sp-3);
+	background-color: transparent;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
 }
 
-.icon-import__code {
+.icon-import__name:hover,
+.icon-import__name:focus {
+	border-color: var(--accent);
+}
+
+.modal-dialog__body .icon-import__code {
 	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
 	font-variant-numeric: tabular-nums;
 	color: var(--text-primary);
 }
 
-.icon-import__code--none {
-	color: var(--text-tertiary);
-}
-
-.icon-import__status {
-	color: var(--text-tertiary);
+/*
+	Why a file cannot be used, in the body colour. --warn is a 3:1 mark rather
+	than a 4.5:1 text colour, and this is a sentence - the row is already
+	greyed and the code point is already a dash, so the state is carried
+	twice over without spending a hue on it.
+*/
+.modal-dialog__body .icon-import__status {
+	font-size: var(--fs-xs);
 	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
 }
 
-.icon-import__warning {
-	color: var(--warn);
-}
+/* --------------------------------------------------------
+	The name map
+-------------------------------------------------------- */
 
-.icon-import__preview {
+.modal-dialog__body .icon-import__preview {
 	margin: 0;
 	padding: var(--sp-5);
 	max-height: 300px;
 	overflow: auto;
 	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
-	line-height: 1.6;
+	line-height: var(--lh-normal);
 	color: var(--text-secondary);
 }
 
-.icon-import__actions {
+.icon-import__formats {
 	display: flex;
-	justify-content: flex-end;
+	flex-wrap: wrap;
 	gap: var(--sp-3);
 }

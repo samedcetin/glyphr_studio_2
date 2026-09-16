@@ -19,10 +19,10 @@ import { glyphIDForCodePoint } from '../icon_font/pua.js';
 /** Ready-made sets, from the smallest useful one upwards. */
 const characterSets = {
 	'Western European': 'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïñòóôõöùúûüýÿ',
-	'Central European':
-		'ĀāĂăĄąĆćČčĎďĒēĖėĘęĚěĢģĪīĮįĶķĹĺĻļĽľŃńŅņŇňŌōŐőŔŕŖŗŚśŞşŠšŢţŤťŪūŮůŰűŲųŹźŻżŽž',
+	'Central European': 'ĀāĂăĄąĆćČčĎďĒēĖėĘęĚěĢģĪīĮįĶķĹĺĻļĽľŃńŅņŇňŌōŐőŔŕŖŗŚśŞşŠšŢţŤťŪūŮůŰűŲųŹźŻżŽž',
 	Turkish: 'ÇçĞğİıÖöŞşÜü',
-	Vietnamese: 'ẠạẢảẤấẦầẨẩẪẫẬậẮắẰằẲẳẴẵẶặẸẹẺẻẼẽẾếỀềỂểỄễỆệỈỉỊịỌọỎỏỐốỒồỔổỖỗỘộỚớỜờỞởỠỡỢợỤụỦủỨứỪừỬửỮữỰựỲỳỴỵỶỷỸỹ',
+	Vietnamese:
+		'ẠạẢảẤấẦầẨẩẪẫẬậẮắẰằẲẳẴẵẶặẸẹẺẻẼẽẾếỀềỂểỄễỆệỈỉỊịỌọỎỏỐốỒồỔổỖỗỘộỚớỜờỞởỠỡỢợỤụỦủỨứỪừỬửỮữỰựỲỳỴỵỶỷỸỹ',
 };
 
 /**
@@ -46,7 +46,7 @@ export function showComposeDialog() {
 		})
 	);
 
-	const setSelect = makeElement({ tag: 'select', className: 'atlas-export__select' });
+	const setSelect = makeElement({ tag: 'select', className: 'compose__select' });
 	Object.keys(characterSets).forEach((label) => {
 		setSelect.appendChild(
 			makeElement({ tag: 'option', content: label, attributes: { value: label } })
@@ -55,14 +55,14 @@ export function showComposeDialog() {
 
 	const charactersInput = makeElement({
 		tag: 'textarea',
-		className: 'atlas-export__characters',
+		className: 'dialog-textarea',
 		attributes: { rows: '3', spellcheck: 'false' },
 	});
 	// @ts-expect-error - textareas have a value
 	charactersInput.value = characterSets['Western European'];
 
 	const replaceToggle = makeElement({ tag: 'input', attributes: { type: 'checkbox' } });
-	const replaceLabel = makeElement({ tag: 'label', className: 'atlas-export__checkbox' });
+	const replaceLabel = makeElement({ tag: 'label', className: 'compose__checkbox' });
 	replaceLabel.appendChild(replaceToggle);
 	replaceLabel.appendChild(
 		makeElement({ tag: 'span', content: 'Rebuild characters that are already drawn' })
@@ -169,7 +169,7 @@ export function showComposeDialog() {
 		showToast(`Built ${built} character${built === 1 ? '' : 's'}`);
 	});
 
-	const form = makeElement({ className: 'atlas-export__form' });
+	const form = makeElement({ className: 'compose__form' });
 	addAsChildren(form, [
 		makeRow('Character set', setSelect, 'A starting point — edit the list below to taste.'),
 		makeRow('Characters', charactersInput, ''),
@@ -188,7 +188,7 @@ export function showComposeDialog() {
 		onClick: closeEveryTypeOfDialog,
 	});
 
-	const actions = makeElement({ className: 'atlas-export__actions' });
+	const actions = makeElement({ className: 'compose__actions' });
 	addAsChildren(actions, [cancelButton, buildButton]);
 	content.appendChild(actions);
 
@@ -204,12 +204,12 @@ export function showComposeDialog() {
  * @returns {Element}
  */
 function makeRow(label, control, hint) {
-	const row = makeElement({ className: 'atlas-export__row' });
-	row.appendChild(makeElement({ className: 'atlas-export__label', content: label }));
+	const row = makeElement({ className: 'dialog-field' });
+	row.appendChild(makeElement({ className: 'dialog-field__label', content: label }));
 
-	const wrapper = makeElement({ className: 'atlas-export__control' });
+	const wrapper = makeElement({ className: 'compose__control' });
 	wrapper.appendChild(control);
-	if (hint) wrapper.appendChild(makeElement({ className: 'atlas-export__hint', content: hint }));
+	if (hint) wrapper.appendChild(makeElement({ className: 'dialog-field__hint', content: hint }));
 
 	row.appendChild(wrapper);
 	return row;

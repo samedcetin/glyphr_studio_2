@@ -325,3 +325,53 @@
 .compose__warning {
 	color: var(--warn);
 }
+
+/*
+	The compose dialog's form, after the atlas export dialog was rebuilt.
+
+	It had been borrowing that dialog's row, label, hint, select, checkbox and
+	actions classes, which is why it had no layout of its own to fall back on
+	when they went. These are its own now - the ones the shared dialog
+	vocabulary does not already cover. Its screen in the walkthrough will decide
+	what the dialog should actually be; this is the part that stops it being
+	broken in the meantime.
+*/
+
+.compose__form {
+	display: grid;
+	gap: var(--sp-6);
+}
+
+.compose__control {
+	display: grid;
+	gap: var(--sp-2);
+	min-width: 0;
+}
+
+.compose__select {
+	height: var(--control-h-lg);
+	padding: 0 var(--sp-4);
+	background-color: transparent;
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-sm);
+}
+
+.compose__checkbox {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	min-height: var(--control-h-lg);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.compose__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--sp-3);
+}
