@@ -89,6 +89,15 @@
 	--bg-surface-raised: var(--n-00); /* popovers, dropdowns */
 	--bg-surface-sunken: var(--n-04); /* wells, inset areas, inputs */
 	/*
+		The two squares of a transparency checkerboard. An exported atlas is
+		white on nothing, so it has to be shown against a pattern rather than a
+		colour - a flat ground hides exactly the coverage problems you open the
+		preview to find. Two tokens rather than one, because a checkerboard is
+		the relationship between them.
+	*/
+	--bg-checker: var(--n-06);
+	--bg-checker-alt: var(--n-00);
+	/*
 		The scrim behind a modal. Dark in both themes and always the same: it is
 		depth, not a colour, and a scrim that lightens with the theme washes the
 		window out behind the dialog instead of pushing it back. It lived as a
@@ -419,6 +428,8 @@
 	--bg-surface: var(--n-87);
 	--bg-surface-raised: var(--n-84);
 	--bg-surface-sunken: var(--n-90);
+	--bg-checker: var(--n-84);
+	--bg-checker-alt: var(--n-80);
 	--bg-hover: hsla(220, 30%, 80%, 0.07);
 	--bg-active: hsla(220, 30%, 80%, 0.12);
 	--bg-selected: hsla(212, 90%, 55%, 0.18);

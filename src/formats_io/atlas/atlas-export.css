@@ -1,70 +1,32 @@
 /*
 	BITMAP FONT EXPORT DIALOG
-	Settings on the left of each row, the live atlas preview underneath. The
-	preview is built by the same code that writes the files, so what you see
-	is what gets exported.
+
+	The settings, then the atlas they describe. The preview is built by the
+	same code that writes the files, so what you see is what gets exported.
+
+	WHAT THIS FILE WAS. Its own scroll box and its own --sp-7 of padding
+	inside the frame's, so the dialog had two scrollers and a doubled gutter,
+	and the commit button lived at the bottom of the inner one. Its own row
+	grid, label and hint classes, duplicating .dialog-field. Its own checkbox
+	row, shorter than the 24px pointer floor. Its own button family, borrowed
+	from the project hub at a height on no scale. And five raw colour literals
+	for the checkerboard, which the design bar names by file.
+
+	The frame owns the header, the footer and the scrolling now, and the form
+	is the app's own .dialog-field / .dialog-option vocabulary. What is left
+	here is the part that is genuinely this dialog's: the texture preview.
 */
 
 .atlas-export {
-	display: grid;
-	gap: var(--sp-6);
-	padding: var(--sp-7);
-	max-height: 78vh;
-	overflow-y: auto;
+	/*
+		A stated height, so the frame does not resize as the atlas does. A
+		preview that grows a second texture page is not a reason for the
+		dialog to jump under the pointer.
+	*/
+	min-height: min(560px, calc(100vh - 240px));
 }
 
-.atlas-export__header h2 {
-	margin-bottom: var(--sp-3);
-}
-
-.atlas-export__header p {
-	max-width: 62ch;
-	margin: 0;
-	font-size: var(--fs-sm);
-	line-height: var(--lh-normal);
-	color: var(--text-secondary);
-}
-
-.atlas-export__header code {
-	font-family: var(--font-mono);
-	font-size: var(--fs-xs);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
-	padding: 0 var(--sp-1);
-}
-
-.atlas-export__form {
-	display: grid;
-	gap: var(--sp-5);
-}
-
-.atlas-export__row {
-	display: grid;
-	grid-template-columns: 132px minmax(0, 1fr);
-	align-items: start;
-	gap: var(--sp-5);
-}
-
-.atlas-export__label {
-	font-size: var(--fs-sm);
-	font-weight: var(--fw-medium);
-	color: var(--text-secondary);
-	padding-top: 7px;
-}
-
-.atlas-export__control {
-	display: grid;
-	gap: var(--sp-2);
-	min-width: 0;
-}
-
-.atlas-export__hint {
-	font-size: var(--fs-xs);
-	line-height: var(--lh-normal);
-	color: var(--text-tertiary);
-}
-
+/* Stacked controls inside one field - the character preset over its list. */
 .atlas-export__stack {
 	display: grid;
 	gap: var(--sp-3);
@@ -72,60 +34,48 @@
 }
 
 .atlas-export__number {
-	width: 110px;
+	width: 120px;
 	height: var(--control-h-lg);
 	font-family: var(--font-mono);
 	font-variant-numeric: tabular-nums;
 }
 
-.atlas-export__select {
-	height: var(--control-h-lg);
-	padding: 0 var(--sp-3);
-	background-color: var(--bg-surface-sunken);
-	color: var(--text-primary);
-	border: 1px solid var(--border-strong);
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	font-family: var(--font-ui);
-	font-size: var(--fs-sm);
-}
-
-.atlas-export__characters {
-	width: 100%;
-	min-height: 62px;
-	padding: var(--sp-3);
-	font-family: var(--font-mono);
-	font-size: var(--fs-xs);
-	line-height: 1.6;
-	resize: vertical;
-}
-
-.atlas-export__checkbox {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-3);
-	font-size: var(--fs-sm);
-	color: var(--text-primary);
-	cursor: pointer;
-}
-
 /* --------------------------------------------------------
-	Preview
+	The preview
+
+	What this export will be: the texture itself, the numbers under it,
+	anything worth interrupting for, and the files it will write.
 -------------------------------------------------------- */
 
 .atlas-export__preview {
 	display: grid;
-	gap: var(--sp-4);
+	gap: var(--sp-5);
 	padding: var(--sp-5);
 	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
+	/* Derived: the page canvases inside are --r-md and this insets them by
+		--sp-5, so the outer corner is concentric with theirs. */
+	border-radius: calc(var(--r-md) + var(--sp-5));
+	corner-shape: var(--corner-smooth);
 }
 
-.atlas-export__preview-canvas {
+/*
+	Rebuilding. The atlas is rasterised off the main thread's next frame, so
+	there is a moment where the numbers on screen belong to the last build -
+	and saying nothing for that moment is how a dialog reads as broken.
+*/
+.atlas-export__preview[building] {
+	opacity: 0.6;
+	transition: var(--transition-color);
+}
+
+.atlas-export__pages {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--sp-5);
+}
+
+.atlas-export__pages:empty {
+	display: none;
 }
 
 .atlas-export__page {
@@ -137,51 +87,166 @@
 /*
 	The atlas is white-on-transparent, so it is shown on a checkerboard - the
 	same way any image editor shows an alpha channel - rather than on a flat
-	color that would hide coverage problems.
+	colour that would hide coverage problems.
+
+	The two squares are tokens now. They were a hard-coded hsl() ground and
+	four hsla() gradient stops, which is five colour literals in a file the
+	design bar holds up as house style - and they were tuned for the dark
+	theme, so in light the preview sat in a dark hole.
 */
 .atlas-export__page-canvas {
 	width: 200px;
 	height: 200px;
 	border: 1px solid var(--border-default);
 	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
 	image-rendering: pixelated;
-	background-color: hsl(220, 10%, 22%);
-	background-image: linear-gradient(45deg, hsla(0, 0%, 100%, 0.06) 25%, transparent 25%),
-		linear-gradient(-45deg, hsla(0, 0%, 100%, 0.06) 25%, transparent 25%),
-		linear-gradient(45deg, transparent 75%, hsla(0, 0%, 100%, 0.06) 75%),
-		linear-gradient(-45deg, transparent 75%, hsla(0, 0%, 100%, 0.06) 75%);
+	background-color: var(--bg-checker-alt);
+	background-image: linear-gradient(45deg, var(--bg-checker) 25%, transparent 25%),
+		linear-gradient(-45deg, var(--bg-checker) 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, var(--bg-checker) 75%),
+		linear-gradient(-45deg, transparent 75%, var(--bg-checker) 75%);
 	background-size: 12px 12px;
 	background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
 }
 
-.atlas-export__page-label {
+/*
+	--text-secondary, not --text-tertiary. The tertiary tone is for text that
+	is beside the thing it describes; this is the only label a texture page
+	has, and it is the number the file names and the descriptor use.
+*/
+.modal-dialog__body .atlas-export__page-label {
+	font-family: var(--font-mono);
 	font-size: var(--fs-2xs);
-	color: var(--text-tertiary);
-}
-
-.atlas-export__stats {
-	font-size: var(--fs-xs);
-	color: var(--text-secondary);
 	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
 }
 
-.atlas-export__warning {
-	color: var(--warn);
+.modal-dialog__body .atlas-export__stats {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
 }
 
-.atlas-export__actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: var(--sp-3);
+.atlas-export__stats:empty {
+	display: none;
+}
+
+/* --------------------------------------------------------
+	Warnings
+-------------------------------------------------------- */
+
+.atlas-export__warnings {
+	display: grid;
+	gap: var(--sp-4);
+}
+
+.atlas-export__warnings:empty {
+	display: none;
 }
 
 /*
-	The `hidden` attribute only carries `display: none` from the user agent
-	stylesheet, which any explicit display - `grid` on the row above - beats.
-	Rows toggled from script need this to actually disappear.
+	A rule down the side rather than a filled block, the same shape as
+	.dialog-note - and the text in the app's body colour rather than in the
+	warn hue. --warn is a 3:1 colour, drawn to be seen as a mark; set as a
+	sentence in light theme it does not reach the 4.5:1 a paragraph owes.
 */
-.atlas-export__row[hidden] {
+.modal-dialog__body .atlas-export__warning {
+	display: grid;
+	gap: var(--sp-3);
+	padding-left: var(--sp-5);
+	border-left: 2px solid var(--warn);
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+/*
+	The two inline spans inside the coverage report, which is built as an HTML
+	string. Same reason as above: the hue marks the number, the sentence round
+	it stays legible.
+*/
+.modal-dialog__body .atlas-export__warning-text {
+	color: var(--text-primary);
+	font-weight: var(--fw-medium);
+}
+
+.modal-dialog__body .atlas-export__ok-text {
+	color: var(--text-primary);
+	font-weight: var(--fw-medium);
+}
+
+/* --------------------------------------------------------
+	Characters, named
+
+	Shared by the too-large list, the missing list and the coverage report:
+	the character itself, with its Unicode name on the app's own tooltip.
+-------------------------------------------------------- */
+
+.atlas-export__character-list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--sp-2);
+}
+
+.modal-dialog__body .atlas-export__character {
+	display: inline-grid;
+	place-items: center;
+	min-width: var(--control-h-sm);
+	height: var(--control-h-sm);
+	padding: 0 var(--sp-2);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .atlas-export__character-more {
+	font-size: var(--fs-2xs);
+	color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------
+	The file plan
+-------------------------------------------------------- */
+
+.atlas-export__files {
+	display: grid;
+	gap: var(--sp-3);
+}
+
+.atlas-export__files:empty {
 	display: none;
+}
+
+.modal-dialog__body .atlas-export__files-label {
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+
+.atlas-export__file-names {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
+}
+
+.modal-dialog__body .atlas-export__file-name {
+	padding: var(--sp-1) var(--sp-3);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	color: var(--text-secondary);
 }
 
 /* --------------------------------------------------------
@@ -190,7 +255,7 @@
 
 .atlas-export__subset {
 	display: grid;
-	gap: var(--sp-3);
+	gap: var(--sp-4);
 	min-width: 0;
 }
 
@@ -199,7 +264,7 @@
 	gap: var(--sp-3);
 }
 
-.atlas-export__subset-report {
+.modal-dialog__body .atlas-export__subset-report {
 	font-size: var(--fs-xs);
 	line-height: var(--lh-normal);
 	color: var(--text-secondary);
@@ -209,19 +274,15 @@
 	display: none;
 }
 
-.atlas-export__ok {
-	color: var(--ok);
-}
-
 .atlas-export__blocks {
 	display: grid;
-	gap: var(--sp-2);
-	margin: var(--sp-3) 0;
+	gap: var(--sp-3);
+	margin: var(--sp-4) 0;
 	padding: 0;
 	list-style: none;
 	/*
-		A text with a lot of missing characters would otherwise push the export
-		button off the bottom of the dialog.
+		A text with a lot of missing characters would otherwise push the rest
+		of the dialog down by more than a screen.
 	*/
 	max-height: 180px;
 	overflow-y: auto;
@@ -232,28 +293,13 @@
 	align-items: center;
 	flex-wrap: wrap;
 	gap: var(--sp-2);
+	/* resets.css indents every list item by 20px, which is right in prose and
+		wrong in a grid of chips. */
+	margin-left: 0;
 }
 
-.atlas-export__block-name {
-	font-size: var(--fs-2xs);
-	color: var(--text-tertiary);
+.modal-dialog__body .atlas-export__block-name {
 	min-width: 140px;
-}
-
-/*
-	Each missing character is shown as itself, drawn by the system font - this
-	font does not have it, which is the whole point.
-*/
-.atlas-export__missing-char {
-	display: inline-grid;
-	place-items: center;
-	min-width: 22px;
-	height: 22px;
-	padding: 0 var(--sp-1);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-default);
-	border-radius: var(--r-md);
-	font-family: var(--font-mono);
-	font-size: var(--fs-xs);
-	color: var(--text-primary);
+	font-size: var(--fs-2xs);
+	color: var(--text-secondary);
 }

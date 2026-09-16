@@ -2341,3 +2341,57 @@ dialog {
 	display: block;
 	width: 100%;
 }
+
+/* --------------------------------------------------------------
+	A NATIVE SELECT AND A TEXTAREA, AT DIALOG SCALE
+
+	option-chooser is the app's select and is right in a panel, where it sits
+	beside a number field at --control-h. A dialog form is a different size,
+	and some of its choices are plain two-option lists that do not need a
+	custom control at all - so these are the native elements, wearing the same
+	40px box, --r-lg corner and transparent ground the dialog's choosers wear.
+	------------------------------------------------------------ */
+
+.modal-dialog__body .dialog-select {
+	width: 100%;
+	height: var(--control-h-lg);
+	padding: 0 var(--sp-4);
+	background-color: transparent;
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-ui);
+	font-size: var(--fs-md);
+	transition: var(--transition-color);
+}
+
+.dialog-select:hover {
+	border-color: var(--accent);
+	cursor: pointer;
+}
+
+.dialog-select:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.modal-dialog__body .dialog-textarea {
+	width: 100%;
+	min-height: 64px;
+	padding: var(--sp-4);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	resize: vertical;
+}
+
+.dialog-textarea:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
