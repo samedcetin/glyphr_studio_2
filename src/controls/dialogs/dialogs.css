@@ -117,15 +117,15 @@ dialog {
 	absolute rather than fixed, it sat at the document's top rather than the
 	window's.
 
-	It takes the toast's slot now - centred, top of the window, where nothing
-	else lives. The two cannot collide: showError closes every other dialog
-	first, the toast included.
+	It takes the toast's slot now - centred, under the breadcrumb bar (see the
+	toast for the arithmetic). The two cannot collide: showError closes every
+	other dialog first, the toast included.
 	------------------------------------------------------------ */
 
 #error {
 	display: grid;
 	position: fixed;
-	top: var(--sp-6);
+	top: calc(var(--sp-10) + var(--sp-5));
 	left: 0;
 	right: 0;
 	margin-inline: auto;
@@ -196,8 +196,8 @@ dialog {
 	background-color: transparent;
 	color: var(--text-danger);
 	box-shadow: none;
-	font-size: var(--fs-lg);
 	line-height: 1;
+	cursor: pointer;
 	transition: var(--transition-color);
 }
 

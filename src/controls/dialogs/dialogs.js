@@ -609,9 +609,18 @@ function makeOneContextMenuRow(data = {}) {
  * @param {String} message - HTML content of the dialog box
  */
 export function showError(message) {
-	let element = makeElement({ tag: 'div', id: 'error' });
+	/*
+		role="alert": an error is the one message that should interrupt a
+		screen reader, where the toast (role="status") waits its turn.
+	*/
+	let element = makeElement({ tag: 'div', id: 'error', attributes: { role: 'alert' } });
 	let header = makeElement({ className: 'error__header', innerHTML: '<h3>Error</h3>' });
-	let close = makeElement({ tag: 'button', innerHTML: '&times;' });
+	// The same close as the modal frame's, not a typographic ×.
+	let close = makeElement({
+		tag: 'button',
+		attributes: { type: 'button', 'aria-label': 'Close' },
+		innerHTML: makeLineIcon('close', 16),
+	});
 	close.addEventListener('click', closeEveryTypeOfDialog);
 	header.appendChild(close);
 	let body = makeElement({ className: 'error__body', innerHTML: message });
