@@ -220,6 +220,7 @@ function makeTextBlockOptions_basicOptions(textBlockOptions, onFlavorChange) {
 	let textInput = makeElement({
 		tag: 'textarea',
 		id: 'textBlockTextInput',
+		className: 'dialog-textarea',
 		innerHTML: textBlockOptions.text,
 	});
 	textInput.addEventListener('keyup', (event) => {

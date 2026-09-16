@@ -30,9 +30,7 @@ export function openPopOutWindow() {
 	*/
 	if (!popOut) {
 		editor.popOutWindow = false;
-		showToast(
-			`The live preview window was blocked.<br>Allow pop-ups for this site and try again.`
-		);
+		showToast(`The live preview window was blocked.<br>Allow pop-ups for this site and try again.`);
 		return;
 	}
 
@@ -253,7 +251,6 @@ function redrawPopOutWindow() {
  * @returns {HTMLElement}
  */
 export function makeLivePreviewPopOutCard() {
-
 	const button = makeElement({
 		tag: 'fancy-button',
 		attributes: { secondary: '' },
@@ -294,55 +291,72 @@ export function livePreviewPopOutWindowResize() {
 // --------------------------------------------------------------
 
 let selectedLivePreview = 1;
+
+/**
+ * The options for one of this window's previews, in the app's modal frame.
+ *
+ * It used to be an h1, a panel card and two stacked buttons inside a bare
+ * dialog - the editor's side panel dropped into a box. It is a dialog now:
+ * a titled frame, the preview to edit as a field at the top, the panel's
+ * controls under it, and the two things you can do in the footer. "Save" is
+ * gone from the footer because nothing here waits to be saved - every
+ * control writes to the preview as you change it - so the button says Done.
+ */
 function showEditLivePreviewDialog() {
 	// log(`showEditLivePreviewDialog`, 'start');
 	const editor = getCurrentProjectEditor();
 	// @ts-expect-error 'property does exist'
 	const popDoc = editor.popOutWindow.document;
-	let panelArea = makeElement({ tag: 'div', id: 'content-page__panel' });
-	let header = makeElement({ tag: 'h1', content: 'Live Preview options' });
-	// log(`selectedLivePreview: ${selectedLivePreview}`);
-	// log(`\n⮟editor.livePreviews⮟`);
-	// log(editor.livePreviews);
-	let selected = editor.livePreviews[selectedLivePreview];
-	// log(`\n⮟selected⮟`);
-	// log(selected);
-	let previewChooser = makeElement({
+	const selected = editor.livePreviews[selectedLivePreview];
+
+	// --- Which preview ------------------------------------------
+	const previewChooser = makeElement({
 		tag: 'option-chooser',
+		className: 'dialog-select',
 		attributes: {
+			id: 'pop-out__preview-chooser',
 			'selected-name': `${selectedLivePreview}: ${selected.displayName}`,
 			'selected-id': `${selectedLivePreview}: ${selected.displayName} ${selected.fontSize}px`,
 		},
 	});
 
 	for (let i = 1; i < editor.livePreviews.length; i++) {
-		let preview = editor.livePreviews[i];
-		let option = makeElement({
+		const preview = editor.livePreviews[i];
+		const option = makeElement({
 			tag: 'option',
 			innerHTML: `${i}: ${preview.displayName}`,
 			attributes: { note: `${preview.fontSize}px` },
 		});
-
 		option.addEventListener('click', () => {
 			selectedLivePreview = i;
 			closeEveryTypeOfDialog();
 			showEditLivePreviewDialog();
 		});
-
 		previewChooser.appendChild(option);
 	}
 
-	let saveButton = makeElement({ tag: 'fancy-button', content: 'Save' });
-	saveButton.addEventListener('click', closeEveryTypeOfDialog);
+	const chooserLabel = makeElement({
+		tag: 'label',
+		className: 'dialog-field__label',
+		id: 'pop-out__preview-chooser__label',
+		content: 'Preview',
+	});
+	previewChooser.setAttribute('aria-labelledby', chooserLabel.id);
+	const chooserField = makeElement({ className: 'dialog-field' });
+	addAsChildren(chooserField, [chooserLabel, previewChooser]);
 
-	let deleteButton = makeElement({
+	// --- What you can do ----------------------------------------
+	const doneButton = makeElement({ tag: 'fancy-button', content: 'Done' });
+	doneButton.addEventListener('click', closeEveryTypeOfDialog);
+
+	const deleteButton = makeElement({
 		tag: 'fancy-button',
-		content: 'Delete',
-		attributes: { danger: '' },
+		content: 'Delete preview',
+		attributes: { secondary: '', danger: '' },
 	});
 	deleteButton.addEventListener('click', () => {
 		const previews = getCurrentProjectEditor().livePreviews;
-		let name = previews[selectedLivePreview].displayName;
+		const name = previews[selectedLivePreview].displayName;
 		previews.splice(selectedLivePreview, 1);
 		if (selectedLivePreview >= previews.length) selectedLivePreview = previews.length - 1;
 		closeEveryTypeOfDialog();
@@ -351,23 +365,18 @@ function showEditLivePreviewDialog() {
 		showToast(`Deleted live preview<br>${name}`);
 	});
 
-	let commitButtons = makeElement();
-	addAsChildren(commitButtons, [saveButton, deleteButton]);
-
-	let previewSelectorCard = makeElement({
-		tag: 'div',
-		className: 'panel__card no-card',
-		innerHTML: `<h3>Edit live preview:</h3>`,
-	});
-	addAsChildren(previewSelectorCard, [previewChooser, commitButtons]);
-
-	addAsChildren(panelArea, [
-		header,
-		previewSelectorCard,
+	// --- The body -----------------------------------------------
+	const body = makeElement({ className: 'pop-out__options' });
+	addAsChildren(body, [
+		chooserField,
 		makePanel_LivePreview(editor.livePreviews[selectedLivePreview], false),
 	]);
 
-	let diag = makeModalDialog(panelArea, 500);
-	popDoc.body.appendChild(diag);
+	const dialog = makeModalDialog(body, 520, {
+		title: 'Live preview options',
+		subtitle: 'What this window shows. Changes land as you make them.',
+		actions: [deleteButton, doneButton],
+	});
+	popDoc.body.appendChild(dialog);
 	// log(`showEditLivePreviewDialog`, 'end');
 }

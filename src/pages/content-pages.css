@@ -1392,11 +1392,24 @@ code {
 	on the page you type a sentence into, and a 28px line is not where you
 	read one back.
 */
+/*
+	Sized by what is typed, between a floor and a ceiling, with no resize
+	grip - the same treatment as .dialog-textarea. The grip was the one
+	piece of browser chrome left on this page. `height: auto` because
+	.studio-field pins the control height, and a fixed height is what stops
+	field-sizing from measuring the text. Padding equal to the radius, so
+	the text sits concentric with the corner.
+*/
 .live-preview__text {
 	width: 100%;
+	height: auto;
 	min-height: 76px;
-	padding: var(--sp-3);
-	resize: vertical;
+	max-height: 240px;
+	padding: var(--sp-4);
+	resize: none;
+	field-sizing: content;
+	overflow-y: auto;
+	scrollbar-width: thin;
 	line-height: var(--lh-normal);
 }
 

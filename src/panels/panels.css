@@ -1562,17 +1562,12 @@ button.history-list__row:focus {
 
 
 /*
-		Content Pages
+	The live preview panel's text box is a .dialog-textarea - the one control
+	the compose dialog and the atlas export use - sized by what is typed
+	between a floor and a ceiling, with no resize grip. The id rule that
+	pinned it to 70 x 260 with a vertical grip is gone; the panel's own
+	column gives it its width.
 */
-
-#textBlockTextInput {
-	height: 70px;
-	min-height: 24px;
-	width: 260px;
-	max-width: 260px;
-	min-width: 260px;
-	resize: vertical;
-}
 
 /* --------------------------------------------------------------
 	CONTEXT CHARACTERS PANEL

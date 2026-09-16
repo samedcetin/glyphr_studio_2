@@ -1,81 +1,87 @@
+/*
+	POP-OUT LIVE PREVIEW
+	--------------------
+	A second window with nothing in it but the previews, for a second screen
+	or the corner of the first. It is the app's ground and the app's cards:
+	it used to be a white page with white-bordered boxes and a quarter-second
+	hand-written hover, which in the dark theme was the one bright window on
+	the desk.
+
+	The wrapper ignores the pointer so the drawn previews are display-only;
+	the native-text previews take it back, because they are typed into.
+*/
+
 body {
 	margin: 0;
-	padding: 20px;
-	background-color: white;
+	padding: var(--sp-6);
+	background-color: var(--bg-app);
+	color: var(--text-primary);
 	overflow-x: hidden;
 	overflow-y: auto;
-	transition: none;
 }
 
 #pop-out__wrapper {
+	display: grid;
+	align-content: start;
+	gap: var(--sp-4);
 	pointer-events: none;
 	width: 100%;
-	height: 100%;
-	padding: 0px;
 }
 
-#pop-out__wrapper:hover display-canvas {
-	transition: border 250ms ease-in-out;
-	border: 1px solid var(--blue-l70);
-	box-shadow: var(--l3-shadow);
+/*
+	One card per preview. Both renderers take the same box - padding, border,
+	radius - so the card does not change size when a preview switches between
+	the drawn and the native flavour.
+*/
+display-canvas,
+font-preview {
+	box-sizing: content-box;
+	display: block;
+	max-width: 100%;
+	padding: var(--sp-4);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	transition: border-color var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease);
+}
+
+display-canvas {
+	width: fit-content;
+}
+
+font-preview {
+	pointer-events: auto;
+}
+
+/* The cards lift a little when the window is being looked at. */
+#pop-out__wrapper:hover display-canvas,
+#pop-out__wrapper:hover font-preview {
+	border-color: var(--border-default);
+	box-shadow: var(--shadow-2);
 }
 
 dialog {
 	pointer-events: auto;
 }
 
-display-canvas {
-	box-sizing: content-box;
-	display: block;
-	width: fit-content;
-	max-width: 100%;
-	margin: 10px;
-	border: 1px solid white;
-	background-color: white;
-}
-
 /*
-	The wrapper disables pointer events so the canvas (Glyphr Studio) previews
-	are display-only. The OTF / TTF font-preview previews are editable live text,
-	so they need pointer events re-enabled to be clicked and typed into.
-
-	Both renderers use the same block-level, top-aligned box model (matching
-	margin and border) so the preview doesn't shift vertically when switching
-	render flavors. (display-canvas is inline-block-free here on purpose — an
-	inline-block strut would offset the text relative to the block font-preview.)
+	The two buttons wait, faint, at the foot: this window is for looking at,
+	and its controls should not compete with the type. They come up when the
+	pointer is in the window.
 */
-font-preview {
-	box-sizing: content-box;
-	display: block;
-	margin: 10px;
-	border: 1px solid white;
-	background-color: white;
-	pointer-events: auto;
-}
-
 .pop-out__footer {
-	margin: 20px 10px 10px 10px;
-	padding: 40px 0px;
-	opacity: 0.1;
-	text-align: center;
-	transition: opacity 300ms ease-in-out;
+	display: flex;
+	justify-content: center;
+	gap: var(--sp-3);
+	padding: var(--sp-8) 0;
+	opacity: 0.35;
 	pointer-events: auto;
+	transition: opacity var(--dur-base) var(--ease);
 }
 
 body:hover .pop-out__footer {
-	transition: opacity 300ms ease-in-out;
-	opacity: 0.5;
-}
-
-body:hover .pop-out__footer:hover {
-	transition: opacity 300ms ease-in-out;
 	opacity: 1;
-}
-
-fancy-button {
-	height: 31px;
-	transition: opacity 300ms ease-in-out;
-	margin: 5px 10px 10px 0px;
 }
 
 option-chooser {

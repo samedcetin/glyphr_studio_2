@@ -2362,9 +2362,14 @@ dialog {
 
 	Hover and focus match the other two controls: accent hairline, then the
 	ring. --sp-5 is 12px - the same number as --r-lg, which is the point.
+
+	Not prefixed with the dialog body: the live preview panel's text box is
+	the same control, and it sits in a side panel and in the pop-out window's
+	dialog as well as here. A class beats resets.css's bare `textarea`
+	wherever it is.
 	------------------------------------------------------------ */
 
-.modal-dialog__body .dialog-textarea {
+.dialog-textarea {
 	display: block;
 	width: 100%;
 	box-sizing: border-box;
@@ -2392,21 +2397,21 @@ dialog {
 	transition: var(--transition-color);
 }
 
-.modal-dialog__body .dialog-textarea::placeholder {
+.dialog-textarea::placeholder {
 	color: var(--text-tertiary);
 }
 
-.modal-dialog__body .dialog-textarea:hover {
+.dialog-textarea:hover {
 	border-color: var(--accent);
 }
 
-.modal-dialog__body .dialog-textarea:focus-visible {
+.dialog-textarea:focus-visible {
 	border-color: var(--accent);
 	outline: var(--focus-style);
 	outline-offset: var(--focus-offset);
 }
 
-.modal-dialog__body .dialog-textarea:disabled {
+.dialog-textarea:disabled {
 	color: var(--text-disabled);
 	border-color: var(--border-subtle);
 	cursor: not-allowed;
