@@ -21,7 +21,14 @@ dialog {
 #toast {
 	display: none;
 	position: fixed;
-	top: var(--sp-6);
+	/*
+		Under the breadcrumb bar, not across it. The bar floats top left and
+		ends 42px down - 8 of offset, 4 of padding, a 24px control, 4 of
+		padding, two hairlines - and at 16px a toast landed on top of it
+		whenever the breadcrumb was long or the window narrow. 52 clears it
+		by the same 8px the bar keeps from the window's edge.
+	*/
+	top: calc(var(--sp-10) + var(--sp-5));
 	/*
 		Centred with auto margins rather than a translate. animateRemove()
 		animates `transform` on the way out, which would drop any translateX
