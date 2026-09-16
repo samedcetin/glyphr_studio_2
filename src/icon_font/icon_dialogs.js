@@ -302,7 +302,7 @@ export function showIconImportDialog() {
 	}
 
 	fileInput.addEventListener('change', () => {
-		loadFiles([.../** @type {HTMLInputElement} */ (fileInput.files || [])]);
+		loadFiles([...(/** @type {HTMLInputElement} */ (fileInput).files || [])]);
 		/* Cleared, so picking the same folder twice fires change the second
 			time. */
 		/** @type {HTMLInputElement} */ (fileInput).value = '';
@@ -313,10 +313,10 @@ export function showIconImportDialog() {
 		dropZone.setAttribute('dragging', '');
 	});
 	dropZone.addEventListener('dragleave', () => dropZone.removeAttribute('dragging'));
-	dropZone.addEventListener('drop', (event) => {
+	dropZone.addEventListener('drop', (/** @type {DragEvent} */ event) => {
 		event.preventDefault();
 		dropZone.removeAttribute('dragging');
-		loadFiles([.../** @type {DragEvent} */ (event.dataTransfer?.files || [])]);
+		loadFiles([...(event.dataTransfer?.files || [])]);
 	});
 
 	/*

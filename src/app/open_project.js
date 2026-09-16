@@ -994,8 +994,8 @@ function refreshProjectGrid() {
 
 /**
  * The project search.
- * @param {Object =} args
- * @param {Boolean =} args.wide - the bar's copy, which has room for more
+ * @param {Object} [args]
+ * @param {Boolean} [args.wide] - the bar's copy, which has room for more
  * @returns {Element}
  */
 function makeProjectSearch({ wide = false } = {}) {

@@ -211,7 +211,7 @@ function makeToolGroup(group, members, toolButtonData) {
  * right panel had been dragged.
  *
  * @param {Element} content - the page, holding .editor-page__tools-area
- * @param {Array} toolButtons - page-specific tools; kerning supplies its own
+ * @param {Array | Element} toolButtons - page-specific tools; kerning supplies its own
  * @returns {Boolean} - whether the bar was found and filled
  */
 export function fillEditorToolBar(content, toolButtons = []) {

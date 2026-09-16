@@ -1213,7 +1213,8 @@ function makeOptionRow(id, title, hint, initial) {
  * A select built from {value, label} entries.
  * @param {String} id - for the label to point at
  * @param {Array} entries - the options
- * @returns {Element}
+ * @param {Function=} onChange - called with the new value
+ * @returns {{element: HTMLElement, get: () => String, set: (value: String) => void}}
  */
 function makeSelect(id, entries, onChange) {
 	const chooser = makeElement({
@@ -1261,7 +1262,9 @@ function makeSelect(id, entries, onChange) {
  * @param {String} label - row label
  * @param {Element} control - the control
  * @param {String} hint - optional explanation
- * @returns {Element}
+ * @param {Element=} labelFor - the control the label points at, when it is
+ *                              not `control` itself
+ * @returns {HTMLElement}
  */
 function makeField(label, control, hint, labelFor = undefined) {
 	const field = makeElement({ className: 'dialog-field' });

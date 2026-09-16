@@ -345,7 +345,7 @@ const stepChevron = {
  *
  * @param {Object} editor - the project editor
  * @param {Number} delta - -1 for the previous item, 1 for the next
- * @returns {Element}
+ * @returns {HTMLElement}
  */
 function makeStepButton(editor, delta) {
 	const button = makeElement({
@@ -371,7 +371,7 @@ function makeStepButton(editor, delta) {
  * A step button says where it goes, since where it goes changes every time
  * one of them is pressed.
  *
- * @param {Element} button - the button to update
+ * @param {HTMLElement} button - the button to update
  * @param {Object} editor - the project editor
  * @param {Number} delta - -1 for the previous item, 1 for the next
  */

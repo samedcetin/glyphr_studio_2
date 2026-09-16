@@ -418,7 +418,7 @@ export function showAddLigatureDialog() {
 		and both spans stay inside the label so the whole row is still a target.
 	*/
 	const option = makeElement({ tag: 'label', className: 'dialog-option' });
-	const multiLigatureCheckbox = makeElement({
+	const multiLigatureCheckbox = /** @type {HTMLInputElement} */ (makeElement({
 		tag: 'input',
 		attributes: {
 			type: 'checkbox',
@@ -426,7 +426,7 @@ export function showAddLigatureDialog() {
 			'aria-labelledby': 'ligatures__multi-input-title',
 			'aria-describedby': 'ligatures__multi-input-hint',
 		},
-	});
+	}));
 	option.appendChild(multiLigatureCheckbox);
 	option.appendChild(
 		makeElement({

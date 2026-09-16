@@ -417,7 +417,9 @@ export function showFindSingleLetterPairDialog() {
 		`,
 	});
 
+	/** @type {HTMLInputElement} */
 	const leftSearch = content.querySelector('#kerning__letter-pair__left-group');
+	/** @type {HTMLInputElement} */
 	const rightSearch = content.querySelector('#kerning__letter-pair__right-group');
 
 	const closeButton = makeElement({
@@ -439,7 +441,7 @@ export function showFindSingleLetterPairDialog() {
 		field.addEventListener('keyup', updateSearchButton);
 		/* Was an inline onclick attribute on each field. */
 		field.addEventListener('focus', () => field.select());
-		field.addEventListener('keydown', (event) => {
+		field.addEventListener('keydown', (/** @type {KeyboardEvent} */ event) => {
 			if (event.key === 'Enter' && !searchButton.hasAttribute('disabled')) {
 				searchForLetterPairs();
 			}
@@ -502,7 +504,9 @@ export function showDeleteSingleLetterPairDialog() {
 		`,
 	});
 
+	/** @type {HTMLInputElement} */
 	const leftSearch = content.querySelector('#kerning__letter-pair__left-group');
+	/** @type {HTMLInputElement} */
 	const rightSearch = content.querySelector('#kerning__letter-pair__right-group');
 	const resultsArea = content.querySelector('#kerning__letter-pair__results');
 
@@ -605,7 +609,7 @@ export function showDeleteSingleLetterPairDialog() {
 		field.addEventListener('change', resetToFind);
 		field.addEventListener('keyup', resetToFind);
 		field.addEventListener('focus', () => field.select());
-		field.addEventListener('keydown', (event) => {
+		field.addEventListener('keydown', (/** @type {KeyboardEvent} */ event) => {
 			if (event.key === 'Enter' && !actionButton.hasAttribute('disabled')) actionButton.click();
 		});
 	});

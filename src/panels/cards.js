@@ -575,12 +575,21 @@ export function makeDirectToggle(item, property, callback, args = {}) {
 	return toggle;
 }
 
+/**
+ * A checkbox bound straight to one property of an object.
+ * @param {Object} item - what to write to
+ * @param {String} property - which property
+ * @param {Function=} callback - called after a change
+ * @param {String | false} [id] - an id for a label to point at
+ * @returns {HTMLInputElement}
+ */
 export function makeDirectCheckbox(item, property, callback, id = false) {
-	let newCheckbox = makeElement({
-		tag: 'input',
-		attributes: { type: 'checkbox' },
-	});
-	// @ts-expect-error 'property does exist'
+	const newCheckbox = /** @type {HTMLInputElement} */ (
+		makeElement({
+			tag: 'input',
+			attributes: { type: 'checkbox' },
+		})
+	);
 	if (item[property]) newCheckbox.checked = true;
 	if (typeof id === 'string') newCheckbox.setAttribute('id', id);
 

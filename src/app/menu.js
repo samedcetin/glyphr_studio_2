@@ -114,7 +114,7 @@ function menuAnchor(entryPoint) {
 /**
  * Makes one menu, with an entry point and a hidden dropdown.
  * @param {String} menuName - Name for the menu entry point
- * @returns {Element}
+ * @returns {HTMLElement}
  */
 export function makeMenu(menuName) {
 	/*
