@@ -330,6 +330,7 @@ export function getActionData(name) {
 			{
 				iconName: 'deleteShape',
 				title: 'Delete\nRemoves the currently selected shape(s) from this glyph.',
+				id: 'actionButtonDeleteShape',
 				onClick: deleteSelectedPaths,
 			},
 			{
@@ -496,6 +497,7 @@ export function getActionData(name) {
 			{
 				iconName: 'moveLayerUp',
 				title: `Move Shapes Up\nMoves shapes up in the layer order.`,
+				id: 'actionButtonMoveLayerUp',
 				onClick: () => {
 					moveLayer('up');
 					const editor = getCurrentProjectEditor();
@@ -506,6 +508,7 @@ export function getActionData(name) {
 			{
 				iconName: 'moveLayerTop',
 				title: `Move Shapes to the Top\nMoves shapes to the top of the layer order.`,
+				id: 'actionButtonMoveLayerTop',
 				onClick: () => {
 					moveLayer('top');
 					const editor = getCurrentProjectEditor();
@@ -516,6 +519,7 @@ export function getActionData(name) {
 			{
 				iconName: 'moveLayerDown',
 				title: `Move Shapes Down\nMoves shapes down in the layer order.`,
+				id: 'actionButtonMoveLayerDown',
 				onClick: () => {
 					moveLayer('down');
 					const editor = getCurrentProjectEditor();
@@ -526,6 +530,7 @@ export function getActionData(name) {
 			{
 				iconName: 'moveLayerBottom',
 				title: `Move Shapes to the Bottom\nMoves shapes to the bottom of the layer order.`,
+				id: 'actionButtonMoveLayerBottom',
 				onClick: () => {
 					moveLayer('bottom');
 					const editor = getCurrentProjectEditor();
@@ -749,11 +754,13 @@ export function getActionData(name) {
 				iconName: 'deletePathPoint',
 				title: `Delete Path Point\nRemoves the currently selected point or points from the path.`,
 				disabled: selectedPaths.length === 0,
+				id: 'actionButtonDeletePathPoint',
 				onClick: deleteSelectedPoints,
 			},
 			{
 				iconName: 'resetPathPoint',
 				title: `Reset Handles\nMoves the handles of the currently selected point or points to default locations.`,
+				id: 'actionButtonResetPathPoint',
 				onClick: () => {
 					const editor = getCurrentProjectEditor();
 					editor.multiSelect.points.resetHandles();
@@ -791,7 +798,7 @@ export function getActionData(name) {
 			{
 				iconName: 'selectPreviousPathPoint',
 				disabled: editor.multiSelect.points.hasMultipleParents,
-				title: `Select pervious Path Point\nSelect the path point that comes before the currently selected path point.\nHold [Ctrl] to add the previous path point to the selection.`,
+				title: `Select previous Path Point\nSelect the path point that comes before the currently selected path point.\nHold [Ctrl] to add the previous path point to the selection.`,
 				onClick: selectPreviousPathPoint,
 			},
 			{
@@ -981,9 +988,11 @@ function snapSelectedItemToPixelGrid() {
 		return;
 	}
 
-	showToast(`Snapped to the pixel grid<br>${before} shape${
-		before === 1 ? '' : 's'
-	} became ${item.shapes.length}.`);
+	showToast(
+		`Snapped to the pixel grid<br>${before} shape${before === 1 ? '' : 's'} became ${
+			item.shapes.length
+		}.`
+	);
 }
 
 /**

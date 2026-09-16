@@ -26,14 +26,17 @@ import { getActionData } from '../panels/actions.js';
  */
 const shortcutsByActionID = {
 	actionButtonCopy: ['Ctrl', 'C'],
+	actionButtonCopyPath: ['Ctrl', 'C'],
 	actionButtonPaste: ['Ctrl', 'V'],
 	actionButtonUndo: ['Ctrl', 'Z'],
 	actionButtonRedo: ['Ctrl', 'Y'],
 	actionButtonDeleteShape: ['Del'],
 	actionButtonDeletePathPoint: ['Del'],
-	actionButtonSelectPreviousPathPoint: ['['],
-	actionButtonSelectNextPathPoint: [']'],
 	actionButtonResetPathPoint: ['Ctrl', 'R'],
+	actionButtonMoveLayerUp: ['Ctrl', ']'],
+	actionButtonMoveLayerDown: ['Ctrl', '['],
+	actionButtonMoveLayerTop: ['Ctrl', 'Shift', ']'],
+	actionButtonMoveLayerBottom: ['Ctrl', 'Shift', '['],
 };
 
 /**
@@ -158,14 +161,23 @@ export function handleCanvasContextMenu(event) {
 	const rows = makeCanvasMenuRows();
 	if (!rows.length) return;
 
-	// Keep the menu on screen: an estimated height is enough here, since the
-	// menu is not in the DOM yet and cannot be measured.
-	const estimatedHeight = rows.length * 28 + 16;
+	/*
+		Keep the whole menu on screen. It used to be placed from an estimate
+		of 28px a row, which the rows outgrew: with two shapes selected the
+		menu ran past the window and scrolled inside itself, and a right-click
+		menu that scrolls hides the rows you came for. So it is measured: put
+		in the DOM at the pointer, then moved up as far as its real height
+		needs. The height cap is the window's, not the stylesheet's 520px -
+		a menu may be as tall as the screen allows before it has to scroll.
+	*/
+	const margin = 8;
 	const menuWidth = 280;
-	const x = Math.min(event.clientX, window.innerWidth - menuWidth - 8);
-	const y = Math.min(event.clientY, Math.max(8, window.innerHeight - estimatedHeight - 8));
-
-	const menu = makeContextMenu(rows, x, y, menuWidth);
+	const x = Math.min(event.clientX, window.innerWidth - menuWidth - margin);
+	const menu = makeContextMenu(rows, x, event.clientY, menuWidth, window.innerHeight - margin * 2);
 	document.body.appendChild(menu);
+
+	const height = menu.offsetHeight;
+	const y = Math.max(margin, Math.min(event.clientY, window.innerHeight - height - margin));
+	menu.style.top = `${y}px`;
 	menu.focus();
 }

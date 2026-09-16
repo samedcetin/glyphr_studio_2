@@ -622,6 +622,8 @@ const shortcutReference = [
 			['Next shape', [']']],
 			['Previous shape', ['[']],
 			['Add next shape to selection', ['Shift', '}']],
+			['Move shape up / down a layer', ['Ctrl', '] / [']],
+			['Move shape to the top / bottom', ['Ctrl', 'Shift', '] / [']],
 			['Next / previous glyph', ['Ctrl', '. / ,']],
 		],
 	},
