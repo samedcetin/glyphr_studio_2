@@ -33,13 +33,6 @@
 	min-width: 0;
 }
 
-.atlas-export__number {
-	width: 120px;
-	height: var(--control-h-lg);
-	font-family: var(--font-mono);
-	font-variant-numeric: tabular-nums;
-}
-
 /* --------------------------------------------------------
 	The preview
 

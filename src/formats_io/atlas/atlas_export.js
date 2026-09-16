@@ -600,9 +600,44 @@ export function showAtlasExportDialog() {
 
 	const rangeField = makeField(
 		'Distance range',
-		rangeInput.input,
-		'MSDF only. How far the field spreads either side of the outline, in pixels — also how much room an outline or glow effect has.'
+		rangeInput.wrapper,
+		'MSDF only. How far the field spreads either side of the outline — also how much room an outline or glow effect has.',
+		rangeInput.input
 	);
+
+	/*
+		Side by side, because they are read against each other. The em size and
+		the texture it has to fit into together decide how many pages there
+		are; the border round a glyph and the gap between glyphs are the two
+		halves of the same question. Stacked, the five numbers ran a screen and
+		a half of full-width rows holding a 120px box each.
+	*/
+	const sizeRow = makeElement({ className: 'dialog-field-row' });
+	addAsChildren(sizeRow, [
+		makeField('Pixel size', sizeInput.wrapper, 'The em square.', sizeInput.input),
+		makeField(
+			'Texture size',
+			pageInput.wrapper,
+			'More pages are added if glyphs do not fit.',
+			pageInput.input
+		),
+	]);
+
+	const gapRow = makeElement({ className: 'dialog-field-row' });
+	addAsChildren(gapRow, [
+		makeField(
+			'Padding',
+			paddingInput.wrapper,
+			'Transparent border baked around each glyph. One is the least the packer allows: a glyph drawn hard against its own edge bleeds into its neighbour when the texture is sampled.',
+			paddingInput.input
+		),
+		makeField(
+			'Spacing',
+			spacingInput.wrapper,
+			'Gap left between glyphs on the texture.',
+			spacingInput.input
+		),
+	]);
 
 	addAsChildren(content, [
 		engineField,
@@ -616,15 +651,9 @@ export function showAtlasExportDialog() {
 			formatSelect.element,
 			'Identical data either way. Phaser 3 and PixiJS parse the XML form; almost everything else reads the text form.'
 		),
-		makeField('Pixel size', sizeInput.input, 'The em square, in pixels.'),
+		sizeRow,
 		rangeField,
-		makeField('Texture size', pageInput.input, 'More pages are added if glyphs do not fit.'),
-		makeField(
-			'Padding',
-			paddingInput.input,
-			'Transparent border baked around each glyph. One pixel is the least the packer allows: a glyph drawn hard against its own edge bleeds into its neighbour when the texture is sampled.'
-		),
-		makeField('Spacing', spacingInput.input, 'Gap left between glyphs on the texture.'),
+		gapRow,
 		makeElement({ className: 'dialog-field__label', content: 'Options' }),
 		potToggle.wrapper,
 		kerningToggle.wrapper,
@@ -1099,7 +1128,6 @@ function makeNumberField(id, initial, min, max) {
 	const input = makeElement({
 		tag: 'input',
 		id: id,
-		className: 'atlas-export__number',
 		attributes: {
 			type: 'number',
 			value: String(initial),
@@ -1108,6 +1136,19 @@ function makeNumberField(id, initial, min, max) {
 		},
 	});
 
+	/*
+		The unit, at the far end of the box. Every number in this dialog is
+		pixels and not one of them said so - and the right edge had nothing in
+		it but the native spinner, which appears on hover and focus and nowhere
+		else, so the field grew two tiny off-system arrows whenever you went
+		near it. See .dialog-number.
+	*/
+	const wrapper = makeElement({ className: 'dialog-number' });
+	wrapper.appendChild(input);
+	wrapper.appendChild(
+		makeElement({ tag: 'span', className: 'dialog-number__unit', content: 'px' })
+	);
+
 	const clamp = (raw) => {
 		const parsed = Number(raw);
 		if (!isFinite(parsed)) return initial;
@@ -1115,6 +1156,7 @@ function makeNumberField(id, initial, min, max) {
 	};
 
 	return {
+		wrapper: wrapper,
 		input: input,
 		value: () => clamp(/** @type {HTMLInputElement} */ (input).value),
 		set: (next) => {

@@ -2370,3 +2370,109 @@ dialog {
 	display: block;
 	width: 100%;
 }
+
+/* --------------------------------------------------------------
+	A NUMBER, AND WHAT IT IS MEASURED IN
+
+	The same box as .dialog-select - 40px, --r-lg, transparent, the text 12px
+	in from the inside of the hairline - with the unit held at the far end.
+
+	Every number in these dialogs is pixels, and none of them said so. The
+	unit also gives the right edge something to be: the native spinner appears
+	on hover and focus and nowhere else, so the field was a box that grew two
+	tiny off-system arrows when you went near it. Arrow keys still step.
+	------------------------------------------------------------ */
+
+.dialog-number {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	height: 40px;
+	padding: 0 var(--sp-5);
+	background-color: transparent;
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
+}
+
+.dialog-number:hover {
+	border-color: var(--accent);
+}
+
+.dialog-number:focus-within {
+	border-color: var(--accent);
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.modal-dialog__body .dialog-number input {
+	/*
+		Sized to the widest number it can hold - 4096 for a texture, four
+		digits and a space - so the unit sits against the digits rather than at
+		the far end of the box, and sits at the same x in all four fields.
+
+		Left, not right. resets.css right-aligns a number input, which is right
+		in a panel row where the field is as wide as the number; in a 350px
+		field it puts a lone value three hundred pixels from the label that
+		names it, which is the one thing it has to be read with.
+	*/
+	flex: 0 0 auto;
+	width: 5ch;
+	height: 100%;
+	text-align: left;
+	padding: 0;
+	background-color: transparent;
+	border: none;
+	box-shadow: none;
+	color: var(--text-primary);
+	font-family: var(--font-mono);
+	font-size: var(--fs-md);
+	font-variant-numeric: tabular-nums;
+	appearance: textfield;
+}
+
+/*
+	The ring belongs to the box, which is what you can see. Legal for the one
+	reason it ever is: the rule above draws it for the same state.
+*/
+.dialog-number input:focus,
+.dialog-number input:focus-visible {
+	border: none;
+	outline: none;
+}
+
+.dialog-number input::-webkit-outer-spin-button,
+.dialog-number input::-webkit-inner-spin-button {
+	appearance: none;
+	margin: 0;
+}
+
+.modal-dialog__body .dialog-number__unit {
+	flex: 0 0 auto;
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+	pointer-events: none;
+}
+
+/* --------------------------------------------------------------
+	TWO FIELDS THAT BELONG TOGETHER
+
+	Not .dialog-span-row, which is one field split into two halves under one
+	label. These are two whole fields - each with its own label and its own
+	sentence - set side by side because the numbers in them are read against
+	each other: the em size and the texture it has to fit into, the padding
+	round a glyph and the gap between glyphs.
+	------------------------------------------------------------ */
+
+.dialog-field-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--sp-6);
+	align-items: start;
+}
+
+.dialog-field-row > .dialog-field {
+	margin-bottom: 0;
+}
