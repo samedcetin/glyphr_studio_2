@@ -250,128 +250,102 @@
 }
 
 /* --------------------------------------------------------
-	Compose dialog
+	COMPOSE DIALOG
+
+	The frame owns the header, the footer and the scrolling. What is left
+	here is the part that is this dialog's: the list you type into, and the
+	two walls of characters that say what will and will not be built.
+
+	WHAT THIS WAS. Its own scroll box and its own --sp-7 inside the frame's,
+	so the buttons sat at the bottom of an inner scroll and a full set put
+	them off the screen. A form borrowed from the atlas export dialog, which
+	is how it lost its layout when that was rebuilt. And a table that listed
+	every character it could not build and never once showed the ones it
+	could.
 -------------------------------------------------------- */
 
 .compose {
-	display: grid;
-	gap: var(--sp-6);
-	padding: var(--sp-7);
-	max-height: 78vh;
-	overflow-y: auto;
-}
-
-.compose__header h2 {
-	margin-bottom: var(--sp-3);
-}
-
-.compose__header p {
-	max-width: 62ch;
-	margin: 0;
-	font-size: var(--fs-sm);
-	line-height: var(--lh-normal);
-	color: var(--text-secondary);
-}
-
-.compose__header code {
-	font-family: var(--font-mono);
-	font-size: var(--fs-xs);
-	background-color: var(--bg-surface-sunken);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
-	padding: 0 var(--sp-1);
-}
-
-.compose__summary {
-	font-size: var(--fs-sm);
-	color: var(--text-secondary);
-}
-
-.compose__table {
-	display: grid;
-	gap: 1px;
-	max-height: 240px;
-	overflow-y: auto;
-	background-color: var(--border-subtle);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-sm);
-}
-
-.compose__table:empty {
-	display: none;
-}
-
-.compose__row {
-	display: grid;
-	grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-	gap: var(--sp-4);
-	padding: var(--sp-3) var(--sp-4);
-	background-color: var(--bg-surface);
-	font-size: var(--fs-xs);
-}
-
-.compose__characters {
-	font-family: var(--font-mono);
-	line-height: 1.6;
-	color: var(--text-primary);
-	word-break: break-all;
-}
-
-.compose__reason {
-	color: var(--text-tertiary);
-	line-height: var(--lh-normal);
-}
-
-.compose__warning {
-	color: var(--warn);
+	min-height: min(520px, calc(100vh - 240px));
 }
 
 /*
-	The compose dialog's form, after the atlas export dialog was rebuilt.
-
-	It had been borrowing that dialog's row, label, hint, select, checkbox and
-	actions classes, which is why it had no layout of its own to fall back on
-	when they went. These are its own now - the ones the shared dialog
-	vocabulary does not already cover. Its screen in the walkthrough will decide
-	what the dialog should actually be; this is the part that stops it being
-	broken in the meantime.
+	The set you are about to build, set as text you can edit. Mono, because
+	what is in it is one character per glyph and the widths have to be even
+	enough to count by eye.
 */
-
-.compose__form {
-	display: grid;
-	gap: var(--sp-6);
+.modal-dialog__body .compose__input {
+	min-height: 76px;
+	font-size: var(--fs-md);
+	line-height: 1.7;
 }
 
-.compose__control {
+.modal-dialog__body .compose__summary {
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
+.compose__section {
+	display: grid;
+	gap: var(--sp-3);
+}
+
+.modal-dialog__body .compose__section-label {
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+}
+
+/*
+	Left, not spread. The character wall is space-between on the Overview
+	page, where it fills a card; a row of six accented letters spread across
+	700px reads as six unrelated things.
+*/
+.compose__wall {
+	justify-content: start;
+	gap: var(--sp-2);
+}
+
+.modal-dialog__body .compose__wall-more {
+	align-self: center;
+	font-size: var(--fs-2xs);
+	color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------
+	What cannot be built, and why
+-------------------------------------------------------- */
+
+.compose__blocked {
+	display: grid;
+	gap: var(--sp-5);
+	/*
+		Bounded. Four reasons is a list; a Vietnamese set against an empty
+		font is a hundred characters across a dozen of them, and the block
+		underneath still has to be reachable.
+	*/
+	max-height: 260px;
+	overflow-y: auto;
+}
+
+/*
+	The reason first and the characters under it, not side by side. The
+	reason is the thing you act on - "draw the base letter o" - and it was
+	in the right-hand column, after a run of characters that could be sixty
+	wide.
+*/
+.compose__blocked-row {
 	display: grid;
 	gap: var(--sp-2);
-	min-width: 0;
+	padding-left: var(--sp-5);
+	border-left: 2px solid var(--border-strong);
 }
 
-.compose__select {
-	height: var(--control-h-lg);
-	padding: 0 var(--sp-4);
-	background-color: transparent;
-	border: 1px solid var(--border-strong);
-	border-radius: var(--r-md);
-	corner-shape: var(--corner-smooth);
-	color: var(--text-primary);
-	font-family: var(--font-ui);
-	font-size: var(--fs-sm);
-}
-
-.compose__checkbox {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-3);
-	min-height: var(--control-h-lg);
-	font-size: var(--fs-sm);
-	color: var(--text-primary);
-	cursor: pointer;
-}
-
-.compose__actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: var(--sp-3);
+.modal-dialog__body .compose__reason {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
 }
