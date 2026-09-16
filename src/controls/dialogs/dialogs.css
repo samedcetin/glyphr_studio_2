@@ -2208,3 +2208,23 @@ dialog {
 	color: var(--text-secondary);
 	text-wrap: pretty;
 }
+
+/*
+	An option that is not on offer. The range delete dialog can be opened on a
+	range holding no characters, where `delete the characters in it` is a
+	choice about nothing - so it is shown, greyed, rather than hidden: a row
+	that comes and goes leaves you unsure whether you missed it.
+*/
+.dialog-option[disabled] {
+	cursor: default;
+	opacity: 0.5;
+}
+
+.dialog-option[disabled]:hover {
+	background-color: transparent;
+	border-color: var(--border-subtle);
+}
+
+.dialog-option[disabled] input[type='checkbox'] {
+	pointer-events: none;
+}

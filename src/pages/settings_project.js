@@ -308,6 +308,15 @@ function makeHiddenRangesTable() {
 // Remove and delete ranges
 // --------------------------------------------------------------
 
+/**
+ * Takes a range out of the project, leaving every glyph where it is.
+ *
+ * @param {Object} range - the range to remove
+ * @param {Boolean} manageDialogs - close and announce, or leave that to the
+ *	caller. deleteCharactersFromRange owns both halves of its action, so it
+ *	says so once rather than letting this speak for half of it.
+ * @returns {Number} - hidden ranges created to hold whatever fell outside
+ */
 function removeCharacterRange(range, manageDialogs = true) {
 	const editor = getCurrentProjectEditor();
 	const fallback = areCharacterRangesEqual(range, editor.selectedCharacterRange);
@@ -335,106 +344,239 @@ function removeCharacterRange(range, manageDialogs = true) {
 			}
 			showToast(message, duration);
 		}
+		return newRanges;
 	} else {
 		if (manageDialogs) {
 			closeEveryTypeOfDialog();
 			showToast(`Something went wrong with removing this character range.`);
 		}
 	}
+	return 0;
 }
 
+/**
+ * Two things you might mean by deleting a character range, and which of them
+ * you are about to do.
+ *
+ * WHAT IT WAS. Four sentences of theory about what a character range is, at
+ * the top of a destructive dialog - where the thing you need to read is what
+ * is about to happen to your project. Two checkboxes in a raw grid with a
+ * label, a paragraph and a preview box each, and no hierarchy between them.
+ * One button reading `Delete selected items`, which said nothing about which
+ * items. And a reassurance - "Don't worry, this action can be undone" - that
+ * was only half true: the character deletion was wrapped in a history state
+ * and the range removal was not, so undo brought the glyphs back and left the
+ * range gone.
+ *
+ * Three faults underneath it:
+ *
+ *   updateDeleteButtonText ran `button.addEventListener('click',
+ *   deleteCharactersFromRange)` every time a box was ticked. The button
+ *   already had a handler that passed the range and the delete list; this
+ *   second one passed the click event as the range. So after touching either
+ *   checkbox, pressing Delete ran the real delete and then a second call that
+ *   looked for a MouseEvent in the project's range list, failed, and put
+ *   "Something went wrong with removing this character range" on screen.
+ *
+ *   findCharactersToDelete set `range.count = 0` and never put it back, so
+ *   opening this dialog and pressing Cancel left the range reading as empty -
+ *   which is also what the hidden ranges table uses to decide whether a range
+ *   offers Remove or Delete.
+ *
+ *   characterRangeDeleteOptions is module state, so the boxes remembered what
+ *   you ticked the last time you opened it, for a different range.
+ *
+ * @param {Object} range - the range to delete
+ */
 function showDeleteCharacterRangeDialog(range) {
-	const wrapper = makeElement({
-		id: 'delete-character-range__wrapper',
-		innerHTML: '<h1>Delete character range</h1>',
-	});
-
 	const deleteData = findCharactersToDelete(range);
 
-	const rangeBlurb = `
-	<p>
-		Character ranges are a simple grouping mechanism with beginning and end points.
-		They are useful to group characters with IDs that fall within that range.
-		Character ranges can be created before actual character objects exist within that range.
-		Alternately, character ranges can be created that overlap other character ranges.
-		<br><br>
-		When deleting a character range, you will have two options:
-	</p>
-	`;
+	/* Fresh every time. These are answers about this range, not a preference. */
+	characterRangeDeleteOptions.removeRange = true;
+	characterRangeDeleteOptions.deleteCharacters = false;
 
-	// Checkbox grid
-	const checkboxes = makeElement({
+	const content = makeElement({ className: 'dialog-layout dialog-form' });
+
+	// --- Remove the range ------------------------------------------
+	const removeOption = makeElement({ tag: 'label', className: 'dialog-option' });
+	const removeBox = makeDirectCheckbox(
+		characterRangeDeleteOptions,
+		'removeRange',
+		() => refresh(),
+		'character-range-delete__remove'
+	);
+	removeOption.appendChild(removeBox);
+	removeOption.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'dialog-option__title',
+			content: 'Remove the range',
+		})
+	);
+	removeOption.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'dialog-option__hint',
+			/*
+				The name and the two code points are in the dialog's subtitle,
+				so this says what happens to them rather than printing them
+				again - and nothing lands a comma against a code chip, which
+				reads as a space before the punctuation.
+			*/
+			content: 'Takes the name and its two end points out of the project. No character is deleted.',
+		})
+	);
+
+	// --- Delete the characters -------------------------------------
+	const deleteOption = makeElement({ tag: 'label', className: 'dialog-option' });
+	const deleteBox = makeDirectCheckbox(
+		characterRangeDeleteOptions,
+		'deleteCharacters',
+		() => refresh(),
+		'character-range-delete__characters'
+	);
+	deleteOption.appendChild(deleteBox);
+	deleteOption.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'dialog-option__title',
+			content: `Delete the ${deleteData.length} character${
+				deleteData.length === 1 ? '' : 's'
+			} inside it`,
+		})
+	);
+	deleteOption.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'dialog-option__hint',
+			content: 'Every outline, side bearing and anchor you have drawn for them goes with them.',
+		})
+	);
+	if (!deleteData.length) deleteOption.setAttribute('disabled', '');
+
+	// --- What is inside it -----------------------------------------
+
+	/*
+		The characters themselves, not their ids. It was a run of
+		`glyph-0x41` chips - the project's internal name for a thing you know
+		by its shape - and there was no cap on how many of them it drew.
+	*/
+	const preview = makeElement({
 		tag: 'div',
-		className: 'character-range-delete__checkboxes',
+		className: 'dialog-charwall dialog-form__preview',
+		attributes: { role: 'group', 'aria-label': 'Characters in this range' },
 	});
+	const previewNote = makeElement({ tag: 'span', className: 'dialog-picker__note' });
 
-	addAsChildren(checkboxes, [
-		makeDirectCheckbox(characterRangeDeleteOptions, 'removeRange', updateDeleteButtonText),
-		textToNode('<label>Remove character range</label'),
-		textToNode('<span></span>'),
-		textToNode(
-			'<p>Data for this character range (name, begin, end) will be removed from the project.</p>'
-		),
-		textToNode('<span></span>'),
+	const summary = makeElement({ className: 'dialog-form__summary' });
+	const summaryText = makeElement({ tag: 'span', className: 'dialog-form__summary-text' });
+	addAsChildren(summary, [summaryText, preview, previewNote]);
+
+	if (deleteData.length) {
+		const shown = Math.min(deleteData.length, PREVIEW_LIMIT);
+		summaryText.textContent = `${deleteData.length} character${
+			deleteData.length === 1 ? '' : 's'
+		} in this range have project data`;
+		deleteData.slice(0, shown).forEach((id) => {
+			const hexString = `${decToHex(id)}`;
+			const tile = makeElement({
+				className: 'dialog-charwall__tile',
+				innerHTML: hexesToChars(hexString) || '',
+			});
+			const characterName = getUnicodeName(hexString);
+			tile.setAttribute('data-tip-name', hexString);
+			tile.setAttribute('data-tip-body', characterName);
+			tile.setAttribute('aria-label', `${hexString} ${characterName}`);
+			preview.appendChild(tile);
+		});
+		previewNote.textContent =
+			deleteData.length > shown
+				? `Showing the first ${shown}. All ${deleteData.length} would be deleted.`
+				: '';
+		previewNote.hidden = !previewNote.textContent;
+	} else {
+		summary.hidden = true;
+	}
+
+	preview.addEventListener('mouseover', (event) => {
+		const tile = /** @type {HTMLElement} */ (event.target)?.closest?.('.dialog-charwall__tile');
+		if (!(tile instanceof HTMLElement)) return;
+		showTooltip(
+			tile,
+			tile.getAttribute('data-tip-name') || '',
+			tile.getAttribute('data-tip-body') || ''
+		);
+	});
+	preview.addEventListener('mouseleave', hideTooltip);
+
+	// --- What it costs ---------------------------------------------
+	const undoNote = makeElement({
+		className: 'dialog-info',
+	});
+	undoNote.appendChild(
+		makeElement({ tag: 'span', className: 'dialog-info__title', content: 'This can be undone' })
+	);
+	undoNote.appendChild(
 		makeElement({
-			tag: 'div',
-			className: 'character-range-delete__preview-area',
-			content: `
-				&quot;${range.name}&quot;&emsp;
-				<code>${decToHex(range.begin)}</code>
-				through
-				<code>${decToHex(range.end)}</code>`,
-		}),
-		textToNode('<span>&nbsp;</span>'),
-		textToNode('<span>&nbsp;</span>'),
-		makeDirectCheckbox(characterRangeDeleteOptions, 'deleteCharacters', updateDeleteButtonText),
-		textToNode('<label>Delete characters</label>'),
-		textToNode('<span></span>'),
-		textToNode(
-			'<p>Characters with IDs that fall within this range will have their project data deleted.</p>'
-		),
-		textToNode('<span></span>'),
-		makeElement({
-			tag: 'div',
-			className: 'character-range-delete__preview-area',
-			content: `${deleteData.map((id) => `<code>glyph-${id}</code>`).join('')}`,
-		}),
-		textToNode('<span>&nbsp;</span>'),
-		textToNode('<span>&nbsp;</span>'),
-	]);
+			className: 'dialog-info__body',
+			content:
+				'Both halves are recorded as one step in History, so Ctrl Z puts the range and everything in it back.',
+		})
+	);
 
-	// Footer buttons
-	const buttonBar = makeElement({ className: 'glyph-range-editor__footer' });
-
-	const buttonSave = makeElement({
+	// --- Actions ----------------------------------------------------
+	const deleteButton = makeElement({
 		tag: 'fancy-button',
-		id: 'character-range-delete__button',
-		innerHTML: 'Delete selected items',
 		attributes: { danger: '' },
-		onClick: () => deleteCharactersFromRange(range, deleteData),
+		content: 'Delete',
+	});
+	deleteButton.addEventListener('click', () => {
+		if (deleteButton.hasAttribute('disabled')) return;
+		deleteCharactersFromRange(range, deleteData);
 	});
 
-	const buttonCancel = makeElement({
+	const cancelButton = makeElement({
 		tag: 'fancy-button',
 		attributes: { secondary: '' },
-		innerHTML: 'Cancel',
+		content: 'Cancel',
 		onClick: closeEveryTypeOfDialog,
 	});
 
-	addAsChildren(buttonBar, [
-		buttonSave,
-		buttonCancel,
-		makeElement({
-			className: 'delete-note',
-			content: `<span class="info-icon">i</span>Don't worry, this action can be undone`,
-		}),
-		textToNode(`<span></span>`),
-	]);
+	/**
+	 * The button says what it is about to do, because the two checkboxes make
+	 * four different actions out of one button. `Delete selected items` was
+	 * the same words whether it removed a name and two numbers or erased every
+	 * outline in the range.
+	 */
+	function refresh() {
+		const removing = characterRangeDeleteOptions.removeRange;
+		const deleting = characterRangeDeleteOptions.deleteCharacters && deleteData.length > 0;
+		const characters = `${deleteData.length} character${deleteData.length === 1 ? '' : 's'}`;
 
-	// Put it all together
-	addAsChildren(wrapper, [textToNode(rangeBlurb), checkboxes, buttonBar]);
+		let label = 'Nothing selected';
+		if (removing && deleting) label = `Delete ${characters} and remove the range`;
+		else if (deleting) label = `Delete ${characters}`;
+		else if (removing) label = 'Remove the range';
 
-	showModalDialog(wrapper);
+		deleteButton.innerHTML = label;
+		if (removing || deleting) deleteButton.removeAttribute('disabled');
+		else deleteButton.setAttribute('disabled', '');
+
+		/* Only the half that erases drawings is the dangerous half. */
+		if (deleting) deleteButton.setAttribute('danger', '');
+		else deleteButton.removeAttribute('danger');
+
+		summary.hidden = !deleting;
+	}
+
+	addAsChildren(content, [removeOption, deleteOption, summary, undoNote]);
+	refresh();
+
+	showModalDialog(content, 520, {
+		title: 'Delete character range',
+		subtitle: `${range.name} · ${decToHex(range.begin)} – ${decToHex(range.end)}`,
+		actions: [cancelButton, deleteButton],
+	});
 }
 
 const characterRangeDeleteOptions = {
@@ -442,59 +584,84 @@ const characterRangeDeleteOptions = {
 	deleteCharacters: false,
 };
 
-function updateDeleteButtonText() {
-	const button = document.querySelector('#character-range-delete__button');
-	if (characterRangeDeleteOptions.removeRange || characterRangeDeleteOptions.deleteCharacters) {
-		button.removeAttribute('disabled');
-		button.addEventListener('click', deleteCharactersFromRange);
-	} else {
-		button.setAttribute('disabled', '');
-		button.removeEventListener('click', deleteCharactersFromRange);
-	}
-}
-
+/**
+ * Which characters in this range have project data.
+ *
+ * It used to set `range.count = 0` on the way past and never put it back, so
+ * opening the delete dialog and cancelling left the range reading as empty -
+ * and the hidden ranges table decides between Remove and Delete on that
+ * number. Counting is updateCharacterRangeCount's job; this only reads.
+ *
+ * @param {Object} range - the range to look inside
+ * @returns {Array} - character ids
+ */
 function findCharactersToDelete(range) {
-	const result = [];
 	const project = getCurrentProject();
-
-	const ids = range.getMemberIDs();
-	range.count = 0;
-	ids.forEach((id) => {
-		if (project.glyphs[`glyph-${id}`]) result.push(id);
-	});
-
-	return result;
+	return range.getMemberIDs().filter((id) => project.glyphs[`glyph-${id}`]);
 }
 
+/**
+ * Does whichever halves were ticked, as one step.
+ *
+ * The two used to be recorded differently: the character deletion took a
+ * whole-project pre and post state, and then removeCharacterRange ran after
+ * the post state, outside the record. So undo brought the glyphs back and
+ * left the range gone - under a dialog that said the action could be undone.
+ * One state now covers both.
+ *
+ * @param {Object} range - the range being deleted
+ * @param {Array} deleteList - character ids to delete
+ */
 function deleteCharactersFromRange(range, deleteList = []) {
-	// log(`deleteCharactersFromRange`, 'start');
-	// log(`\n⮟deleteList⮟`);
-	// log(deleteList);
 	const removeInfo = characterRangeDeleteOptions.removeRange;
-	const removeChars = characterRangeDeleteOptions.deleteCharacters;
+	const removeChars = characterRangeDeleteOptions.deleteCharacters && deleteList.length > 0;
+	if (!removeInfo && !removeChars) return;
+
 	const editor = getCurrentProjectEditor();
 	const name = range.name;
 
-	if (removeChars && deleteList.length) {
-		const message = `Deleted ${deleteList.length} characters and removed character range: ${name}`;
-		editor.history.addWholeProjectChangePreState(message);
+	const parts = [];
+	if (removeChars) parts.push(`deleted ${deleteList.length} characters`);
+	if (removeInfo) parts.push(`removed character range ${name}`);
+	const message = `Deleting: ${parts.join(' and ')}`;
+
+	editor.history.addWholeProjectChangePreState(message);
+
+	if (removeChars) {
 		deleteList.forEach((id) => {
 			const item = editor.project.getItem(`glyph-${id}`);
 			resolveItemLinks(item, true);
 			delete editor.project.glyphs[`glyph-${id}`];
 		});
-		editor.history.addWholeProjectChangePostState();
-		editor.project.updateAllCharacterRangeCounts();
-		updateRangesTables();
-		closeEveryTypeOfDialog();
-		showToast(message);
 	}
 
+	/*
+		No dialogs or toasts from in there - this function owns both, so that
+		two halves of one action do not announce themselves twice.
+	*/
+	let newRanges = 0;
+	if (removeInfo) newRanges = removeCharacterRange(range, false);
+
+	editor.history.addWholeProjectChangePostState();
+
+	editor.project.updateAllCharacterRangeCounts();
+	updateRangesTables();
+	closeEveryTypeOfDialog();
+
+	let toast = removeChars
+		? `Deleted ${deleteList.length} character${deleteList.length === 1 ? '' : 's'}`
+		: '';
 	if (removeInfo) {
-		removeCharacterRange(range, removeInfo && !removeChars);
+		toast += toast
+			? `<br>and removed character range:<br>${name}`
+			: `Removed character range:<br>${name}`;
 	}
-
-	// log(`deleteCharactersFromRange`, 'end');
+	if (newRanges > 0) {
+		toast += `<br><br>Created ${newRanges} new hidden range${
+			newRanges === 1 ? '' : 's'
+		} to cover orphaned characters.`;
+	}
+	showToast(toast, newRanges > 0 ? 6000 : 3000);
 }
 
 // --------------------------------------------------------------
