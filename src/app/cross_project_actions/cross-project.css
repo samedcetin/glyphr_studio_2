@@ -1,0 +1,420 @@
+/*
+	CROSS-PROJECT ACTIONS
+	---------------------
+	One page, one card: the action's sentence, its options, the list of what it
+	will touch, and the button at the foot. The page shell, head and card come
+	from .studio-page; everything here is what sits inside them.
+
+	The list is drawn to the same recipe as the dialog checklist that Global
+	actions and the range pickers use - head and rows on one grid, a 32px row,
+	the focus ring round the whole row - because a list of things to tick
+	should look the same wherever in the app it turns up. It carries its own
+	namespace because its columns are its own.
+*/
+
+/* --------------------------------------------------------------
+	Page
+	------------------------------------------------------------ */
+
+.cross-project {
+	display: grid;
+	grid-template-rows: min-content min-content minmax(0, 1fr);
+	gap: var(--sp-6);
+}
+
+/* Only one project open: a card with a sentence in it, and nothing else. */
+.cross-project__note {
+	font-size: var(--fs-md);
+	color: var(--text-secondary);
+	max-width: 60ch;
+}
+
+/* --------------------------------------------------------------
+	Head: the two projects
+	------------------------------------------------------------ */
+
+.cross-project__head-controls {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-5);
+	flex: 0 0 auto;
+}
+
+/*
+	From X to Y, and the swap. Set as a sentence rather than two fields
+	because that is how the relationship is said out loud, and the names are
+	chips so the eye can find them in the sentence.
+*/
+.cross-project__flipper {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+.cross-project__project {
+	display: inline-flex;
+	align-items: center;
+	height: var(--control-h);
+	padding: 0 var(--sp-4);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+	max-width: 24ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Where things land is the one to read first, so it is the one with a ground. */
+.cross-project__project--to {
+	background-color: var(--bg-selected);
+	border-color: var(--border-selected);
+}
+
+.cross-project__swap {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--control-h);
+	height: var(--control-h);
+	margin-left: var(--sp-2);
+	background: none;
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--icon-default);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.cross-project__swap:hover {
+	color: var(--icon-accent);
+	border-color: var(--accent);
+}
+
+.cross-project__swap:active {
+	background-color: var(--bg-active);
+}
+
+.cross-project__swap:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+/* --------------------------------------------------------------
+	The card
+	------------------------------------------------------------ */
+
+.cross-project__card {
+	display: grid;
+	min-height: 0;
+	/* The body scrolls inside the card, so the head and the tabs stay put. */
+	grid-template-rows: minmax(0, 1fr);
+}
+
+.cross-project__body {
+	min-height: 0;
+	display: grid;
+}
+
+.cross-project__view {
+	display: grid;
+	grid-template-rows: min-content min-content min-content minmax(0, 1fr) min-content;
+	gap: var(--sp-6);
+	min-height: 0;
+}
+
+/* A view without options or a range picker has fewer rows to fill. */
+.cross-project__view:not(:has(.cross-project__options)):not(:has(.cross-project__range-field)) {
+	grid-template-rows: min-content minmax(0, 1fr) min-content;
+}
+
+.cross-project__view:has(.cross-project__options):not(:has(.cross-project__range-field)),
+.cross-project__view:not(:has(.cross-project__options)):has(.cross-project__range-field) {
+	grid-template-rows: min-content min-content minmax(0, 1fr) min-content;
+}
+
+.cross-project__describe {
+	margin: 0;
+	max-width: 72ch;
+	font-size: var(--fs-md);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------
+	Options
+	------------------------------------------------------------ */
+
+/*
+	.dialog-option rows, the ones the choose-from-other-project dialog draws
+	for the same three choices, set side by side as far as the width allows.
+	The dialog body gives the rows their type sizes through its own prefix;
+	out here they are stated on the rows.
+*/
+.cross-project__options {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: var(--sp-4);
+}
+
+.cross-project__options .dialog-option__title {
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+}
+
+.cross-project__options .dialog-option__hint {
+	font-size: var(--fs-xs);
+}
+
+/* --------------------------------------------------------------
+	Range
+	------------------------------------------------------------ */
+
+.cross-project__range-field {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
+}
+
+.cross-project__range-label {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/* The house dialog select, held to a sensible width on a wide page. */
+.cross-project__range {
+	max-width: 320px;
+}
+
+/* --------------------------------------------------------------
+	The list
+	------------------------------------------------------------ */
+
+.cross-project__table-wrap {
+	display: grid;
+	grid-template-rows: min-content minmax(0, 1fr);
+	gap: var(--sp-3);
+	min-height: 0;
+}
+
+.cross-project__toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-5);
+	min-height: var(--control-h-sm);
+}
+
+.cross-project__summary {
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
+.cross-project__table {
+	display: grid;
+	align-content: start;
+	gap: var(--sp-1);
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+/*
+	One template, stated on the head and on every row, from the custom
+	property the table writes - the rows need boxes of their own for hover
+	and for the ring, so they cannot be `display: contents`.
+*/
+.cross-project__head,
+.cross-project__row {
+	display: grid;
+	grid-template-columns: var(--cross-project-columns);
+	align-items: center;
+	column-gap: var(--sp-5);
+	padding: 0 var(--sp-4);
+}
+
+.cross-project__head {
+	position: sticky;
+	top: 0;
+	z-index: var(--z-sticky);
+	padding-bottom: var(--sp-3);
+	margin-bottom: var(--sp-2);
+	background-color: var(--bg-surface);
+	border-bottom: 1px solid var(--border-subtle);
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-medium);
+	color: var(--text-secondary);
+}
+
+.cross-project__row {
+	/*
+		Tall enough for a 32px thumbnail with a hairline of air, and a row you
+		read down wants that much anyway. Rows without a thumbnail get the same
+		height so the two kinds of list line up when you switch action.
+	*/
+	min-height: calc(var(--tool-size) + var(--sp-2) * 2);
+	margin: 0;
+	/* Concentric with the checkbox in its corner: its radius plus the inset. */
+	border-radius: calc(var(--r-sm) + var(--sp-3));
+	corner-shape: var(--corner-smooth);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.cross-project__row:hover {
+	background-color: var(--bg-hover);
+}
+
+.cross-project__row:has(input:checked) {
+	background-color: var(--bg-selected);
+}
+
+/*
+	One ring, round the row - the whole row is the target. The outline: none
+	is legal for the one reason it ever is: the rule above draws the ring for
+	the same state.
+*/
+.cross-project__row:has(input:focus-visible) {
+	outline: var(--focus-style);
+	outline-offset: calc(var(--focus-offset) * -1);
+}
+
+.cross-project__row input[type='checkbox']:focus-visible {
+	outline: none;
+}
+
+.cross-project__name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: var(--text-primary);
+}
+
+.cross-project__id,
+.cross-project__value {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/*
+	A thumbnail column is as wide as its header - "Destination" is wider than
+	32px - and the glyph sits in the middle of it, under the word.
+*/
+.cross-project__glyph {
+	justify-self: center;
+	white-space: nowrap;
+}
+
+/* The glyph, small. The box is the tool size, so it lines up with everything else that is 32. */
+.cross-project__thumb {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tool-size);
+	height: var(--tool-size);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	overflow: hidden;
+}
+
+.cross-project__thumb svg {
+	width: 100%;
+	height: 100%;
+	fill: currentColor;
+}
+
+/* Nothing there yet: a dashed box says "this will be created" without a word. */
+.cross-project__thumb--empty {
+	background-color: transparent;
+	border-style: dashed;
+	border-color: var(--border-default);
+}
+
+.cross-project__arrow {
+	display: inline-flex;
+	color: var(--icon-default);
+}
+
+.cross-project__members {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	min-width: 0;
+	overflow: hidden;
+}
+
+/*
+	The chip rows are 100% wide where they come from, which here would put
+	the right-hand group in the middle of the column. Each takes what its
+	chips need, and the divider sits between them.
+*/
+.cross-project__members .kern-chips {
+	width: auto;
+	flex: 0 1 auto;
+}
+
+.cross-project__members-divider {
+	color: var(--text-tertiary);
+}
+
+.cross-project__empty {
+	padding: var(--sp-7) 0;
+	font-size: var(--fs-sm);
+	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------
+	Foot: the button
+	------------------------------------------------------------ */
+
+.cross-project__footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-5);
+	padding-top: var(--sp-5);
+	border-top: 1px solid var(--border-subtle);
+}
+
+.cross-project__footer-note {
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+}
+
+/*
+	The two-step confirm swaps in here. Tinted, so the moment the question is
+	asked the foot of the card reads as a different state, not the same bar
+	with different words.
+*/
+.cross-project__footer--confirm {
+	padding: var(--sp-5);
+	background-color: var(--danger-bg);
+	border-top: none;
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+}
+
+.cross-project__footer--confirm .cross-project__footer-note {
+	color: var(--text-primary);
+}
+
+.cross-project__confirm-buttons {
+	display: flex;
+	gap: var(--sp-3);
+	flex: 0 0 auto;
+}

@@ -72,7 +72,7 @@ export function makePage_Settings() {
 		the stacked tabs until it moves onto this shell too.
 	*/
 	const tabs = makeElement({ className: 'studio-tabs settings__tabs' });
-	addAsChildren(tabs, tabControl.makeTabs());
+	addAsChildren(tabs, tabControl.makeTabs({ segmented: true }));
 	page.appendChild(tabs);
 
 	page.appendChild(body);

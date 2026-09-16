@@ -56,3 +56,122 @@
 .tab-control__label {
 	white-space: nowrap;
 }
+
+/*
+	A segmented control, the way a macOS toolbar switches between views: one
+	sunken track. Any TabControl can ask for it - makeTabs({ segmented: true })
+	- and the Settings and Cross-project pages both do; one sunken track, the selected tab raised on a thumb that slides between the
+	segments rather than lighting up in place.
+
+	The thumb is a pseudo-element on the track, placed from --tab-thumb-x and
+	--tab-thumb-w, which the control measures and writes. Drawing it under the
+	tabs instead of styling the selected tab is what makes it slide: the
+	selected tab only changes its text, and the thumb travels to meet it.
+
+	Both radii carry the app's corner smoothing. The track takes the same
+	radius as the settings card under it, so the two read as one family; the
+	thumb's radius is the track's less the inset, so the two curves stay
+	concentric - a thumb with the same radius as its track looks pinched at
+	the corners.
+
+	Sized up from the default control height: this is the page's one control
+	and it sits alone on a row, so it can afford to be as tall as a toolbar
+	segment on the desktop rather than a form field.
+*/
+
+.tab-control__tab-container--segmented {
+	--seg-inset: 4px;
+	--seg-radius: var(--r-3xl);
+	--seg-tab-h: 36px;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0;
+	width: auto;
+	padding: var(--seg-inset);
+	margin: 0;
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--seg-radius);
+	corner-shape: var(--corner-smooth);
+	box-shadow: none;
+	isolation: isolate;
+}
+
+.tab-control__tab-container--segmented::before {
+	content: '';
+	position: absolute;
+	top: var(--seg-inset);
+	left: 0;
+	height: calc(100% - var(--seg-inset) * 2);
+	width: var(--tab-thumb-w, 0px);
+	transform: translateX(var(--tab-thumb-x, 0px));
+	background-color: var(--bg-surface);
+	border-radius: calc(var(--seg-radius) - var(--seg-inset));
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-1);
+	opacity: 0;
+	z-index: 0;
+	pointer-events: none;
+}
+
+/*
+	Only once measured - a thumb sized from nothing would flash in at zero.
+
+	--ease-out rather than a hand-written cubic-bezier(0.2, 0.8, 0.2, 1). The
+	curve it had was a decelerate written by hand, which is what --ease-out is
+	for, and the token is the one the rest of the app moves on.
+*/
+.tab-control__tab-container--segmented[data-thumb-ready]::before {
+	opacity: 1;
+	transition: transform var(--dur-slow) var(--ease-out), width var(--dur-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tab-control__tab-container--segmented[data-thumb-ready]::before {
+		transition: none;
+	}
+}
+
+.tab-control__tab-container--segmented .tab-control__tab {
+	position: relative;
+	z-index: 1;
+	width: auto;
+	height: var(--seg-tab-h);
+	padding: 0 var(--sp-6);
+	gap: var(--sp-3);
+	border: none;
+	border-radius: calc(var(--seg-radius) - var(--seg-inset));
+	corner-shape: var(--corner-smooth);
+	background-color: transparent;
+	color: var(--text-secondary);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-medium);
+	transition: color var(--dur-fast) var(--ease);
+}
+
+.tab-control__tab-container--segmented .tab-control__tab:hover {
+	background-color: transparent;
+	color: var(--text-primary);
+}
+
+.tab-control__tab-container--segmented .tab-control__tab[selected] {
+	background-color: transparent;
+	color: var(--text-primary);
+	font-weight: var(--fw-semibold);
+}
+
+.tab-control__tab-container--segmented .tab-control__tab .tab-control__icon {
+	color: var(--icon-default);
+	transition: color var(--dur-fast) var(--ease);
+}
+
+.tab-control__tab-container--segmented .tab-control__tab .tab-control__icon svg {
+	width: 18px;
+	height: 18px;
+}
+
+.tab-control__tab-container--segmented .tab-control__tab[selected] .tab-control__icon,
+.tab-control__tab-container--segmented .tab-control__tab:hover .tab-control__icon {
+	color: var(--icon-accent);
+}

@@ -12,11 +12,31 @@ import { KernGroup } from '../project_data/kern_group.js';
 	item (Glyph, Component, Ligature, Kern)
 **/
 export class History {
-	constructor() {
+	/**
+	 * @param {Object=} owner - the ProjectEditor this history belongs to
+	 */
+	constructor(owner = undefined) {
 		this.queue = [];
 		this.redoQueue = [];
 		this.initialTimeStamp = 0;
 		this.initialProject = {};
+		/**
+		 * Whose changes this records. Every method used to reach for the
+		 * *selected* editor, which is right until two projects are open: the
+		 * cross-project actions write to the other project's history, and a
+		 * snapshot taken from the selected editor there is a snapshot of the
+		 * wrong project - so undo restored the project that had not changed.
+		 */
+		this.owner = owner;
+	}
+
+	/**
+	 * The editor this history belongs to - the owner when there is one, and
+	 * the selected editor for a History made without one.
+	 * @returns {Object}
+	 */
+	get editor() {
+		return this.owner || getCurrentProjectEditor();
 	}
 
 	/**
@@ -38,7 +58,11 @@ export class History {
 	 */
 	addState(title = '', itemWasDeleted = false) {
 		// log(`History.addState`, 'start');
-		const entry = makeHistoryEntry({ title: title, itemWasDeleted: itemWasDeleted });
+		const entry = makeHistoryEntry({
+			title: title,
+			itemWasDeleted: itemWasDeleted,
+			editor: this.editor,
+		});
 		this.queue.unshift(entry);
 		this.redoQueue = [];
 		this.updateAfterSaveState();
@@ -55,12 +79,12 @@ export class History {
 	 */
 	addWholeProjectChangePreState(title = '') {
 		title = title || `Update to many items across the project.`;
-		const entry = makeHistoryEntry({ title: title, wholeProjectSave: true });
+		const entry = makeHistoryEntry({ title: title, wholeProjectSave: true, editor: this.editor });
 		if (this.queue.length) {
 			entry.itemID = this.queue[0].itemID;
 			entry.page = this.queue[0].page;
 		} else {
-			const editor = getCurrentProjectEditor();
+			const editor = this.editor;
 			entry.itemID = editor.selectedItemID;
 			entry.page = editor.nav.page;
 		}
@@ -76,12 +100,13 @@ export class History {
 		const entry = makeHistoryEntry({
 			title: '_whole_project_change_post_state_',
 			wholeProjectSave: true,
+			editor: this.editor,
 		});
 		if (this.queue.length) {
 			entry.itemID = this.queue[0].itemID;
 			entry.page = this.queue[0].page;
 		} else {
-			const editor = getCurrentProjectEditor();
+			const editor = this.editor;
 			entry.itemID = editor.selectedItemID;
 			entry.page = editor.nav.page;
 		}
@@ -92,7 +117,7 @@ export class History {
 	 * Update common project, editor, and UI stuff after a new state is added
 	 */
 	updateAfterSaveState() {
-		const editor = getCurrentProjectEditor();
+		const editor = this.editor;
 		editor.setProjectAsUnsaved();
 		if (editor.nav.panel === 'History') {
 			refreshPanel();
@@ -178,8 +203,8 @@ export class History {
 			const baseItemState = baseItem
 				? baseItem.save()
 				: editor.nav.page === 'Kerning'
-					? new KernGroup().save()
-					: new Glyph({ id: editor.selectedItemID || '' }).save();
+				? new KernGroup().save()
+				: new Glyph({ id: editor.selectedItemID || '' }).save();
 
 			nextEntry = {
 				itemState: baseItemState,
@@ -323,8 +348,12 @@ export class History {
 	}
 }
 
-function makeHistoryEntry({ title = '', itemWasDeleted = false, wholeProjectSave = false }) {
-	const editor = getCurrentProjectEditor();
+function makeHistoryEntry({
+	title = '',
+	itemWasDeleted = false,
+	wholeProjectSave = false,
+	editor = getCurrentProjectEditor(),
+}) {
 	let page;
 	let item;
 

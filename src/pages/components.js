@@ -221,12 +221,18 @@ export function addComponent(newComponent) {
  * Makes a new Component ID that doesn't collide with old ones.
  * @returns {String}
  */
-export function makeComponentID() {
+export function makeComponentID(components = getCurrentProject().components) {
 	// log(`makeComponentID`, 'start');
 
-	const project = getCurrentProject();
-	let counter = countItems(project.components);
-	while (project.components[`comp-${counter}`]) counter++;
+	/*
+		Counted in the table the component is going into, which the caller
+		names. Defaulting to the selected project was fine until two projects
+		were open: the cross-project actions add components to the *other*
+		project, and an id counted in the wrong one collided with what was
+		already there - the new component silently replaced it.
+	*/
+	let counter = countItems(components);
+	while (components[`comp-${counter}`]) counter++;
 	// log(`makeComponentID`, 'end');
 	return `comp-${counter}`;
 }

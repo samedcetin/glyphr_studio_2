@@ -131,9 +131,15 @@ En ciddileri — hepsi `src/app/cross_project_actions/` altında:
   guard'ı ve commit sırasını tekrarlıyor.
 - Erişilemeyen bir 'Merge two projects' dalı var.
 
-**Kullanıcı bunları biliyor.** Son mesajda "düzelteyim mi, yoksa walkthrough'a
-devam edelim mi?" diye soruldu; cevap gelmeden push istendi. **Cevap hâlâ
-bekliyor — ilk iş bunu sor.**
+**Cevap geldi (16 Eyl 2026): "düzelt".** Ekran baştan kuruldu — veri katmanı
+(`selection.js`, `transfer.js`, `actions.js`, `item_table.js`) ve sayfa
+(`cross_project_actions.js`, `cross-project.css`); beş aksiyon dosyası silindi.
+Yukarıdaki bulguların hepsi kapandı: seçim `Set`, component ID'si hedef projede
+sayılıyor (`makeComponentID(components)`), `History` kendi editörüne bağlı
+(`new History(owner)`), em ölçekleme `scaleGlyphInPlace` + advance, kopya
+`save()`/JSON ile derin, iki yıkıcı aksiyon yerinde iki adımlı onay soruyor,
+aynı üyeli kern grubu atlanıyor, yeni yaratılan hedef öğe kaynağın advance'ini
+alıyor. 16 test `cross_project_actions/tests/transfer.test.js` içinde.
 
 ---
 

@@ -18,6 +18,7 @@ import { showIconImportDialog, showIconMapDialog } from '../icon_font/icon_dialo
 import { ioSVG_exportSVGfont } from '../formats_io/svg_font/svg_font_export.js';
 import { makeFileName } from '../project_editor/file_io.js';
 import { makePage_CrossProjectActions } from './cross_project_actions/cross_project_actions.js';
+import { makeLeftRail } from './left_rail.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from './main.js';
 import { cycleThemePreference, getThemePreference, onThemeChange } from '../common/theme.js';
 import { showKeyboardShortcuts } from '../controls/command-palette/command_palette.js';
@@ -338,7 +339,12 @@ export function makeMenu(menuName) {
 							: 'Copy glyphs, components and kerning between the two',
 						icon: 'command_crossProjectActions',
 						onClick: () => {
-							getGlyphrStudioApp().appPageNavigate(makePage_CrossProjectActions);
+							/*
+								With the editor's rail, so the page keeps the app's one
+								piece of persistent chrome and every rail button is a
+								way back into the project.
+							*/
+							getGlyphrStudioApp().appPageNavigate(makePage_CrossProjectActions, makeLeftRail);
 						},
 						disabled: onlyOneProject,
 					},

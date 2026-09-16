@@ -413,17 +413,14 @@
 	pre-paint fallback for the moment before JavaScript runs.
 	================================================================ */
 
-:root[data-theme='dark'],
-/*
-	Surfaces that are dark in BOTH themes. Listing them here means their
-	descendants get the whole dark palette (inputs, buttons, borders), instead
-	of light-theme controls sitting on a dark ground.
-
-	The open-project hub used to be in this list. It is not any more: it was
-	rebuilt as a file browser that is part of the app, so it follows the app's
-	theme like every other page.
-*/
-#cross-project-actions__page {
+:root[data-theme='dark'] {
+	/*
+		This selector used to also name the surfaces that are dark in both
+		themes - first the open-project hub, then the cross-project actions
+		page. Neither is any more: both were rebuilt as ordinary pages on the
+		shared shell, so they follow the app's theme like every other page,
+		and the list is just the dark theme.
+	*/
 	--bg-app: var(--n-93);
 	--bg-surface: var(--n-87);
 	--bg-surface-raised: var(--n-84);

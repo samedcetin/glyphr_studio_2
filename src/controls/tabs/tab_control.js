@@ -31,7 +31,9 @@ export class TabControl {
 	 * @param {Object=} options - { icon } a line icon name drawn before the label
 	 */
 	registerTab(tabName = 'Tab Name', contentMaker = () => {}, { icon = '' } = {}) {
-		const iconMarkup = icon ? `<span class="tab-control__icon">${makeLineIcon(icon, 16)}</span>` : '';
+		const iconMarkup = icon
+			? `<span class="tab-control__icon">${makeLineIcon(icon, 16)}</span>`
+			: '';
 
 		let newTab = {
 			name: tabName,
@@ -52,12 +54,18 @@ export class TabControl {
 
 	/**
 	 * Makes the tabs
+	 * @param {Object=} options - { segmented } draws the row as one track with
+	 *     a sliding thumb, the way the Settings page has it
 	 * @returns {Element}
 	 */
-	makeTabs() {
+	makeTabs({ segmented = false } = {}) {
+		// The segmented track is its own surface, not a panel card: the card's
+		// grid and its full width are exactly what a row of segments is not.
 		const tabContainer = makeElement({
 			tag: 'div',
-			className: 'tab-control__tab-container panel__card full-width',
+			className: segmented
+				? 'tab-control__tab-container tab-control__tab-container--segmented'
+				: 'tab-control__tab-container panel__card full-width',
 			attributes: { role: 'tablist' },
 		});
 

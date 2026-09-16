@@ -1,5 +1,9 @@
 import { PRODUCT_NAME } from '../app/brand.js';
-import { addCrossProjectCopyShapeOptionControls } from '../app/cross_project_actions/action_copy_shapes.js';
+import {
+	copyGlyphForTransfer,
+	describeEmScaling,
+	emRatioBetween,
+} from '../app/cross_project_actions/transfer.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from '../app/main.js';
 import { makeElement } from '../common/dom.js';
 import {
@@ -14,11 +18,7 @@ import { makeAllItemTypeChooserContent } from '../panels/item_chooser.js';
 import { ComponentInstance } from '../project_data/component_instance.js';
 import { Glyph } from '../project_data/glyph.js';
 import { Path } from '../project_data/path.js';
-import {
-	addLinkToUsedIn,
-	canAddComponentInstance,
-	makeGlyphWithResolvedLinks,
-} from './cross_item_actions.js';
+import { addLinkToUsedIn, canAddComponentInstance } from './cross_item_actions.js';
 
 // --------------------------------------------------------------
 // Delete selected path / point
@@ -648,77 +648,121 @@ export function addCopyActionsForChooseOtherItem(parent) {
 }
 
 export function showDialogChooseItemFromOtherProject() {
-	let content = makeElement({
-		innerHTML: `
-			<h2>Copy shapes from a glyph in the other open project</h2>
-			All the paths from the glyph you select will be copied and pasted into this glyph.
-			<br><br>
-			<strong style="display: inline-block; margin-bottom:10px;">Copy options:</strong>
-			<br>`,
-	});
-
 	const thisEditor = getCurrentProjectEditor();
 	const otherEditor = getGlyphrStudioApp().otherProjectEditor;
-	addCrossProjectCopyShapeOptionControls(content, otherEditor, thisEditor);
+	const emRatio = emRatioBetween(otherEditor.project, thisEditor.project);
 
-	let onClick = (itemID) => {
+	const content = makeElement({ className: 'dialog-layout' });
+
+	/*
+		The options, as the app's option rows - the same three the
+		cross-project page offers, because they are the same three decisions.
+		The scale option only appears when there is something to scale.
+	*/
+	const options = [];
+	if (emRatio !== 1) {
+		options.push({
+			id: 'scale',
+			title: 'Scale to this font’s em',
+			hint: describeEmScaling(otherEditor.project, thisEditor.project),
+		});
+	}
+	options.push(
+		{
+			id: 'keepRSB',
+			title: 'Keep the right sidebearing',
+			hint: 'Hold this glyph’s spacing where it is, whatever width arrives with the paths.',
+		},
+		{
+			id: 'reverseWindings',
+			title: 'Reverse fill direction',
+			hint: 'Turns every contour the other way round. Use it when a copied glyph comes out as a hole.',
+		}
+	);
+
+	/** @type {Object<String, HTMLInputElement>} */
+	const boxes = {};
+	options.forEach((option) => {
+		const row = makeElement({ tag: 'label', className: 'dialog-option' });
+		const box = /** @type {HTMLInputElement} */ (
+			makeElement({
+				tag: 'input',
+				attributes: {
+					type: 'checkbox',
+					'aria-labelledby': `other-project-${option.id}-title`,
+					'aria-describedby': `other-project-${option.id}-hint`,
+				},
+			})
+		);
+		boxes[option.id] = box;
+		row.appendChild(box);
+		row.appendChild(
+			makeElement({
+				tag: 'span',
+				className: 'dialog-option__title',
+				id: `other-project-${option.id}-title`,
+				content: option.title,
+			})
+		);
+		row.appendChild(
+			makeElement({
+				tag: 'span',
+				className: 'dialog-option__hint',
+				id: `other-project-${option.id}-hint`,
+				content: option.hint,
+			})
+		);
+		content.appendChild(row);
+	});
+
+	const onClick = (itemID) => {
 		const sourceItem = otherEditor.project.getItem(itemID);
-		const resolvedGlyph = makeGlyphWithResolvedLinks(sourceItem);
 		const thisItem = thisEditor.selectedItem;
-		const emRatio = thisEditor.project.settings.font.upm / otherEditor.project.settings.font.upm;
-		// log(`emRatio: ${emRatio}`);
 
-		/**@type {HTMLInputElement} */
-		const updateAdvanceWidthBox = document.querySelector('#checkbox-advance-width');
-		const updateAdvanceWidth = updateAdvanceWidthBox.checked;
-		// log(`updateAdvanceWidth: ${updateAdvanceWidth}`);
-
-		/**@type {HTMLInputElement} */
-		const scaleItemsBox = document.querySelector('#checkbox-scale');
-		let scaleItems = false;
-		if (scaleItemsBox) scaleItems = scaleItemsBox?.checked;
-		// log(`scaleItems: ${scaleItems}`);
-
-		/**@type {HTMLInputElement} */
-		const reverseWindingsBox = document.querySelector('#checkbox-reverse-windings');
-		const reverseWindings = reverseWindingsBox.checked;
-		// log(`reverseWindings: ${reverseWindings}`);
+		/*
+			Scaled and re-wound before anything is copied, on a copy that shares
+			nothing with the other project - the same path the cross-project
+			page takes. It used to copy first and then resize the pasted shapes
+			by an advance-width delta, which is not a scale.
+		*/
+		const copy = copyGlyphForTransfer(sourceItem, {
+			emRatio: emRatio,
+			scale: !!boxes.scale?.checked,
+			reverseWindings: !!boxes.reverseWindings.checked,
+		});
 
 		const oldRSB = thisItem.rightSideBearing;
-		const newShapes = copyShapesFromTo(resolvedGlyph, thisItem, false);
+		const newShapes = copyShapesFromTo(copy, thisItem, false);
 		const msShapes = thisEditor.multiSelect.shapes;
 		msShapes.clear();
 		newShapes.forEach((shape) => msShapes.add(shape));
 
-		if (scaleItems) {
-			let deltaWidth = resolvedGlyph.advanceWidth * emRatio - resolvedGlyph.advanceWidth;
-			// log(`deltaWidth: ${deltaWidth}`);
-			msShapes.virtualGlyph.updateGlyphSize({
-				width: deltaWidth,
-				ratioLock: true,
-				transformOrigin: 'baseline-left',
-			});
-		}
-
-		if (reverseWindings) msShapes.virtualGlyph.reverseWinding();
-		if (updateAdvanceWidth) thisItem.rightSideBearing = oldRSB;
+		if (boxes.keepRSB.checked) thisItem.rightSideBearing = oldRSB;
 
 		thisEditor.publish('currentItem', thisItem);
-		let title = `
-			${resolvedGlyph.shapes.length} paths were copied<br>
-			from ${otherEditor.project.settings.project.name} : ${resolvedGlyph.name}`;
+		const title = `
+			${copy.shapes.length} paths were copied<br>
+			from ${otherEditor.project.settings.project.name} : ${copy.name}`;
 		thisEditor.history.addState(title);
 		closeEveryTypeOfDialog();
 		showToast(title);
 	};
 
-	const chooserArea = makeAllItemTypeChooserContent(
-		onClick,
-		'Characters',
-		getGlyphrStudioApp().otherProjectEditor
-	);
+	const chooserArea = makeAllItemTypeChooserContent(onClick, 'Characters', otherEditor);
 	content.appendChild(chooserArea);
-	showModalDialog(content);
+
+	showModalDialog(content, 912, {
+		title: 'Copy shapes from the other project',
+		subtitle: `Every path of the glyph you pick in ${otherEditor.project.settings.project.name} is added to this one.`,
+		actions: [
+			makeElement({
+				tag: 'fancy-button',
+				attributes: { secondary: '' },
+				innerHTML: 'Cancel',
+				onClick: closeEveryTypeOfDialog,
+			}),
+		],
+	});
 }
 
 /**

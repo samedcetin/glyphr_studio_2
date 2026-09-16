@@ -411,7 +411,8 @@ export class GlyphrStudioProject {
 		}
 		if (objType === 'Component') {
 			destination = this.components;
-			if (!newID) newID = makeComponentID();
+			// Counted in *this* project's table, not the selected project's.
+			if (!newID) newID = makeComponentID(this.components);
 		}
 		if (objType === 'KernGroup') {
 			destination = this.kerning;

@@ -59,7 +59,7 @@ export class ProjectEditor {
 		// log(this.project);
 
 		// History
-		this.history = new History();
+		this.history = new History(this);
 
 		// Saving
 		this.projectSaved = true;
@@ -192,7 +192,7 @@ export class ProjectEditor {
 	}
 
 	initializeHistory(project) {
-		this.history = new History();
+		this.history = new History(this);
 		this.history.queue = [];
 		this.history.initialTimeStamp = new Date().getTime();
 		// Edits must not mutate the state that the last undo restores.

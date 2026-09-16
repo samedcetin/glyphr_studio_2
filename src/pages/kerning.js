@@ -56,7 +56,6 @@ export function makePage_Kerning() {
 
 	if (editor.showPageTransitions) content.classList.add('app__page-animation');
 
-
 	const canvasArea = content.querySelector('.editor-page__edit-canvas-wrapper');
 
 	if (!selectedKernGroupID) {
@@ -65,8 +64,6 @@ export function makePage_Kerning() {
 		// log(`makePage_Kerning`, 'end');
 		return content;
 	}
-
-
 
 	const editCanvas = makeElement({
 		tag: 'edit-canvas',
@@ -857,23 +854,30 @@ function deleteLetterPair(leftLetter = '', rightLetter = '', kernID = '') {
  * twenty characters, which is the one thing this row exists to tell you.
  *
  * @param {Array} group - char IDs
+ * @param {Object=} project - the project the group belongs to; the current one by default
  * @returns {HTMLElement}
  */
-export function makeKernGroupCharChips(group) {
+export function makeKernGroupCharChips(group, project = getCurrentProject()) {
 	const wrapper = makeElement({ className: 'kern-chips' });
-	group.forEach((charID) => wrapper.appendChild(makeCharChip(charID)));
+	group.forEach((charID) => wrapper.appendChild(makeCharChip(charID, project)));
 	return wrapper;
 }
 
 /**
  * Makes a small element that represents a single character.
+ *
+ * "Missing" is judged against the project the group belongs to - the
+ * cross-project page lists the other project's groups, and a character that
+ * project has is not missing because this one lacks it.
+ *
  * @param {String} charID - char to make a chip for
+ * @param {Object=} project - the project the group belongs to; the current one by default
  * @returns {Element}
  */
-export function makeCharChip(charID) {
+export function makeCharChip(charID, project = getCurrentProject()) {
 	const char = hexesToChars(charID) || '';
 	const name = getUnicodeName(charID);
-	const exists = !!getCurrentProject().getItem(`glyph-${charID}`, false);
+	const exists = !!project.getItem(`glyph-${charID}`, false);
 
 	const chip = makeElement({
 		tag: 'code',

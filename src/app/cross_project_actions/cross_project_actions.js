@@ -1,331 +1,539 @@
-import { makeElement } from '../../common/dom';
-import { countItems, duplicates } from '../../common/functions';
-import { ProjectEditor } from '../../project_editor/project_editor';
-import { emailLink } from '../app';
-import { getCurrentProjectEditor, getGlyphrStudioApp } from '../main';
-import { updateContent_addComponents, updateFooter_addComponents } from './action_add_components';
-import { updateContent_addKernGroups, updateFooter_addKernGroups } from './action_add_kern_groups';
-import {
-	updateCharacterCopyTable,
-	updateContent_copyShapes,
-	updateFooter_copyShapes,
-} from './action_copy_shapes';
-import {
-	updateContent_overwriteItems,
-	updateFooter_overwriteItems,
-} from './action_overwrite_items';
-import {
-	updateContent_overwriteSettings,
-	updateFooter_overwriteSettings,
-} from './action_overwrite_settings';
-
-/** @type {ProjectEditor} */
-export let sourceEditor;
-/** @type {ProjectEditor} */
-export let destinationEditor;
-/** @type {Array} */
-export let selectedItemIDs = [];
-/** @type {Object | false} */
-export let selectedRange = false;
+import { addAsChildren, makeElement } from '../../common/dom.js';
+import { makeLineIcon } from '../../common/icons.js';
+import { showToast } from '../../controls/dialogs/dialogs.js';
+import { TabControl } from '../../controls/tabs/tab_control.js';
+import { attachTooltip } from '../../controls/tooltip/tooltip.js';
+import { getCurrentProjectEditor, getGlyphrStudioApp } from '../main.js';
+import { crossProjectActions } from './actions.js';
+import { makeItemTable } from './item_table.js';
+import { createSelection } from './selection.js';
 
 /**
- * Make the Cross-project Actions page
+	PAGE > CROSS-PROJECT ACTIONS
+	----------------------------
+	Moving things between the two projects that are open.
+
+	WHAT THIS PAGE WAS. Its own dark shell with its own token block, a native
+	select to pick the action, three checkboxes stacked with <br>s, and a
+	five-column grid built by hand in five files - one per action, each with
+	its own toggle-all handler and its own copy of the bug in it (see
+	selection.js). The colours were fixed on the last pass; nothing under them
+	was.
+
+	It is the same shape as the other pages now: the shared shell, the actions
+	as a segmented row under the head, one card that holds the action's
+	sentence, its options, the list of what it will touch, and the button that
+	does it. The two projects and the way to swap them sit in the head, where
+	every page puts its context.
+
+	Two things are true of every action here that were not before:
+	- What gets written is bracketed in the *destination's* history, and the
+	  destination's ids are counted in the destination. Undo works, and adding
+	  a component cannot replace one that was already there.
+	- The two that destroy something ask first - in place, with the count and
+	  the project name, the way §8 of the design bar has it.
+ */
+
+/** @type {Object} - the ProjectEditor items come from */
+let sourceEditor;
+/** @type {Object} - the ProjectEditor items go to */
+let destinationEditor;
+/** @type {Map<String, Object>} - one selection per action, kept across re-renders */
+const selections = new Map();
+/** @type {Map<String, Object>} - one options object per action */
+const optionState = new Map();
+/** @type {Object|String|false} - the range on screen for the current action */
+let currentRange = false;
+/** @type {Object|null} - the action on screen */
+let currentAction = null;
+/** @type {HTMLElement|null} - the card body the action renders into */
+let cardBody = null;
+
+/**
+ * Make the Cross-project actions page
  * @returns {HTMLElement}
  */
 export function makePage_CrossProjectActions() {
-	const content = makeElement({
-		tag: 'div',
-		id: 'app__page',
-		innerHTML: `
-			<div id="cross-project-actions__page">
-				<div class="cross-project-actions__page-header">
-					<h1>Cross&#8209;project&nbsp;actions</h1><span></span><span id="cross-project-actions__close-button">✖</span>
-					<option-chooser id="cross-project-actions__action-chooser" selected-name="Choose an action to get started...">
-						<option>Copy character or ligature shapes</option>
-						<option>Overwrite characters or ligatures</option>
-						<option>Add component roots</option>
-						<option>Add kern groups</option>
-						<option>Overwrite settings</option>
-					</option-chooser>
-					<span id="cross-project-actions__item-count"></span>
-					<span></span>
-				</div>
-				<div id="cross-project-actions__page-content">
-					<div class="cross-project-actions__welcome-content">
-						<h2>These actions help you move and copy items between the two projects you have open.</h2>
-						<br>
-						To get started, choose an action from the dropdown at the top of the page.
-						<br><br>
-						Each action has the concept of a <code>source</code> and <code>destination</code> project. You can
-						easily flip the relationship with this control that is displayed at the top of each page:
-						<br>
-						<div id="cross-project-actions__welcome-flipper"></div>
-						<br><br>
-						New cross-project actions are easy to add. If you have any ideas for other capabilities,
-						please send us an email: ${emailLink()}
-						<br><br>
-						<a href="https://www.glyphrstudio.com/help/getting-started/working-with-multiple-projects.html" target="_blank">More help about working with multiple projects</a>
-					</div>
-				</div>
-				<div id="cross-project-actions__page-footer">
-				</div>
-			</div>
-		`,
-	});
-
-	// Set up projects
 	const app = getGlyphrStudioApp();
 	sourceEditor = app.otherProjectEditor;
 	destinationEditor = app.selectedProjectEditor;
+	currentRange = false;
 
-	// Set up window
-	const closeButton = content.querySelector('#cross-project-actions__close-button');
-	closeButton.addEventListener('click', () => {
-		getCurrentProjectEditor().navigate();
+	const content = makeElement({ tag: 'div', id: 'app__page' });
+	const page = makeElement({ className: 'studio-page cross-project' });
+	content.appendChild(page);
+
+	// --- Head ------------------------------------------------------
+	const head = makeElement({ className: 'studio-page__head' });
+	const titles = makeElement({ className: 'studio-page__titles' });
+	titles.appendChild(
+		makeElement({ tag: 'h1', className: 'studio-page__title', content: 'Cross‑project actions' })
+	);
+	titles.appendChild(
+		makeElement({
+			className: 'studio-page__subtitle',
+			content:
+				'Copy shapes, components, kern groups and settings from one open project to the other.',
+		})
+	);
+	head.appendChild(titles);
+	head.appendChild(makeHeadControls());
+	page.appendChild(head);
+
+	if (!sourceEditor || !destinationEditor || sourceEditor === destinationEditor) {
+		page.appendChild(
+			makeElement({
+				className: 'studio-card cross-project__note',
+				content:
+					'Only one project is open. Open a second one from the Projects menu, then come back here.',
+			})
+		);
+		return content;
+	}
+
+	// --- The actions, and the card they switch ----------------------
+	const card = makeElement({ className: 'studio-card cross-project__card' });
+	cardBody = makeElement({ className: 'cross-project__body' });
+	const tabControl = new TabControl(cardBody);
+
+	crossProjectActions.forEach((action) => {
+		tabControl.registerTab(action.label, () => renderAction(action), { icon: action.icon });
 	});
 
-	// Make content
-	let actionChooser = content.querySelector('#cross-project-actions__action-chooser');
-	actionChooser.addEventListener('change', () => {
-		updateCrossProjectActionsPage(content);
-	});
+	const tabs = makeElement({ className: 'studio-tabs cross-project__tabs' });
+	addAsChildren(tabs, tabControl.makeTabs({ segmented: true }));
+	page.appendChild(tabs);
 
-	let flipperContent = content.querySelector('#cross-project-actions__welcome-flipper');
-	flipperContent.appendChild(makeProjectFlipper());
-	// updateCrossProjectActionsPage(content);
+	card.appendChild(cardBody);
+	page.appendChild(card);
+
+	tabControl.selectTab(crossProjectActions[0].label);
 	return content;
 }
 
-/**
- * Refresh the Cross-project Actions page
- * @param {Element} content - page wrapper
- */
-function updateCrossProjectActionsPage(content) {
-	// log(`updateCrossProjectActionsPage`, 'start');
-	let actionChooser = content.querySelector('#cross-project-actions__action-chooser');
-	let selectedAction = actionChooser.getAttribute('selected-id');
-	// log(`selectedAction: ${selectedAction}`);
-	/** @type {HTMLElement} */
-	let pageContent = content.querySelector('#cross-project-actions__page-content');
-	let pageFooter = content.querySelector('#cross-project-actions__page-footer');
-
-	pageContent.innerHTML = '';
-	pageFooter.innerHTML = '';
-	selectedItemIDs = [];
-	selectedRange = false;
-	if (selectedAction === 'Copy character or ligature shapes') {
-		updateContent_copyShapes(pageContent);
-		updateFooter_copyShapes(pageFooter);
-	} else if (selectedAction === 'Overwrite characters or ligatures') {
-		updateContent_overwriteItems(pageContent);
-		updateFooter_overwriteItems(pageFooter);
-	} else if (selectedAction === 'Add component roots') {
-		updateContent_addComponents(pageContent);
-		updateFooter_addComponents(pageFooter);
-	} else if (selectedAction === 'Add kern groups') {
-		updateContent_addKernGroups(pageContent);
-		updateFooter_addKernGroups(pageFooter);
-	} else if (selectedAction === 'Overwrite settings') {
-		updateContent_overwriteSettings(pageContent);
-		updateFooter_overwriteSettings(pageFooter);
-	} else if (selectedAction === 'Merge two projects') {
-		pageContent.innerHTML = 'Merge two projects';
-	}
-	// log(`updateCrossProjectActionsPage`, 'end');
-}
+// --------------------------------------------------------------
+// Head: the two projects, the swap, the way out
+// --------------------------------------------------------------
 
 /**
- * Control to switch source / destination projects
- * @param {String} textPrefix - label for the text
+ * Source → destination, a button to swap them, and the way back.
  * @returns {Element}
  */
-export function makeProjectFlipper(textPrefix = 'From') {
-	let sourceProject = sourceEditor.project.settings.project;
-	let destinationProject = destinationEditor.project.settings.project;
-	const wrapper = makeElement({
-		tag: 'span',
-		id: 'cross-project-actions__project-flipper',
-		innerHTML: `
-			${textPrefix} project
-			<code id="project-flipper-source-name"
-				title="${sourceProject.name}\n${sourceProject.id}">
-				${sourceProject.name}
-			</code>
-			to
-			<code id="project-flipper-destination-name"
-				title="${destinationProject.name}\n${destinationProject.id}">
-				${destinationProject.name}
-			</code>
-		`,
-	});
+function makeHeadControls() {
+	const controls = makeElement({ className: 'cross-project__head-controls' });
 
-	const flipButton = makeElement({
-		className: 'flip-button',
-		innerHTML: '⮀',
-		title: 'Flip from/to projects',
-		onClick: flipProjects,
+	const flipper = makeElement({
+		className: 'cross-project__flipper',
+		attributes: { 'aria-live': 'polite' },
 	});
-	wrapper.appendChild(flipButton);
-	return wrapper;
+	fillFlipper(flipper);
+	controls.appendChild(flipper);
+
+	const back = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		content: 'Back to the editor',
+		onClick: () => getCurrentProjectEditor().navigate(),
+	});
+	controls.appendChild(back);
+
+	return controls;
 }
 
 /**
- * Switch source / destination projects
+ * Writes the two project names and the swap button into the flipper.
+ * @param {Element} flipper - the container
  */
-function flipProjects() {
-	let temp = sourceEditor;
-	sourceEditor = destinationEditor;
-	destinationEditor = temp;
+function fillFlipper(flipper) {
+	flipper.innerHTML = '';
+	if (!sourceEditor || !destinationEditor) return;
 
-	let welcomeFlipper = document.querySelector('#cross-project-actions__welcome-flipper');
-	if (welcomeFlipper) {
-		welcomeFlipper.innerHTML = '';
-		welcomeFlipper.appendChild(makeProjectFlipper());
-	} else {
-		// @ts-expect-error 'property does exist'
-		updateCrossProjectActionsPage(document);
+	const name = (editor, role) => {
+		const project = editor.project.settings.project;
+		const chip = makeElement({
+			tag: 'span',
+			className: `cross-project__project cross-project__project--${role}`,
+		});
+		chip.textContent = project.name;
+		attachTooltip(chip, {
+			name: project.name,
+			body: `${role === 'from' ? 'Source' : 'Destination'} · ${project.id}`,
+		});
+		return chip;
+	};
+
+	const swap = makeElement({
+		tag: 'button',
+		className: 'cross-project__swap',
+		attributes: { type: 'button', 'aria-label': 'Swap source and destination' },
+		innerHTML: makeLineIcon('flipHorizontal', 16),
+		onClick: () => {
+			[sourceEditor, destinationEditor] = [destinationEditor, sourceEditor];
+			currentRange = false;
+			fillFlipper(flipper);
+			if (currentAction) renderAction(currentAction, true);
+		},
+	});
+	attachTooltip(swap, {
+		name: 'Swap',
+		body: 'Makes the destination the source, and the source the destination.',
+	});
+
+	addAsChildren(flipper, [
+		makeElement({ tag: 'span', className: 'cross-project__flipper-label', content: 'From' }),
+		name(sourceEditor, 'from'),
+		makeElement({ tag: 'span', className: 'cross-project__flipper-label', content: 'to' }),
+		name(destinationEditor, 'to'),
+		swap,
+	]);
+}
+
+// --------------------------------------------------------------
+// One action's view
+// --------------------------------------------------------------
+
+/**
+ * Everything the action needs to know, gathered once.
+ * @param {Object} action
+ * @returns {Object} - an ActionContext
+ */
+function contextFor(action) {
+	if (!optionState.has(action.id)) optionState.set(action.id, {});
+	return {
+		source: sourceEditor,
+		destination: destinationEditor,
+		range: currentRange,
+		options: optionState.get(action.id),
+	};
+}
+
+/**
+ * Builds the card body for one action.
+ *
+ * Called by the tab control when a tab is picked, and again by this file when
+ * the range changes, the projects swap, or an action has run - so the rows
+ * always show the projects as they are now.
+ *
+ * @param {Object} action - one of crossProjectActions
+ * @param {Boolean=} inPlace - true to redraw the current body rather than
+ *     return a fresh one for the tab control to mount
+ * @returns {Element|undefined}
+ */
+function renderAction(action, inPlace = false) {
+	currentAction = action;
+	if (!selections.has(action.id)) selections.set(action.id, createSelection());
+	const selection = selections.get(action.id);
+
+	// The default range is the source's own selected one; it survives a
+	// re-render but resets when the projects swap.
+	if (action.ranges && !currentRange) currentRange = sourceEditor.selectedCharacterRange;
+	const context = contextFor(action);
+
+	const view = makeElement({ className: 'cross-project__view' });
+
+	// --- What it does ----------------------------------------------
+	view.appendChild(
+		makeElement({
+			tag: 'p',
+			className: 'cross-project__describe',
+			content: action.describe(context),
+		})
+	);
+
+	// --- Options ---------------------------------------------------
+	const options = action.options(context);
+	if (options.length) view.appendChild(makeOptions(options, context.options));
+
+	// --- Range -----------------------------------------------------
+	if (action.ranges) view.appendChild(makeRangeChooser(action));
+
+	// --- The rows --------------------------------------------------
+	const rows = action.rows(context);
+	const table = makeItemTable({
+		columns: action.columns,
+		rows: rows,
+		emptyMessage: action.emptyMessage,
+		selection: selection,
+		onChange: () => refreshFooter(),
+	});
+	view.appendChild(table.element);
+
+	// --- The button ------------------------------------------------
+	const footer = makeElement({ className: 'cross-project__footer' });
+	view.appendChild(footer);
+
+	/** Rewrites the footer for the current selection. */
+	function refreshFooter() {
+		footer.innerHTML = '';
+		const count = selection.size;
+		const label = `${action.verb} ${count} ${action.noun}${count === 1 ? '' : 's'}`;
+
+		// With nothing ticked the button says what the action is, not "0 items".
+		const run = makeElement({
+			tag: 'fancy-button',
+			content: count ? label : action.label,
+		});
+		if (!count) run.setAttribute('disabled', '');
+
+		run.addEventListener('click', () => {
+			if (!selection.size) return;
+			if (action.destructive) {
+				showConfirm(footer, action, selection.size, () => runAction(action, selection));
+			} else {
+				runAction(action, selection);
+			}
+		});
+
+		const note = makeElement({ className: 'cross-project__footer-note' });
+		note.textContent = count
+			? `Into ${destinationEditor.project.settings.project.name}. One Undo there takes it back.`
+			: 'Tick the rows to act on.';
+
+		addAsChildren(footer, [note, run]);
 	}
+	refreshFooter();
+
+	if (inPlace && cardBody) {
+		cardBody.innerHTML = '';
+		cardBody.appendChild(view);
+		return undefined;
+	}
+	return view;
 }
 
 /**
- * Flip all checkboxes
- */
-export function toggleCheckboxes() {
-	/** @type {HTMLInputElement} */
-	const checkbox = document.querySelector('#toggle-all-checkbox');
-	let state = checkbox.checked;
-	const checkboxes = document.querySelectorAll('.item-select-checkbox');
-	checkboxes.forEach((/** @type {HTMLInputElement} */ box) => {
-		box.checked = state;
-		updateSelectedIDs(box.getAttribute('item-id'), box.checked);
-	});
-}
-
-/**
- * Clear checkboxes
- */
-export function clearAllSelections() {
-	selectedItemIDs = [];
-	document.querySelector('#cross-project-actions__item-count').innerHTML = '';
-}
-
-/**
- * Update the selected state of an item by ID
- * @param {String} itemID - ID for the item to update
- * @param {Boolean} add - should it be added or not
- */
-export function updateSelectedIDs(itemID, add = true) {
-	if (add) selectedItemIDs.push(itemID);
-	else selectedItemIDs.splice(selectedItemIDs.indexOf(itemID), 1);
-	selectedItemIDs = selectedItemIDs.filter(duplicates);
-	selectedItemIDs = selectedItemIDs.filter((item) => !!item);
-	document.querySelector('#cross-project-actions__item-count').innerHTML = `
-		${selectedItemIDs.length} item${selectedItemIDs.length === 1 ? '' : 's'} selected
-	`;
-}
-
-/**
- * Makes the Item and Range Chooser control
- * @param {Object} param0 - range chooser options
- * @param {Function} updateHandler - callback for when this range is selected
+ * The checkboxes for an action's options.
+ *
+ * The same rows the "Choose item from other project" dialog draws for the
+ * same three choices - .dialog-option, a box with a title and a hint - so
+ * the option reads the same whichever way you reach it.
+ *
+ * @param {Array<Object>} options - {id, label, hint}
+ * @param {Object} state - where the values live
  * @returns {Element}
  */
-export function makeItemAndRangeChooser(
-	{ showLigatures = false, showComponents = false, showKernGroups = false },
-	updateHandler
-) {
-	// log(`\n⮟sourceEditor⮟`);
-	// log(sourceEditor);
+function makeOptions(options, state) {
+	const list = makeElement({ className: 'cross-project__options' });
+
+	options.forEach((option) => {
+		if (!(option.id in state)) state[option.id] = false;
+		const titleID = `cross-project-${option.id}-title`;
+		const hintID = `cross-project-${option.id}-hint`;
+
+		const row = makeElement({ tag: 'label', className: 'dialog-option' });
+		const box = /** @type {HTMLInputElement} */ (
+			makeElement({
+				tag: 'input',
+				attributes: {
+					type: 'checkbox',
+					'aria-labelledby': titleID,
+					'aria-describedby': hintID,
+				},
+			})
+		);
+		box.checked = !!state[option.id];
+		box.addEventListener('change', () => {
+			state[option.id] = box.checked;
+		});
+		addAsChildren(row, [
+			box,
+			makeElement({
+				tag: 'span',
+				className: 'dialog-option__title',
+				id: titleID,
+				content: option.label,
+			}),
+			makeElement({
+				tag: 'span',
+				className: 'dialog-option__hint',
+				id: hintID,
+				content: option.hint,
+			}),
+		]);
+		list.appendChild(row);
+	});
+
+	return list;
+}
+
+/**
+ * Picks which slice of the source is listed.
+ * @param {Object} action - the action, for which extra groups it accepts
+ * @returns {Element}
+ */
+function makeRangeChooser(action) {
 	const project = sourceEditor.project;
+	const rangeName = typeof currentRange === 'string' ? currentRange : currentRange?.name || '';
 
-	if (!selectedRange) selectedRange = sourceEditor.selectedCharacterRange;
-	// log(selectedRange);
-	let optionChooser = makeElement({
+	const chooser = makeElement({
 		tag: 'option-chooser',
-		className: 'cross-project-actions__range-chooser',
+		className: 'dialog-select cross-project__range',
 		attributes: {
-			'selected-name': selectedRange.name || selectedRange,
-			'selected-id': selectedRange.id || selectedRange,
+			'selected-name': rangeName,
+			'selected-id':
+				typeof currentRange === 'string' ? currentRange : currentRange?.id || rangeName,
+			'aria-label': 'Which items to list',
 		},
 	});
 
-	let option;
-	let addHR = false;
+	const choose = (range) => {
+		currentRange = range;
+		if (currentAction) renderAction(currentAction, true);
+	};
 
-	if (showLigatures) {
-		let ligatureCount = countItems(project.ligatures);
-		if (ligatureCount) {
-			// log(`range.name: Ligatures`);
-			option = makeElement({
-				tag: 'option',
-				innerHTML: 'Ligatures',
-				attributes: { note: `${ligatureCount}&nbsp;items` },
-			});
-			option.addEventListener('click', () => {
-				selectedRange = 'Ligatures';
-				updateHandler();
-			});
-			optionChooser.appendChild(option);
-			addHR = true;
-		}
+	/** @type {Array<[String, Number]>} */
+	const groups = [];
+	if (action.ranges.ligatures && Object.keys(project.ligatures).length) {
+		groups.push(['Ligatures', Object.keys(project.ligatures).length]);
 	}
-
-	if (showComponents) {
-		let componentCount = countItems(project.components);
-		if (componentCount) {
-			// log(`range.name: Components`);
-			option = makeElement({
-				tag: 'option',
-				innerHTML: 'Components',
-				attributes: { note: `${componentCount}&nbsp;items` },
-			});
-			option.addEventListener('click', () => {
-				selectedRange = 'Components';
-				updateHandler();
-			});
-			optionChooser.appendChild(option);
-			addHR = true;
-		}
+	if (action.ranges.components && Object.keys(project.components).length) {
+		groups.push(['Components', Object.keys(project.components).length]);
 	}
+	groups.forEach(([label, count]) => {
+		const option = makeElement({
+			tag: 'option',
+			innerHTML: label,
+			attributes: { note: `${count}&nbsp;item${count === 1 ? '' : 's'}` },
+		});
+		option.addEventListener('click', () => choose(label));
+		chooser.appendChild(option);
+	});
+	if (groups.length) chooser.appendChild(makeElement({ tag: 'hr' }));
 
-	if (showKernGroups) {
-		let kernCount = countItems(project.kerning);
-		if (kernCount) {
-			// log(`range.name: Kern groups`);
-			option = makeElement({
-				tag: 'option',
-				innerHTML: 'Kern groups',
-				attributes: { note: `${kernCount}&nbsp;items` },
-			});
-			option.addEventListener('click', () => {
-				selectedRange = 'Kern groups';
-				updateHandler();
-			});
-			optionChooser.appendChild(option);
-			addHR = true;
-		}
-	}
-
-	if (addHR) optionChooser.appendChild(makeElement({ tag: 'hr' }));
-
-	let ranges = project.settings.project.characterRanges;
-	// log(ranges);
-	ranges.forEach((range) => {
-		// log(`range.name: ${range.name}`);
-		option = makeElement({
+	project.settings.project.characterRanges.forEach((range) => {
+		const option = makeElement({
 			tag: 'option',
 			innerHTML: range.name,
 			attributes: { note: range.note },
 		});
-
-		option.addEventListener('click', () => {
-			selectedRange = range;
-			let table = document.getElementById('cross-project-actions__character-action-table');
-			updateCharacterCopyTable(table);
-		});
-
-		optionChooser.appendChild(option);
+		option.addEventListener('click', () => choose(range));
+		chooser.appendChild(option);
 	});
 
-	return optionChooser;
+	const field = makeElement({ className: 'cross-project__range-field' });
+	field.appendChild(
+		makeElement({ tag: 'span', className: 'cross-project__range-label', content: 'List' })
+	);
+	field.appendChild(chooser);
+	return field;
+}
+
+// --------------------------------------------------------------
+// Running an action
+// --------------------------------------------------------------
+
+/**
+ * A two-step confirm, in place of the footer.
+ *
+ * Not a second dialog: the footer's own contents are swapped for a sentence
+ * that names what will be destroyed and where, a cancel that puts the footer
+ * back, and a confirm labelled with the verb. Focus lands on cancel; Escape
+ * cancels.
+ *
+ * @param {Element} footer - the footer to swap
+ * @param {Object} action - the destructive action
+ * @param {Number} count - how many items
+ * @param {Function} onConfirm - what to do if confirmed
+ */
+function showConfirm(footer, action, count, onConfirm) {
+	const previous = [...footer.childNodes];
+	footer.innerHTML = '';
+	footer.classList.add('cross-project__footer--confirm');
+
+	const noun = `${count} ${action.noun}${count === 1 ? '' : 's'}`;
+	const destination = destinationEditor.project.settings.project.name;
+	const sentence = makeElement({
+		className: 'cross-project__footer-note',
+		attributes: { role: 'alert' },
+	});
+	sentence.textContent = `${action.verb} ${noun} in ${destination}? The current versions are replaced; Undo in that project brings them back.`;
+
+	const restore = () => {
+		footer.classList.remove('cross-project__footer--confirm');
+		footer.innerHTML = '';
+		previous.forEach((node) => footer.appendChild(node));
+		const button = footer.querySelector('fancy-button');
+		if (button instanceof HTMLElement) button.focus();
+		document.removeEventListener('keydown', onKey, true);
+	};
+
+	const onKey = (event) => {
+		if (event.key === 'Escape') {
+			event.stopPropagation();
+			restore();
+		}
+	};
+	document.addEventListener('keydown', onKey, true);
+
+	const cancel = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '' },
+		content: 'Keep them',
+		onClick: restore,
+	});
+	const confirm = makeElement({
+		tag: 'fancy-button',
+		attributes: { secondary: '', danger: '' },
+		content: `${action.verb} ${noun}`,
+		onClick: () => {
+			document.removeEventListener('keydown', onKey, true);
+			footer.classList.remove('cross-project__footer--confirm');
+			onConfirm();
+		},
+	});
+
+	const buttons = makeElement({ className: 'cross-project__confirm-buttons' });
+	addAsChildren(buttons, [cancel, confirm]);
+	addAsChildren(footer, [sentence, buttons]);
+	requestAnimationFrame(() => cancel.focus());
+}
+
+/**
+ * Does the work, says what it did, and redraws.
+ * @param {Object} action - the action
+ * @param {Object} selection - what is ticked
+ */
+function runAction(action, selection) {
+	const ids = selection.list;
+	const result = action.run(contextFor(action), ids);
+
+	selection.clear();
+	renderAction(action, true);
+
+	const where = escapeHTML(destinationEditor.project.settings.project.name);
+	let message = `${countPhrase(result.count, result.noun)} ${pastTense(action.verb)} into ${where}`;
+	if (result.skipped) {
+		message += `<br>${countPhrase(result.skipped, result.noun)} left alone — ${result.reason}`;
+	}
+	showToast(message);
+}
+
+/**
+ * @param {Number} count
+ * @param {String} noun - singular
+ * @returns {String}
+ */
+function countPhrase(count, noun) {
+	return `${count} ${noun}${count === 1 ? '' : 's'}`;
+}
+
+/**
+ * "Copy shapes" → "copied", "Overwrite" → "overwritten", "Add" → "added".
+ * @param {String} verb
+ * @returns {String}
+ */
+function pastTense(verb) {
+	const first = verb.split(' ')[0].toLowerCase();
+	if (first === 'copy') return 'copied';
+	if (first === 'overwrite') return 'overwritten';
+	if (first === 'add') return 'added';
+	return `${first}ed`;
+}
+
+/**
+ * @param {String} text
+ * @returns {String}
+ */
+function escapeHTML(text) {
+	return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
