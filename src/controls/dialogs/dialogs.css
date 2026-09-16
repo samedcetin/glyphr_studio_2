@@ -2228,3 +2228,87 @@ dialog {
 .dialog-option[disabled] input[type='checkbox'] {
 	pointer-events: none;
 }
+
+/* --------------------------------------------------------------
+	THE PANOSE BUILDER
+
+	Ten digits, one per question, where the first question decides what the
+	other nine ask. See showPanoseBuilderDialog for what the fixed table of
+	ten id-addressed rows became.
+	------------------------------------------------------------ */
+
+/*
+	The string being built, set as a string. It was ten separate cells each
+	holding one digit, in a 50px column at 2em - so the one thing this dialog
+	produces could not be read as the one thing it produces.
+*/
+.panose__result {
+	justify-items: start;
+	gap: var(--sp-3);
+}
+
+.modal-dialog__body .panose__result-value {
+	font-family: var(--font-mono);
+	font-size: var(--fs-xl);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.08em;
+	color: var(--text-primary);
+}
+
+.panose__rows {
+	display: grid;
+	gap: var(--sp-2);
+}
+
+/*
+	What the position asks, what you answered, and the digit that comes out.
+	The digit is last because it is the result of the row rather than its
+	name - it used to be first, at twice the size of everything beside it.
+*/
+.panose__row {
+	display: grid;
+	grid-template-columns: 136px minmax(0, 1fr) 24px;
+	align-items: center;
+	column-gap: var(--sp-5);
+}
+
+.modal-dialog__body .panose__head {
+	padding-bottom: var(--sp-3);
+	border-bottom: 1px solid var(--border-subtle);
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+}
+
+.modal-dialog__body .panose__name {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+.modal-dialog__body .panose__digit,
+.modal-dialog__body .panose__head > span:last-child {
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+	text-align: right;
+}
+
+.modal-dialog__body .panose__head > span:last-child {
+	font-family: var(--font-ui);
+	font-size: var(--fs-2xs);
+}
+
+/*
+	These hold the names of shapes - `Obtuse Square Cove` - rather than code
+	points, so they take the UI face. The control's default is mono, which is
+	right where it usually sits.
+*/
+.panose__chooser {
+	--option-chooser-font: var(--font-ui);
+	display: block;
+	width: 100%;
+}
