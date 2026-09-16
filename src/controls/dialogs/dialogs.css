@@ -306,6 +306,20 @@ dialog {
 */
 .context-menu__dropdown#context-menu {
 	max-width: none;
+	/*
+		And no bar down the right edge. The menu is var(--sp-2) of padding
+		around rows that are --r-xl, which is exactly what makes its own
+		--r-2xl corner concentric with theirs - and a scrollbar takes that
+		padding back on one side only. The rows then sit 4px in from the left
+		wall and hard against the right one, with the bar running across both
+		corners it passes. A dropdown that scrolls says so by clipping its
+		last row.
+	*/
+	scrollbar-width: none;
+}
+
+.context-menu__dropdown#context-menu::-webkit-scrollbar {
+	display: none;
 }
 
 /*
