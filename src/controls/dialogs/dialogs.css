@@ -2449,6 +2449,13 @@ dialog {
 }
 
 .modal-dialog__body .dialog-number__unit {
+	/*
+		Pinned to the far end, so the unit is the box's right-hand landmark
+		rather than a word that drifts with the number in front of it. It lands
+		13px in from the outer edge, which is what the number is from the left
+		- the box reads even.
+	*/
+	margin-left: auto;
 	flex: 0 0 auto;
 	font-family: var(--font-mono);
 	font-size: var(--fs-xs);
