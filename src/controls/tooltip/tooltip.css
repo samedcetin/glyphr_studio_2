@@ -35,6 +35,12 @@
 		visibility 0s linear var(--dur-fast);
 }
 
+/* Opening sideways, it arrives from the side it is anchored to. */
+.tooltip[data-side='right'] {
+	transform: translateX(-3px) scale(0.97);
+	transform-origin: left center;
+}
+
 .tooltip[open] {
 	opacity: 1;
 	visibility: visible;

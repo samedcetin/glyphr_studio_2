@@ -42,7 +42,8 @@ export function makeLeftRail() {
 	const rail = makeElement({
 		tag: 'nav',
 		id: 'app__left-rail',
-		attributes: { 'aria-label': 'Main' },
+		/* Tips open to the right of a rail button: above it, they hit the window's edge. */
+		attributes: { 'aria-label': 'Main', 'data-tip-side': 'right' },
 	});
 
 	rail.appendChild(makeRailMark(navigateToHub));
@@ -98,7 +99,8 @@ export function makeAppPageRail({ tabs = [], current = '', onSelect = () => {}, 
 	const rail = makeElement({
 		tag: 'nav',
 		id: 'app__left-rail',
-		attributes: { 'aria-label': 'Main' },
+		/* Tips open to the right of a rail button: above it, they hit the window's edge. */
+		attributes: { 'aria-label': 'Main', 'data-tip-side': 'right' },
 	});
 
 	rail.appendChild(makeRailMark());

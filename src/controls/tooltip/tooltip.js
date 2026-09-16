@@ -69,18 +69,40 @@ export function showTooltip(target, name, body) {
 	const tipBox = element.getBoundingClientRect();
 	const gap = 8;
 
-	/* Centred on the target, then pulled back inside the window. */
-	const left = Math.min(
-		Math.max(targetBox.left + targetBox.width / 2 - tipBox.width / 2, gap),
-		window.innerWidth - tipBox.width - gap
-	);
+	/*
+		Which side the tip opens on is the surface's to say, not the target's:
+		a rail against the window's left edge marks itself data-tip-side="right"
+		and every button in it opens sideways, where there is room. Anything
+		else opens above.
+	*/
+	const side = target.closest('[data-tip-side]')?.getAttribute('data-tip-side') || 'top';
+	let left;
+	let top;
 
-	/* Above, unless there is no room up there. */
-	const above = targetBox.top - tipBox.height - gap;
-	const flipped = above < gap;
+	if (side === 'right') {
+		/* Beside the target, level with its middle; to its left if the window ends. */
+		left = targetBox.right + gap;
+		if (left + tipBox.width > window.innerWidth - gap) left = targetBox.left - gap - tipBox.width;
+		top = Math.min(
+			Math.max(targetBox.top + targetBox.height / 2 - tipBox.height / 2, gap),
+			window.innerHeight - tipBox.height - gap
+		);
+	} else {
+		/* Centred on the target, then pulled back inside the window. */
+		left = Math.min(
+			Math.max(targetBox.left + targetBox.width / 2 - tipBox.width / 2, gap),
+			window.innerWidth - tipBox.width - gap
+		);
 
+		/* Above, unless there is no room up there. */
+		const above = targetBox.top - tipBox.height - gap;
+		const flipped = above < gap;
+		top = flipped ? targetBox.bottom + gap : above;
+	}
+
+	element.setAttribute('data-side', side);
 	element.style.left = `${Math.round(left)}px`;
-	element.style.top = `${Math.round(flipped ? targetBox.bottom + gap : above)}px`;
+	element.style.top = `${Math.round(top)}px`;
 	element.removeAttribute('measuring');
 
 	window.clearTimeout(timer);
