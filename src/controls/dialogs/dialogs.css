@@ -50,7 +50,8 @@ dialog {
 	background-color: var(--bg-surface-raised);
 	color: var(--text-primary);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-lg);
+	/* The floating-strip radius, shared with the error panel, the toolbar and the breadcrumb bar. */
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 	font-size: var(--fs-sm);
@@ -133,14 +134,21 @@ dialog {
 	min-width: 280px;
 	max-width: min(460px, calc(100vw - var(--sp-9)));
 	row-gap: var(--sp-3);
-	padding: var(--sp-4) var(--sp-5);
+	padding: var(--sp-5) var(--sp-6);
 	z-index: var(--z-toast);
 	text-align: left;
 	text-wrap: pretty;
-	color: var(--text-danger);
+	/*
+		The words are in the ordinary text colour. Red on the red tint measured
+		5.3:1 at 12px - past the bar, and still hard to read, because the two
+		reds share a hue and the eye gets no edge to hold. The tint, the border,
+		the label and the close carry the red; the message is just text.
+	*/
+	color: var(--text-primary);
 	background-color: var(--danger-bg);
 	border: 1px solid var(--danger);
-	border-radius: var(--r-lg);
+	/* The floating-strip radius, like the toolbar and the breadcrumb bar. */
+	border-radius: var(--r-xl);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
 	user-select: text;
@@ -176,9 +184,9 @@ dialog {
 }
 
 .error__body {
-	font-size: var(--fs-sm);
+	font-size: var(--fs-md);
 	line-height: var(--lh-normal);
-	color: var(--text-danger);
+	color: var(--text-primary);
 }
 
 .error__header button {
