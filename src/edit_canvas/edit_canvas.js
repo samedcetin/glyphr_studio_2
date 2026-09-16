@@ -512,8 +512,14 @@ export class EditCanvas extends HTMLElement {
 				/** @type {String | false} */
 				let sbHover = false;
 				if (editor.selectedTool === 'resize') {
+					/*
+						The tool handlers are made when a canvas first mounts, and a
+						redraw can arrive before that - opening a second project
+						paints the first editor's canvas while the new editor has
+						no handlers yet. Without the guard, that paint threw.
+					*/
 					const tool = editor.eventHandlers.tool_resize;
-					if (!tool.dragging && !tool.resizing && !tool.rotating) {
+					if (tool && !tool.dragging && !tool.resizing && !tool.rotating) {
 						sbHover = tool.sideBearingHover || tool.sideBearingEdit;
 					}
 				}
