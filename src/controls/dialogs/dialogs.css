@@ -2069,18 +2069,6 @@ dialog {
 }
 
 /*
-	A label with a help bubble beside it is two things on a line, so it is set
-	as one - the bubble was butted straight against the last letter of the
-	label, with no space for the question mark to be its own object. Scoped to
-	labels that actually carry one, so every other field row is untouched.
-*/
-.dialog-field__label:has(info-bubble) {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-3);
-}
-
-/*
 	Start and End, side by side and equal. They are one fact with two ends, so
 	they belong on one line - and neither of them is the more important half,
 	so neither gets more room.
@@ -2165,5 +2153,58 @@ dialog {
 	font-size: var(--fs-xs);
 	line-height: var(--lh-normal);
 	color: var(--text-danger);
+	text-wrap: pretty;
+}
+
+/*
+	ONE SOURCE OF VERTICAL SPACE, which is the form.
+
+	.dialog-field carries a margin-bottom of its own, from the dialogs that use
+	it loose in a body with nothing else spacing them. Inside a grid that
+	already has a gap the two add up: measured 32px between Range name and Code
+	points, against the 16 the form asks for. The margin goes, and the gap
+	decides.
+*/
+.dialog-form .dialog-field {
+	margin-bottom: 0;
+}
+
+/*
+	A group of two fields needs more air under its own label than each field
+	needs under its label, or the group label reads as a third field label.
+	8 above the pair, 4 above each input.
+*/
+.dialog-field:has(.dialog-span-row) {
+	gap: var(--sp-4);
+}
+
+/* --------------------------------------------------------------
+	AN INFO BLOCK
+
+	What the thing you are filling in actually is. Not .dialog-note, which is
+	the warn tint and is for a consequence you should know about before you
+	commit; this is reference, in the app's quiet voice, and it sits at the
+	end because you can finish the form without reading it.
+	------------------------------------------------------------ */
+
+.dialog-info {
+	display: grid;
+	gap: var(--sp-2);
+	padding: var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+}
+
+.modal-dialog__body .dialog-info__title {
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-semibold);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .dialog-info__body {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
 	text-wrap: pretty;
 }

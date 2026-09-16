@@ -525,15 +525,6 @@ function deleteCharactersFromRange(range, deleteList = []) {
  * @param {Object | false} range - the range to edit, or false to add one
  */
 function showEditCharacterRangeDialog(range = false) {
-	const unicodeHelp = `
-		Start and End are the code points at each end of the range. ${PRODUCT_NAME} reads three ways of writing one:<br>
-		<ul>
-			<li><b>Unicode</b> - base 16 with a U+&nbsp;prefix. <code>U+4E</code> is Capital&nbsp;N.</li>
-			<li><b>Hexadecimal</b> - base 16 with a 0x&nbsp;prefix. <code>0x4E</code> is Capital&nbsp;N.</li>
-			<li><b>Decimal</b> - base 10. <code>78</code> is Capital&nbsp;N.</li>
-		</ul>
-	`;
-
 	const content = makeElement({ className: 'dialog-layout dialog-form' });
 
 	// --- Name ------------------------------------------------------
@@ -560,12 +551,14 @@ function showEditCharacterRangeDialog(range = false) {
 
 	// --- Start and End, one pair with one hint ---------------------
 	const spanGroup = makeElement({ className: 'dialog-field' });
-	const spanLabel = makeElement({ className: 'dialog-field__label' });
-	spanLabel.appendChild(makeElement({ tag: 'span', content: 'Code points' }));
-	/* One bubble, not two. The help is about the pair, and it was the same
-		paragraph printed twice. */
-	spanLabel.appendChild(makeElement({ tag: 'info-bubble', innerHTML: unicodeHelp }));
-	spanGroup.appendChild(spanLabel);
+	/*
+		The label, and under the pair the one thing you have to know to fill
+		them in. It used to be the same paragraph inside two identical info
+		bubbles, one beside Start and one beside End - so the answer to "what
+		do I type here" was behind a click, twice, on a field whose whole
+		difficulty is that it reads three notations and says so nowhere.
+	*/
+	spanGroup.appendChild(makeElement({ className: 'dialog-field__label', content: 'Code points' }));
 
 	const spanRow = makeElement({ className: 'dialog-span-row' });
 	const makeSpanInput = (id, placeholder, label) => {
@@ -597,6 +590,16 @@ function showEditCharacterRangeDialog(range = false) {
 	const end = makeSpanInput('glyph-range-editor__end', '0x7F', 'End');
 	addAsChildren(spanRow, [begin.wrapper, end.wrapper]);
 	spanGroup.appendChild(spanRow);
+	spanGroup.appendChild(
+		makeElement({
+			className: 'dialog-field__hint',
+			/* The punctuation follows a word rather than a chip. Written the
+				short way - chip, comma, chip - every comma and full stop sat
+				against a padded box and read as a space before it. */
+			content:
+				'Three ways to write one: <code>0x4E</code> hexadecimal, <code>U+4E</code> Unicode, or <code>78</code> decimal. All three are Capital&nbsp;N.',
+		})
+	);
 
 	// --- What you have described -----------------------------------
 
@@ -623,6 +626,26 @@ function showEditCharacterRangeDialog(range = false) {
 
 	const problem = makeElement({ className: 'dialog-form__problem' });
 	problem.hidden = true;
+
+	// --- What a range is, for whoever has not met one ---------------
+
+	/*
+		Last, not first. It is reference rather than instruction - you can fill
+		this form in without reading it - and a paragraph above the fields
+		pushes the fields down the dialog to explain something most people
+		opening it already know.
+	*/
+	const info = makeElement({ className: 'dialog-info' });
+	info.appendChild(
+		makeElement({ tag: 'span', className: 'dialog-info__title', content: 'What a range does' })
+	);
+	info.appendChild(
+		makeElement({
+			className: 'dialog-info__body',
+			content:
+				'A range decides which characters appear on the Characters page and which are written into the exported font. It is a span of code points and nothing else, so ranges may overlap, and one can exist long before you have drawn anything inside it &ndash; which is how you lay out the shape of a font before you start drawing.',
+		})
+	);
 
 	// --- The note that only applies to an edit ----------------------
 	const orphanNote = makeElement({
@@ -743,7 +766,7 @@ function showEditCharacterRangeDialog(range = false) {
 		/** @type {HTMLInputElement} */ (end.input).value = `${decToHex(range.end)}`;
 	}
 
-	addAsChildren(content, [nameField, spanGroup, problem, summary, orphanNote]);
+	addAsChildren(content, [nameField, spanGroup, problem, summary, info, orphanNote]);
 	refresh();
 
 	showModalDialog(content, 520, {
