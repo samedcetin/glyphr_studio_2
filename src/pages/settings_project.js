@@ -3,12 +3,7 @@ import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { decToHex, hexesToChars } from '../common/character_ids.js';
 import { addAsChildren, makeElement, textToNode } from '../common/dom.js';
 import { remove } from '../common/functions.js';
-import {
-	closeEveryTypeOfDialog,
-	showError,
-	showModalDialog,
-	showToast,
-} from '../controls/dialogs/dialogs.js';
+import { closeEveryTypeOfDialog, showModalDialog, showToast } from '../controls/dialogs/dialogs.js';
 import { unicodeBlocksBMP } from '../lib/unicode/unicode_blocks_0_bmp.js';
 import { unicodeBlocksSMP } from '../lib/unicode/unicode_blocks_1_smp.js';
 import { unicodeBlocksSIP } from '../lib/unicode/unicode_blocks_2_sip.js';
@@ -505,148 +500,277 @@ function deleteCharactersFromRange(range, deleteList = []) {
 // --------------------------------------------------------------
 // Edit Range or Add Custom Range
 // --------------------------------------------------------------
+/**
+ * The three numbers a character range is made of.
+ *
+ * WHAT IT WAS. An h1 in the body and the buttons at the bottom of it, so
+ * neither the name of the dialog nor the way out belonged to the frame. Three
+ * labels in a grid whose middle column existed to hold two copies of the same
+ * info bubble, and a third empty span where the name's would have gone. No
+ * hint about what Start and End accept, on fields that accept three different
+ * notations. Save always enabled, on a form that starts empty.
+ *
+ * And two real faults:
+ *
+ *   The name field ran its value through sanitizeUnicodeInput on change, the
+ *   same as Start and End. A range called `2024 Icons` parses as 2024, so the
+ *   field rewrote it to `0x7E8` - silently, on blur, before anyone pressed
+ *   Save.
+ *
+ *   Every validation failure went to showError, and showError begins with
+ *   closeEveryTypeOfDialog. So submitting a range with a blank name threw away
+ *   the two numbers you had just typed and left a red panel at the top of the
+ *   window explaining what you should have done.
+ *
+ * @param {Object | false} range - the range to edit, or false to add one
+ */
 function showEditCharacterRangeDialog(range = false) {
-	// log(`showEditCharacterRangeDialog`, 'start');
-	// log(`\n⮟range⮟`);
-	// log(range);
 	const unicodeHelp = `
-		Start and End inputs are Unicode or number IDs for the characters on each end of the range. ${PRODUCT_NAME} accepts three flavors of this ID number:<br>
+		Start and End are the code points at each end of the range. ${PRODUCT_NAME} reads three ways of writing one:<br>
 		<ul>
-			<li><b>Unicode Number</b> - a base-16 number with a U+&nbsp;prefix. For example, <code>U+4E</code> corresponds to Capital&nbsp;N.</li>
-			<li><b>Hexadecimal Number</b> - a base-16 number with a 0x&nbsp;prefix. For example, <code>0x4E</code> corresponds to Capital&nbsp;N.</li>
-			<li><b>Decimal Number</b> - a base-10 number. For example, <code>78</code> corresponds to Capital&nbsp;N.</li>
+			<li><b>Unicode</b> - base 16 with a U+&nbsp;prefix. <code>U+4E</code> is Capital&nbsp;N.</li>
+			<li><b>Hexadecimal</b> - base 16 with a 0x&nbsp;prefix. <code>0x4E</code> is Capital&nbsp;N.</li>
+			<li><b>Decimal</b> - base 10. <code>78</code> is Capital&nbsp;N.</li>
 		</ul>
 	`;
 
-	const rangeNote = !range
-		? '<span></span>'
-		: `
-	<p>
-		Note: All characters must have at least one parent character range.
-		If you edit a range to be smaller, a new hidden character range may be created to
-		contain orphaned characters.
-	</p>
-	`;
+	const content = makeElement({ className: 'dialog-layout dialog-form' });
 
-	const content = makeElement({
-		className: 'glyph-range-editor__wrapper',
-		innerHTML: `
-			<h1>${range ? 'Edit' : 'Add'} character range</h1>
-		`,
-	});
-
+	// --- Name ------------------------------------------------------
+	const nameField = makeElement({ className: 'dialog-field' });
+	nameField.appendChild(
+		makeElement({
+			tag: 'label',
+			className: 'dialog-field__label',
+			attributes: { for: 'glyph-range-editor__name' },
+			content: 'Range name',
+		})
+	);
 	const inputName = makeElement({
 		tag: 'input',
 		id: 'glyph-range-editor__name',
-		attributes: { type: 'text' },
+		className: 'dialog-field__control',
+		attributes: { type: 'text', placeholder: 'Game icons', spellcheck: 'false' },
 	});
-	inputName.addEventListener('change', (event) => {
-		// @ts-expect-error 'property does exist'
-		event.target.value = sanitizeUnicodeInput(event.target.value);
-	});
+	/*
+		No sanitizeUnicodeInput here. A name is a name - see the note above the
+		function.
+	*/
+	nameField.appendChild(inputName);
 
-	const inputBegin = makeElement({
-		tag: 'input',
-		id: 'glyph-range-editor__begin',
-		attributes: { type: 'text' },
-	});
-	inputBegin.addEventListener('change', (event) => {
-		// @ts-expect-error 'property does exist'
-		event.target.value = sanitizeUnicodeInput(event.target.value);
-	});
+	// --- Start and End, one pair with one hint ---------------------
+	const spanGroup = makeElement({ className: 'dialog-field' });
+	const spanLabel = makeElement({ className: 'dialog-field__label' });
+	spanLabel.appendChild(makeElement({ tag: 'span', content: 'Code points' }));
+	/* One bubble, not two. The help is about the pair, and it was the same
+		paragraph printed twice. */
+	spanLabel.appendChild(makeElement({ tag: 'info-bubble', innerHTML: unicodeHelp }));
+	spanGroup.appendChild(spanLabel);
 
-	const inputEnd = makeElement({
-		tag: 'input',
-		id: 'glyph-range-editor__end',
-		attributes: { type: 'text' },
+	const spanRow = makeElement({ className: 'dialog-span-row' });
+	const makeSpanInput = (id, placeholder, label) => {
+		const wrapper = makeElement({ className: 'dialog-span-row__field' });
+		wrapper.appendChild(
+			makeElement({
+				tag: 'label',
+				className: 'dialog-span-row__label',
+				attributes: { for: id },
+				content: label,
+			})
+		);
+		const input = makeElement({
+			tag: 'input',
+			id: id,
+			attributes: { type: 'text', placeholder: placeholder, spellcheck: 'false' },
+		});
+		input.addEventListener('change', (event) => {
+			/** @type {HTMLInputElement} */ (event.target).value = sanitizeUnicodeInput(
+				/** @type {HTMLInputElement} */ (event.target).value
+			);
+			refresh();
+		});
+		wrapper.appendChild(input);
+		return { wrapper: wrapper, input: input };
+	};
+
+	const begin = makeSpanInput('glyph-range-editor__begin', '0x20', 'Start');
+	const end = makeSpanInput('glyph-range-editor__end', '0x7F', 'End');
+	addAsChildren(spanRow, [begin.wrapper, end.wrapper]);
+	spanGroup.appendChild(spanRow);
+
+	// --- What you have described -----------------------------------
+
+	/*
+		The range, read back. These three fields are numbers in one of three
+		notations, and until now nothing said what they added up to until after
+		you had saved them - so a typo in Start was a range you found out about
+		on the Characters page.
+	*/
+	const summary = makeElement({ className: 'dialog-form__summary' });
+	const summaryText = makeElement({ tag: 'span', className: 'dialog-form__summary-text' });
+	/*
+		Named, because it is a tab stop. Chrome makes a scrolling box keyboard
+		focusable when nothing inside it is - which is right, or a keyboard could
+		not scroll this strip at all - and a focusable region with no accessible
+		name announces itself as nothing.
+	*/
+	const preview = makeElement({
+		tag: 'div',
+		className: 'dialog-charwall dialog-form__preview',
+		attributes: { role: 'group', 'aria-label': 'Characters in this range' },
 	});
-	inputEnd.addEventListener('change', (event) => {
-		// @ts-expect-error 'property does exist'
-		event.target.value = sanitizeUnicodeInput(event.target.value);
+	addAsChildren(summary, [summaryText, preview]);
+
+	const problem = makeElement({ className: 'dialog-form__problem' });
+	problem.hidden = true;
+
+	// --- The note that only applies to an edit ----------------------
+	const orphanNote = makeElement({
+		className: 'dialog-note',
+		content:
+			'Every character has to belong to a range. Making this one smaller creates a hidden range to hold whatever falls outside it.',
 	});
+	if (!range) orphanNote.hidden = true;
 
-	if (range) {
-		// @ts-expect-error 'property does exist'
-		inputName.value = range.name;
-		// @ts-expect-error 'property does exist'
-		inputBegin.value = '' + decToHex(range.begin);
-		// @ts-expect-error 'property does exist'
-		inputEnd.value = '' + decToHex(range.end);
-	}
-
-	const buttonBar = makeElement({ className: 'glyph-range-editor__footer' });
-
-	const buttonSave = makeElement({
+	// --- Actions ----------------------------------------------------
+	const saveButton = makeElement({
 		tag: 'fancy-button',
-		innerHTML: 'Save',
-		onClick: () => validateAndSaveCharacterRange(range),
+		content: 'Save',
+		attributes: { disabled: '' },
+	});
+	saveButton.addEventListener('click', () => {
+		const values = read();
+		if (!values.valid) return;
+		saveCharacterRange(range, values.name, values.begin, values.end);
 	});
 
-	const buttonCancel = makeElement({
+	const cancelButton = makeElement({
 		tag: 'fancy-button',
 		attributes: { secondary: '' },
-		innerHTML: 'Cancel',
+		content: 'Cancel',
 		onClick: closeEveryTypeOfDialog,
 	});
 
-	addAsChildren(buttonBar, [buttonSave, buttonCancel, textToNode('<span></span><span></span>')]);
+	// --- Reading and saying what is there ---------------------------
 
-	addAsChildren(content, [
-		textToNode('<label>Range name</label>'),
-		textToNode('<span></span>'),
-		inputName,
-		textToNode('<label>Start</label>'),
-		makeElement({ tag: 'info-bubble', innerHTML: unicodeHelp }),
-		inputBegin,
-		textToNode('<label>End</label>'),
-		makeElement({ tag: 'info-bubble', innerHTML: unicodeHelp }),
-		inputEnd,
-		textToNode(rangeNote),
-		buttonBar,
-	]);
+	/**
+	 * What the three fields currently hold, and whether it is a range.
+	 * @returns {Object} - { name, begin, end, valid, problem }
+	 */
+	function read() {
+		const name = `${/** @type {HTMLInputElement} */ (inputName).value}`.trim();
+		const rawBegin = `${/** @type {HTMLInputElement} */ (begin.input).value}`.trim();
+		const rawEnd = `${/** @type {HTMLInputElement} */ (end.input).value}`.trim();
+		let low = parseInt(sanitizeUnicodeInput(rawBegin));
+		let high = parseInt(sanitizeUnicodeInput(rawEnd));
 
-	showModalDialog(content, 500);
+		if (!rawBegin || !rawEnd || !name) {
+			return { valid: false, problem: '' };
+		}
+		if (isNaN(low)) {
+			return { valid: false, problem: 'Start is not a code point. Try 0x20, U+20 or 32.' };
+		}
+		if (isNaN(high)) {
+			return { valid: false, problem: 'End is not a code point. Try 0x7F, U+7F or 127.' };
+		}
 
-	// log(`showEditCharacterRangeDialog`, 'end');
+		/* Typed the other way round is still a range, so it is turned round
+			rather than refused - and said out loud, because a field that holds
+			one number and means another is a field you cannot trust. */
+		const swapped = low > high;
+		if (swapped) [low, high] = [high, low];
+
+		return { name: name, begin: low, end: high, swapped: swapped, valid: true, problem: '' };
+	}
+
+	/** Says what the fields add up to, and whether Save can be pressed. */
+	function refresh() {
+		const values = read();
+
+		problem.textContent = values.problem;
+		problem.hidden = !values.problem;
+
+		if (!values.valid) {
+			summaryText.textContent = '';
+			preview.innerHTML = '';
+			saveButton.setAttribute('disabled', '');
+			return;
+		}
+
+		saveButton.removeAttribute('disabled');
+
+		const count = values.end - values.begin + 1;
+		const shown = Math.min(count, PREVIEW_LIMIT);
+		summaryText.textContent =
+			`${decToHex(values.begin)} – ${decToHex(values.end)} · ${count} character${
+				count === 1 ? '' : 's'
+			}` +
+			(values.swapped ? ' · Start and End are the other way round, and will be saved swapped' : '');
+
+		preview.innerHTML = '';
+		for (let point = values.begin; point < values.begin + shown; point++) {
+			const hexString = `${decToHex(point)}`;
+			const tile = makeElement({
+				className: 'dialog-charwall__tile',
+				innerHTML: hexesToChars(hexString) || '',
+			});
+			const characterName = getUnicodeName(hexString);
+			tile.setAttribute('data-tip-name', hexString);
+			tile.setAttribute('data-tip-body', characterName);
+			tile.setAttribute('aria-label', `${hexString} ${characterName}`);
+			preview.appendChild(tile);
+		}
+	}
+
+	preview.addEventListener('mouseover', (event) => {
+		const tile = /** @type {HTMLElement} */ (event.target)?.closest?.('.dialog-charwall__tile');
+		if (!(tile instanceof HTMLElement)) return;
+		showTooltip(
+			tile,
+			tile.getAttribute('data-tip-name') || '',
+			tile.getAttribute('data-tip-body') || ''
+		);
+	});
+	preview.addEventListener('mouseleave', hideTooltip);
+
+	[inputName, begin.input, end.input].forEach((input) => {
+		input.addEventListener('input', refresh);
+	});
+
+	if (range) {
+		/** @type {HTMLInputElement} */ (inputName).value = range.name;
+		/** @type {HTMLInputElement} */ (begin.input).value = `${decToHex(range.begin)}`;
+		/** @type {HTMLInputElement} */ (end.input).value = `${decToHex(range.end)}`;
+	}
+
+	addAsChildren(content, [nameField, spanGroup, problem, summary, orphanNote]);
+	refresh();
+
+	showModalDialog(content, 520, {
+		title: `${range ? 'Edit' : 'Add'} character range`,
+		subtitle: 'A span of Unicode code points, and what to call it.',
+		actions: [cancelButton, saveButton],
+	});
+
+	/** @type {HTMLElement} */ (inputName).focus();
 }
 
-function validateAndSaveCharacterRange(range) {
-	// log(`validateAndSaveCharacterRange`, 'start');
-	// log(`\n⮟range⮟`);
-	// log(range);
-
-	/** @type {HTMLInputElement} */
-	const newNameInput = document.querySelector('#glyph-range-editor__name');
-	let newName = newNameInput.value;
-
-	/** @type {HTMLInputElement} */
-	const newBeginInput = document.querySelector('#glyph-range-editor__begin');
-	let newBegin = parseInt(newBeginInput.value);
-
-	/** @type {HTMLInputElement} */
-	const newEndInput = document.querySelector('#glyph-range-editor__end');
-	let newEnd = parseInt(newEndInput.value);
-
-	if (isNaN(newBegin)) {
-		showError(`Start must be a number, a Unicode code point, or a Hexadecimal number.`);
-		return;
-	} else if (isNaN(newEnd)) {
-		showError(`End must be a number, a Unicode code point, or a Hexadecimal number.`);
-		return;
-	} else if (newName === '') {
-		showError(`Name must not be blank.`);
-		return;
-	}
-
-	if (newBegin > newEnd) {
-		let temp = newEnd;
-		newEnd = newBegin;
-		newBegin = temp;
-	}
-
+/**
+ * Writes the range, having already been told it is a range.
+ *
+ * It used to read the three fields back out of the document by id and validate
+ * them here, which is why the failure path had to reach for showError - there
+ * was nowhere else to put the message. The dialog validates as you type now,
+ * so by the time this runs there is nothing left to refuse.
+ *
+ * @param {Object | false} range - the range being edited, or false to add one
+ * @param {String} newName - what to call it
+ * @param {Number} newBegin - first code point
+ * @param {Number} newEnd - last code point
+ */
+function saveCharacterRange(range, newName, newBegin, newEnd) {
 	const checkForOrphans = range && (newBegin > range.begin || newEnd < range.end);
 
-	// Make the update
 	if (range) {
 		range.begin = newBegin;
 		range.end = newEnd;
@@ -654,11 +778,7 @@ function validateAndSaveCharacterRange(range) {
 		showToast(`Saved changes to character range:<br>${range.name}`);
 	} else {
 		addCharacterRangeToCurrentProject(
-			{
-				begin: newBegin,
-				end: newEnd,
-				name: newName,
-			},
+			{ begin: newBegin, end: newEnd, name: newName },
 			false,
 			false
 		);
@@ -682,7 +802,6 @@ function validateAndSaveCharacterRange(range) {
 		sortCharacterRanges();
 	}
 	updateRangesTables();
-	// log(`validateAndSaveCharacterRange`, 'end');
 }
 
 function enableRangesForOrphanedItems() {
@@ -928,8 +1047,11 @@ function showUnicodeCharacterRangeDialog() {
 		The grid and the empty state share the column's scrolling row, so the
 		message that stands in for the characters stands where they would.
 	*/
-	const previewBody = makeElement({ className: 'dialog-picker__body' });
-	const previewGrid = makeElement({ className: 'dialog-picker__grid' });
+	const previewBody = makeElement({
+		className: 'dialog-picker__body',
+		attributes: { role: 'group', 'aria-label': 'Characters in this block' },
+	});
+	const previewGrid = makeElement({ className: 'dialog-charwall' });
 
 	const previewEmpty = makeElement({
 		className: 'dialog-empty',
@@ -965,7 +1087,7 @@ function showUnicodeCharacterRangeDialog() {
 		telling you its name.
 	*/
 	previewGrid.addEventListener('mouseover', (event) => {
-		const tile = /** @type {HTMLElement} */ (event.target)?.closest?.('.dialog-picker__tile');
+		const tile = /** @type {HTMLElement} */ (event.target)?.closest?.('.dialog-charwall__tile');
 		if (!(tile instanceof HTMLElement)) return;
 		showTooltip(
 			tile,
@@ -1058,7 +1180,7 @@ function showUnicodeCharacterRangeDialog() {
 			for (let point = block.begin; point < block.begin + shown; point++) {
 				const hexString = `${decToHex(point)}`;
 				const tile = makeElement({
-					className: 'dialog-picker__tile',
+					className: 'dialog-charwall__tile',
 					innerHTML: hexesToChars(hexString) || '',
 				});
 				/*

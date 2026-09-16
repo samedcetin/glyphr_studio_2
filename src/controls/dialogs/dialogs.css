@@ -1961,7 +1961,14 @@ dialog {
 	align-content: center;
 }
 
-.dialog-picker__grid {
+/*
+	A wall of characters at a size you can recognise a script by. Shared: the
+	block chooser fills a column with it, and the custom range editor shows a
+	strip of one under the two fields that define it. They used to be inline
+	text at the body size, so a block of Devanagari was a paragraph of
+	Devanagari - which reads as prose, not as an inventory.
+*/
+.dialog-charwall {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, 32px);
 	justify-content: space-between;
@@ -1973,7 +1980,7 @@ dialog {
 	display: none;
 }
 
-.modal-dialog__body .dialog-picker__tile {
+.modal-dialog__body .dialog-charwall__tile {
 	display: grid;
 	place-items: center;
 	width: 32px;
@@ -1986,7 +1993,7 @@ dialog {
 	transition: var(--transition-color);
 }
 
-.dialog-picker__tile:hover {
+.dialog-charwall__tile:hover {
 	background-color: var(--bg-hover);
 	color: var(--text-primary);
 }
@@ -2046,4 +2053,117 @@ dialog {
 	font-size: var(--fs-2xs);
 	font-variant-numeric: tabular-nums;
 	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------
+	A DIALOG THAT IS A SHORT FORM
+
+	Fields down one column, then what they add up to. The character range
+	editor is the first: a name and two code points, and a line saying what
+	span you have just described.
+	------------------------------------------------------------ */
+
+.dialog-form {
+	display: grid;
+	gap: var(--sp-6);
+}
+
+/*
+	A label with a help bubble beside it is two things on a line, so it is set
+	as one - the bubble was butted straight against the last letter of the
+	label, with no space for the question mark to be its own object. Scoped to
+	labels that actually carry one, so every other field row is untouched.
+*/
+.dialog-field__label:has(info-bubble) {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+}
+
+/*
+	Start and End, side by side and equal. They are one fact with two ends, so
+	they belong on one line - and neither of them is the more important half,
+	so neither gets more room.
+*/
+.dialog-span-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--sp-5);
+}
+
+.dialog-span-row__field {
+	display: grid;
+	gap: var(--sp-2);
+}
+
+.modal-dialog__body .dialog-span-row__label {
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-normal);
+	color: var(--text-secondary);
+}
+
+.dialog-span-row input[type='text'] {
+	width: 100%;
+	height: var(--control-h-lg);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+}
+
+/*
+	What the fields add up to, read back. Sunken, because it is the one thing
+	in the dialog you do not type into - it is the form answering.
+*/
+.dialog-form__summary {
+	display: grid;
+	gap: var(--sp-4);
+	padding: var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	/* Derived: the wall's tiles are --r-sm and this insets them by --sp-5. */
+	border-radius: calc(var(--r-sm) + var(--sp-5));
+	corner-shape: var(--corner-smooth);
+}
+
+/* Nothing described yet, nothing to show. An empty sunken box under a form is
+	a hole in it. */
+.dialog-form__summary:not(:has(.dialog-form__summary-text:not(:empty))) {
+	display: none;
+}
+
+.modal-dialog__body .dialog-form__summary-text {
+	font-family: var(--font-mono);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
+/* Bounded. A custom range can be ten thousand code points wide, and the strip
+	is here to confirm a span, not to browse one. */
+.dialog-form__preview {
+	max-height: 144px;
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+.dialog-form__preview::-webkit-scrollbar {
+	display: none;
+}
+
+.dialog-form__preview:empty {
+	display: none;
+}
+
+/*
+	What is wrong, next to the fields that are wrong, while you are still in
+	them. Every failure used to go to showError - which begins by closing every
+	dialog, so the form you were filling in went with it.
+*/
+.modal-dialog__body .dialog-form__problem {
+	padding-left: var(--sp-5);
+	border-left: 2px solid var(--danger);
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-danger);
+	text-wrap: pretty;
 }

@@ -496,26 +496,13 @@ code {
 	padding-left: 2px;
 }
 
-/* Custom range chooser */
-.glyph-range-editor__wrapper {
-	display: grid;
-	grid-template-columns: 1fr 24px 2fr;
-	row-gap: 10px;
-}
-
-.glyph-range-editor__wrapper label {
-	height: 24px;
-	line-height: 24px;
-}
-
-.glyph-range-editor__wrapper h1,
-.glyph-range-editor__wrapper p,
-.glyph-range-editor__wrapper ul,
+/*
+	The button bar the delete-range dialog still ends on. It was named for the
+	range editor, which had one too - that dialog is on the frame's footer now
+	and this is the last thing reading the name.
+*/
 .glyph-range-editor__footer {
 	grid-column: -1 / 1;
-}
-
-.glyph-range-editor__footer {
 	display: grid;
 	column-gap: 10px;
 	grid-template-columns: min-content min-content 1fr min-content;
