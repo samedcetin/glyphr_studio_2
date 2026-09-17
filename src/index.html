@@ -85,6 +85,13 @@
 				--splash-link: hsl(212, 90%, 72%);
 				/* The mark's blue: --a-50, the light theme's --accent, as a literal for the same reason. */
 				--splash-accent: hsl(212, 92%, 56%);
+				/*
+					The pen's hand: eases in and out symmetrically, so each stroke
+					starts from rest and settles into its anchor instead of snapping
+					off the mark the way the tool's --ease does. Same status as the
+					durations below - brand motion, the splash's own.
+				*/
+				--splash-ease: cubic-bezier(0.65, 0, 0.35, 1);
 			}
 
 			body,
@@ -183,7 +190,7 @@
 			.splash__draw {
 				stroke-dasharray: 1;
 				stroke-dashoffset: 1;
-				animation: splash-draw var(--d) var(--ease) var(--t) forwards;
+				animation: splash-draw var(--d) var(--splash-ease) var(--t) forwards;
 			}
 
 			.splash__pop {
@@ -200,7 +207,7 @@
 			}
 
 			.splash__path {
-				animation: splash-recede 360ms var(--ease) var(--t) forwards;
+				animation: splash-recede 360ms var(--splash-ease) var(--t) forwards;
 			}
 
 			.splash__nib {
@@ -208,7 +215,7 @@
 				offset-rotate: 0deg;
 				offset-distance: 0%;
 				opacity: 0;
-				animation: splash-nib var(--d) var(--ease) var(--t) forwards;
+				animation: splash-nib var(--d) var(--splash-ease) var(--t) forwards;
 			}
 
 			.splash__name {
