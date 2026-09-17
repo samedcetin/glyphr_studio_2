@@ -233,21 +233,34 @@ export class GlyphrStudioApp {
 	}
 
 	/**
-	 * Fades out the initial load screen to show the App
+	 * Fades out the initial load screen to show the App.
+	 *
+	 * The splash draws its mark on (see the animation in index.html), and on a
+	 * fast machine the app is ready before the drawing is done. So this waits
+	 * for whatever is still animating on the splash to finish first - with a
+	 * ceiling, so a stuck animation can never hold the app hostage. With
+	 * reduced motion there is nothing running and the fade starts at once.
+	 *
 	 * @param {Number} delay - override default fadeout time
 	 */
 	fadeOutLandingPage(delay = 700) {
 		/** @type {HTMLElement} */
 		const landingPage = document.querySelector('#app__landing-page');
-		if (landingPage) {
-			landingPage.style.opacity = '0';
+		if (!landingPage) return;
 
-			setTimeout(function () {
-				// landingPage.style.visibility = 'hidden';
-				// landingPage.style.display = 'none';
-				document.body.removeChild(landingPage);
-			}, delay);
-		}
+		const running =
+			typeof landingPage.getAnimations === 'function'
+				? landingPage.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => {}))
+				: [];
+		const settled = Promise.race([
+			Promise.all(running),
+			new Promise((resolve) => setTimeout(resolve, 1600)),
+		]);
+
+		settled.then(() => {
+			landingPage.style.opacity = '0';
+			setTimeout(() => landingPage.remove(), delay);
+		});
 	}
 
 	// --------------------------------------------------------------
