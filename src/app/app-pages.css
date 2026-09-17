@@ -1574,7 +1574,20 @@
 	The project grid, and its list form
 -------------------------------------------------------- */
 
+/*
+	The head and its grid share a section, so the head-to-content distance
+	the home view states as its row gap has to be restated here: without it
+	the two sat flush, the section head touching the first card and the
+	empty state alike. The same --sp-9 as .hub__home, so the head stands the
+	same distance above its grid as every other head on the page, and the
+	same --sp-7 above the start cards that a head starting a new section
+	gets from .hub__section-head:not(:first-child) - which cannot fire here,
+	because inside the section the head is the first child.
+*/
 .hub__recents {
+	display: grid;
+	gap: var(--sp-9);
+	margin-top: var(--sp-7);
 	min-width: 0;
 }
 
