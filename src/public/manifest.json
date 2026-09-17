@@ -1,0 +1,22 @@
+{
+  "name": "Glyva",
+  "short_name": "Glyva",
+  "icons": [
+    {
+      "src": "icons/glyva-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/glyva-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "https://bluerain.studio/glyva/",
+  "display": "standalone",
+  "theme_color": "#0a0a0f",
+  "background_color": "#0a0a0f"
+}

@@ -220,8 +220,8 @@ function readerValidateTXTandGS2() {
 	let thisGlyphrStudioVersion = parseSemVer(getGlyphrStudioApp().version);
 	if (isSemVerLessThan(thisGlyphrStudioVersion, version)) {
 		return failWithError(`
-			This project file was created with a future version of Blue Rain
-			Type (0_o) As with most software, it is not forwards-compatible. [PF4]
+			This project file was created with a future version of ${PRODUCT_NAME}.
+			As with most software, it is not forwards-compatible. [PF4]
 		`);
 	}
 

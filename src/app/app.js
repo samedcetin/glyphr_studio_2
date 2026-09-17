@@ -53,7 +53,12 @@ export class GlyphrStudioApp {
 				testOnLoad: function () {}, // code to run on load
 				testOnRedraw: function () {}, // code to run on Edit Canvas redraw
 			},
-			telemetry: true, // Load google analytics
+			/*
+				Off. The tag in addTelemetry() below is upstream's Google Analytics
+				property, so leaving this on would report this app's page views to
+				someone else's dashboard. Turn it back on only with our own tag.
+			*/
+			telemetry: false,
 		};
 
 		// Version

@@ -11,7 +11,7 @@ import { makeSettingsTabContentProject } from './settings_project.js';
 /**
 	PAGE > SETTINGS
 	---------------
-	One place to edit all the settings for Blue Rain Type.
+	One place to edit all the settings for the app.
 
 	WHAT THIS PAGE WAS. The content-page shell: a 450px column holding a
 	dropdown repeating the page you were already on, and under it the three

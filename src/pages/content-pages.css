@@ -1767,6 +1767,29 @@ code {
 }
 
 /*
+	The studio's plate. --brand-black straight from the primitive layer, which
+	brand chrome alone may do: the wordmark is white and tint on a black it
+	was drawn for, and a theme-following ground would lose it in light mode.
+	--r-lg for the same reason as .about__mark below - it sits in the card's
+	corner region.
+*/
+.about__hero {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--sp-9) var(--sp-6);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--brand-black);
+}
+
+.about__wordmark {
+	display: block;
+	width: min(200px, 60%);
+	height: auto;
+}
+
+/*
 	The identity. This replaced a 300px SVG of the upstream wordmark, which
 	was the first thing on our own About page - set in type now, from the
 	brand constants, so it says what the product is actually called.

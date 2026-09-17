@@ -225,7 +225,7 @@ function makeRailMenuButton({ name, icon }) {
 	Pages the Help menu already reaches, so the rail does not show them twice.
 
 	Both of these are rows in the Help dropdown - "In-app help" and "About
-	Blue Rain Type" - and both drew the same question-mark and info icons the
+	Glyva" - and both drew the same question-mark and info icons the
 	menu's own entry point uses. Two identical icons in one column, one opening
 	a menu and one navigating, is a column that has to be read rather than
 	scanned.

@@ -79,6 +79,15 @@
 	--violet-50: hsl(268, 85%, 63%);
 	--violet-60: hsl(268, 75%, 52%);
 
+	/*
+		Brand primitives, for brand chrome only - the About hero, a splash.
+		The one family with no semantic alias: brand surfaces read these
+		directly, and nothing else may. Theme-invariant on purpose, since the
+		wordmarks are drawn for this ground and no other. The value is the
+		marketing site's --bg-primary, so the two products share one black.
+	*/
+	--brand-black: #0a0a0f;
+
 	/* ============================================================
 		2. SEMANTICS - light theme is the base definition
 		============================================================ */

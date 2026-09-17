@@ -10,7 +10,6 @@ import { DisplayCanvas } from '../display_canvas/display_canvas.js';
 import { EditCanvas } from '../edit_canvas/edit_canvas.js';
 
 /* Other stuff */
-import asciiLogo from '../common/graphics/ascii-wordmark-vertical.txt?raw';
 import { addCommandPaletteListeners } from '../controls/command-palette/command_palette.js';
 import { initTheme } from '../common/theme.js';
 import { closeAllInfoBubbles, closeAllOptionChoosers } from '../controls/dialogs/dialogs.js';
@@ -24,24 +23,18 @@ import { PRODUCT_NAME } from './brand.js';
  * First function to run when the browser starts
  */
 export function glyphrStudioOnLoad() {
-	console.info(`%c${asciiLogo}\n`, 'color: hsl(200, 100%, 41%);');
 	try {
 		// Theme first: everything drawn after this point reads the right tokens.
 		initTheme();
 		const app = getGlyphrStudioApp();
 		if (app.version) {
 			console.info(
-				`%cApp Version ${app.version}%c\n`,
+				`%c${PRODUCT_NAME} ${app.version}%c\n`,
 				'color:hsl(200, 100%, 41%);; background-color:hsla(200, 100%, 49%, 10%); padding: 4px 8px; border-radius: 12px;',
 				'background-color: transparent;'
 			);
 		}
 		// log(`glyphrStudioOnLoad`, 'start');
-		// let favIcon = makeElement({
-		// 	tag: 'link',
-		// 	attributes: { rel: 'shortcut icon', href: '../common/graphics/logo-icon-color.ico' },
-		// });
-		// document.head.appendChild(favIcon);
 
 		/*
 			index.html carries the tab name as a literal, because it has to say

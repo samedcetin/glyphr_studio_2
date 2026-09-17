@@ -2,7 +2,7 @@ import { PRODUCT_NAME } from '../app/brand.js';
 import { getCurrentProjectEditor } from '../app/main';
 import colorStyle from '../common/colors.css?inline';
 import { addAsChildren, makeElement } from '../common/dom';
-import logo from '../common/graphics/logo-icon.svg?raw';
+import favicon from '../common/graphics/glyva-favicon-32.png?inline';
 import resetStyle from '../common/resets.css?inline';
 import tokenStyle from '../common/tokens.css?inline';
 import { closeEveryTypeOfDialog, makeModalDialog, showToast } from '../controls/dialogs/dialogs';
@@ -94,7 +94,7 @@ export function openPopOutWindow() {
 
 	let favIcon = makeElement({
 		tag: 'link',
-		attributes: { rel: 'shortcut icon', href: `data:image/svg+xml,${encodeURI(logo)}` },
+		attributes: { rel: 'icon', type: 'image/png', href: favicon },
 	});
 
 	popDoc.head.appendChild(favIcon);

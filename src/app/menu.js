@@ -140,7 +140,7 @@ export function makeMenu(menuName) {
 
 			This menu used to head three of its four groups with a file name and
 			the fourth with a category, all in the same style - so the first line
-			a user read was "Oblegg - Blue Rain Type Project - 2026.9.13.gs2", and
+			a user read was "Oblegg - Glyva Project - 2026.9.13.gs2", and
 			nothing said what the group was for. Worse, the font group's heading
 			named one file while the four rows under it wrote four different ones.
 

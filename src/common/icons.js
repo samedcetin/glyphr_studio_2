@@ -683,16 +683,62 @@ lineIcons.dark = `<path d="M20.5 14.3A8.7 8.7 0 0 1 9.7 3.5a8.5 8.5 0 1 0 10.8 1
 // --------------------------------------------------------------
 
 /*
-	The app mark, for the top of the left rail.
+	The app mark, for the top of the left rail and the About identity.
 
-	A glyph in its em box: the box with a baseline, and an aperture cut through
-	it. It replaces the horizontal wordmark, which needed 140px of a 56px rail.
+	A G, drawn the way this editor draws one: the bowl and the bar are a
+	path under edit - the arc with its three anchors, the handle off the top
+	one ending in the square that marks a control point, and the bar as a
+	segment ending in its own anchor - while the spur is the finished letter,
+	set solid. The two meet: the spur hangs from the bar, its shoulder
+	sweeping out from under the bar's left cap and down into the stem, so
+	the construction line and the letter share one edge. Reading it goes
+	from the work to the result, which is the product in one glyph.
 
-	Deliberately generic. The published mark is a brand decision and the Blue
-	Rain wordmark lives in the other repo - see the skill's section 7.
+	Proportioned on the golden section, phi = 1.618. The mark is 17 tall
+	(y 3.5 to 20.5) and the bowl is its full height, radius 8.5. The bar
+	sits at 10, which splits that height 6.5 above to 10.5 below - 1 : phi.
+	The bar is 8.5 long - the radius - and the handle 5.25, the radius over
+	phi, so the two segments are 1 : phi to each other; the bar's anchor
+	lands on the spur's right edge. The spur is the bar's 8.5 wide, and it
+	splits at the stem's left edge into 5.25 of shoulder and 3.25 of stem -
+	the width over phi and over phi squared. That edge is x 17.25, which is
+	where the handle ends: the stem stands directly under the control point. None of it is
+	visible as arithmetic; it is why the halves feel like one weight.
+
+	Stroke 1.5 rather than the family's 2: eight parts on a 24 grid, and at
+	2 the arc and the bar closed up against the spur. The path itself - arc,
+	handle and bar - is thinner again, .7, so the work reads as a
+	construction line and the letter as the weight. It was drawn at 1.5 over
+	phi = .93 and the owner took it down by eye in Illustrator, in the same
+	pass that squared the spur's outer shoulder into the corner and made
+	its inner edge a true quarter circle; the spur's top sits at 10.35, the
+	bar's new underside. The path sits at 40% opacity as well, so it recedes
+	behind the anchors and the letter the way a construction line should:
+	the same drawing at two weights and two strengths. Two filled parts,
+	on purpose. The anchors are dots because that is what an anchor is on the
+	canvas, and the spur is a silhouette because a stroked spur is a hook,
+	not a letter. Every corner is smoothed the way the set smooths them: the
+	handle square is squircle() at r .9, and the spur's two feet carry the
+	same SPAN and PULL by hand at r .4, so the curvature eases in rather
+	than jumping from the edge. Its top right corner is the bar's anchor.
+
+	The 24 grid has no room for the sparkle that sat at the bar's end in the
+	brief, and in this icon set a four-point star means "generate", which
+	the G does not. The splash and the favicon, at their own sizes, may.
 */
 lineIcons.appMark =
-	squirclePath(3, 3, 18, 18, 5) + `<path d="M8.5 16.5L12 7.5l3.5 9M9.9 13.6h4.2"/>`;
+	`<g opacity=".4">` +
+	`<path d="M12 3.5A8.5 8.5 0 0 0 12 20.5" stroke-width=".7"/>` +
+	`<path d="M12 3.5h3.75" stroke-width=".7"/>` +
+	`<path d="M12 10h8.5" stroke-width=".7"/>` +
+	`</g>` +
+	`<circle cx="12" cy="3.5" r="1.4" fill="currentColor" stroke="none"/>` +
+	`<circle cx="3.5" cy="12" r="1.4" fill="currentColor" stroke="none"/>` +
+	`<circle cx="12" cy="20.5" r="1.4" fill="currentColor" stroke="none"/>` +
+	`<path d="${squircle(15.75, 2, 3, 3, 0.9)}" fill="currentColor" stroke="none"/>` +
+	`<circle cx="20.5" cy="10" r="1.4" fill="currentColor" stroke="none"/>` +
+	`<path fill="currentColor" stroke="none" d="M12 10.35C17.6 10.35 20.5 10 20.5 16.8V19.96C20.5 20.35 20.35 20.5 19.96 20.5H17.79C17.4 20.5 17.25 20.35 17.25 19.96V15.735C17.25 13.229 15.534 11.019 13.087 10.473C12.739 10.394 12.375 10.35 12 10.35Z"/>`;
+iconStrokeWidth.appMark = 1.5;
 
 /* The three shell menus, as icons for the rail. */
 lineIcons.menu_file = `<path d="M13.5 3.5H7A2.5 2.5 0 0 0 4.5 6v12A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5V9.5z"/><path d="M13.5 3.5v6h6"/>`;

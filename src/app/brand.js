@@ -21,13 +21,15 @@
  */
 
 /** What the app calls itself, everywhere a person can read it. */
-export const PRODUCT_NAME = 'Blue Rain Type';
+export const PRODUCT_NAME = 'Glyva';
 
 /**
- * The short form, for places with no room for three words - window titles
- * that already carry a document name, and the like.
+ * The short form, for places with no room for the full name - window titles
+ * that already carry a document name, and the like. One word now, so the
+ * two are the same; kept as its own constant so the call sites that want
+ * the short form keep saying so.
  */
-export const PRODUCT_SHORT_NAME = 'BR Type';
+export const PRODUCT_SHORT_NAME = 'Glyva';
 
 /** The studio behind it. */
 export const VENDOR_NAME = 'Blue Rain';
@@ -38,7 +40,7 @@ export const VENDOR_NAME = 'Blue Rain';
  * TODO: not serving yet. Every link that points at the product goes through
  * this constant, so launching is a one-line change here.
  */
-export const PRODUCT_URL = 'https://bluerain.studio/type';
+export const PRODUCT_URL = 'https://bluerain.studio/glyva';
 
 /**
  * Where feedback goes.
@@ -71,6 +73,15 @@ export const PRODUCT_ISSUES_URL = `${PRODUCT_SOURCE_URL}/issues`;
  * Replace article by article as our own docs appear, not in one sweep.
  */
 export const UPSTREAM_NAME = 'Glyphr Studio';
+
+/**
+ * The upstream release this build is based on.
+ *
+ * Our own version numbers start at 3.0 and no longer track upstream's, so
+ * the About page says which upstream code sits underneath. Bump this when
+ * upstream changes are merged in, not when we ship.
+ */
+export const UPSTREAM_VERSION = '2.10.3';
 export const UPSTREAM_HELP = 'https://www.glyphrstudio.com/help';
 export const UPSTREAM_URL = 'https://www.glyphrstudio.com';
 export const UPSTREAM_SOURCE_URL = 'https://github.com/glyphr-studio';

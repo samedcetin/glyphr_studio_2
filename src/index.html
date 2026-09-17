@@ -49,10 +49,12 @@
 			source of truth - but it is what someone sees if the app never starts,
 			so keep it in step with the constant.
 		-->
-		<title>Blue Rain Type</title>
+		<title>Glyva</title>
 		<meta name="viewport" content="width=device-width" />
-		<link rel="shortcut icon" href="./common/graphics/logo-icon-color.ico" />
-		<link rel="manifest" href="manifest.json" />
+		<link rel="icon" href="./common/graphics/glyva-favicon.ico" sizes="any" />
+		<link rel="icon" type="image/svg+xml" href="./common/graphics/glyva-icon.svg" />
+		<link rel="apple-touch-icon" sizes="180x180" href="./common/graphics/glyva-touch-180.png" />
+		<link rel="manifest" href="/manifest.json" />
 		<script src="app/main.js" type="module"></script>
 		<script type="module">
 			import { glyphrStudioOnLoad, getGlyphrStudioApp, log } from './app/main.js';
@@ -62,28 +64,27 @@
 		</script>
 		<style>
 			/*
-				The boot splash's own colours, and the one place in the app where a
-				literal is the right answer.
+				The boot splash: what is on screen before app.css has loaded, which is
+				the one place inline CSS earns its place.
 
-				This ground is a fixed dark gradient - it does not follow the theme,
-				because it is on screen before there is an app to have a theme. So
-				the text on it cannot follow the theme either: reaching for
-				--text-primary here put near-black type on a dark gradient the
-				moment the app was in light mode. Measured, in light mode, before
-				these three lines existed.
+				Its ground is --dark-gradient-background from resets.css, built from
+				the --n-93 / --n-96 primitives - fixed dark in both themes, because
+				it is on screen before there is an app to have a theme. This block
+				used to redeclare that property with its own blue-to-purple literal,
+				which resets.css then overrode: the values here were never painted.
 
-				Declared together rather than inlined, so the ground and what sits
-				on it are read and changed as one thing.
+				The text on that ground cannot follow the theme either: reaching for
+				--text-primary put near-black type on a dark gradient the moment the
+				app was in light mode. Hence three literals of its own, the one place
+				in the app where a literal is the right answer, declared together so
+				the ground and what sits on it are read and changed as one thing.
 			*/
 			:root {
-				--dark-gradient-background: linear-gradient(
-					135deg,
-					hsl(200, 100%, 12%),
-					hsl(285, 100%, 10%)
-				);
 				--splash-text: hsl(220, 18%, 92%);
 				--splash-text-muted: hsl(220, 12%, 72%);
 				--splash-link: hsl(212, 90%, 72%);
+				/* The mark's blue: --a-50, the light theme's --accent, as a literal for the same reason. */
+				--splash-accent: hsl(212, 92%, 56%);
 			}
 
 			body,
@@ -104,51 +105,55 @@
 			}
 
 			#app__wrapper {
-				background-color: #161d20;
-			}
-
-			#app__landing-page {
-				font-family: sans-serif;
-				opacity: 1;
-				visibility: visible;
-				transition: opacity 500ms ease-out;
-				background-color: #0e1214;
-				padding: auto;
-				text-align: left;
-				display: flex;
-				flex-direction: column;
-				justify-content: center;
-				padding-bottom: 189px;
-				background: var(--dark-gradient-background);
-			}
-
-			#app__landing-page svg,
-			#app__landing-page #errorMessage {
-				margin: 90px 0px 0px 50px;
-			}
-
-			.mainLogo {
-				fill: url(#logoGradient);
-				width: 300px;
-			}
-
-			.mainLogo .logoWords {
-				fill: transparent;
-				stroke-width: 0.4px;
-				stroke: var(--blue-l50);
+				background-color: var(--bg-app);
 			}
 
 			/*
-				The crash screen used to be styled here, and borrowed the splash's
-				box above to sit in: .error-page__wrapper, .error-page__table-flip
-				and their three descendants, which between them held four legacy
-				ramps, `color: white`, two colour literals and a `monospace`.
-
-				It has its own surface now - see .app-error in app/app.css, a real
-				stylesheet that can read the token layer. This block styles the boot
-				splash only: what is on screen before app.css has loaded, which is
-				the one place inline CSS earns its place.
+				One centred column: the wordmark, or, if the app never boots, the
+				message that replaces it. Both sit at the optical centre - a little
+				above the geometric one, which is what the bottom padding is for.
 			*/
+			#app__landing-page {
+				font-family: var(--font-ui);
+				opacity: 1;
+				visibility: visible;
+				transition: opacity var(--dur-slow) var(--ease);
+				background: var(--dark-gradient-background);
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				padding: 0 var(--sp-8) var(--sp-10);
+				box-sizing: border-box;
+			}
+
+			/*
+				The Glyva mark and the name under it. The mark is the same drawing
+				as lineIcons.appMark in common/icons.js, inlined here because the
+				splash is on screen before any module has loaded; keep the two in
+				step. currentColor, so the one place the colour is set is
+				--splash-text above. 96px is the mark's 24 grid times four.
+			*/
+			.splash__brand {
+				display: grid;
+				justify-items: center;
+				gap: var(--sp-6);
+				color: var(--splash-text);
+			}
+
+			.splash__mark {
+				display: block;
+				width: 96px;
+				height: 96px;
+				color: var(--splash-accent);
+			}
+
+			.splash__name {
+				font-size: var(--fs-2xl);
+				font-weight: var(--fw-semibold);
+				letter-spacing: var(--tracking-tight);
+				line-height: var(--lh-tight);
+			}
 		</style>
 		<!--
 			Load order matters: tokens define the variables, colors maps the legacy
@@ -186,7 +191,6 @@
 
 	<body
 		style="
-			background-color: var(--dark-gradient-background);
 			width: 100%;
 			height: 100%;
 			min-width: 100%;
@@ -196,21 +200,16 @@
 		"
 	>
 		<div id="app__landing-page">
-			<svg
-				version="1.1"
-				xmlns="http://www.w3.org/2000/svg"
-				xmlns:xlink="http://www.w3.org/1999/xlink"
-				xml:space="preserve"
-				viewBox="0 0 200 128"
-				enable-background="new 0 0 200 128"
-				class="mainLogo"
-			></svg>
+			<div class="splash__brand">
+				<svg class="splash__mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Glyva"><g opacity=".4" fill="none" stroke="currentColor" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5A8.5 8.5 0 0 0 12 20.5"/><path d="M12 3.5H15.75"/><path d="M12 10H20.5"/></g><g fill="currentColor"><circle cx="12" cy="3.5" r="1.4"/><circle cx="3.5" cy="12" r="1.4"/><circle cx="12" cy="20.5" r="1.4"/><circle cx="20.5" cy="10" r="1.4"/><path d="M16.965 2H17.535C18.41 2 18.75 2.34 18.75 3.215V3.785C18.75 4.66 18.41 5 17.535 5H16.965C16.09 5 15.75 4.66 15.75 3.785V3.215C15.75 2.34 16.09 2 16.965 2Z"/><path d="M12 10.35C17.6 10.35 20.5 10 20.5 16.8V19.96C20.5 20.35 20.35 20.5 19.96 20.5H17.79C17.4 20.5 17.25 20.35 17.25 19.96V15.735C17.25 13.229 15.534 11.019 13.087 10.473C12.739 10.394 12.375 10.35 12 10.35Z"/></g></svg>
+				<div class="splash__name">Glyva</div>
+			</div>
 			<script>
 				setTimeout(function () {
 					let errorDiv = document.querySelector('#errorMessage');
 					if (errorDiv) {
 						errorDiv.style.display = 'block';
-						document.querySelector('.mainLogo').style.display = 'none';
+						document.querySelector('.splash__brand').style.display = 'none';
 					}
 				}, 5000);
 			</script>
@@ -232,10 +231,10 @@
 				sibling of the table flip that used to head the crash screen, and
 				it went for the same reason - see .app-error in app/app.css.
 			-->
-			<div id="errorMessage" style="display: none; max-width: 420px; margin: auto">
+			<div id="errorMessage" style="display: none; max-width: 420px">
 				<div style="font-size: 15px; line-height: 1.5; color: var(--splash-text-muted)">
 					<strong style="font-size: 20px; font-weight: 600; color: var(--splash-text)"
-						>Blue Rain Type could not start</strong
+						>Glyva could not start</strong
 					>
 					<br /><br />
 					This usually means the browser is too old for it. The current version of
@@ -244,7 +243,7 @@
 					If you are on one of those already, tell us and we will look at it:
 					<a
 						style="color: var(--splash-link)"
-						href="mailto:hello@bluerain.studio?subject=Blue%20Rain%20Type%20could%20not%20start"
+						href="mailto:hello@bluerain.studio?subject=Glyva%20could%20not%20start"
 						>hello@bluerain.studio</a
 					>
 				</div>

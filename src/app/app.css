@@ -87,7 +87,8 @@
 	corner-shape: var(--corner-smooth);
 	background-color: transparent;
 	box-shadow: none;
-	color: var(--text-primary);
+	/* The mark is set in the accent, the one colour the brand shares with the tool. */
+	color: var(--accent);
 	flex: 0 0 auto;
 	transition: var(--transition-color);
 }

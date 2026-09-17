@@ -1,4 +1,5 @@
 import { emailLink } from '../app/app.js';
+import wordmarkVertical from '../common/graphics/bluerain-wordmark-vertical.svg';
 import {
 	PRODUCT_ISSUES_URL,
 	PRODUCT_NAME,
@@ -9,6 +10,7 @@ import {
 	UPSTREAM_RELEASES_URL,
 	UPSTREAM_SOURCE_URL,
 	UPSTREAM_URL,
+	UPSTREAM_VERSION,
 	VENDOR_NAME,
 } from '../app/brand.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from '../app/main.js';
@@ -105,7 +107,7 @@ export function makePage_About() {
 	tabControl.registerTab('License', makeLicenseInfo, { icon: 'label' });
 
 	const tabs = makeElement({ tag: 'div', className: 'studio-tabs about__tabs' });
-	addAsChildren(tabs, tabControl.makeTabs());
+	addAsChildren(tabs, tabControl.makeTabs({ segmented: true }));
 	page.appendChild(tabs);
 
 	page.appendChild(body);
@@ -208,6 +210,22 @@ function makeVersionInfo() {
 	const content = makeElement({ tag: 'div', className: 'about__tab-content' });
 
 	/*
+		The studio, first. The vertical wordmark on its own black plate - the
+		mark is drawn for that ground and no other, so the plate does not
+		follow the theme. It is the publisher, not the product: the product
+		is the identity row beneath it, set in type from PRODUCT_NAME.
+	*/
+	const hero = makeElement({ tag: 'div', className: 'about__hero' });
+	hero.appendChild(
+		makeElement({
+			tag: 'img',
+			className: 'about__wordmark',
+			attributes: { src: wordmarkVertical, alt: VENDOR_NAME, width: '1025', height: '1239' },
+		})
+	);
+	content.appendChild(hero);
+
+	/*
 		The identity, set in type. This is where the upstream wordmark used to
 		be - 300px of someone else's logo on our own About page. Setting the
 		name instead of drawing it means it follows PRODUCT_NAME, and it is
@@ -274,8 +292,9 @@ function makeVersionInfo() {
 				where they belong, not with us.
 			</p>
 			<p class="about__prose">
-				Version numbers follow that project. What changed in each of them is
-				written up on the
+				${PRODUCT_NAME} numbers its own releases from 3.0, and this build
+				carries ${UPSTREAM_NAME} ${UPSTREAM_VERSION} underneath. What changed in the
+				upstream versions is written up on the
 				<a href="${UPSTREAM_RELEASES_URL}" target="_blank">${UPSTREAM_NAME} releases</a>
 				page and the
 				<a href="${UPSTREAM_HELP}/about/updates.html" target="_blank">${UPSTREAM_NAME} updates</a>
