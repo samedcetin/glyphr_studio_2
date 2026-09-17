@@ -9,6 +9,7 @@ import { cancelDefaultEventActions } from '../edit_canvas/events.js';
 import { ioFont_importFont } from '../formats_io/otf/font_import.js';
 import { ioSVG_importSVGfont } from '../formats_io/svg_font/svg_font_import.js';
 import { validateSingleFileInput } from '../formats_io/validate_file_input.js';
+import { showSpecimenSheetDialog } from '../formats_io/specimen/specimen_dialog.js';
 import { GlyphrStudioProject } from '../project_data/glyphr_studio_project.js';
 import { importGlyphrProjectFromText } from '../project_editor/import_project.js';
 import obleggExampleProject from '../samples/oblegg.gs2?raw';
@@ -111,6 +112,42 @@ function railTabFor(viewName) {
 function startNewFont(origin) {
 	formOrigin = origin;
 	switchHubView('new');
+}
+
+/**
+ * Opens the specimen sheet importer from the hub, where there is no project.
+ *
+ * Reading the current project here would not do: with nothing open,
+ * `selectedProjectEditor` quietly mints a blank editor, so the characters would
+ * land somewhere the user never gets taken to and the hub would just sit there.
+ * So the hub hands the dialog the two things only it knows - how to make the
+ * project, and where to go afterwards - and the dialog calls neither until an
+ * import actually happens. Cancelling leaves no empty project behind.
+ */
+function startTraceFromPicture() {
+	showSpecimenSheetDialog({
+		createTarget: ({ fileName } = {}) => {
+			if (isSecondProject) addProjectEditorAndSetAsImportTarget();
+			const editor = getProjectEditorImportTarget();
+			setCurrentProjectEditor(editor);
+
+			// The sheet's own file name is the best name available, and better
+			// than asking for one in front of a review the user has just done.
+			const name = (fileName || '').replace(/\.[^.]+$/, '').trim() || 'My Font';
+			editor.project = new GlyphrStudioProject({
+				settings: { project: { name }, font: { family: name } },
+			});
+			return editor;
+		},
+		onImported: ({ editor }) => {
+			// The same landing the hub's other two ways in perform.
+			editor.project.resetSessionStateForAllItems();
+			editor.nav.page = 'Overview';
+			if (isSecondProject) showToast(`Switched to<br>${editor.project.settings.project.name}`);
+			updateWindowUnloadEvent();
+			editor.navigate();
+		},
+	});
 }
 
 /** How the project grid is sorted: 'recent' | 'name'. */
@@ -1343,7 +1380,56 @@ function makeStartCards() {
 	]);
 	importCard.appendChild(importAction);
 
-	addAsChildren(row, [create, importCard]);
+	/*
+		--- Trace ------------------------------------------------------
+
+		The third way in, and it spans the row rather than joining it as a
+		column. The split above is 1.55fr/1fr and both halves are drawn to it:
+		the create card's artwork has a 200px floor and the import card is one
+		head over one object. A third column takes roughly a third from each
+		and breaks both - so this sits on an implicit second row instead,
+		full width, and neither of the two above it changes at all.
+
+		It is last because it is the newest and least familiar of the three,
+		not because it matters least.
+	*/
+	const traceCard = makeElement({
+		tag: 'div',
+		className: 'studio-card hub__start-card hub__trace',
+	});
+
+	const traceAction = makeElement({
+		tag: 'button',
+		className: 'hub__trace-action',
+		attributes: { type: 'button' },
+		onClick: startTraceFromPicture,
+	});
+
+	const traceText = makeElement({ className: 'hub__trace-text' });
+	traceText.appendChild(
+		makeElement({ tag: 'div', className: 'studio-eyebrow', content: 'From a picture' })
+	);
+	traceText.appendChild(
+		makeElement({ className: 'hub__trace-title', content: 'Trace a picture of a font' })
+	);
+	traceText.appendChild(
+		makeElement({
+			className: 'hub__trace-caption',
+			content: 'A whole character set in one image becomes outlines, one per character.',
+		})
+	);
+
+	addAsChildren(traceAction, [
+		traceText,
+		makeElement({
+			className: 'hub__trace-arrow',
+			attributes: { 'aria-hidden': 'true' },
+			innerHTML: '&rarr;',
+		}),
+	]);
+	traceCard.appendChild(traceAction);
+
+	addAsChildren(row, [create, importCard, traceCard]);
 	return row;
 }
 

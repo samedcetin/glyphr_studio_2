@@ -390,6 +390,18 @@ lineIcons.command_icons = squirclePath(3.5, 3.5, 7, 7, 2) + squirclePath(13.5, 1
 
 lineIcons.command_newTab = squirclePath(3, 3, 18, 18, 4) + `<path d="M12 8.5v7M8.5 12h7"/>`;
 
+/*
+	A sheet with a letter on it. The noun, not the verb: what the user has is a
+	PICTURE of an alphabet, and the tracing is what the label says.
+
+	Portrait, where command_newTab's frame is square, because a page is - and
+	that is what keeps the two apart at 20px, along with a letter inside rather
+	than a plus. Against page_characters, which is the same A bare and nearly
+	twice this size, the frame is the whole difference and it is the meaning.
+*/
+lineIcons.command_specimenSheet =
+	squirclePath(4, 3, 16, 18, 3) + `<path d="M8 17L12 7l4 10M10 13.5h4"/>`;
+
 lineIcons.command_info = lineIcons.panel_characterInfo;
 
 lineIcons.command_help = `<circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 0 1 4.7.7c0 1.6-2.4 2.4-2.4 2.4M12 16.3v.3"/>`;

@@ -35,10 +35,49 @@ import { ACCEPTED_TYPES, imageFromTransfer, readSheetImage } from './read_image.
 let state = null;
 
 /**
- * Opens the specimen sheet importer.
+ * What to scale the trace against before there is a project to ask.
+ *
+ * Only the cap height anchors the size; every other line is measured off the
+ * sheet itself and written back, so these are a starting point rather than a
+ * shape imposed on the face.
  */
-export function showSpecimenSheetDialog() {
+const DEFAULT_FONT_METRICS = {
+	upm: 2048,
+	capHeight: 1480,
+	xHeight: 1100,
+	ascent: 1550,
+	descent: -440,
+};
+
+/**
+ * Opens the specimen sheet importer.
+ *
+ * The caller says where the characters are to land, because neither of the two
+ * obvious guesses is right from both places this is opened. `getCurrentProject`
+ * is correct from inside the editor and wrong from the hub, where there may be
+ * no project at all and reading it quietly mints a blank one. And
+ * `getProjectEditorImportTarget` is correct from the hub and wrong from the
+ * editor, because that target is sticky - once a second project has been opened
+ * it keeps pointing at it, so an import from the editor would land in the other
+ * font.
+ *
+ * @param {Object =} options
+ * @param {Object =} options.editor - the project editor to import into; omit to
+ *   use the one being edited
+ * @param {Function =} options.createTarget - for a caller with no project yet,
+ *   such as the hub: returns the editor to import into. It is called only when
+ *   an import actually happens, so backing out of the review leaves no empty
+ *   project behind.
+ * @param {Function =} options.onImported - called after a successful import,
+ *   with { editor, result }, for a caller that has to navigate somewhere
+ */
+export function showSpecimenSheetDialog(options = {}) {
 	state = {
+		target: {
+			editor: options.editor ?? null,
+			createTarget: options.createTarget ?? null,
+			onImported: options.onImported ?? null,
+		},
 		file: null,
 		sheet: null,
 		segmentation: null,
@@ -58,7 +97,7 @@ export function showSpecimenSheetDialog() {
 
 	const dropZone = makeDropZone();
 	const layoutBlock = makeLayoutBlock();
-	const options = makeOptions();
+	const optionsBlock = makeOptions();
 	const results = makeElement({ className: 'specimen__results' });
 	const info = makeInfoBlock();
 
@@ -75,14 +114,16 @@ export function showSpecimenSheetDialog() {
 		onClick: doImport,
 	});
 
-	addAsChildren(content, [dropZone, layoutBlock, options, results, info]);
+	addAsChildren(content, [dropZone, layoutBlock, optionsBlock, results, info]);
 
 	state.nodes = { content, results, importButton, dropZone };
 	redraw();
 
 	showModalDialog(content, 900, {
 		title: 'Import a specimen sheet',
-		subtitle: 'Trace a picture of a character set into this project.',
+		subtitle: state.target.createTarget
+			? 'Trace a picture of a character set into a new font.'
+			: 'Trace a picture of a character set into this project.',
 		actions: [cancelButton, importButton],
 	});
 
@@ -417,13 +458,16 @@ function analyse() {
 		return;
 	}
 
-	const project = getCurrentProject();
+	// Only to check what would be replaced, and to read the metrics the trace is
+	// scaled against. From the hub there is nothing to collide with yet.
+	const project = state.target.createTarget ? null : targetProject();
+	const font = project?.settings?.font ?? DEFAULT_FONT_METRICS;
 	const targets = {
-		upm: project.settings.font.upm,
-		capHeight: project.settings.font.capHeight,
-		xHeight: project.settings.font.xHeight,
-		ascent: project.settings.font.ascent,
-		descent: project.settings.font.descent,
+		upm: font.upm,
+		capHeight: font.capHeight,
+		xHeight: font.xHeight,
+		ascent: font.ascent,
+		descent: font.descent,
 	};
 
 	state.assignment = assignGlyphs(state.segmentation.rows, state.layout);
@@ -674,13 +718,35 @@ function chosenCharacters() {
 		.filter((character) => !state.skipped.has(character));
 }
 
+/**
+ * The editor being imported into.
+ * @returns {Object}
+ */
+function targetEditor() {
+	return state?.target?.editor ?? getCurrentProjectEditor();
+}
+
+/**
+ * The project being imported into, or null when there is not one yet.
+ * @returns {Object|null}
+ */
+function targetProject() {
+	const editor = state?.target?.editor;
+	return editor ? editor.project : getCurrentProject();
+}
+
 function doImport() {
 	const only = chosenCharacters();
 	if (!only.length) return;
 
-	const editor = getCurrentProjectEditor();
+	const { createTarget, onImported } = state.target;
+	// The project is minted here rather than when the dialog opened, so backing
+	// out of the review leaves nothing behind.
+	const editor = createTarget ? createTarget({ fileName: state.file?.name }) : targetEditor();
+	if (!editor?.project) return;
+
 	const result = importSheet(state.plan, {
-		project: getCurrentProject(),
+		project: editor.project,
 		history: editor?.history,
 		face: state.metrics.derived,
 		only,
@@ -688,7 +754,8 @@ function doImport() {
 
 	state = null;
 	closeEveryTypeOfDialog();
-	editor?.navigate();
+	if (onImported) onImported({ editor, result });
+	else editor?.navigate();
 
 	const parts = [];
 	if (result.written) parts.push(`${result.written} added`);

@@ -1256,6 +1256,101 @@
 	transform: translateX(var(--sp-2));
 }
 
+/* --------------------------------------------------------
+	The third way in: trace a picture
+
+	Spanning the row rather than joining it as a column. The split above is
+	1.55fr/1fr and both halves are drawn to it - the create card's artwork has
+	a 200px floor, the import card is one head over one object - so a third
+	column would take a third from each and break both. On its own implicit
+	row neither of them changes at all.
+
+	Everything else is the import card's, deliberately: same card padding, same
+	concentric --r-xl inside --r-3xl, same lift and the same arrow. They are
+	two doors on one screen and should not be two designs.
+-------------------------------------------------------- */
+
+.hub__trace {
+	grid-column: 1 / -1;
+	display: grid;
+	padding: var(--sp-5);
+}
+
+.hub__trace-action {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) min-content;
+	/* resets.css button{} centres an implicit auto column; both tracks named. */
+	justify-content: normal;
+	align-items: center;
+	gap: var(--sp-6);
+	min-height: var(--control-h-lg);
+	padding: var(--sp-6);
+	margin: 0;
+	text-align: left;
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	/* --r-3xl 28 less the card's --sp-5 12, the same sum as the import card. */
+	border-radius: var(--r-xl);
+	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-1);
+	color: var(--text-primary);
+	font-family: inherit;
+	cursor: pointer;
+	transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-base) var(--ease-out),
+		transform var(--dur-base) var(--ease-out), background-color var(--dur-fast) var(--ease);
+}
+
+.hub__trace-action:hover {
+	background-color: var(--bg-surface);
+	border-color: var(--accent);
+	box-shadow: var(--shadow-2);
+	transform: translateY(-1px);
+}
+
+.hub__trace-action:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.hub__trace-text {
+	display: grid;
+	gap: var(--sp-2);
+	min-width: 0;
+}
+
+/*
+	--fs-xl, where the import card's title is --fs-2xl. It is the newest of the
+	three ways in and the widest box on the screen; at 2xl across that span it
+	would out-shout the two it is meant to sit under.
+*/
+.hub__trace-title {
+	font-size: var(--fs-xl);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+.hub__trace-caption {
+	font-size: var(--fs-md);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+.hub__trace-arrow {
+	display: inline-flex;
+	flex: 0 0 auto;
+	font-size: var(--fs-lg);
+	color: var(--icon-default);
+	transition: transform var(--dur-base) var(--ease-out), color var(--dur-fast) var(--ease);
+}
+
+.hub__trace-action:hover .hub__trace-arrow {
+	color: var(--accent);
+	transform: translateX(var(--sp-2));
+}
+
 .hub__start-text {
 	display: grid;
 	gap: var(--sp-2);

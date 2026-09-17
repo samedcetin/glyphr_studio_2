@@ -15,6 +15,7 @@ import {
 } from '../formats_io/otf/font_export.js';
 import { showAtlasExportDialog } from '../formats_io/atlas/atlas_export.js';
 import { showIconImportDialog, showIconMapDialog } from '../icon_font/icon_dialogs.js';
+import { showSpecimenSheetDialog } from '../formats_io/specimen/specimen_dialog.js';
 import { ioSVG_exportSVGfont } from '../formats_io/svg_font/svg_font_export.js';
 import { makeFileName } from '../project_editor/file_io.js';
 import { makePage_CrossProjectActions } from './cross_project_actions/cross_project_actions.js';
@@ -235,6 +236,20 @@ export function makeMenu(menuName) {
 				icon: 'command_export',
 				note: ['Ctrl', 'g'],
 				onClick: ioSVG_exportSVGfont,
+			},
+			{ name: 'hr' },
+			/*
+				Its own group rather than a row under "For game engines" beside
+				the SVG icon import. That one is a game-dev workflow - glyphs
+				into the Private Use Area for a HUD - and a picture of an
+				alphabet is not: anyone with an image is the audience.
+			*/
+			{ type: 'heading', name: 'Import' },
+			{
+				name: 'Import a specimen sheet…',
+				icon: 'command_specimenSheet',
+				note: 'PNG, JPG or WebP',
+				onClick: () => showSpecimenSheetDialog(),
 			},
 			{ name: 'hr' },
 			{ type: 'heading', name: 'For game engines' },
