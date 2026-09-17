@@ -254,7 +254,7 @@ export class GlyphrStudioApp {
 				: [];
 		const settled = Promise.race([
 			Promise.all(running),
-			new Promise((resolve) => setTimeout(resolve, 1600)),
+			new Promise((resolve) => setTimeout(resolve, 2000)),
 		]);
 
 		settled.then(() => {
