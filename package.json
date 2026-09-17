@@ -1,10 +1,10 @@
 {
-	"name": "glyphr-studio-2",
-	"author": "Matt LaGrandeur",
-	"version": "2.10",
+	"name": "glyva",
+	"author": "Blue Rain",
+	"version": "3.0",
 	"license": "GPL-3.0-or-later",
-	"homepage": "https://github.com/glyphr-studio/Glyphr-Studio-2#readme",
-	"description": "Glyphr Studio v2 is a web-based font editor, optimized for typeface design beginners or hobbyists.",
+	"homepage": "https://github.com/samedcetin/glyphr_studio_2#readme",
+	"description": "Glyva is a web-based font editor for game developers and type designers, built on Glyphr Studio 2.",
 	"type": "module",
 	"scripts": {
 		"dev": "run-func scripts.js dev && vite serve ./src/",
@@ -35,11 +35,11 @@
 		"vitest": "^4.1.10"
 	},
 	"bugs": {
-		"url": "https://github.com/glyphr-studio/Glyphr-Studio-2/issues"
+		"url": "https://github.com/samedcetin/glyphr_studio_2/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/glyphr-studio/Glyphr-Studio-2.git"
+		"url": "git+https://github.com/samedcetin/glyphr_studio_2.git"
 	},
 	"prettier": {
 		"printWidth": 100,
