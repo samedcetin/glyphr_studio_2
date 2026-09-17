@@ -1,0 +1,365 @@
+/*
+	SPECIMEN SHEET DIALOG
+
+	Three things stacked: where the sheet comes from, what is on it, and what
+	was found. The last of those is the screen - it is where the user decides
+	whether the import is right, so it gets the room.
+
+	The review strip shows the traced OUTLINE rather than a crop of the source,
+	because the question being asked is "is this what you want in your font",
+	and the answer is the vector, not the picture it came from.
+*/
+
+.specimen {
+	min-height: min(560px, calc(100vh - 240px));
+}
+
+/* --------------------------------------------------------
+	The sheet
+-------------------------------------------------------- */
+
+.specimen__drop {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-5);
+	padding: var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border: 1px dashed var(--border-strong);
+	/* Derived: the button inside is --r-md and this insets it by --sp-5. */
+	border-radius: calc(var(--r-md) + var(--sp-5));
+	corner-shape: var(--corner-smooth);
+	transition: var(--transition-color);
+}
+
+.specimen__drop[dragging] {
+	background-color: var(--bg-selected);
+	border-color: var(--accent);
+	border-style: solid;
+}
+
+.modal-dialog__body .specimen__drop-label {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------
+	What is on it
+-------------------------------------------------------- */
+
+.specimen__layout {
+	display: grid;
+	gap: var(--sp-3);
+}
+
+.specimen__layout-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-5);
+}
+
+.specimen__layout-head .dialog-select {
+	width: auto;
+	min-width: 280px;
+}
+
+.modal-dialog__body .specimen__label {
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .specimen__rows {
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	line-height: var(--lh-loose);
+	white-space: pre;
+	overflow-x: auto;
+}
+
+.modal-dialog__body .specimen__hint {
+	font-size: var(--fs-xs);
+	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------
+	Options
+-------------------------------------------------------- */
+
+.specimen__options {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: var(--sp-5);
+}
+
+.specimen__toggle {
+	display: grid;
+	grid-template-columns: min-content minmax(0, 1fr);
+	align-items: start;
+	gap: var(--sp-4);
+	padding: var(--sp-4) var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.specimen__toggle:hover {
+	border-color: var(--border-strong);
+}
+
+.specimen__toggle:focus-within {
+	border-color: var(--accent);
+}
+
+/*
+	The box resets.css draws is 14px. The 24px pointer floor is bought with
+	transparent padding so the drawn control keeps its proportions.
+*/
+.specimen__toggle input[type='checkbox'] {
+	margin: calc(var(--sp-3) * -1);
+	padding: var(--sp-3);
+	box-sizing: content-box;
+	flex: none;
+}
+
+.specimen__toggle-text {
+	display: grid;
+	gap: var(--sp-1);
+}
+
+.modal-dialog__body .specimen__toggle-title {
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .specimen__toggle-hint {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+/* --------------------------------------------------------
+	What was found
+-------------------------------------------------------- */
+
+.specimen__results {
+	display: grid;
+	gap: var(--sp-6);
+	align-content: start;
+}
+
+.modal-dialog__body .specimen__status {
+	font-size: var(--fs-sm);
+	color: var(--text-secondary);
+}
+
+.modal-dialog__body .specimen__error {
+	padding: var(--sp-4) var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-default);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-danger);
+	text-wrap: pretty;
+}
+
+.specimen__summary {
+	display: grid;
+	gap: var(--sp-2);
+}
+
+.modal-dialog__body .specimen__summary-lead {
+	font-size: var(--fs-md);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .specimen__summary-note {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+/* --------------------------------------------------------
+	One row of the sheet
+-------------------------------------------------------- */
+
+.specimen__row {
+	display: grid;
+	gap: var(--sp-3);
+	padding: var(--sp-5);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+}
+
+/*
+	A row whose counts disagree is the one thing on this screen that has to be
+	noticed, so it is the only thing that changes colour.
+*/
+.specimen__row[status='count-mismatch'] {
+	border-color: var(--warn-50);
+}
+
+.specimen__row-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--sp-5);
+}
+
+.modal-dialog__body .specimen__row-name {
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+}
+
+.modal-dialog__body .specimen__row-count {
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-secondary);
+}
+
+.modal-dialog__body .specimen__row-warning {
+	font-size: var(--fs-xs);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+.specimen__strip {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-3);
+}
+
+/* --------------------------------------------------------
+	One character
+-------------------------------------------------------- */
+
+.specimen__cell {
+	display: grid;
+	justify-items: center;
+	gap: var(--sp-1);
+	width: 64px;
+	padding: var(--sp-3) var(--sp-2);
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.specimen__cell:hover {
+	border-color: var(--border-strong);
+}
+
+.specimen__cell:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.specimen__cell[status='check'],
+.specimen__cell[status='count-mismatch'] {
+	border-color: var(--warn-50);
+}
+
+/* Skipped stays in place, greyed. Removing it would leave the user counting
+   their own characters to work out which one is gone. */
+.specimen__cell[skipped] {
+	opacity: 0.4;
+}
+
+.specimen__cell[skipped] .specimen__thumb {
+	color: var(--text-tertiary);
+}
+
+.specimen__thumb {
+	display: block;
+	width: 100%;
+	height: 44px;
+	color: var(--text-primary);
+}
+
+.specimen__thumb svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.modal-dialog__body .specimen__cell-char {
+	font-family: var(--font-mono);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .specimen__cell-flag {
+	font-size: var(--fs-2xs);
+	line-height: var(--lh-tight);
+	color: var(--text-secondary);
+	text-align: center;
+	text-wrap: pretty;
+}
+
+/* --------------------------------------------------------
+	Before throwing the work away
+-------------------------------------------------------- */
+
+.specimen__confirm {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--sp-5);
+	padding: var(--sp-5);
+	background-color: var(--bg-selected);
+	border: 1px solid var(--accent);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+}
+
+.modal-dialog__body .specimen__confirm-text {
+	flex: 1 1 260px;
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	text-wrap: pretty;
+}
+
+.modal-dialog__body .specimen__confirm-button {
+	height: var(--control-h);
+	padding: 0 var(--sp-5);
+	background-color: transparent;
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.specimen__confirm-button:hover {
+	background-color: var(--bg-hover);
+}
+
+.specimen__confirm-button:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.specimen__confirm-button--discard {
+	color: var(--text-danger);
+	border-color: var(--text-danger);
+}

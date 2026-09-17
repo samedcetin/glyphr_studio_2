@@ -7,6 +7,7 @@ import { refreshEditToolsArea } from '../../edit_canvas/tools/tools.js';
 import { showComposeDialog } from '../../anchors/compose_dialog.js';
 import { applyAllMetricKeys } from '../../metrics/apply_keys.js';
 import { showIconImportDialog, showIconMapDialog } from '../../icon_font/icon_dialogs.js';
+import { showSpecimenSheetDialog } from '../../formats_io/specimen/specimen_dialog.js';
 import { getPixelMode } from '../../pixel_font/pixel_grid.js';
 import { arePanelsHidden, setPanelsHidden } from '../../panels/sidebar.js';
 import { addCommonLigaturesToProject } from '../../pages/ligatures.js';
@@ -267,6 +268,13 @@ function collectCommands() {
 			category: 'File',
 			searchText: 'import svg icons icon font private use area PUA glyph set ui symbols game hud',
 			run: showIconImportDialog,
+		},
+		{
+			name: 'Import a specimen sheet',
+			category: 'File',
+			searchText:
+				'import specimen sheet image png jpg jpeg webp picture scan photo trace autotrace vectorize raster bitmap to vector alphabet character set ai generated font from an image',
+			run: showSpecimenSheetDialog,
 		},
 		{
 			name: 'Export icon names',
