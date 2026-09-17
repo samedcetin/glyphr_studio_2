@@ -258,6 +258,8 @@ export class GlyphrStudioApp {
 		]);
 
 		settled.then(() => {
+			// The hub is usable the instant the fade starts, not 700ms later.
+			landingPage.style.pointerEvents = 'none';
 			landingPage.style.opacity = '0';
 			setTimeout(() => landingPage.remove(), delay);
 		});

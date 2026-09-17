@@ -116,11 +116,19 @@
 			}
 
 			/*
-				One centred column: the wordmark, or, if the app never boots, the
+				One centred column: the mark, or, if the app never boots, the
 				message that replaces it. Both sit at the optical centre - a little
 				above the geometric one, which is what the bottom padding is for.
+
+				Above the shell. The app renders into #app__wrapper, which comes
+				after this element in the document and so painted over it the
+				moment the hub was ready - the splash was drawing its mark behind
+				the app, and nobody saw it. --z-full-screen, the top of the scale:
+				while the splash is up, nothing else is meant to be reachable, and
+				fadeOutLandingPage() removes it once the fade is done.
 			*/
 			#app__landing-page {
+				z-index: var(--z-full-screen);
 				font-family: var(--font-ui);
 				opacity: 1;
 				visibility: visible;
