@@ -1,4 +1,3 @@
-import { PRODUCT_NAME } from '../app/brand.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { charToHex, charsToHexArray, hexesToChars } from '../common/character_ids.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
@@ -16,6 +15,11 @@ import { getUnicodeName } from '../lib/unicode/unicode_names.js';
 import { makeOneKernGroupRow } from '../panels/item_chooser.js';
 import { makePanel, refreshPanel } from '../panels/panels.js';
 import { KernGroup } from '../project_data/kern_group.js';
+import {
+	goToCharacters,
+	makeEditorEmptyState,
+	projectHasDrawnCharacters,
+} from './editor_empty_state.js';
 
 /**
  * Page > Kerning
@@ -39,16 +43,19 @@ export function makePage_Kerning() {
 		<div class="editor-page__edit-canvas-wrapper"></div>
 	`;
 
-	const firstRunContent = `<div class="editor-page__edit-canvas-wrapper" style="grid-column: span 2; overflow-y: scroll;"></div>`;
+	/*
+		No left area on an empty page: there is no item to inspect, so the
+		panel would be a blank column sitting on top of the empty state. The
+		modifier on .editor__page moves the breadcrumb to the edge to match.
+	*/
+	const firstRunContent = `<div class="editor-page__edit-canvas-wrapper"></div>`;
 
 	const content = makeElement({
 		tag: 'div',
 		id: 'app__page',
 		innerHTML: `
-		<div class="editor__page">
-			<div class="editor-page__left-area">
-					<div id="editor-page__panel"></div>
-			</div>
+		<div class="editor__page${selectedKernGroupID ? '' : ' editor__page--empty'}">
+			${selectedKernGroupID ? '<div class="editor-page__left-area"><div id="editor-page__panel"></div></div>' : ''}
 			${selectedKernGroupID ? editingContent : firstRunContent}
 		</div>
 	`,
@@ -124,51 +131,33 @@ export function makePage_Kerning() {
 }
 
 /**
- * Makes the first run / get started content
+ * What the page shows when the project has no kern groups.
+ *
+ * Kerning adjusts the space between characters that exist, so on a project
+ * with nothing drawn yet the sentence and the button both point at
+ * Characters first; the dialog is still there, one step down.
+ *
  * @returns {Element}
  */
 function makeKerningFirstRunContent() {
-	const content = makeElement({
-		className: 'editor-page__first-run',
-		innerHTML: `
-			<h1>There are no kern pairs in your project</h1>
-			<p>
-				Kerning is an advanced feature of fonts that recognizes a pair of characters, then
-				adjusts the spacing between them to some custom value. The default spacing between
-				characters is zero - which is to say, the white space (side bearings) within each
-				character are the only space shown.
-			</p>
-			<p>
-				Some letter combinations, like <code>VA</code>
-				as an example, if the default side bearing spacing
-				is used, the letters visually look very far apart. Kerning can help the visual flow of
-				character pairs look more well considered. Many character pairs may need either negative
-				or positive kern values to make them "look right".
-			</p>
-			<h2>Class-based kerning</h2>
-			<p>
-				Font files encode kerning values as three pieces of information: a left character, a right
-				character, and a horizontal adjustment value. Fonts with many characters can end up having
-				a huge amount of kern pairs. ${PRODUCT_NAME} uses a system called Class-based Kerning, where
-				groups of characters with similar edges (like
-					<code>V</code><code>v</code><code>W</code><code>w</code>
-					)
-				can be treated as a single left-hand group, and a group of right-hand characters (for example,
-				<code>A</code><code>/</code>) can be treated as single group - which can be given a single value.
-				When a font is exported, the permutations are saved as individual kern pairs. But, while
-				editing, grouping common characters often simplifies the overall kerning process.
-			</p>
-		`,
+	const drawn = projectHasDrawnCharacters();
+	return makeEditorEmptyState({
+		icon: 'page_kerning',
+		title: 'No kern groups yet',
+		body: drawn
+			? 'A kern group sets the spacing between pairs of characters that look too far apart at their default sidebearings, like V and A — a per-pair offset.'
+			: 'A kern group sets the spacing between pairs of characters that look too far apart at their default sidebearings, like V and A. Nothing is drawn yet, so there is nothing to pair: draw a few characters first.',
+		actions: drawn
+			? [{ label: 'Create a kern group…', onClick: () => showAddEditKernGroupDialog(false) }]
+			: [
+					{ label: 'Go to Characters', onClick: goToCharacters },
+					{
+						label: 'Create a kern group…',
+						onClick: () => showAddEditKernGroupDialog(false),
+						secondary: true,
+					},
+				],
 	});
-
-	const addOneKernButton = makeElement({
-		tag: 'fancy-button',
-		innerHTML: 'Create a new kern group',
-		onClick: () => showAddEditKernGroupDialog(false),
-	});
-
-	content.appendChild(addOneKernButton);
-	return content;
 }
 
 /**

@@ -401,53 +401,84 @@ body.is-resizing-sidebar * {
 	position: static;
 }
 
-/* First run pages */
-.editor-page__first-run {
-	display: block;
-	margin: 20px;
-	width: calc(100% - 40px);
-	max-width: 700px;
+/* --------------------------------------------------------------
+	The empty page
+
+	Ligatures, Components and Kerning with nothing in them yet. The page
+	drops its left area - there is no item to inspect - and the breadcrumb
+	comes to the edge with it. The canvas wrapper stays as the ground and
+	centres the one thing on it.
+
+	The block itself is the hub's empty state, on the canvas: the page's
+	icon on a plate, what is absent, one or two sentences, the actions. No
+	dashed box - on the hub the box says "a card would go here"; on a page
+	that is all ground there is nothing for a frame to stand in for.
+	-------------------------------------------------------------- */
+
+.editor__page--empty > .breadcrumb {
+	left: var(--float-inset);
+	max-width: calc(100% - var(--float-inset) * 2);
 }
 
-.editor-page__first-run p {
-	margin-bottom: 20px;
+.editor__page--empty .editor-page__edit-canvas-wrapper {
+	display: grid;
+	place-items: center;
+	overflow-y: auto;
+	/* Under the breadcrumb, which floats at the top of the ground. */
+	padding: calc(var(--control-h) + var(--sp-8)) var(--sp-8) var(--sp-8);
+	box-sizing: border-box;
 }
 
-.editor-page__first-run fancy-button {
-	margin-right: 10px;
-	margin-bottom: 10px;
-}
-
-.first-run__examples-table {
-	margin-bottom: 10px;
-}
-
-.first-run__example-wrapper {
-	display: inline-block;
-	width: max-content;
-	padding: 8px 10px 0px 10px;
-	margin: 10px 10px 0px 0px;
-	background-color: var(--gray-l95);
-	border: 1px solid var(--gray-l90);
-	border-radius: 4px;
-}
-
-.first-run__example-wrapper span {
-	display: inline-block;
+.editor-empty {
+	display: grid;
+	justify-items: center;
+	gap: var(--sp-5);
+	max-width: 52ch;
 	text-align: center;
-	margin: 0px 5px 0px 5px;
-	color: var(--gray-l50);
-	line-height: 2em;
-	position: relative;
-	top: -4px;
 }
 
-.first-run__example-wrapper pre {
-	display: inline-block;
-	font-size: 2em;
-	line-height: 1em;
-	letter-spacing: 0.05em;
+/* The same plate as the About identity: --r-lg on a 48px box. */
+.editor-empty__mark {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	margin-bottom: var(--sp-2);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	color: var(--icon-accent);
+}
+
+.editor-empty__title {
+	margin: 0;
+	font-size: var(--fs-xl);
+	font-weight: var(--fw-semibold);
+	letter-spacing: var(--tracking-tight);
+	line-height: var(--lh-tight);
+	color: var(--text-primary);
+}
+
+/*
+	Centred on the element, not inherited: resets.css sets text-align: left
+	on *, and a rule that matches the element beats the parent's.
+*/
+.editor-empty__body {
+	margin: 0;
+	font-size: var(--fs-md);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
 	text-align: center;
+}
+
+.editor-empty__actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--sp-4);
+	margin-top: var(--sp-3);
 }
 
 /*

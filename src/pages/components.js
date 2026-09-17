@@ -1,6 +1,6 @@
-import { PRODUCT_NAME } from '../app/brand.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
 import { addAsChildren, makeElement } from '../common/dom.js';
+import { makeEditorEmptyState } from './editor_empty_state.js';
 import { countItems } from '../common/functions.js';
 import {
 	closeAllInfoBubbles,
@@ -35,16 +35,19 @@ export function makePage_Components() {
 		<div class="editor-page__edit-canvas-wrapper"></div>
 	`;
 
-	const firstRunContent = `<div class="editor-page__edit-canvas-wrapper" style="grid-column: span 2; overflow-y: scroll;"></div>`;
+	/*
+		No left area on an empty page: there is no item to inspect, so the
+		panel would be a blank column sitting on top of the empty state. The
+		modifier on .editor__page moves the breadcrumb to the edge to match.
+	*/
+	const firstRunContent = `<div class="editor-page__edit-canvas-wrapper"></div>`;
 
 	const content = makeElement({
 		tag: 'div',
 		id: 'app__page',
 		innerHTML: `
-		<div class="editor__page">
-			<div class="editor-page__left-area">
-					<div id="editor-page__panel"></div>
-			</div>
+		<div class="editor__page${selectedComponentID ? '' : ' editor__page--empty'}">
+			${selectedComponentID ? '<div class="editor-page__left-area"><div id="editor-page__panel"></div></div>' : ''}
 			${selectedComponentID ? editingContent : firstRunContent}
 		</div>
 	`,
@@ -150,60 +153,17 @@ export function makePage_Components() {
 }
 
 /**
- * Makes the first run / get started content
+ * What the page shows when the project has no components.
  * @returns {Element}
  */
 function makeComponentsFirstRunContent() {
-	let componentExampleTable = '';
-	[
-		{
-			root: 'A',
-			instances:
-				'&#xC0;&#xC1;&#xC2;&#xC3;&#xC4;&#xC5;&#x100;&#x102;&#x104;&#x1DE;&#x1FA;&#x200;&#x226;&#x23A;&#x1E00;&#x24B6;&#x2C6F;',
-		},
-		{
-			root: 'N',
-			instances:
-				'&#xD1;&#x143;&#x145;&#x147;&#x19D;&#x1F8;&#x1E44;&#x1E46;&#x1E48;&#x1E4A;&#x24C3;&#xA790;&#xA7A4;',
-		},
-	].forEach((example) => {
-		componentExampleTable += `
-			<span class="first-run__example-wrapper">
-					<pre>${example.root}</pre>
-					<span> ➞ </span>
-					<pre>${example.instances}</pre>
-			</span>
-		`;
+	return makeEditorEmptyState({
+		icon: 'page_components',
+		title: 'No components yet',
+		body:
+			'A component is a drawing you reuse inside many glyphs — a prefab. Change the root and every instance of it follows.',
+		actions: [{ label: 'Create a component…', onClick: showAddComponentDialog }],
 	});
-
-	const content = makeElement({
-		className: 'editor-page__first-run',
-		innerHTML: `
-			<h1>There are no components in your project</h1>
-			<p>
-				Components are a ${PRODUCT_NAME} feature that lets you re-use a collection of paths
-				across many different glyphs. The root is called a 'Component' and these are added
-				by reference to other glyphs, where they are called 'Component Instances'.
-				Updating the root component will also update all component instances.
-			</p>
-			<p>
-				<div class="first-run__examples-table">
-					${componentExampleTable}
-				</div>
-				Diacritic glyphs (glyphs with accents) are just one example of where having a shared
-				component root can be used across many individual characters.
-			</p>
-		`,
-	});
-
-	const addOneComponentButton = makeElement({
-		tag: 'fancy-button',
-		innerHTML: 'Create a new component',
-		onClick: showAddComponentDialog,
-	});
-
-	content.appendChild(addOneComponentButton);
-	return content;
 }
 
 /**

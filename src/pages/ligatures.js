@@ -16,6 +16,7 @@ import { removeStopCreatingNewPathButton } from '../edit_canvas/tools/new_path.j
 import { fillEditorToolBar, makeEditToolsButtons } from '../edit_canvas/tools/tools.js';
 import { makePanel, refreshPanel } from '../panels/panels.js';
 import { Glyph } from '../project_data/glyph.js';
+import { makeEditorEmptyState } from './editor_empty_state.js';
 
 /**
  * Page > Ligatures
@@ -39,16 +40,19 @@ export function makePage_Ligatures() {
 		<div class="editor-page__edit-canvas-wrapper"></div>
 	`;
 
-	const firstRunContent = `<div class="editor-page__edit-canvas-wrapper" style="grid-column: span 2; overflow-y: scroll;"></div>`;
+	/*
+		No left area on an empty page: there is no item to inspect, so the
+		panel would be a blank column sitting on top of the empty state. The
+		modifier on .editor__page moves the breadcrumb to the edge to match.
+	*/
+	const firstRunContent = `<div class="editor-page__edit-canvas-wrapper"></div>`;
 
 	const content = makeElement({
 		tag: 'div',
 		id: 'app__page',
 		innerHTML: `
-		<div class="editor__page">
-			<div class="editor-page__left-area">
-					<div id="editor-page__panel"></div>
-			</div>
+		<div class="editor__page${selectedLigatureID ? '' : ' editor__page--empty'}">
+			${selectedLigatureID ? '<div class="editor-page__left-area"><div id="editor-page__panel"></div></div>' : ''}
 			${selectedLigatureID ? editingContent : firstRunContent}
 		</div>
 	`,
@@ -146,58 +150,24 @@ export function makePage_Ligatures() {
 }
 
 /**
- * Makes the first run / get started content
+ * What the page shows when the project has no ligatures.
  * @returns {Element}
  */
 function makeLigaturesFirstRunContent() {
-	let commonLigatureTable = '';
-	ligaturesWithCodePoints.forEach((lig) => {
-		commonLigatureTable += `
-			<span class="first-run__example-wrapper">
-					<pre>${lig.display}</pre>
-					<span> ➞ </span>
-					<pre>&#${parseInt(lig.point)};</pre>
-			</span>
-		`;
+	return makeEditorEmptyState({
+		icon: 'page_ligatures',
+		title: 'No ligatures yet',
+		body:
+			'A ligature replaces a sequence of characters, like f and i, with one glyph you draw — a multi-character sprite. Create one, or start from the common Latin set.',
+		actions: [
+			{ label: 'Create a ligature…', onClick: showAddLigatureDialog },
+			{
+				label: 'Add the common Latin ligatures',
+				onClick: addCommonLigaturesToProject,
+				secondary: true,
+			},
+		],
 	});
-
-	const content = makeElement({
-		className: 'editor-page__first-run',
-		innerHTML: `
-			<h1>There are no ligatures in your project</h1>
-			<p>
-				Ligatures are a feature of fonts where a specified sequence of characters
-				is recognized and replaced with a single new character that you design.
-				In Latin, there are some common ligatures:
-				<div class="first-run__examples-table">
-				${commonLigatureTable}
-				</div>
-			</p>
-			<p>
-				These are just some examples. <strong>Ligatures can have any sequence of two
-				or more characters.</strong> In a text editing program that has ligatures enabled,
-				this sequence of characters is recognized, then replaced with the custom ligature
-				character that you design.
-			</p>
-		`,
-	});
-
-	const addOneLigatureButton = makeElement({
-		tag: 'fancy-button',
-		innerHTML: 'Create a new ligature',
-		onClick: showAddLigatureDialog,
-	});
-
-	const addCommonLigaturesButton = makeElement({
-		tag: 'fancy-button',
-		innerHTML: 'Add the common Latin ligatures to your project',
-		attributes: { secondary: '' },
-		onClick: addCommonLigaturesToProject,
-	});
-
-	content.appendChild(addOneLigatureButton);
-	content.appendChild(addCommonLigaturesButton);
-	return content;
 }
 
 // The 'display' property intentionally have zero-width
