@@ -19,7 +19,6 @@ export function ioSVG_convertSVGTagsToGlyph(svgData, showErrors = true, projectU
 
 	// log(`Passed svgData`);
 	// log(svgData);
-	importUPM = projectUPM;
 	const bezierData = SVGtoBezier(svgData);
 	// log(`Resulting Bezier Data`);
 	// log(bezierData);
@@ -31,6 +30,36 @@ export function ioSVG_convertSVGTagsToGlyph(svgData, showErrors = true, projectU
 		return new Glyph();
 	}
 
+	// log('ioSVG_convertSVGTagsToGlyph', 'end');
+	return bezierDataToGlyph(bezierData, projectUPM);
+}
+
+/**
+ * Turns Bezier path data into a Glyphr Studio Glyph object.
+ *
+ * This is the second half of the SVG import, split out so that anything else
+ * that can produce Bezier data - the specimen sheet tracer, for one - lands a
+ * Glyph the same way an SVG paste does, instead of building Paths by hand.
+ *
+ * The format is the one `svg-to-bezier` emits, and it is worth stating because
+ * the `false` is load-bearing:
+ *
+ *   bezierData  = array of paths
+ *   path        = array of beziers
+ *   bezier      = [ {x,y}, {x,y}|false, {x,y}|false, {x,y} ]   // p0, h2, h1, p3
+ *
+ * A straight segment carries literal `false` for both handles, NOT undefined
+ * and not a copy of its endpoint. Do not hand these arrays to `Segment`
+ * directly: its constructor only special-cases `undefined`, so `false` becomes
+ * `parseNumber(false)` = 0 and parks both control points at the origin, which
+ * drags the reported bounding box toward (0,0). Come through here instead.
+ *
+ * @param {Array} bezierData - paths in Bezier format
+ * @param {Number =} projectUPM - upm for scaled handle length
+ * @returns {Glyph} - Glyphr Studio Glyph result
+ */
+export function bezierDataToGlyph(bezierData, projectUPM = 2048) {
+	importUPM = projectUPM;
 	let pathCounter = 0;
 	let newPaths = [];
 
