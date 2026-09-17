@@ -8,26 +8,61 @@
 	The review strip shows the traced OUTLINE rather than a crop of the source,
 	because the question being asked is "is this what you want in your font",
 	and the answer is the vector, not the picture it came from.
+
+	ONE RADIUS, AND IT IS CONCENTRIC.
+
+	Every block in the content column is --r-2xl 20, and every child sitting in
+	a block's corner region derives from it: inner = outer - padding. The three
+	cases are not the same padding, because they are not the same child, and
+	the point is that the CORNERS line up rather than the paddings:
+
+	  drop zone   --sp-4  8 of padding around a fancy-button at --r-lg 12  =  20
+	  toggle      --sp-5 12 of padding around a checkbox at --r-md 8       =  20
+	  row block   --sp-5 12 of padding around a tile at --r-md 8           =  20
+
+	Blocks holding nothing but text are not bound by this - there is no corner
+	to be concentric with - so they take the same 20 and the roomier --sp-5.
+
+	The shared .dialog-info and .dialog-textarea ship at --r-lg 12, which is
+	right on a surface of their own and wrong next to these. They are brought
+	to 20 inside this dialog only, so the column reads as one system.
 */
 
 .specimen {
 	min-height: min(560px, calc(100vh - 240px));
+
+	/* Stated once so a block and its children cannot drift apart. */
+	--block-radius: var(--r-2xl);
+	--block-inset: var(--sp-5);
+	--tile-radius: var(--r-md);
+}
+
+/* The shared blocks, brought onto this surface's radius. */
+.specimen .dialog-info,
+.specimen .dialog-textarea {
+	border-radius: var(--block-radius);
+	corner-shape: var(--corner-smooth);
 }
 
 /* --------------------------------------------------------
 	The sheet
 -------------------------------------------------------- */
 
+/*
+	--sp-4 of padding, not --sp-5, because the button inside is --r-lg 12 and
+	12 + 8 is the 20 every other block is drawn at.
+*/
 .specimen__drop {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--sp-5);
-	padding: var(--sp-5);
+	padding: var(--sp-4);
+	padding-left: var(--sp-6);
+	min-height: 64px;
 	background-color: var(--bg-surface-sunken);
 	border: 1px dashed var(--border-strong);
-	/* Derived: the button inside is --r-md and this insets it by --sp-5. */
-	border-radius: calc(var(--r-md) + var(--sp-5));
+	border-radius: var(--block-radius);
 	corner-shape: var(--corner-smooth);
 	transition: var(--transition-color);
 }
@@ -49,7 +84,7 @@
 
 .specimen__layout {
 	display: grid;
-	gap: var(--sp-3);
+	gap: var(--sp-4);
 }
 
 .specimen__layout-head {
@@ -57,6 +92,7 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--sp-5);
+	min-height: var(--control-h-lg);
 }
 
 .specimen__layout-head .dialog-select {
@@ -71,6 +107,7 @@
 }
 
 .modal-dialog__body .specimen__rows {
+	padding: var(--block-inset) var(--sp-6);
 	font-family: var(--font-mono);
 	font-size: var(--fs-sm);
 	line-height: var(--lh-loose);
@@ -89,19 +126,26 @@
 
 .specimen__options {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 	gap: var(--sp-5);
 }
 
+/*
+	The whole block is the label, so the pointer target is the block - the box
+	itself stays the size resets.css draws it and needs no padding trick. The
+	earlier one grew the drawn box to 26px, because a background paints the
+	padding box.
+*/
 .specimen__toggle {
 	display: grid;
 	grid-template-columns: min-content minmax(0, 1fr);
 	align-items: start;
-	gap: var(--sp-4);
-	padding: var(--sp-4) var(--sp-5);
+	column-gap: var(--sp-5);
+	row-gap: var(--sp-2);
+	padding: var(--block-inset);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
+	border-radius: var(--block-radius);
 	corner-shape: var(--corner-smooth);
 	cursor: pointer;
 	transition: var(--transition-color);
@@ -115,20 +159,19 @@
 	border-color: var(--accent);
 }
 
-/*
-	The box resets.css draws is 14px. The 24px pointer floor is bought with
-	transparent padding so the drawn control keeps its proportions.
-*/
 .specimen__toggle input[type='checkbox'] {
-	margin: calc(var(--sp-3) * -1);
-	padding: var(--sp-3);
-	box-sizing: content-box;
-	flex: none;
+	width: 16px;
+	height: 16px;
+	/* --r-md against the block's --sp-5: 8 + 12 is the block's own 20. */
+	border-radius: var(--tile-radius);
+	corner-shape: var(--corner-smooth);
+	/* Sits on the cap line of the title beside it rather than the line box. */
+	margin-top: 2px;
 }
 
 .specimen__toggle-text {
 	display: grid;
-	gap: var(--sp-1);
+	gap: var(--sp-2);
 }
 
 .modal-dialog__body .specimen__toggle-title {
@@ -160,10 +203,10 @@
 }
 
 .modal-dialog__body .specimen__error {
-	padding: var(--sp-4) var(--sp-5);
+	padding: var(--block-inset) var(--sp-6);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-default);
-	border-radius: var(--r-md);
+	border-radius: var(--block-radius);
 	corner-shape: var(--corner-smooth);
 	font-size: var(--fs-sm);
 	line-height: var(--lh-normal);
@@ -174,6 +217,7 @@
 .specimen__summary {
 	display: grid;
 	gap: var(--sp-2);
+	padding: 0 var(--sp-1);
 }
 
 .modal-dialog__body .specimen__summary-lead {
@@ -195,11 +239,11 @@
 
 .specimen__row {
 	display: grid;
-	gap: var(--sp-3);
-	padding: var(--sp-5);
+	gap: var(--sp-4);
+	padding: var(--block-inset);
 	background-color: var(--bg-surface-sunken);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-lg);
+	border-radius: var(--block-radius);
 	corner-shape: var(--corner-smooth);
 }
 
@@ -216,6 +260,7 @@
 	align-items: baseline;
 	justify-content: space-between;
 	gap: var(--sp-5);
+	padding: 0 var(--sp-1);
 }
 
 .modal-dialog__body .specimen__row-name {
@@ -233,6 +278,7 @@
 }
 
 .modal-dialog__body .specimen__row-warning {
+	padding: 0 var(--sp-1);
 	font-size: var(--fs-xs);
 	line-height: var(--lh-normal);
 	color: var(--text-secondary);
@@ -251,13 +297,16 @@
 
 .specimen__cell {
 	display: grid;
+	grid-template-rows: 44px min-content;
 	justify-items: center;
-	gap: var(--sp-1);
-	width: 64px;
+	align-content: start;
+	gap: var(--sp-2);
+	width: 68px;
 	padding: var(--sp-3) var(--sp-2);
 	background-color: var(--bg-surface);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--r-md);
+	/* --r-md against the row's --sp-5: 8 + 12 is the row's own 20. */
+	border-radius: var(--tile-radius);
 	corner-shape: var(--corner-smooth);
 	cursor: pointer;
 	transition: var(--transition-color);
@@ -290,7 +339,7 @@
 .specimen__thumb {
 	display: block;
 	width: 100%;
-	height: 44px;
+	height: 100%;
 	color: var(--text-primary);
 }
 
@@ -303,6 +352,7 @@
 .modal-dialog__body .specimen__cell-char {
 	font-family: var(--font-mono);
 	font-size: var(--fs-sm);
+	line-height: var(--lh-tight);
 	color: var(--text-primary);
 }
 
@@ -318,31 +368,44 @@
 	Before throwing the work away
 -------------------------------------------------------- */
 
+/*
+	Pinned to the foot of the scrolling body, not dropped into it. The question
+	can be asked from anywhere - Escape, the close control, a backdrop click -
+	and the body is a long scroll, so in the flow it landed off screen and the
+	dialog looked like it had ignored the key.
+*/
 .specimen__confirm {
+	position: sticky;
+	bottom: 0;
+	z-index: var(--z-sticky);
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
 	gap: var(--sp-5);
-	padding: var(--sp-5);
-	background-color: var(--bg-selected);
+	/* --sp-4 around buttons at --r-lg 12, the same sum as the drop zone. */
+	padding: var(--sp-4);
+	padding-left: var(--sp-6);
+	margin-top: var(--sp-2);
+	background-color: var(--bg-surface-raised);
 	border: 1px solid var(--accent);
-	border-radius: var(--r-md);
+	border-radius: var(--block-radius);
 	corner-shape: var(--corner-smooth);
+	box-shadow: var(--shadow-3);
 }
 
 .modal-dialog__body .specimen__confirm-text {
-	flex: 1 1 260px;
+	flex: 1 1 240px;
 	font-size: var(--fs-sm);
 	color: var(--text-primary);
 	text-wrap: pretty;
 }
 
 .modal-dialog__body .specimen__confirm-button {
-	height: var(--control-h);
+	height: var(--control-h-lg);
 	padding: 0 var(--sp-5);
 	background-color: transparent;
 	border: 1px solid var(--border-strong);
-	border-radius: var(--r-sm);
+	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	font-size: var(--fs-sm);
 	color: var(--text-primary);

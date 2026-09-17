@@ -21,7 +21,12 @@ import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
 import { makeInkMask } from './binarize.js';
 import { segmentSheet } from './segment_sheet.js';
 import { LAYOUT_TEMPLATES, layoutToText, parseLayout } from './layout_templates.js';
-import { ROW_CHECK, ROW_COUNT_MISMATCH, ROW_OK, assignGlyphs } from './assign_glyphs.js';
+import {
+	ROW_CHECK,
+	ROW_COUNT_MISMATCH,
+	ROW_UNDECLARED,
+	assignGlyphs,
+} from './assign_glyphs.js';
 import { measureBaselineWander, measureSheet } from './sheet_metrics.js';
 import { describePlan, importSheet, planImport } from './import_sheet.js';
 import { ACCEPTED_TYPES, imageFromTransfer, readSheetImage } from './read_image.js';
@@ -142,15 +147,29 @@ function tryClose(force = false) {
 	closeEveryTypeOfDialog();
 }
 
+/**
+ * Asks before discarding a reviewed sheet.
+ *
+ * The bar is pinned to the bottom of the dialog body rather than put into the
+ * flow, because the flow is a long scroll and the question can be triggered
+ * from anywhere in it. Measured before this was fixed: with the review grid
+ * scrolled down, Escape put the question 993px above the visible area - so the
+ * dialog appeared to have ignored the key entirely, which is worse than just
+ * closing. Pinned, it lands directly above the actions, which is where the
+ * cursor already is if Cancel or the close control was what asked.
+ */
 function askBeforeClosing() {
-	const results = state?.nodes?.results;
-	if (!results) {
+	const content = state?.nodes?.content;
+	if (!content) {
 		tryClose(true);
 		return;
 	}
 
-	const existing = results.querySelector('.specimen__confirm');
-	if (existing) return;
+	const existing = content.querySelector('.specimen__confirm');
+	if (existing) {
+		existing.querySelector('.specimen__confirm-button')?.focus();
+		return;
+	}
 
 	const confirm = makeElement({ className: 'specimen__confirm' });
 	confirm.appendChild(
@@ -175,7 +194,7 @@ function askBeforeClosing() {
 		onClick: () => tryClose(true),
 	});
 	addAsChildren(confirm, [keep, discard]);
-	results.prepend(confirm);
+	content.appendChild(confirm);
 	keep.focus();
 }
 
@@ -502,16 +521,17 @@ function makeRow(row) {
 	head.appendChild(
 		makeElement({ tag: 'span', className: 'specimen__row-name', content: `Row ${row.index + 1}` })
 	);
-	head.appendChild(
-		makeElement({
-			tag: 'span',
-			className: 'specimen__row-count',
-			content:
-				row.status === ROW_COUNT_MISMATCH
-					? `${row.found} shapes found, ${row.expected} characters declared`
-					: `${row.found} character${row.found === 1 ? '' : 's'}`,
-		})
-	);
+	// A shape only becomes a character once the layout has named it, so an
+	// undeclared row counts shapes.
+	let count;
+	if (row.status === ROW_COUNT_MISMATCH) {
+		count = `${row.found} shapes found, ${row.expected} characters declared`;
+	} else if (row.status === ROW_UNDECLARED) {
+		count = `${row.found} shape${row.found === 1 ? '' : 's'}, none declared`;
+	} else {
+		count = `${row.found} character${row.found === 1 ? '' : 's'}`;
+	}
+	head.appendChild(makeElement({ tag: 'span', className: 'specimen__row-count', content: count }));
 	block.appendChild(head);
 
 	if (row.status === ROW_COUNT_MISMATCH) {
@@ -524,6 +544,22 @@ function makeRow(row) {
 					'Check this row against the sheet and correct the line above before importing it.',
 			})
 		);
+	}
+
+	// A row the layout says nothing about has nothing to show per shape - every
+	// tile would be empty and carry the same sentence. Said once, it is
+	// information; said twenty-six times it is a wall.
+	if (row.status === ROW_UNDECLARED) {
+		block.appendChild(
+			makeElement({
+				tag: 'span',
+				className: 'specimen__row-warning',
+				content:
+					'Nothing is declared for this row, so these shapes will not be imported. ' +
+					'Add a line above with the characters on it to bring them in.',
+			})
+		);
+		return block;
 	}
 
 	const strip = makeElement({ className: 'specimen__strip' });
@@ -556,13 +592,15 @@ function makeCell(entry) {
 		})
 	);
 
-	if (planned?.replaces) {
-		cell.appendChild(
-			makeElement({ tag: 'span', className: 'specimen__cell-flag', content: 'replaces' })
-		);
-	} else if (entry.note) {
+	// Only a note about THIS character earns space on it. A row-level problem
+	// is stated once on the row, not repeated onto each of its thirteen tiles.
+	if (entry.status === ROW_CHECK && entry.note) {
 		cell.appendChild(
 			makeElement({ tag: 'span', className: 'specimen__cell-flag', content: entry.note })
+		);
+	} else if (planned?.replaces) {
+		cell.appendChild(
+			makeElement({ tag: 'span', className: 'specimen__cell-flag', content: 'replaces' })
 		);
 	}
 
