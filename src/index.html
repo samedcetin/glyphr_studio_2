@@ -67,24 +67,17 @@
 				The boot splash: what is on screen before app.css has loaded, which is
 				the one place inline CSS earns its place.
 
-				Its ground is --dark-gradient-background from resets.css, built from
-				the --n-93 / --n-96 primitives - fixed dark in both themes, because
-				it is on screen before there is an app to have a theme. This block
-				used to redeclare that property with its own blue-to-purple literal,
-				which resets.css then overrode: the values here were never painted.
-
-				The text on that ground cannot follow the theme either: reaching for
-				--text-primary put near-black type on a dark gradient the moment the
-				app was in light mode. Hence three literals of its own, the one place
-				in the app where a literal is the right answer, declared together so
-				the ground and what sits on it are read and changed as one thing.
+				It follows the theme. The blocking script above stamps data-theme
+				on <html> before first paint and tokens.css is a stylesheet link, so
+				by the time anything here is drawn the semantic tokens already
+				resolve for the right theme: the text is --text-primary, the mark is
+				--accent, and the ground is a gradient of the theme's own surfaces -
+				a whisper of depth in light, the shell's dark gradient in dark. It
+				used to be fixed dark with three colour literals of its own, from
+				before the theme was stamped this early.
 			*/
 			:root {
-				--splash-text: hsl(220, 18%, 92%);
-				--splash-text-muted: hsl(220, 12%, 72%);
-				--splash-link: hsl(212, 90%, 72%);
-				/* The mark's blue: --a-50, the light theme's --accent, as a literal for the same reason. */
-				--splash-accent: hsl(212, 92%, 56%);
+				--splash-ground: linear-gradient(150deg, var(--bg-surface), var(--bg-app));
 				/*
 					The pen's hand: eases in and out symmetrically, so each stroke
 					starts from rest and settles into its anchor instead of snapping
@@ -92,6 +85,10 @@
 					durations below - brand motion, the splash's own.
 				*/
 				--splash-ease: cubic-bezier(0.65, 0, 0.35, 1);
+			}
+
+			:root[data-theme='dark'] {
+				--splash-ground: var(--dark-gradient-background);
 			}
 
 			body,
@@ -108,7 +105,7 @@
 			}
 
 			body {
-				background: var(--dark-gradient-background);
+				background: var(--splash-ground);
 			}
 
 			#app__wrapper {
@@ -133,7 +130,7 @@
 				opacity: 1;
 				visibility: visible;
 				transition: opacity var(--dur-slow) var(--ease);
-				background: var(--dark-gradient-background);
+				background: var(--splash-ground);
 				display: flex;
 				flex-direction: column;
 				align-items: center;
@@ -146,21 +143,21 @@
 				The Glyva mark and the name under it. The mark is the same drawing
 				as lineIcons.appMark in common/icons.js, inlined here because the
 				splash is on screen before any module has loaded; keep the two in
-				step. currentColor, so the one place the colour is set is
-				--splash-text above. 120px is the mark's 24 grid times five.
+				step. currentColor, so the colour is set once, on the block, from
+				the theme's tokens. 120px is the mark's 24 grid times five.
 			*/
 			.splash__brand {
 				display: grid;
 				justify-items: center;
 				gap: var(--sp-6);
-				color: var(--splash-text);
+				color: var(--text-primary);
 			}
 
 			.splash__mark {
 				display: block;
 				width: 120px;
 				height: 120px;
-				color: var(--splash-accent);
+				color: var(--accent);
 			}
 
 			.splash__name {
@@ -372,8 +369,8 @@
 				it went for the same reason - see .app-error in app/app.css.
 			-->
 			<div id="errorMessage" style="display: none; max-width: 420px">
-				<div style="font-size: 15px; line-height: 1.5; color: var(--splash-text-muted)">
-					<strong style="font-size: 20px; font-weight: 600; color: var(--splash-text)"
+				<div style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">
+					<strong style="font-size: 20px; font-weight: 600; color: var(--text-primary)"
 						>Glyva could not start</strong
 					>
 					<br /><br />
@@ -382,7 +379,7 @@
 					<br /><br />
 					If you are on one of those already, tell us and we will look at it:
 					<a
-						style="color: var(--splash-link)"
+						style="color: var(--text-accent)"
 						href="mailto:hello@bluerain.studio?subject=Glyva%20could%20not%20start"
 						>hello@bluerain.studio</a
 					>
