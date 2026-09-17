@@ -252,7 +252,7 @@
 	noticed, so it is the only thing that changes colour.
 */
 .specimen__row[status='count-mismatch'] {
-	border-color: var(--warn-50);
+	border-color: var(--warn);
 }
 
 .specimen__row-head {
@@ -323,7 +323,7 @@
 
 .specimen__cell[status='check'],
 .specimen__cell[status='count-mismatch'] {
-	border-color: var(--warn-50);
+	border-color: var(--warn);
 }
 
 /* Skipped stays in place, greyed. Removing it would leave the user counting
@@ -386,8 +386,8 @@
 	padding: var(--sp-4);
 	padding-left: var(--sp-6);
 	margin-top: var(--sp-2);
-	background-color: var(--bg-surface-raised);
-	border: 1px solid var(--accent);
+	background-color: var(--warn-bg);
+	border: 1px solid var(--warn);
 	border-radius: var(--block-radius);
 	corner-shape: var(--corner-smooth);
 	box-shadow: var(--shadow-3);
@@ -400,11 +400,16 @@
 	text-wrap: pretty;
 }
 
+/*
+	The border is --warn rather than --border-strong: the neutral border is a
+	hairline meant for neutral ground, and on the light warn tint it measured
+	1.53:1 - there, but not visibly. Against the bar's own colour it carries.
+*/
 .modal-dialog__body .specimen__confirm-button {
 	height: var(--control-h-lg);
 	padding: 0 var(--sp-5);
 	background-color: transparent;
-	border: 1px solid var(--border-strong);
+	border: 1px solid var(--warn);
 	border-radius: var(--r-lg);
 	corner-shape: var(--corner-smooth);
 	font-size: var(--fs-sm);
@@ -422,7 +427,12 @@
 	outline-offset: var(--focus-offset);
 }
 
-.specimen__confirm-button--discard {
+/*
+	Scoped the same as the rule above on purpose. Written as a bare class it
+	loses the cascade to it and the destructive action comes out in the body
+	colour - which is exactly what it must not be.
+*/
+.modal-dialog__body .specimen__confirm-button--discard {
 	color: var(--text-danger);
 	border-color: var(--text-danger);
 }
