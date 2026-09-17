@@ -9,6 +9,7 @@ import { applyAllMetricKeys } from '../../metrics/apply_keys.js';
 import { showIconImportDialog, showIconMapDialog } from '../../icon_font/icon_dialogs.js';
 import { getPixelMode } from '../../pixel_font/pixel_grid.js';
 import { arePanelsHidden, setPanelsHidden } from '../../panels/sidebar.js';
+import { addCommonLigaturesToProject } from '../../pages/ligatures.js';
 import {
 	ioFont_exportOTF,
 	ioFont_exportTTF,
@@ -253,6 +254,13 @@ function collectCommands() {
 			searchText:
 				'compose accented characters diacritics accents anchors marks build umlaut acute grave circumflex tilde cedilla latin extended',
 			run: showComposeDialog,
+		},
+		{
+			name: 'Add the common Latin ligatures',
+			category: 'Edit',
+			searchText:
+				'add common latin ligatures ae oe fi fl ff ffi ffl st multi-character sprite glyph substitution',
+			run: addCommonLigaturesToProject,
 		},
 		{
 			name: 'Import SVG icons',

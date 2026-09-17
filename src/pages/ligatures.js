@@ -158,15 +158,8 @@ function makeLigaturesFirstRunContent() {
 		icon: 'page_ligatures',
 		title: 'No ligatures yet',
 		body:
-			'A ligature replaces a sequence of characters, like f and i, with one glyph you draw — a multi-character sprite. Create one, or start from the common Latin set.',
-		actions: [
-			{ label: 'Create a ligature…', onClick: showAddLigatureDialog },
-			{
-				label: 'Add the common Latin ligatures',
-				onClick: addCommonLigaturesToProject,
-				secondary: true,
-			},
-		],
+			'A ligature replaces a sequence of characters, like f and i, with one glyph you draw — a multi-character sprite. Text that has ligatures enabled swaps the sequence for it.',
+		actions: [{ label: 'Create a ligature…', onClick: showAddLigatureDialog }],
 	});
 }
 
@@ -189,7 +182,12 @@ const ligaturesWithCodePoints = [
 /**
  * Adds the list of common ligatures to the current project
  */
-function addCommonLigaturesToProject() {
+/**
+ * Adds the ten common Latin ligatures - ae, fi, fl and the rest - as empty
+ * ligatures, then lands on the page. Reached from the command palette; the
+ * empty state offers one action, the dialog, like the other two pages.
+ */
+export function addCommonLigaturesToProject() {
 	ligaturesWithCodePoints.forEach((lig) => addLigature(lig.chars));
 	const editor = getCurrentProjectEditor();
 	editor.nav.page = 'Ligatures';
