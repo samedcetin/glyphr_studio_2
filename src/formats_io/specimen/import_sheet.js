@@ -250,6 +250,39 @@ export function importSheet(plan, context) {
 }
 
 /**
+ * Whether this sheet can go straight in, without anyone checking it first.
+ *
+ * The review step earns its place when there is something to review. When the
+ * layout was identified and every shape on every declared row agrees with the
+ * character it was given, there is nothing on that screen the user can act on
+ * - it is ceremony, and the honest thing is to skip it.
+ *
+ * One case is never skipped however clean the detection: an import that would
+ * REPLACE something. Overwriting glyphs someone drew is the one outcome here
+ * that cannot be undone by looking at it afterwards and noticing, so it is
+ * always put in front of them first. From the hub, where the project is made
+ * by the import itself, there is nothing to replace and this never fires.
+ *
+ * @param {Object} detection - from detectLayout
+ * @param {Object} plan - from planImport
+ * @param {Object} assignment - from assignGlyphs
+ * @returns {Boolean}
+ */
+export function canImportWithoutReview(detection, plan, assignment) {
+	if (!detection || detection.status !== 'detected') return false;
+	if (detection.confidence < 1) return false;
+	if (!plan?.entries?.length) return false;
+	if (plan.replaceCount) return false;
+
+	// Every declared row read cleanly. An undeclared row is not a problem -
+	// its shapes are traced and handed to the panel on the Overview - but a
+	// row whose counts disagree means characters may be in the wrong slots.
+	return assignment.rows.every(
+		(row) => row.status === 'ok' || row.status === 'undeclared'
+	);
+}
+
+/**
  * A line describing what the import will do, for the dialog footer.
  * @param {Object} plan - from planImport
  * @returns {String}

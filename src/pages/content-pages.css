@@ -1045,6 +1045,36 @@ code {
 }
 
 /* --------------------------------------------------------------
+	A character arriving
+
+	Played once, from JavaScript, on the tiles a specimen sheet just filled -
+	see arrival.js for why it is not simply a class on the tile. The delay is a
+	custom property so one keyframe serves the whole run and the stagger is the
+	only thing that differs between tiles.
+
+	It rises and settles rather than fading: a fade says something changed, and
+	this needs to say something arrived. --ease-out lands it instead of
+	stopping it dead, and the scale starts close to 1 so sixty of them do not
+	read as a swarm.
+	------------------------------------------------------------ */
+
+glyph-tile[arriving] {
+	animation: var(--dur-slow) var(--ease-out) var(--arrival-delay, 0ms) both character-arriving;
+}
+
+@keyframes character-arriving {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.94);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* --------------------------------------------------------------
 	Shapes without a character
 
 	The right column holds two cards once a sheet has left something loose, so

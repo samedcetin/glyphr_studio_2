@@ -38,9 +38,10 @@ import {
 	assignGlyphs,
 } from './assign_glyphs.js';
 import { measureBaselineWander, measureSheet } from './sheet_metrics.js';
-import { describePlan, importSheet, planImport } from './import_sheet.js';
+import { canImportWithoutReview, describePlan, importSheet, planImport } from './import_sheet.js';
 import { ACCEPTED_TYPES, imageFromTransfer, readSheetImage } from './read_image.js';
 import { DETECTED, UNDETECTED, describeDetection, detectLayout } from './detect_layout.js';
+import { announceArrival, cancelArrival } from './arrival.js';
 
 /** Everything this dialog knows, in one place so the redraws stay honest. */
 let state = null;
@@ -249,6 +250,7 @@ function tryClose(force = false) {
 		return;
 	}
 	if (state?.previewURL) URL.revokeObjectURL(state.previewURL);
+	cancelArrival();
 	state = null;
 	closeEveryTypeOfDialog();
 }
@@ -412,6 +414,21 @@ async function loadSheet(file) {
 
 		analyse();
 		state.step = STEP_REVIEW;
+
+		/*
+			And when there is nothing on that step to act on, do not show it.
+
+			The review earns its place by catching a sheet that was read wrong.
+			A layout identified with every cell agreeing, landing where nothing
+			is overwritten, has no such catch in it - so the user goes straight
+			to their font rather than being asked to approve an answer that has
+			already been checked. canImportWithoutReview holds the rule,
+			including the one case that is never skipped.
+		*/
+		if (canImportWithoutReview(state.detection, state.plan, state.assignment)) {
+			doImport();
+			return;
+		}
 	} catch (error) {
 		state.sheet = null;
 		state.segmentation = null;
@@ -1025,6 +1042,13 @@ function doImport() {
 	// out of the review leaves nothing behind.
 	const editor = createTarget ? createTarget({ fileName: state.file?.name }) : targetEditor();
 	if (!editor?.project) return;
+
+	/*
+		Announced before the import, so the Overview the navigation builds has
+		something to play. In reading order, which is the order the plan is in,
+		because that is the order they were on the sheet.
+	*/
+	announceArrival(state.plan.entries.filter((entry) => only.includes(entry.character)).map((entry) => entry.id));
 
 	const result = importSheet(state.plan, {
 		project: editor.project,

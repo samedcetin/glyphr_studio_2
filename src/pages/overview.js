@@ -3,6 +3,7 @@ import {
 	enableShapeDropTargets,
 	makeLooseShapesCard,
 } from '../formats_io/specimen/loose_shapes_panel.js';
+import { playArrival } from '../formats_io/specimen/arrival.js';
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
 import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
@@ -392,6 +393,13 @@ function makeCoverageCard() {
 
 	// A loose shape from a sheet can be dropped straight onto a character here.
 	enableShapeDropTargets(chooser);
+
+	/*
+		If a sheet just landed, its characters arrive rather than being simply
+		present. After a frame, because the tiles are built by the chooser and
+		are not in the document yet.
+	*/
+	requestAnimationFrame(() => playArrival(chooser));
 
 	const header = chooser.querySelector('.item-chooser__header');
 	if (header) {

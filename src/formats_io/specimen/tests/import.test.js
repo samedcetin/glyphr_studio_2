@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { describePlan, glyphIdFor, importSheet, planImport } from '../import_sheet.js';
+import {
+	canImportWithoutReview,
+	describePlan,
+	glyphIdFor,
+	importSheet,
+	planImport,
+} from '../import_sheet.js';
 import { ROW_OK } from '../assign_glyphs.js';
 
 const FACE = { upm: 2048, capHeight: 1480, xHeight: 950, ascent: 1500, descent: -420 };
@@ -146,6 +152,46 @@ describe('planImport', () => {
 		expect(bottomOf(placed)).toBeCloseTo(0, 1);
 		expect(heightOf(placed)).toBeCloseTo(FACE.capHeight, 0);
 		expect(heightOf(plain)).not.toBeCloseTo(FACE.capHeight, 0);
+	});
+});
+
+describe('canImportWithoutReview', () => {
+	const perfect = { status: 'detected', confidence: 1 };
+	const cleanRows = { rows: [{ status: 'ok' }, { status: 'undeclared' }] };
+
+	it('lets a sheet that was read cleanly go straight in', () => {
+		const project = fakeProject();
+		const plan = planFor(['O', 'H'], project);
+		expect(canImportWithoutReview(perfect, plan, cleanRows)).toBe(true);
+	});
+
+	it('never skips when something would be replaced', () => {
+		// The one outcome here that cannot be undone by noticing it afterwards.
+		const project = fakeProject({ 'glyph-0x4F': { shapes: [] } });
+		const plan = planFor(['O', 'H'], project);
+		expect(plan.replaceCount).toBe(1);
+		expect(canImportWithoutReview(perfect, plan, cleanRows)).toBe(false);
+	});
+
+	it('does not skip when the layout was not identified', () => {
+		const plan = planFor(['O'], fakeProject());
+		expect(canImportWithoutReview({ status: 'undetected', confidence: 0 }, plan, cleanRows)).toBe(false);
+		expect(canImportWithoutReview(null, plan, cleanRows)).toBe(false);
+	});
+
+	it('does not skip when a shape did not look like its character', () => {
+		const plan = planFor(['O'], fakeProject());
+		expect(canImportWithoutReview({ status: 'detected', confidence: 0.98 }, plan, cleanRows)).toBe(false);
+	});
+
+	it('does not skip when a row could not be read', () => {
+		const plan = planFor(['O'], fakeProject());
+		const mismatched = { rows: [{ status: 'ok' }, { status: 'count-mismatch' }] };
+		expect(canImportWithoutReview(perfect, plan, mismatched)).toBe(false);
+	});
+
+	it('does not skip an import with nothing in it', () => {
+		expect(canImportWithoutReview(perfect, { entries: [] }, cleanRows)).toBe(false);
 	});
 });
 
