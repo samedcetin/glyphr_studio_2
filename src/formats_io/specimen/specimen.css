@@ -28,8 +28,27 @@
 	to 20 inside this dialog only, so the column reads as one system.
 */
 
+/*
+	A step that is not the current one is gone, not merely invisible.
+
+	`hidden` carries display:none from the user agent stylesheet, which ANY
+	explicit display in an author sheet beats - and most of the blocks here are
+	`display: grid`. Left alone they kept their space, so step one had a column
+	of empty boxes under it. Two classes deep, so it outranks the rules it has
+	to undo.
+*/
+.specimen [hidden] {
+	display: none;
+}
+
 .specimen {
+	/*
+		A floor rather than a height, so the dialog does not resize under the
+		cursor as you move between steps - and start, so the floor reserves
+		space below the content instead of spreading it down the box.
+	*/
 	min-height: min(560px, calc(100vh - 240px));
+	align-content: start;
 
 	/* Stated once so a block and its children cannot drift apart. */
 	--block-radius: var(--r-2xl);
@@ -42,6 +61,167 @@
 .specimen .dialog-textarea {
 	border-radius: var(--block-radius);
 	corner-shape: var(--corner-smooth);
+}
+
+/* --------------------------------------------------------
+	Where you are
+
+	Two steps, not three. The layout box is a detour off the review - you only
+	go there when what was detected is wrong - and counting it would tell
+	everyone the wizard is three steps long when almost nobody will see it.
+-------------------------------------------------------- */
+
+.specimen__trail {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-5);
+	align-items: baseline;
+}
+
+.modal-dialog__body .specimen__trail-step {
+	font-size: var(--fs-2xs);
+	font-weight: var(--fw-medium);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+	transition: var(--transition-color);
+}
+
+.modal-dialog__body .specimen__trail-step[done] {
+	color: var(--text-secondary);
+}
+
+.modal-dialog__body .specimen__trail-step[here] {
+	color: var(--text-accent);
+}
+
+/* --------------------------------------------------------
+	The sheet you chose
+
+	Shown back, because this step asks you to confirm an interpretation and you
+	cannot do that against a list of characters. The bands say WHERE each row
+	was found, which is the thing that goes wrong on an unusual sheet, and they
+	say it without a sentence of explanation.
+-------------------------------------------------------- */
+
+.specimen__sheet {
+	display: grid;
+	justify-items: center;
+	gap: var(--sp-3);
+}
+
+.specimen__sheet-frame {
+	position: relative;
+	/*
+		Shrink-wrapped to the image rather than a box the image sits in, so the
+		bands - which are percentages of this element - land on the rows they
+		describe. Capping the frame and cropping instead showed the top two
+		thirds of the sheet and hid the rows the user most needs to check.
+	*/
+	display: inline-block;
+	max-width: 100%;
+	align-self: center;
+	background-color: var(--canvas-bg);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--block-radius);
+	corner-shape: var(--corner-smooth);
+}
+
+.specimen__sheet-image {
+	display: block;
+	max-width: 100%;
+	max-height: 260px;
+	width: auto;
+	height: auto;
+}
+
+.specimen__sheet-band {
+	position: absolute;
+	left: 0;
+	right: 0;
+	border-top: 1px solid var(--accent);
+	border-bottom: 1px solid var(--accent);
+	background-color: var(--bg-selected);
+	pointer-events: none;
+}
+
+.specimen__sheet-band-label {
+	position: absolute;
+	top: 50%;
+	left: var(--sp-3);
+	transform: translateY(-50%);
+	padding: 0 var(--sp-2);
+	background-color: var(--accent);
+	border-radius: var(--r-sm);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-on-accent);
+	font-size: var(--fs-2xs);
+	font-variant-numeric: tabular-nums;
+	line-height: 1.6;
+}
+
+.modal-dialog__body .specimen__sheet-caption {
+	font-size: var(--fs-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------
+	What we made of it
+-------------------------------------------------------- */
+
+.specimen__detected {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: var(--sp-5);
+	padding: var(--block-inset) var(--sp-6);
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--block-radius);
+	corner-shape: var(--corner-smooth);
+}
+
+.specimen__detected-text {
+	display: grid;
+	gap: var(--sp-1);
+	min-width: 0;
+}
+
+.modal-dialog__body .specimen__detected-name {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-medium);
+	color: var(--text-primary);
+}
+
+.modal-dialog__body .specimen__detected-note {
+	font-size: var(--fs-xs);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+.modal-dialog__body .specimen__detected-change {
+	height: var(--control-h-lg);
+	padding: 0 var(--sp-5);
+	background-color: transparent;
+	border: 1px solid var(--border-strong);
+	border-radius: var(--r-lg);
+	corner-shape: var(--corner-smooth);
+	font-size: var(--fs-sm);
+	color: var(--text-primary);
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.specimen__detected-change:hover {
+	border-color: var(--accent);
+	color: var(--text-accent);
+}
+
+.specimen__detected-change:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
 }
 
 /* --------------------------------------------------------

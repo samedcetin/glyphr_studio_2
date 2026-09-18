@@ -1,13 +1,23 @@
 /**
 	SPECIMEN SHEET — THE DIALOG
 
-	Upload a sheet, say what is on it, look at what was found, import it.
+	Two steps. Choose a sheet, then check what was found on it.
 
-	The review step is not a formality. Reading order is exact when the sheet
-	holds what the layout says it holds, and wrong for every character after
-	the first discrepancy when it does not - so the one thing this screen has
-	to do well is show which rows are certain and which are not, before
-	anything is written.
+	It used to be one screen that opened by asking the user to type out the
+	character set. That was backwards: they arrived holding a picture of an
+	alphabet and were met with a form. The layout is worked out from the sheet
+	now - see detect_layout.js - so the second step shows a conclusion to agree
+	with, and typing one is a detour off it rather than the way in.
+
+	The sheet itself is shown back on that step, with the rows we found drawn
+	over it. Confirming an interpretation against a list of characters is not
+	something anyone can actually do; against their own picture it is.
+
+	The review is not a formality. Reading order is exact when the sheet holds
+	what the layout says it holds, and wrong for every character after the
+	first discrepancy when it does not - so the one thing this screen has to do
+	well is show which rows are certain and which are not, before anything is
+	written.
 
 	Escape is handled here rather than left alone. The app's global key handler
 	closes every dialog on Escape before it checks what has focus, and the
@@ -30,9 +40,24 @@ import {
 import { measureBaselineWander, measureSheet } from './sheet_metrics.js';
 import { describePlan, importSheet, planImport } from './import_sheet.js';
 import { ACCEPTED_TYPES, imageFromTransfer, readSheetImage } from './read_image.js';
+import { DETECTED, UNDETECTED, describeDetection, detectLayout } from './detect_layout.js';
 
 /** Everything this dialog knows, in one place so the redraws stay honest. */
 let state = null;
+
+/** Pick a sheet. Nothing else is on screen. */
+const STEP_SHEET = 'sheet';
+/** Look at what was found and import it. */
+const STEP_REVIEW = 'review';
+/** Say what is on the sheet, when what was detected is wrong. */
+const STEP_LAYOUT = 'layout';
+
+/** What each step is called, and what it is for. */
+const STEPS = {
+	[STEP_SHEET]: { title: 'Choose a sheet', subtitle: 'A picture of a character set, traced into outlines.' },
+	[STEP_REVIEW]: { title: 'Check the characters', subtitle: 'What we found on your sheet, before anything is written.' },
+	[STEP_LAYOUT]: { title: 'What is on the sheet', subtitle: 'One row per line, in reading order.' },
+};
 
 /**
  * What to scale the trace against before there is a project to ask.
@@ -78,6 +103,14 @@ export function showSpecimenSheetDialog(options = {}) {
 			createTarget: options.createTarget ?? null,
 			onImported: options.onImported ?? null,
 		},
+		/*
+			Where in the wizard we are. Three, and the third is a detour rather
+			than a stage: you only go to `layout` when what was detected is
+			wrong, and you come straight back.
+		*/
+		step: STEP_SHEET,
+		detection: null,
+		previewURL: '',
 		file: null,
 		sheet: null,
 		segmentation: null,
@@ -95,7 +128,17 @@ export function showSpecimenSheetDialog(options = {}) {
 
 	const content = makeElement({ className: 'dialog-layout dialog-form specimen' });
 
+	/*
+		Every step's blocks are built once and shown by step, rather than the
+		content being torn down and rebuilt on each move. The drop zone holds a
+		file input and the layout box holds what the user has typed into it -
+		both would be lost by a rebuild, and the typing is the thing they came
+		to this step to do.
+	*/
+	const steps = makeElement({ className: 'specimen__steps' });
 	const dropZone = makeDropZone();
+	const sheetPreview = makeElement({ className: 'specimen__sheet-holder' });
+	const detected = makeElement({ className: 'specimen__detected-holder' });
 	const layoutBlock = makeLayoutBlock();
 	const optionsBlock = makeOptions();
 	const results = makeElement({ className: 'specimen__results' });
@@ -107,26 +150,47 @@ export function showSpecimenSheetDialog(options = {}) {
 		content: 'Cancel',
 		onClick: () => tryClose(),
 	});
-	const importButton = makeElement({
+	const primaryButton = makeElement({
 		tag: 'fancy-button',
 		content: 'Import characters',
 		attributes: { disabled: '' },
-		onClick: doImport,
+		onClick: () => onPrimary(),
 	});
 
-	addAsChildren(content, [dropZone, layoutBlock, optionsBlock, results, info]);
+	addAsChildren(content, [
+		steps,
+		dropZone,
+		sheetPreview,
+		detected,
+		layoutBlock,
+		optionsBlock,
+		results,
+		info,
+	]);
 
-	state.nodes = { content, results, importButton, dropZone };
+	state.nodes = {
+		content,
+		steps,
+		dropZone,
+		sheetPreview,
+		detected,
+		layoutBlock,
+		optionsBlock,
+		results,
+		info,
+		primaryButton,
+		layoutText: state.pendingLayoutText || null,
+	};
+	delete state.pendingLayoutText;
 	redraw();
 
 	showModalDialog(content, 900, {
 		title: 'Import a specimen sheet',
-		subtitle: state.target.createTarget
-			? 'Trace a picture of a character set into a new font.'
-			: 'Trace a picture of a character set into this project.',
-		actions: [cancelButton, importButton],
+		subtitle: STEPS[STEP_SHEET].subtitle,
+		actions: [cancelButton, primaryButton],
 	});
 
+	redrawFrame();
 	guardAgainstLosingWork();
 }
 
@@ -184,6 +248,7 @@ function tryClose(force = false) {
 		askBeforeClosing();
 		return;
 	}
+	if (state?.previewURL) URL.revokeObjectURL(state.previewURL);
 	state = null;
 	closeEveryTypeOfDialog();
 }
@@ -330,15 +395,33 @@ async function loadSheet(file) {
 			inverted: mask.inverted,
 		};
 		state.segmentation = segmentSheet(mask.ink, width, height);
+
+		/*
+			Worked out rather than asked for. The number of shapes in each row
+			is a fingerprint, and the pieces each shape is drawn in check it -
+			so the common sheet needs no form at all, and the user is shown a
+			conclusion to agree with instead of a question to answer.
+		*/
+		state.detection = detectLayout(state.segmentation);
+		if (state.detection.status === DETECTED) state.layout = state.detection.layout;
+		syncLayoutText();
+
+		// The sheet itself, shown back on the next step.
+		if (state.previewURL) URL.revokeObjectURL(state.previewURL);
+		state.previewURL = URL.createObjectURL(file);
+
 		analyse();
+		state.step = STEP_REVIEW;
 	} catch (error) {
 		state.sheet = null;
 		state.segmentation = null;
 		state.plan = null;
+		state.detection = null;
 		setError(error?.message || 'That image could not be read.');
 	} finally {
 		state.busy = false;
 		redraw();
+		redrawFrame();
 	}
 }
 
@@ -385,6 +468,8 @@ function makeLayoutBlock() {
 		attributes: { rows: '6', spellcheck: 'false' },
 	});
 	textarea.value = layoutToText(state.layout);
+	if (state.nodes) state.nodes.layoutText = textarea;
+	else state.pendingLayoutText = textarea;
 	textarea.addEventListener('input', () => {
 		state.layout = parseLayout(textarea.value);
 		state.templateId = 'custom';
@@ -446,6 +531,177 @@ function makeOptions() {
 	return block;
 }
 
+/**
+ * Writes the current layout into the box on the layout step.
+ *
+ * Kept as a handle rather than rebuilt, because rebuilding the block would
+ * throw away whatever the user had typed into it.
+ */
+function syncLayoutText() {
+	if (state?.nodes?.layoutText) state.nodes.layoutText.value = layoutToText(state.layout);
+}
+
+/* --------------------------------------------------------
+	Moving between steps
+-------------------------------------------------------- */
+
+/**
+ * @param {String} step - one of STEP_SHEET, STEP_REVIEW, STEP_LAYOUT
+ */
+function goTo(step) {
+	if (!state) return;
+	state.step = step;
+	redraw();
+	redrawFrame();
+	// The body scrolls per step; arriving half way down the previous one reads
+	// as the dialog having ignored the move.
+	document.querySelector('.modal-dialog__body')?.scrollTo({ top: 0 });
+}
+
+/**
+ * The frame's own title and subtitle, which belong to the step rather than to
+ * the dialog. showModalDialog sets them once, so they are written here after.
+ */
+function redrawFrame() {
+	if (!state) return;
+	const step = STEPS[state.step];
+	const title = document.querySelector('.modal-dialog__title');
+	const subtitle = document.querySelector('.modal-dialog__subtitle');
+	if (title) title.textContent = step.title;
+	if (subtitle) subtitle.textContent = step.subtitle;
+}
+
+/**
+ * What the primary button does, which is not the same thing on every step.
+ */
+function onPrimary() {
+	if (state?.step === STEP_LAYOUT) goTo(STEP_REVIEW);
+	else doImport();
+}
+
+/**
+ * The three dots, so the wizard says how long it is.
+ * @returns {Element}
+ */
+function makeStepTrail() {
+	const trail = makeElement({ className: 'specimen__trail' });
+	/*
+		Two, not three. `layout` is a detour off the review rather than a stage
+		of the journey - counting it would tell everyone the wizard is three
+		steps long when almost nobody will see it.
+	*/
+	[STEP_SHEET, STEP_REVIEW].forEach((step, index) => {
+		const done = state.step === STEP_REVIEW && step === STEP_SHEET;
+		const here = state.step === step || (state.step === STEP_LAYOUT && step === STEP_REVIEW);
+		const dot = makeElement({
+			tag: 'span',
+			className: 'specimen__trail-step',
+			content: `${index + 1}. ${STEPS[step].title}`,
+		});
+		if (here) dot.setAttribute('here', '');
+		if (done) dot.setAttribute('done', '');
+		trail.appendChild(dot);
+	});
+	return trail;
+}
+
+/* --------------------------------------------------------
+	The sheet, and what we made of it
+-------------------------------------------------------- */
+
+/**
+ * The uploaded picture, with the rows we found drawn over it.
+ *
+ * Showing the sheet back is half of why this step exists: the user is being
+ * asked to confirm an interpretation, and they cannot do that against a list
+ * of characters alone. The bands are the other half - they say WHERE we think
+ * each row is, which is the thing that goes wrong on an unusual sheet, and
+ * they say it without a word of explanation.
+ *
+ * @returns {Element}
+ */
+function makeSheetPreview() {
+	const block = makeElement({ className: 'specimen__sheet' });
+	if (!state.previewURL || !state.sheet) return block;
+
+	const frame = makeElement({ className: 'specimen__sheet-frame' });
+	frame.appendChild(
+		makeElement({
+			tag: 'img',
+			className: 'specimen__sheet-image',
+			attributes: { src: state.previewURL, alt: 'The specimen sheet you chose' },
+		})
+	);
+
+	// Percentages, so the overlay follows the image at whatever size it is
+	// drawn - the frame is fluid and the sheet can be any proportion.
+	const rows = state.segmentation?.rows ?? [];
+	rows.forEach((row, index) => {
+		const top = (row.y0 / state.sheet.height) * 100;
+		const height = ((row.y1 - row.y0 + 1) / state.sheet.height) * 100;
+		const band = makeElement({
+			className: 'specimen__sheet-band',
+			style: `top: ${top.toFixed(2)}%; height: ${height.toFixed(2)}%;`,
+		});
+		band.appendChild(
+			makeElement({
+				tag: 'span',
+				className: 'specimen__sheet-band-label',
+				content: `${row.glyphs.length}`,
+			})
+		);
+		frame.appendChild(band);
+	});
+
+	block.appendChild(frame);
+	block.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'specimen__sheet-caption',
+			content: `${state.file?.name || 'Sheet'} — ${state.sheet.width} × ${state.sheet.height}, ${rows.length} row${rows.length === 1 ? '' : 's'}`,
+		})
+	);
+	return block;
+}
+
+/**
+ * What we worked out the sheet holds, and the way to disagree.
+ * @returns {Element}
+ */
+function makeDetectedBlock() {
+	const block = makeElement({ className: 'specimen__detected' });
+	const detection = state.detection;
+
+	const text = makeElement({ className: 'specimen__detected-text' });
+	text.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'specimen__detected-name',
+			content: detection?.status === DETECTED ? detection.template.name : 'We could not name this layout',
+		})
+	);
+	text.appendChild(
+		makeElement({
+			tag: 'span',
+			className: 'specimen__detected-note',
+			content: describeDetection(detection ?? { status: UNDETECTED }),
+		})
+	);
+	block.appendChild(text);
+
+	block.appendChild(
+		makeElement({
+			tag: 'button',
+			className: 'specimen__detected-change',
+			attributes: { type: 'button' },
+			content: detection?.status === DETECTED ? 'Not this?' : 'Tell us',
+			onClick: () => goTo(STEP_LAYOUT),
+		})
+	);
+
+	return block;
+}
+
 /* --------------------------------------------------------
 	Working it out
 -------------------------------------------------------- */
@@ -484,32 +740,50 @@ function analyse() {
 -------------------------------------------------------- */
 
 function redraw() {
-	const { results, importButton } = state.nodes;
+	const nodes = state.nodes;
+	const { results, primaryButton } = nodes;
+	const step = state.step;
+
+	// --- what belongs on this step -------------------------------
+	nodes.steps.textContent = '';
+	nodes.steps.appendChild(makeStepTrail());
+
+	const show = (element, visible) => element.toggleAttribute('hidden', !visible);
+	show(nodes.dropZone, step === STEP_SHEET);
+	show(nodes.info, step === STEP_SHEET);
+	show(nodes.sheetPreview, step === STEP_REVIEW);
+	show(nodes.detected, step === STEP_REVIEW);
+	show(nodes.optionsBlock, step === STEP_REVIEW);
+	show(nodes.results, step === STEP_REVIEW);
+	show(nodes.layoutBlock, step === STEP_LAYOUT);
+
+	// --- the layout detour ---------------------------------------
+	if (step === STEP_LAYOUT) {
+		primaryButton.removeAttribute('disabled');
+		primaryButton.innerHTML = 'Use this layout';
+		return;
+	}
+
+	// --- picking a sheet -----------------------------------------
 	results.textContent = '';
-
-	if (state.error) {
-		results.appendChild(
-			makeElement({ tag: 'span', className: 'specimen__error', content: state.error })
-		);
+	if (step === STEP_SHEET) {
+		primaryButton.setAttribute('disabled', '');
+		primaryButton.innerHTML = 'Import characters';
+		if (state.error) nodes.dropZone.after(makeErrorNote());
+		return;
 	}
 
-	if (state.busy) {
-		results.appendChild(
-			makeElement({ tag: 'span', className: 'specimen__status', content: 'Reading the sheet…' })
-		);
-	}
+	// --- reviewing what was found --------------------------------
+	nodes.sheetPreview.textContent = '';
+	nodes.sheetPreview.appendChild(makeSheetPreview());
+	nodes.detected.textContent = '';
+	nodes.detected.appendChild(makeDetectedBlock());
+
+	if (state.error) results.appendChild(makeErrorNote());
 
 	if (!state.plan || !state.assignment) {
-		importButton.setAttribute('disabled', '');
-		if (!state.busy && !state.error && !state.sheet) {
-			results.appendChild(
-				makeElement({
-					tag: 'span',
-					className: 'specimen__status',
-					content: 'No sheet yet. Drop one above to see what is on it.',
-				})
-			);
-		}
+		primaryButton.setAttribute('disabled', '');
+		primaryButton.innerHTML = 'Import characters';
 		return;
 	}
 
@@ -517,9 +791,16 @@ function redraw() {
 	state.assignment.rows.forEach((row) => results.appendChild(makeRow(row)));
 
 	const chosen = chosenCharacters();
-	if (chosen.length) importButton.removeAttribute('disabled');
-	else importButton.setAttribute('disabled', '');
-	importButton.innerHTML = `Import ${chosen.length} character${chosen.length === 1 ? '' : 's'}`;
+	if (chosen.length) primaryButton.removeAttribute('disabled');
+	else primaryButton.setAttribute('disabled', '');
+	primaryButton.innerHTML = `Import ${chosen.length} character${chosen.length === 1 ? '' : 's'}`;
+}
+
+/**
+ * @returns {Element}
+ */
+function makeErrorNote() {
+	return makeElement({ tag: 'span', className: 'specimen__error', content: state.error });
 }
 
 /**
