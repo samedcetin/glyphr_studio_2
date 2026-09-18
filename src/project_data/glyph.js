@@ -60,6 +60,7 @@ export class Glyph extends GlyphElement {
 		anchors = [],
 		leftSideBearingKey = '',
 		rightSideBearingKey = '',
+		fromSpecimenSheet = false,
 	} = {}) {
 		// log(`Glyph.constructor`, 'start');
 		super();
@@ -77,6 +78,14 @@ export class Glyph extends GlyphElement {
 		this.anchors = anchors;
 		this.leftSideBearingKey = leftSideBearingKey;
 		this.rightSideBearingKey = rightSideBearingKey;
+		/*
+			Set by the specimen sheet importer on the shapes it traced but could
+			not give a character to, and read by the Overview panel that offers
+			them for assignment. It has to come through the constructor or the
+			panel is empty on every reload and the shapes are orphaned in the
+			project with nothing on screen able to reach them.
+		*/
+		this.fromSpecimenSheet = fromSpecimenSheet;
 
 		// Changed state metadata
 		this.hasChangedThisSession = false;
@@ -139,6 +148,9 @@ export class Glyph extends GlyphElement {
 		// from it, so the key is the thing worth keeping.
 		if (this.leftSideBearingKey) re.leftSideBearingKey = this.leftSideBearingKey;
 		if (this.rightSideBearingKey) re.rightSideBearingKey = this.rightSideBearingKey;
+
+		// Only when true, so a project that never imported a sheet gains nothing.
+		if (this.fromSpecimenSheet) re.fromSpecimenSheet = true;
 
 		if (this.shapes && this.shapes.length) {
 			re.shapes = [];
