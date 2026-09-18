@@ -404,6 +404,13 @@
 	--dur-slow: 220ms;
 	--ease: cubic-bezier(0.2, 0, 0, 1);
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	/*
+		Constant rate. For something travelling ACROSS a surface - a sweep, a
+		wipe, an indeterminate bar - where the other two curves spend the
+		motion in the opening third and then hold, which reads as a stutter
+		rather than as travel. Not for anything that starts or stops in place.
+	*/
+	--ease-linear: linear;
 
 	--transition-color: color var(--dur-fast) var(--ease),
 		background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),

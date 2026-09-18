@@ -25,10 +25,24 @@
 let pending = null;
 
 /** Between one tile starting and the next. */
-const STEP_MS = 16;
+const STEP_MS = 26;
 
-/** However many arrive, the whole run is over inside this. */
-const MAX_RUN_MS = 900;
+/**
+ * However many arrive, the whole run is over inside this.
+ *
+ * Long enough that sixty-two characters read as arriving in order rather than
+ * together - at the 900ms this started on, the stagger was 14ms and the run
+ * looked simultaneous - and short enough that the page is usable before anyone
+ * would think to reach for it.
+ */
+const MAX_RUN_MS = 1400;
+
+/*
+	How long after its own delay a tile is considered settled. Comfortably past
+	--dur-slow, because this only has to be late enough to be certain - nothing
+	is waiting on it, it just takes the attribute back off.
+*/
+const SETTLE_MS = 900;
 
 /**
  * Says what just landed, for the next Overview to play.
@@ -70,16 +84,30 @@ export function playArrival(root) {
 	const step = Math.min(STEP_MS, MAX_RUN_MS / tiles.length);
 
 	tiles.forEach((tile, index) => {
-		tile.style.setProperty('--arrival-delay', `${Math.round(index * step)}ms`);
+		const delay = Math.round(index * step);
+		tile.style.setProperty('--arrival-delay', `${delay}ms`);
 		tile.setAttribute('arriving', '');
-		tile.addEventListener(
-			'animationend',
-			() => {
-				tile.removeAttribute('arriving');
-				tile.style.removeProperty('--arrival-delay');
-			},
-			{ once: true }
-		);
+
+		const done = () => {
+			tile.removeAttribute('arriving');
+			tile.style.removeProperty('--arrival-delay');
+		};
+
+		/*
+			Listened for INSIDE the shadow root, because that is where the
+			animation runs - the glyph moves and the tile does not. An
+			animationend bound to the host never fired, and the attribute it
+			was meant to clear stayed on all sixty-two tiles, which is exactly
+			the state that makes the next rebuild replay the whole run.
+
+			The timer is not a belt to that brace, it is the brace: a tile
+			whose thumbnail has not rendered yet has nothing to listen to, and
+			an animation the browser never starts fires no event at all.
+		*/
+		tile.shadowRoot?.querySelector('.thumbnail svg')?.addEventListener('animationend', done, {
+			once: true,
+		});
+		window.setTimeout(done, delay + SETTLE_MS);
 	});
 
 	return tiles.length;

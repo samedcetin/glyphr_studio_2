@@ -85,6 +85,91 @@
 	color: var(--canvas-ink);
 }
 
+/*
+	A CHARACTER ARRIVING
+
+	Set from outside - arrival.js marks the tiles a specimen sheet just filled,
+	with a per-tile delay so they come in in reading order. The animation has
+	to live here because the thing that moves is inside this shadow root.
+
+	The TILE DOES NOT MOVE. Its ground, its border and its caption stay exactly
+	where they are and only the glyph appears in the box - so sixty of them
+	arriving reads as a page filling up rather than as a grid shivering. The
+	first attempt animated the whole tile and looked like the latter.
+
+	THREE THINGS AT ONCE, and none of them is a fade.
+
+	A DIAGONAL SWEEP. The glyph is masked by a soft-edged gradient that travels
+	across it, so the letter resolves along a line rather than appearing all at
+	once. The mask is far wider than the box and only its position moves, which
+	is why this costs the same on a `W` as on an `i` and needs no measuring of
+	either - and why it has to travel at a constant rate, which is the one
+	thing neither of the shipped easings does.
+
+	A BLOOM THAT FOLLOWS THE LETTER. drop-shadow reads the alpha of what it is
+	filtering, so the glow is the shape of the glyph rather than a rectangle
+	behind it - it swells as the sweep passes and is gone by the end. That is
+	the whole sparkle, and it is why it is a filter and not a shine laid over
+	the tile: a highlight on the box would say the box was doing something.
+
+	AND A BLUR CLEARING, out of which the letter settles - scaled from its foot
+	rather than its middle, which is the direction a letter is written in.
+*/
+:host([arriving]) .thumbnail svg {
+	transform-origin: bottom center;
+	/*
+		currentColor rather than a literal: a mask reads alpha, the svg's own
+		colour is opaque, and the stylesheet stays free of colour values.
+	*/
+	mask-image: linear-gradient(100deg, currentColor 0 44%, transparent 64%);
+	/*
+		Three times the box, so that BOTH ends of the sweep still sit over the
+		glyph. Past 100% the image is beside the box rather than on it, and a
+		no-repeat mask covers nothing there - which is how the first version of
+		this ended by hiding the letter it had just revealed, then popped it
+		back when the attribute came off. Both keyframe positions are inside
+		0-100% and were checked against a real tile at each end.
+	*/
+	mask-size: 300% 100%;
+	mask-repeat: no-repeat;
+	/*
+		Twice the slowest token, because a sweep has to be seen travelling: at
+		--dur-slow alone the mask crosses the glyph in a snap and the blur never
+		reads. Composed from the token rather than written out, so reduced
+		motion - which zeroes the token - still zeroes this.
+
+		--ease-linear because a CSS animation eases each keyframe SEGMENT, not
+		the run: under --ease-out every segment spent itself in its first third
+		and then held, so the sweep arrived as two jumps and a wait. At a
+		constant rate the offsets below are real time, which is what lets the
+		bloom be placed where the sweep actually is.
+	*/
+	animation: calc(var(--dur-slow) * 2) var(--ease-linear) var(--arrival-delay, 0s) both
+		glyph-arriving;
+}
+
+@keyframes glyph-arriving {
+	0% {
+		opacity: 0;
+		transform: scale(0.96);
+		filter: blur(5px) drop-shadow(0 0 0 transparent);
+		mask-position: 100% 0;
+	}
+
+	/* Where the sweep is a third of the way across, so the bloom rides it. */
+	35% {
+		opacity: 1;
+		filter: blur(2px) drop-shadow(0 0 6px var(--accent));
+	}
+
+	100% {
+		opacity: 1;
+		transform: scale(1);
+		filter: blur(0) drop-shadow(0 0 0 transparent);
+		mask-position: 0% 0;
+	}
+}
+
 .whitespace-char-thumbnail {
 	font-size: 12px;
 	line-height: 10px;
