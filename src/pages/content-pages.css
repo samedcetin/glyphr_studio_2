@@ -1233,6 +1233,18 @@ glyph-tile[sheet-shape-target] {
 }
 
 /*
+	The character under the pointer is already drawn. Same ring, warning
+	colour: the drop is allowed and is now recoverable - what is there goes
+	back to the loose panel - but it is worth saying before the mouse comes up
+	rather than in a toast afterwards, because "I dropped it on the wrong one"
+	is how this gets reported.
+*/
+glyph-tile[sheet-shape-target='replace'] {
+	outline-color: var(--warn);
+	background-color: var(--warn-bg);
+}
+
+/*
 	Name on the left, number on the right, in the app's tabular figures - so
 	the four of them read as a column of numbers rather than four sentences.
 */

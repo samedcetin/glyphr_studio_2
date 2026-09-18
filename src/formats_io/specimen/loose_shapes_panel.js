@@ -15,7 +15,11 @@
 import { makeElement } from '../../common/dom.js';
 import { Glyph } from '../../project_data/glyph.js';
 import { getCurrentProjectEditor } from '../../app/main.js';
-import { showModalDialog, closeEveryTypeOfDialog, showToast } from '../../controls/dialogs/dialogs.js';
+import {
+	showModalDialog,
+	closeEveryTypeOfDialog,
+	showToast,
+} from '../../controls/dialogs/dialogs.js';
 import { makeAllItemTypeChooserContent } from '../../panels/item_chooser.js';
 import { getUnicodeName } from '../../lib/unicode/unicode_names.js';
 import { looseSheetShapes } from './leftovers.js';
@@ -36,7 +40,11 @@ export function makeLooseShapesCard() {
 
 	const card = makeElement({ className: 'studio-card overview__loose' });
 	card.appendChild(
-		makeElement({ tag: 'h2', className: 'studio-card__title', content: 'Shapes without a character' })
+		makeElement({
+			tag: 'h2',
+			className: 'studio-card__title',
+			content: 'Shapes without a character',
+		})
 	);
 	card.appendChild(
 		makeElement({
@@ -124,6 +132,22 @@ function clearDropTarget() {
 }
 
 /**
+ * Whether the character a tile stands for already holds an outline.
+ *
+ * getItem WITHOUT forceCreateItem, so hovering over an undrawn character
+ * does not quietly bring it into existence - and it returns false rather
+ * than throwing for a character the project has never had.
+ *
+ * @param {Element} tile - a glyph-tile
+ * @returns {Boolean}
+ */
+function alreadyDrawn(tile) {
+	const itemID = tile.getAttribute('displayed-item-id');
+	if (!itemID) return false;
+	return Boolean(getCurrentProjectEditor()?.project?.getItem(itemID)?.shapes?.length);
+}
+
+/**
  * Lets a loose shape be dropped onto any character in a grid.
  *
  * Delegated to the container rather than bound per tile: the grid rebuilds
@@ -151,7 +175,18 @@ export function enableShapeDropTargets(root) {
 		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
 		if (tile !== markedTile) {
 			clearDropTarget();
-			tile.setAttribute('sheet-shape-target', '');
+			/*
+				"replace" when the character under the pointer is already drawn,
+				so the ring can warn instead of invite. Dropping on an occupied
+				character is recoverable now - what was there goes back to the
+				panel - but it is still not what the user meant, and the moment
+				to say so is before the mouse comes up rather than in a toast
+				afterwards.
+
+				Only recomputed when the tile changes, which the guard above
+				already gives us: dragover fires continuously.
+			*/
+			tile.setAttribute('sheet-shape-target', alreadyDrawn(tile) ? 'replace' : '');
 			markedTile = tile;
 		}
 	});
@@ -269,8 +304,55 @@ function restoreScroll(saved) {
  * @returns {String} the name, or an empty string when there is not one
  */
 function unicodeNameFor(itemID) {
-	const name = getUnicodeName(String(itemID).replace(/^glyph-/, ""));
-	return !name || name.startsWith("[") ? "" : name;
+	const name = getUnicodeName(String(itemID).replace(/^glyph-/, ''));
+	return !name || name.startsWith('[') ? '' : name;
+}
+
+/**
+ * Puts whatever the character was already holding back in the panel.
+ *
+ * Assigning is a SWAP, not an overwrite. Before this, dropping a shape on a
+ * character that was already drawn simply replaced it: the old outline was
+ * gone from the grid and did not appear in the loose panel either, so a
+ * mis-drop onto an occupied character destroyed work with nothing on screen
+ * to say so. Undo covered it in principle and not in practice - the Overview
+ * is not an edit canvas, and that is where the keyboard shortcut is bound.
+ *
+ * What comes back is a component like any other leftover, so it lands in this
+ * same panel and can be dropped somewhere else. It carries fromSpecimenSheet
+ * because that flag is what the panel filters on - the flag means "belongs in
+ * the loose panel", and a shape this workflow has just displaced does.
+ *
+ * @param {Object} project
+ * @param {Object} target - the character about to be written over
+ * @param {String} targetName - what to call it in the panel
+ * @returns {Object|null} the component it became, or null when the character
+ *   was empty and there was nothing to keep
+ *
+ * Exported for the suite. The guarantee it makes - that the outlines survive
+ * the overwrite that happens on the next line - is the whole point of the
+ * function and is the kind of thing that breaks silently, so it is worth a
+ * test even though the rest of this module is too DOM-bound to have one.
+ */
+export function keepWhatWasThere(project, target, targetName) {
+	/*
+		Read BEFORE the caller overwrites. The shapes setter assigns a fresh
+		array to _shapes rather than emptying the old one, so this reference
+		still holds the outlines after the character has been written over -
+		but only if it was taken first.
+	*/
+	const existing = target?.shapes;
+	if (!existing?.length) return null;
+
+	const kept = new Glyph({});
+	kept.shapes = existing;
+	if (target.advanceWidth) kept.advanceWidth = target.advanceWidth;
+	kept.name = `${targetName} (replaced)`;
+	kept.fromSpecimenSheet = true;
+
+	// No id: the project numbers components itself, and Component is the one
+	// type addItemByType adds without touching a range count or the history.
+	return project.addItemByType(kept, 'Component');
 }
 
 /**
@@ -311,13 +393,21 @@ function assignShapeToItem(id, itemID) {
 		up reading worse than the id it replaced.
 	*/
 	const targetName = target?.name || unicodeNameFor(itemID) || itemID;
-	editor.history.addWholeProjectChangePreState(`Assign a traced shape to ${targetName}`);
+	const wasDrawn = Boolean(target?.shapes?.length);
+	editor.history.addWholeProjectChangePreState(
+		wasDrawn
+			? `Replace ${targetName} with a traced shape`
+			: `Assign a traced shape to ${targetName}`
+	);
 
 	if (!target) target = project.addItemByType(new Glyph({ id: itemID }), 'Glyph', itemID);
 	if (!target) {
 		showToast('That character could not be created.', 3000, false, 'bottom');
 		return;
 	}
+
+	// Whatever is there now goes back to the panel rather than being lost.
+	const displaced = keepWhatWasThere(project, target, targetName);
 
 	target.shapes = component.shapes;
 	if (component.advanceWidth) target.advanceWidth = component.advanceWidth;
@@ -333,5 +423,12 @@ function assignShapeToItem(id, itemID) {
 	restoreScroll(scroll);
 	// Bottom: the panel this was dragged from is low on the right, and a
 	// notice at the top of the window is outside where the eye already is.
-	showToast(`Assigned to ${targetName}`, 3000, false, 'bottom');
+	showToast(
+		displaced
+			? `Assigned to ${targetName}. The old shape is back in the panel.`
+			: `Assigned to ${targetName}`,
+		3000,
+		false,
+		'bottom'
+	);
 }
