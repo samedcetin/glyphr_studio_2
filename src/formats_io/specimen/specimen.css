@@ -135,13 +135,25 @@
 	height: auto;
 }
 
+/*
+	A band is a SELECTION OVER ARTWORK, not a filled surface, so it takes the
+	canvas selection pair rather than --bg-selected.
+
+	--bg-selected is translucent in the dark theme and OPAQUE in the light one
+	(--a-05, a solid near-white blue), which is legitimate for the row and tile
+	highlights it was made for and fatal here: in the light theme the six bands
+	painted over the whole sheet, and all the user could see of the font they
+	had just uploaded was the slivers of ascender between one band and the next.
+	--canvas-selection-fill is translucent in both, which is the whole point of
+	a token named for being drawn on top of something.
+*/
 .specimen__sheet-band {
 	position: absolute;
 	left: 0;
 	right: 0;
-	border-top: 1px solid var(--accent);
-	border-bottom: 1px solid var(--accent);
-	background-color: var(--bg-selected);
+	border-top: 1px solid var(--canvas-selection);
+	border-bottom: 1px solid var(--canvas-selection);
+	background-color: var(--canvas-selection-fill);
 	pointer-events: none;
 }
 
