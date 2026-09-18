@@ -1188,6 +1188,43 @@ code {
 	color: var(--text-accent);
 }
 
+/* --------------------------------------------------------------
+	Dragging one onto a character
+
+	Dragging is the second way in and never the only one - it cannot be done
+	from a keyboard - so the tile stays a button that opens the same chooser.
+	What the cursor says has to match: grab when it can be picked up, grabbing
+	while it is held.
+	------------------------------------------------------------ */
+
+.overview__loose-tile[draggable='true'] {
+	cursor: grab;
+}
+
+.overview__loose-tile[draggable='true']:active {
+	cursor: grabbing;
+}
+
+/*
+	While a shape is in the air, every character is a place it could land. The
+	whole grid lifts a little so the answer to "where do I drop this" is the
+	page rather than a tooltip.
+*/
+body[dragging-sheet-shape] .overview__coverage {
+	border-color: var(--border-strong);
+}
+
+body[dragging-sheet-shape] glyph-tile {
+	cursor: copy;
+}
+
+glyph-tile[sheet-shape-target] {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+}
+
 /*
 	Name on the left, number on the right, in the app's tabular figures - so
 	the four of them read as a column of numbers rather than four sentences.

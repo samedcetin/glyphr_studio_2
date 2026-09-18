@@ -17,6 +17,7 @@ import { Glyph } from '../../project_data/glyph.js';
 import { getCurrentProjectEditor } from '../../app/main.js';
 import { showModalDialog, closeEveryTypeOfDialog, showToast } from '../../controls/dialogs/dialogs.js';
 import { makeAllItemTypeChooserContent } from '../../panels/item_chooser.js';
+import { getUnicodeName } from '../../lib/unicode/unicode_names.js';
 import { looseSheetShapes } from './leftovers.js';
 
 /**
@@ -64,8 +65,31 @@ function makeLooseTile(id, component) {
 	const tile = makeElement({
 		tag: 'button',
 		className: 'overview__loose-tile',
-		attributes: { type: 'button', title: `Give ${component.name || 'this shape'} a character` },
+		attributes: {
+			type: 'button',
+			draggable: 'true',
+			title: `Drag ${component.name || 'this shape'} onto a character, or press to pick one`,
+		},
 		onClick: () => chooseCharacterFor(id, component),
+	});
+
+	/*
+		Dragging is the second way, never the only one. It cannot be done from a
+		keyboard, so the tile stays a button that opens the same chooser - and
+		the two end in the same function, so they cannot drift apart.
+	*/
+	tile.addEventListener('dragstart', (event) => {
+		dragging = id;
+		event.dataTransfer?.setData(DRAG_TYPE, id);
+		event.dataTransfer?.setData('text/plain', component.name || id);
+		if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+		document.body.setAttribute('dragging-sheet-shape', '');
+	});
+
+	tile.addEventListener('dragend', () => {
+		dragging = null;
+		document.body.removeAttribute('dragging-sheet-shape');
+		clearDropTarget();
 	});
 
 	tile.appendChild(makeShapeThumbnail(component));
@@ -73,6 +97,82 @@ function makeLooseTile(id, component) {
 		makeElement({ tag: 'span', className: 'overview__loose-label', content: 'Assign' })
 	);
 	return tile;
+}
+
+/* --------------------------------------------------------
+	Dropping one on a character
+-------------------------------------------------------- */
+
+/** What the drag carries. A private type, so nothing else answers to it. */
+const DRAG_TYPE = 'application/x-glyva-sheet-shape';
+
+/**
+ * The component being dragged.
+ *
+ * Kept here rather than read back off the event, because `getData` is only
+ * readable on drop - during dragover the payload is deliberately unreadable,
+ * and dragover is where a target has to decide whether it wants it.
+ */
+let dragging = null;
+
+/** The tile currently under the pointer, so it can be un-marked. */
+let markedTile = null;
+
+function clearDropTarget() {
+	markedTile?.removeAttribute('sheet-shape-target');
+	markedTile = null;
+}
+
+/**
+ * Lets a loose shape be dropped onto any character in a grid.
+ *
+ * Delegated to the container rather than bound per tile: the grid rebuilds
+ * itself whenever the range or the search changes, and per-tile listeners
+ * would go with it.
+ *
+ * @param {Element} root - a container holding glyph-tile elements
+ */
+export function enableShapeDropTargets(root) {
+	if (!root) return;
+
+	const tileUnder = (event) => {
+		const target = event.target;
+		if (!(target instanceof Element)) return null;
+		// Events from inside a glyph-tile are retargeted to the host, so this
+		// finds the tile whether the pointer is over its canvas or its caption.
+		return target.closest('glyph-tile[displayed-item-id]');
+	};
+
+	root.addEventListener('dragover', (event) => {
+		if (!dragging) return;
+		const tile = tileUnder(event);
+		if (!tile) return;
+		event.preventDefault();
+		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+		if (tile !== markedTile) {
+			clearDropTarget();
+			tile.setAttribute('sheet-shape-target', '');
+			markedTile = tile;
+		}
+	});
+
+	root.addEventListener('dragleave', (event) => {
+		const tile = tileUnder(event);
+		if (tile && tile === markedTile) clearDropTarget();
+	});
+
+	root.addEventListener('drop', (event) => {
+		if (!dragging) return;
+		const tile = tileUnder(event);
+		if (!tile) return;
+		event.preventDefault();
+		const itemID = tile.getAttribute('displayed-item-id');
+		const id = dragging;
+		dragging = null;
+		document.body.removeAttribute('dragging-sheet-shape');
+		clearDropTarget();
+		if (itemID) assignShapeToItem(id, itemID);
+	});
 }
 
 /**
@@ -110,7 +210,7 @@ function chooseCharacterFor(id, component) {
 	const editor = getCurrentProjectEditor();
 
 	const content = makeAllItemTypeChooserContent(
-		(itemID) => assignShapeToItem(id, component, itemID),
+		(itemID) => assignShapeToItem(id, itemID),
 		'Characters',
 		editor,
 		{ tileSize: 'large', countPlacement: 'inside' }
@@ -123,6 +223,16 @@ function chooseCharacterFor(id, component) {
 }
 
 /**
+ * The readable name of a character, from a project item id.
+ * @param {String} itemID - such as glyph-0x21
+ * @returns {String} the name, or an empty string when there is not one
+ */
+function unicodeNameFor(itemID) {
+	const name = getUnicodeName(String(itemID).replace(/^glyph-/, ""));
+	return !name || name.startsWith("[") ? "" : name;
+}
+
+/**
  * Moves a loose shape into a character.
  *
  * The shape BECOMES the character rather than being placed in it as a
@@ -131,12 +241,14 @@ function chooseCharacterFor(id, component) {
  * the project as a second thing to understand.
  *
  * @param {String} id - the component id
- * @param {Object} component
  * @param {String} itemID - the glyph to become
  */
-function assignShapeToItem(id, component, itemID) {
+function assignShapeToItem(id, itemID) {
 	const editor = getCurrentProjectEditor();
 	const project = editor.project;
+	// Looked up rather than passed in: a drop carries an id and nothing else.
+	const component = project.components?.[id];
+	if (!component) return;
 
 	/*
 		Asked WITHOUT forceCreateItem on purpose. That flag makes getItem call
@@ -147,9 +259,18 @@ function assignShapeToItem(id, component, itemID) {
 	*/
 	let target = project.getItem(itemID);
 
-	editor.history.addWholeProjectChangePreState(
-		`Assign a traced shape to ${target?.name || itemID}`
-	);
+	/*
+		Named from the id rather than from the item, because the item may not
+		exist yet - and a history entry reading "glyph-0x21" is a worse answer
+		to "what did I just do" than "Exclamation Mark".
+
+		getUnicodeName wants a bare code point, and returns the string
+		"[name not found]" rather than nothing when it cannot place one - so
+		both the prefix and that sentinel have to be handled, or the entry ends
+		up reading worse than the id it replaced.
+	*/
+	const targetName = target?.name || unicodeNameFor(itemID) || itemID;
+	editor.history.addWholeProjectChangePreState(`Assign a traced shape to ${targetName}`);
 
 	if (!target) target = project.addItemByType(new Glyph({ id: itemID }), 'Glyph', itemID);
 	if (!target) {
@@ -166,5 +287,5 @@ function assignShapeToItem(id, component, itemID) {
 
 	closeEveryTypeOfDialog();
 	editor.navigate();
-	showToast(`Assigned to ${target.name || itemID}`);
+	showToast(`Assigned to ${targetName}`);
 }

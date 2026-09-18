@@ -1,5 +1,8 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
-import { makeLooseShapesCard } from '../formats_io/specimen/loose_shapes_panel.js';
+import {
+	enableShapeDropTargets,
+	makeLooseShapesCard,
+} from '../formats_io/specimen/loose_shapes_panel.js';
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
 import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
@@ -386,6 +389,9 @@ function makeCoverageCard() {
 		editor,
 		{ tileSize: 'large', filters: 'menu' }
 	);
+
+	// A loose shape from a sheet can be dropped straight onto a character here.
+	enableShapeDropTargets(chooser);
 
 	const header = chooser.querySelector('.item-chooser__header');
 	if (header) {
