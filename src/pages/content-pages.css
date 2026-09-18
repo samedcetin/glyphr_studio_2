@@ -1044,6 +1044,99 @@ code {
 	align-content: start;
 }
 
+/* --------------------------------------------------------------
+	Shapes without a character
+
+	The right column holds two cards once a sheet has left something loose, so
+	the coverage card spans both rows rather than the grid growing a second
+	row under it with an empty cell in column one. It already scrolls inside
+	itself, so being taller costs it nothing.
+	------------------------------------------------------------ */
+
+.overview__loose {
+	grid-column: 2;
+	display: grid;
+	gap: var(--sp-5);
+	align-content: start;
+}
+
+.overview__columns:has(.overview__loose) .overview__coverage {
+	grid-row: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+	.overview__loose {
+		grid-column: 1;
+	}
+
+	.overview__columns:has(.overview__loose) .overview__coverage {
+		grid-row: auto;
+	}
+}
+
+.overview__loose-note {
+	font-size: var(--fs-sm);
+	line-height: var(--lh-normal);
+	color: var(--text-secondary);
+	text-wrap: pretty;
+}
+
+.overview__loose-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+	gap: var(--sp-3);
+}
+
+.overview__loose-tile {
+	display: grid;
+	grid-template-rows: 44px min-content;
+	justify-items: center;
+	gap: var(--sp-2);
+	padding: var(--sp-3) var(--sp-2);
+	margin: 0;
+	background-color: var(--bg-surface-sunken);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--r-md);
+	corner-shape: var(--corner-smooth);
+	color: var(--text-primary);
+	font-family: inherit;
+	cursor: pointer;
+	transition: var(--transition-color);
+}
+
+.overview__loose-tile:hover {
+	border-color: var(--accent);
+	background-color: var(--bg-hover);
+}
+
+.overview__loose-tile:focus-visible {
+	outline: var(--focus-style);
+	outline-offset: var(--focus-offset);
+}
+
+.overview__loose-thumb {
+	display: block;
+	width: 100%;
+	height: 100%;
+	color: var(--text-primary);
+}
+
+.overview__loose-thumb svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.overview__loose-label {
+	font-size: var(--fs-2xs);
+	line-height: var(--lh-tight);
+	color: var(--text-secondary);
+}
+
+.overview__loose-tile:hover .overview__loose-label {
+	color: var(--text-accent);
+}
+
 /*
 	Name on the left, number on the right, in the app's tabular figures - so
 	the four of them read as a column of numbers rather than four sentences.

@@ -1,4 +1,5 @@
 import { getCurrentProject, getCurrentProjectEditor } from '../app/main.js';
+import { makeLooseShapesCard } from '../formats_io/specimen/loose_shapes_panel.js';
 import { makeElement } from '../common/dom.js';
 import { makeLineIcon } from '../common/icons.js';
 import { makeFancySlider } from '../controls/fancy-slider/fancy_slider.js';
@@ -62,6 +63,9 @@ export function makePage_Overview() {
 	const columns = makeElement({ className: 'overview__columns' });
 	columns.appendChild(makeCoverageCard());
 	columns.appendChild(makeSnapshotCard());
+	// Only when a sheet has left something behind - see makeLooseShapesCard.
+	const looseShapes = makeLooseShapesCard();
+	if (looseShapes) columns.appendChild(looseShapes);
 	page.appendChild(columns);
 
 	/*

@@ -110,6 +110,19 @@ export function reversePath(beziers) {
  */
 export function traceCellToFontSpace(crop, placement) {
 	const { baseline, unitsPerPixel, sidebearing, tolerance = 0.4, snap = null, fit = null } = placement;
+
+	/*
+		A non-finite baseline or scale is refused rather than traced.
+
+		NaN does not fail loudly here. It propagates into every coordinate, and
+		the curve fitter compares against it - every comparison false - so it
+		splits and splits until the recursion guard catches it, for every
+		contour of every glyph. The tab stops responding, which is a far worse
+		way to learn that a row had no baseline than an empty result.
+	*/
+	if (!Number.isFinite(baseline) || !Number.isFinite(unitsPerPixel) || unitsPerPixel <= 0) {
+		return { bezierData: [], advanceWidth: 0, contours: 0, nodes: 0, moved: 0, scaled: 1 };
+	}
 	const nested = nestContours(traceContours(crop.field, crop.width, crop.height));
 
 	const fitted = nested

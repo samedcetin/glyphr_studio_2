@@ -216,6 +216,20 @@ describe('measureRow', () => {
 		expect(Number.isFinite(measured.baseline)).toBe(true);
 	});
 
+	it('still places a row the layout declares nothing for', () => {
+		// A NaN baseline does not fail loudly - it reaches the curve fitter,
+		// whose every comparison against it is false, and the fitter splits
+		// until its recursion guard stops it, for every contour on the sheet.
+		// Measured once: the tab stopped responding.
+		const measured = measureRow([
+			{ character: null, cell: cell(0, 100, 50, 400) },
+			{ character: null, cell: cell(60, 110, 110, 398) },
+			{ character: null, cell: cell(120, 105, 170, 402) },
+		]);
+		expect(Number.isFinite(measured.baseline)).toBe(true);
+		expect(measured.confident).toBe(false);
+	});
+
 	it('finds the cap line from flat-topped capitals', () => {
 		const measured = measureRow([at('H', 100, 400), at('B', 102, 400), at('E', 98, 400)]);
 		expect(measured.capTop).toBeCloseTo(100, 0);
@@ -388,6 +402,14 @@ describe('traceCellToFontSpace', () => {
 			return Math.max(...ys) - Math.min(...ys);
 		};
 		expect(width(sized) / width(plain)).toBeCloseTo(heights(sized) / heights(plain), 3);
+	});
+
+	it('refuses a baseline or a scale that is not a number', () => {
+		for (const broken of [{ baseline: NaN }, { unitsPerPixel: NaN }, { unitsPerPixel: 0 }]) {
+			const result = traceCellToFontSpace(ring(), { ...placement, ...broken });
+			expect(result.bezierData).toEqual([]);
+			expect(result.contours).toBe(0);
+		}
 	});
 
 	it('gives an empty crop nothing rather than guessing', () => {

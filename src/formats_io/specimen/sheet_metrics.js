@@ -91,7 +91,19 @@ export function measureRow(cells) {
 		// round digits. The flat ones are still the HIGHEST bottoms among
 		// everything that does not descend, so a low quantile finds them.
 		const bottoms = bottomsOf((c) => !DESCENDER.has(c));
-		baseline = bottoms.length ? quantile(bottoms, 0.25) : NaN;
+		/*
+			And when the layout declares nothing at all for this row, there are
+			no characters to ask - but there are still shapes, and they still
+			have to be placed. Every cell's bottom, at the same low quantile.
+
+			Without this the row's baseline came back NaN, and a NaN baseline
+			does not fail loudly: it propagates into every traced coordinate,
+			and the curve fitter - whose every comparison against NaN is false -
+			splits and splits until the recursion guard stops it, tens of
+			thousands of times over. The tab stops responding.
+		*/
+		const anyBottom = known.length ? bottoms : cells.map((entry) => entry.cell.y1);
+		baseline = anyBottom.length ? quantile(anyBottom, 0.25) : NaN;
 		confident = false;
 	}
 

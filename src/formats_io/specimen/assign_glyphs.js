@@ -144,6 +144,29 @@ export function acceptedAssignments(assignment, includeReviewed = false) {
 }
 
 /**
+ * The shapes the layout had no character for.
+ *
+ * These used to be dropped on the floor - not merely left unassigned but never
+ * traced at all, since planning walked only the cells that had a character. On
+ * the reference sheet that silently discarded the whole punctuation row: the
+ * user could see twenty-six shapes in the review and end up with none of them,
+ * with nothing left afterwards to say what had been lost.
+ *
+ * @param {Object} assignment - from assignGlyphs
+ * @returns {Array} { cell, row, position }
+ */
+export function unassignedCells(assignment) {
+	const out = [];
+	assignment.rows.forEach((row) => {
+		row.cells.forEach((entry, position) => {
+			if (entry.character) return;
+			out.push({ cell: entry.cell, row: row.index, position });
+		});
+	});
+	return out;
+}
+
+/**
  * A one-line description of what the sheet turned out to hold, for the dialog.
  * @param {Object} assignment - from assignGlyphs
  * @returns {String}
