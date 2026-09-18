@@ -26,25 +26,29 @@
 */
 
 import { addAsChildren, makeElement } from '../../common/dom.js';
-import { closeEveryTypeOfDialog, showModalDialog, showToast } from '../../controls/dialogs/dialogs.js';
+import {
+	closeEveryTypeOfDialog,
+	showModalDialog,
+	showToast,
+} from '../../controls/dialogs/dialogs.js';
 import { getCurrentProject, getCurrentProjectEditor } from '../../app/main.js';
 import { makeInkMask } from './binarize.js';
+import { describeReading, makePreviewPlane } from './sheet_preview.js';
 import { segmentSheet } from './segment_sheet.js';
 import { LAYOUT_TEMPLATES, layoutToText, parseLayout } from './layout_templates.js';
-import {
-	ROW_CHECK,
-	ROW_COUNT_MISMATCH,
-	ROW_UNDECLARED,
-	assignGlyphs,
-} from './assign_glyphs.js';
+import { ROW_CHECK, ROW_COUNT_MISMATCH, ROW_UNDECLARED, assignGlyphs } from './assign_glyphs.js';
 import { measureBaselineWander, measureSheet } from './sheet_metrics.js';
 import { canImportWithoutReview, describePlan, importSheet, planImport } from './import_sheet.js';
 import { ACCEPTED_TYPES, imageFromTransfer, readSheetImage } from './read_image.js';
 import { DETECTED, UNDETECTED, describeDetection, detectLayout } from './detect_layout.js';
 import { announceArrival, cancelArrival } from './arrival.js';
+import { getCanvasColors, onThemeChange } from '../../common/theme.js';
 
 /** Everything this dialog knows, in one place so the redraws stay honest. */
 let state = null;
+
+/** Releases the sheet preview's theme subscription. Never more than one. */
+let stopThemeWatch = null;
 
 /** Pick a sheet. Nothing else is on screen. */
 const STEP_SHEET = 'sheet';
@@ -55,8 +59,14 @@ const STEP_LAYOUT = 'layout';
 
 /** What each step is called, and what it is for. */
 const STEPS = {
-	[STEP_SHEET]: { title: 'Choose a sheet', subtitle: 'A picture of a character set, traced into outlines.' },
-	[STEP_REVIEW]: { title: 'Check the characters', subtitle: 'What we found on your sheet, before anything is written.' },
+	[STEP_SHEET]: {
+		title: 'Choose a sheet',
+		subtitle: 'A picture of a character set, traced into outlines.',
+	},
+	[STEP_REVIEW]: {
+		title: 'Check the characters',
+		subtitle: 'What we found on your sheet, before anything is written.',
+	},
 	[STEP_LAYOUT]: { title: 'What is on the sheet', subtitle: 'One row per line, in reading order.' },
 };
 
@@ -111,7 +121,7 @@ export function showSpecimenSheetDialog(options = {}) {
 		*/
 		step: STEP_SHEET,
 		detection: null,
-		previewURL: '',
+		preview: null,
 		file: null,
 		sheet: null,
 		segmentation: null,
@@ -249,7 +259,7 @@ function tryClose(force = false) {
 		askBeforeClosing();
 		return;
 	}
-	if (state?.previewURL) URL.revokeObjectURL(state.previewURL);
+	stopWatchingTheme();
 	cancelArrival();
 	state = null;
 	closeEveryTypeOfDialog();
@@ -395,7 +405,16 @@ async function loadSheet(file) {
 			height,
 			threshold: mask.threshold,
 			inverted: mask.inverted,
+			alphaIsInk: mask.alphaIsInk,
 		};
+
+		/*
+			Built once, here, rather than in the view. redraw() runs on every
+			checkbox in the review, and box-filtering a 4K sheet down is
+			sixteen million reads - fine once while the user is already
+			waiting on the trace, far too much to repeat on a click.
+		*/
+		state.preview = makePreviewPlane(state.sheet);
 		state.segmentation = segmentSheet(mask.ink, width, height);
 
 		/*
@@ -407,10 +426,6 @@ async function loadSheet(file) {
 		state.detection = detectLayout(state.segmentation);
 		if (state.detection.status === DETECTED) state.layout = state.detection.layout;
 		syncLayoutText();
-
-		// The sheet itself, shown back on the next step.
-		if (state.previewURL) URL.revokeObjectURL(state.previewURL);
-		state.previewURL = URL.createObjectURL(file);
 
 		analyse();
 		state.step = STEP_REVIEW;
@@ -431,6 +446,7 @@ async function loadSheet(file) {
 		}
 	} catch (error) {
 		state.sheet = null;
+		state.preview = null;
 		state.segmentation = null;
 		state.plan = null;
 		state.detection = null;
@@ -626,8 +642,51 @@ function makeStepTrail() {
 	The sheet, and what we made of it
 -------------------------------------------------------- */
 
+/** Drops the theme subscription, if one is open. */
+function stopWatchingTheme() {
+	if (stopThemeWatch) stopThemeWatch();
+	stopThemeWatch = null;
+}
+
 /**
- * The uploaded picture, with the rows we found drawn over it.
+ * Paints the sheet we read onto the preview canvas.
+ *
+ * The plane arrives as coverage in the alpha channel with the colour left
+ * black, and the two fills below put the theme's ink and paper through it.
+ * Doing it this way rather than compositing the colours in JavaScript is
+ * what lets getCanvasColors keep handing back plain CSS colour strings -
+ * the canvas parses them, so nothing here has to know whether a token
+ * resolved to a hex, an rgb() or an oklch().
+ *
+ * @param {HTMLCanvasElement} canvas
+ */
+function paintSheet(canvas) {
+	const plane = state?.preview;
+	const context = canvas?.getContext?.('2d');
+	if (!context || !plane?.width) return;
+
+	const colors = getCanvasColors();
+	const { width, height } = canvas;
+
+	context.globalCompositeOperation = 'source-over';
+	context.clearRect(0, 0, width, height);
+	context.putImageData(new ImageData(plane.rgba, plane.width, plane.height), 0, 0);
+
+	// The ink, through the coverage that is already there.
+	context.globalCompositeOperation = 'source-in';
+	context.fillStyle = colors.ink;
+	context.fillRect(0, 0, width, height);
+
+	// The paper, behind all of it.
+	context.globalCompositeOperation = 'destination-over';
+	context.fillStyle = colors.bg;
+	context.fillRect(0, 0, width, height);
+
+	context.globalCompositeOperation = 'source-over';
+}
+
+/**
+ * The sheet AS WE READ IT, with the rows we found drawn over it.
  *
  * Showing the sheet back is half of why this step exists: the user is being
  * asked to confirm an interpretation, and they cannot do that against a list
@@ -635,24 +694,46 @@ function makeStepTrail() {
  * each row is, which is the thing that goes wrong on an unusual sheet, and
  * they say it without a word of explanation.
  *
+ * Our reading rather than their file, because the file is not always
+ * something that can be shown: a sheet exported on a transparent ground with
+ * white artwork - the usual output of every vector tool - is INVISIBLE on a
+ * light surface, and that is what the light theme showed. sheet_preview.js
+ * has the rest of it.
+ *
  * @returns {Element}
  */
 function makeSheetPreview() {
 	const block = makeElement({ className: 'specimen__sheet' });
-	if (!state.previewURL || !state.sheet) return block;
+	if (!state.preview?.width || !state.sheet) return block;
 
 	const frame = makeElement({ className: 'specimen__sheet-frame' });
-	frame.appendChild(
-		makeElement({
-			tag: 'img',
-			className: 'specimen__sheet-image',
-			attributes: { src: state.previewURL, alt: 'The specimen sheet you chose' },
-		})
-	);
+	const canvas = makeElement({
+		tag: 'canvas',
+		className: 'specimen__sheet-image',
+		attributes: {
+			width: `${state.preview.width}`,
+			height: `${state.preview.height}`,
+			role: 'img',
+			'aria-label': `The sheet you chose, as we read it: ${state.sheet.width} by ${state.sheet.height} pixels`,
+		},
+	});
+	frame.appendChild(canvas);
+	paintSheet(canvas);
+
+	/*
+		The ink and the paper come from the theme, so the sheet has to be
+		repainted when the theme changes under an open dialog. One watch at a
+		time: this view is rebuilt by every redraw, and a listener per build
+		would end the session with several hundred of them all drawing into
+		canvases that were thrown away.
+	*/
+	stopWatchingTheme();
+	stopThemeWatch = onThemeChange(() => paintSheet(canvas));
 
 	// Percentages, so the overlay follows the image at whatever size it is
 	// drawn - the frame is fluid and the sheet can be any proportion.
 	const rows = state.segmentation?.rows ?? [];
+	const reading = describeReading(state.sheet);
 	rows.forEach((row, index) => {
 		const top = (row.y0 / state.sheet.height) * 100;
 		const height = ((row.y1 - row.y0 + 1) / state.sheet.height) * 100;
@@ -675,7 +756,9 @@ function makeSheetPreview() {
 		makeElement({
 			tag: 'span',
 			className: 'specimen__sheet-caption',
-			content: `${state.file?.name || 'Sheet'} — ${state.sheet.width} × ${state.sheet.height}, ${rows.length} row${rows.length === 1 ? '' : 's'}`,
+			content: `${state.file?.name || 'Sheet'} — ${state.sheet.width} × ${state.sheet.height}, ${
+				rows.length
+			} row${rows.length === 1 ? '' : 's'}${reading ? `, ${reading}` : ''}`,
 		})
 	);
 	return block;
@@ -694,7 +777,8 @@ function makeDetectedBlock() {
 		makeElement({
 			tag: 'span',
 			className: 'specimen__detected-name',
-			content: detection?.status === DETECTED ? detection.template.name : 'We could not name this layout',
+			content:
+				detection?.status === DETECTED ? detection.template.name : 'We could not name this layout',
 		})
 	);
 	text.appendChild(
@@ -982,20 +1066,25 @@ function makeThumbnail(planned) {
 	const width = planned.advanceWidth || face.upm;
 
 	const path = planned.bezierData
-		.map((contour) =>
-			contour
-				.map((bezier, index) => {
-					const c1 = bezier[1] || bezier[0];
-					const c2 = bezier[2] || bezier[3];
-					const move = index === 0 ? `M${round(bezier[0].x)},${round(-bezier[0].y)}` : '';
-					return `${move}C${round(c1.x)},${round(-c1.y)} ${round(c2.x)},${round(-c2.y)} ${round(bezier[3].x)},${round(-bezier[3].y)}`;
-				})
-				.join('') + 'Z'
+		.map(
+			(contour) =>
+				contour
+					.map((bezier, index) => {
+						const c1 = bezier[1] || bezier[0];
+						const c2 = bezier[2] || bezier[3];
+						const move = index === 0 ? `M${round(bezier[0].x)},${round(-bezier[0].y)}` : '';
+						return `${move}C${round(c1.x)},${round(-c1.y)} ${round(c2.x)},${round(-c2.y)} ${round(
+							bezier[3].x
+						)},${round(-bezier[3].y)}`;
+					})
+					.join('') + 'Z'
 		)
 		.join(' ');
 
 	box.innerHTML =
-		`<svg viewBox="0 ${-top} ${width} ${top - bottom}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">` +
+		`<svg viewBox="0 ${-top} ${width} ${
+			top - bottom
+		}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">` +
 		`<path d="${path}" fill="currentColor" fill-rule="nonzero"/></svg>`;
 	return box;
 }
@@ -1048,7 +1137,9 @@ function doImport() {
 		something to play. In reading order, which is the order the plan is in,
 		because that is the order they were on the sheet.
 	*/
-	announceArrival(state.plan.entries.filter((entry) => only.includes(entry.character)).map((entry) => entry.id));
+	announceArrival(
+		state.plan.entries.filter((entry) => only.includes(entry.character)).map((entry) => entry.id)
+	);
 
 	const result = importSheet(state.plan, {
 		project: editor.project,
@@ -1057,6 +1148,10 @@ function doImport() {
 		only,
 	});
 
+	// Not through tryClose - that would ask about the work it is committing.
+	// The watch still has to go, or every import leaves a listener holding a
+	// canvas that is no longer in the document and the plane it was painted from.
+	stopWatchingTheme();
 	state = null;
 	closeEveryTypeOfDialog();
 	if (onImported) onImported({ editor, result });
