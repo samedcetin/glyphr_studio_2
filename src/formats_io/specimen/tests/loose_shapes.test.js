@@ -42,6 +42,10 @@ function fakeProject() {
 			this.components[key] = item;
 			return item;
 		}),
+		getItem(id) {
+			return this.components[id] || this.glyphs?.[id] || false;
+		},
+		glyphs: {},
 	};
 }
 
@@ -157,5 +161,60 @@ describe('the loose flag across a save', () => {
 		plain.shapes = [triangle()];
 		plain.objType = 'Component';
 		expect('fromSpecimenSheet' in plain.save()).toBe(false);
+	});
+});
+
+describe('usedIn, when shapes move between items', () => {
+	/*
+		The bookkeeping that decides whether a component counts as PLACED, and
+		therefore whether the loose panel will show it. Getting it wrong here
+		reproduces the reported bug by a second route: a component whose only
+		instance was in the overwritten character goes on claiming it is used
+		there, so it is hidden from the panel for good.
+	*/
+	it('follows the shapes into the component they were rescued into', () => {
+		const project = fakeProject();
+		const root = glyphWith([triangle()]);
+		root.id = 'comp-9';
+		root.usedIn = ['glyph-0x41'];
+		project.components['comp-9'] = root;
+
+		const target = glyphWith([{ link: 'comp-9' }]);
+		target.id = 'glyph-0x41';
+
+		const kept = keepWhatWasThere(project, target, 'Latin Capital Letter A');
+
+		expect(root.usedIn).toEqual([kept.id]);
+		expect(root.usedIn).not.toContain('glyph-0x41');
+	});
+
+	it('does not touch anything when the shapes are plain outlines', () => {
+		// Every shape a specimen sheet traces is a raw path, so the ordinary
+		// case must not go near the project looking for links.
+		const project = fakeProject();
+		const root = glyphWith([triangle()]);
+		root.id = 'comp-9';
+		root.usedIn = ['glyph-0x41'];
+		project.components['comp-9'] = root;
+
+		const target = glyphWith([triangle()]);
+		target.id = 'glyph-0x41';
+		keepWhatWasThere(project, target, 'A');
+
+		expect(root.usedIn).toEqual(['glyph-0x41']);
+	});
+
+	it('adds one entry for a component instanced twice', () => {
+		const project = fakeProject();
+		const root = glyphWith([triangle()]);
+		root.id = 'comp-9';
+		root.usedIn = ['glyph-0x41'];
+		project.components['comp-9'] = root;
+
+		const target = glyphWith([{ link: 'comp-9' }, { link: 'comp-9' }]);
+		target.id = 'glyph-0x41';
+		const kept = keepWhatWasThere(project, target, 'A');
+
+		expect(root.usedIn).toEqual([kept.id]);
 	});
 });

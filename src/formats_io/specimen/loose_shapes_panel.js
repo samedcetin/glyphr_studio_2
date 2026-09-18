@@ -23,6 +23,7 @@ import {
 import { makeAllItemTypeChooserContent } from '../../panels/item_chooser.js';
 import { getUnicodeName } from '../../lib/unicode/unicode_names.js';
 import { looseSheetShapes } from './leftovers.js';
+import { addLinkToUsedIn, removeLinkFromUsedIn } from '../../project_editor/cross_item_actions.js';
 
 /**
  * The card, or nothing at all when there is nothing loose.
@@ -309,6 +310,40 @@ function unicodeNameFor(itemID) {
 }
 
 /**
+ * Re-points the usedIn bookkeeping after shapes move from one item to another.
+ *
+ * usedIn is the project's record of where a component has been placed, and it
+ * is what isPlaced() - and therefore the loose panel - reads. Moving shapes
+ * between items without maintaining it produces EXACTLY the bug this file was
+ * opened to fix, by a second route: a component whose only instance lived in
+ * the character that just got overwritten still says it is used there, so it
+ * counts as placed and never comes back to the panel, while the character it
+ * names no longer contains it.
+ *
+ * Raw paths carry no link and are skipped, which is every shape a specimen
+ * sheet traces - so on the ordinary path this does nothing at all. It is the
+ * character someone had already built out of components that needs it.
+ *
+ * @param {Object} project
+ * @param {Array} shapes - the shapes in their new home
+ * @param {String} fromID - the item they left, or empty to only add
+ * @param {String} toID - the item they arrived in, or empty to only remove
+ */
+function moveLinks(project, shapes, fromID, toID) {
+	// Deduped: two instances of one component must not push two usedIn entries.
+	const links = new Set();
+	for (const shape of shapes ?? []) {
+		if (shape?.link) links.add(shape.link);
+	}
+
+	for (const link of links) {
+		const root = project.getItem(link);
+		if (!root) continue;
+		if (fromID) removeLinkFromUsedIn(root, fromID);
+		if (toID && !root.usedIn.includes(toID)) addLinkToUsedIn(root, toID);
+	}
+}
+/**
  * Puts whatever the character was already holding back in the panel.
  *
  * Assigning is a SWAP, not an overwrite. Before this, dropping a shape on a
@@ -352,7 +387,11 @@ export function keepWhatWasThere(project, target, targetName) {
 
 	// No id: the project numbers components itself, and Component is the one
 	// type addItemByType adds without touching a range count or the history.
-	return project.addItemByType(kept, 'Component');
+	const added = project.addItemByType(kept, 'Component');
+
+	// After the add, because the links have to be pointed at an id that exists.
+	moveLinks(project, added.shapes, target.id, added.id);
+	return added;
 }
 
 /**
@@ -412,6 +451,10 @@ function assignShapeToItem(id, itemID) {
 	target.shapes = component.shapes;
 	if (component.advanceWidth) target.advanceWidth = component.advanceWidth;
 	target.changed();
+
+	// The other direction: anything the shape itself was built from now lives
+	// in the character rather than in the component that is about to go.
+	moveLinks(project, target.shapes, id, itemID);
 	delete project.components[id];
 
 	editor.history.addWholeProjectChangePostState();
