@@ -161,7 +161,7 @@ let toastTimer = 0;
  * @param {Number} duration - how long to show the message (milliseconds)
  * @param {Boolean =} fancy - mark it with the accent, for a change of state
  */
-export function showToast(message = '0_o', duration = 3000, fancy = false) {
+export function showToast(message = '0_o', duration = 3000, fancy = false, placement = 'top') {
 	// log(`showToast`, 'start');
 	// log(`message: ${message}`);
 	// log(`duration: ${duration}`);scaleItems
@@ -196,6 +196,21 @@ export function showToast(message = '0_o', duration = 3000, fancy = false) {
 	*/
 	if (fancy) element.setAttribute('fancy', '');
 	else element.removeAttribute('fancy');
+
+	/*
+		Where it comes from. Top by default, because that is the corner of the
+		window nothing else occupies - see the note in dialogs.css.
+
+		A caller asks for the bottom when the thing it is reporting happened at
+		the bottom of the screen. The loose-shapes panel sits low on the right,
+		and a notice about a shape just assigned from it arrived above the
+		fold, outside the gaze of the person who had just dropped it.
+
+		Set every time, for the same reason `fancy` is: the element is reused,
+		so one bottom toast would otherwise move every toast after it.
+	*/
+	if (placement === 'bottom') element.setAttribute('placement', 'bottom');
+	else element.removeAttribute('placement');
 
 	element.innerHTML = message;
 	element.style.display = 'block';

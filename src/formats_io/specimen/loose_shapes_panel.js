@@ -315,7 +315,7 @@ function assignShapeToItem(id, itemID) {
 
 	if (!target) target = project.addItemByType(new Glyph({ id: itemID }), 'Glyph', itemID);
 	if (!target) {
-		showToast('That character could not be created.');
+		showToast('That character could not be created.', 3000, false, 'bottom');
 		return;
 	}
 
@@ -331,5 +331,7 @@ function assignShapeToItem(id, itemID) {
 	closeEveryTypeOfDialog();
 	editor.navigate();
 	restoreScroll(scroll);
-	showToast(`Assigned to ${targetName}`);
+	// Bottom: the panel this was dragged from is low on the right, and a
+	// notice at the top of the window is outside where the eye already is.
+	showToast(`Assigned to ${targetName}`, 3000, false, 'bottom');
 }

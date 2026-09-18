@@ -86,6 +86,26 @@ dialog {
 }
 
 /*
+	From the bottom, when the caller asks.
+
+	The top is the default because nothing else lives there. But a notice about
+	something that happened at the bottom of the screen is missed there - the
+	loose-shapes panel on the Overview sits low on the right, and a message
+	about a shape just assigned from it appeared above where the person was
+	looking.
+
+	--sp-10 + --sp-5, mirroring the top offset, so the two placements sit the
+	same distance from their own edge. Callers should note that the edit
+	canvas keeps its toolbar bottom centre: this placement is for pages that
+	do not have one.
+*/
+#toast[placement='bottom'] {
+	top: auto;
+	bottom: calc(var(--sp-10) + var(--sp-5));
+	animation: var(--dur-slow) var(--ease-out) toast-in-bottom;
+}
+
+/*
 	Down and settling, not just fading in. The toast appears without being
 	asked for, so it needs a moment of motion to be noticed - and --ease-out
 	lands it rather than stopping it dead.
@@ -94,6 +114,20 @@ dialog {
 	from {
 		opacity: 0;
 		transform: translateY(-10px) scale(0.96);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* The same arrival, rising rather than dropping, so it reads as coming from
+	the edge it is anchored to. */
+@keyframes toast-in-bottom {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.96);
 	}
 
 	to {

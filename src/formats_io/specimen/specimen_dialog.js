@@ -761,7 +761,7 @@ function doImport() {
 	if (result.written) parts.push(`${result.written} added`);
 	if (result.replaced) parts.push(`${result.replaced} replaced`);
 	if (result.skipped) parts.push(`${result.skipped} could not be read`);
-	showToast(parts.join(', ') || 'Nothing was imported');
+	showToast(parts.join(', ') || 'Nothing was imported', 3000, false, 'bottom');
 }
 
 /* --------------------------------------------------------
