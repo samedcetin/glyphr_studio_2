@@ -223,6 +223,47 @@ function chooseCharacterFor(id, component) {
 }
 
 /**
+	The scrollers on this page that a rebuild must not move.
+
+	Assigning a shape ends in editor.navigate(), which rebuilds the whole
+	Overview - so the coverage grid is a new element and starts at the top.
+	Measured: scrolled to 900, dropped a shape, came back at 0. Someone working
+	down a long range is put back at the beginning after every single
+	assignment, which is the one thing that makes the feature tedious to use.
+*/
+const KEEP_SCROLL = ['.item-chooser__tile-grid', '.overview__loose-grid'];
+
+/**
+ * Where each of them is scrolled to right now.
+ * @returns {Array} { selector, top }
+ */
+function rememberScroll() {
+	return KEEP_SCROLL.map((selector) => ({
+		selector,
+		top: document.querySelector(selector)?.scrollTop ?? 0,
+	}));
+}
+
+/**
+ * Puts them back, once the page has been rebuilt.
+ *
+ * On the next frame, because the elements these selectors find after a
+ * navigate are not the ones they found before it - and the new ones do not
+ * exist until the rebuild has run.
+ *
+ * @param {Array} saved - from rememberScroll
+ */
+function restoreScroll(saved) {
+	requestAnimationFrame(() => {
+		for (const { selector, top } of saved) {
+			if (!top) continue;
+			const element = document.querySelector(selector);
+			if (element) element.scrollTop = top;
+		}
+	});
+}
+
+/**
  * The readable name of a character, from a project item id.
  * @param {String} itemID - such as glyph-0x21
  * @returns {String} the name, or an empty string when there is not one
@@ -285,7 +326,10 @@ function assignShapeToItem(id, itemID) {
 
 	editor.history.addWholeProjectChangePostState();
 
+	// Taken before the rebuild, put back after it. See KEEP_SCROLL.
+	const scroll = rememberScroll();
 	closeEveryTypeOfDialog();
 	editor.navigate();
+	restoreScroll(scroll);
 	showToast(`Assigned to ${targetName}`);
 }
