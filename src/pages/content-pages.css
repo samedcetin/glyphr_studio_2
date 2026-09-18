@@ -1056,8 +1056,23 @@ code {
 .overview__loose {
 	grid-column: 2;
 	display: grid;
+	grid-template-rows: min-content min-content minmax(0, 1fr);
 	gap: var(--sp-5);
 	align-content: start;
+	min-height: 0;
+}
+
+/*
+	The rows are declared, and they have to be.
+
+	`grid-row: 1 / -1` on the coverage card counts EXPLICIT grid lines, and with
+	no grid-template-rows there are none - so -1 resolved back to line 1 and the
+	card spanned a single row while the column beside it had two. Measured: the
+	rows came out 297px and 659px and the coverage card stood at 297, which is
+	what "the coverage looks squashed" was.
+*/
+.overview__columns:has(.overview__loose) {
+	grid-template-rows: min-content minmax(0, 1fr);
 }
 
 .overview__columns:has(.overview__loose) .overview__coverage {
@@ -1069,8 +1084,26 @@ code {
 		grid-column: 1;
 	}
 
+	.overview__columns:has(.overview__loose) {
+		grid-template-rows: none;
+	}
+
 	.overview__columns:has(.overview__loose) .overview__coverage {
 		grid-row: auto;
+	}
+
+	/*
+		Stacked, the card takes the height it needs and the page scrolls. Its
+		own scroller belongs to the two-column layout, where it has a column to
+		fill; here it would only compete with the coverage card for a height
+		that is already tight.
+	*/
+	.overview__loose {
+		grid-template-rows: none;
+	}
+
+	.overview__loose-grid {
+		overflow-y: visible;
 	}
 }
 
@@ -1081,15 +1114,33 @@ code {
 	text-wrap: pretty;
 }
 
+/*
+	Scrolls inside itself, the way the coverage grid does. A sheet can leave
+	twenty-six shapes loose - the reference one does - and at four to a row
+	that is 659px of card, measured, which pushes everything under it off the
+	screen to list something the user has not dealt with yet.
+*/
 .overview__loose-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+	/* So a short list sits at the top rather than spreading down the card. */
+	align-content: start;
 	gap: var(--sp-3);
+	min-height: 0;
+	overflow-y: auto;
 }
 
+/*
+	The min-height is load-bearing, not padding-by-another-name. Without it the
+	tile came out 49px against the 72 its own rows add up to - the thumbnail's
+	44, the label's 12, the gap and the padding - and the label was clipped out
+	from under the shape. 44 + 12 + --sp-2 + --sp-3 twice, written as the sum so
+	it follows if any of them moves.
+*/
 .overview__loose-tile {
 	display: grid;
 	grid-template-rows: 44px min-content;
+	min-height: calc(44px + 12px + var(--sp-2) + var(--sp-3) * 2);
 	justify-items: center;
 	gap: var(--sp-2);
 	padding: var(--sp-3) var(--sp-2);
