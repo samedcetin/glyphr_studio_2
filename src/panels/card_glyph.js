@@ -23,8 +23,13 @@ export function makeCard_glyphAttributes(glyph) {
 	let glyphCard = makeElement({
 		tag: 'div',
 		className: 'panel__card',
-		innerHTML: `<h3>${glyph.displayType} ${glyph.ident || ''}</h3>`,
+		innerHTML: `<h3></h3>`,
 	});
+	/* The heading is ours, the name in it is not: displayType and ident both
+	   come off the project file, so they go in as text. */
+	const glyphCardHeading = glyphCard.querySelector('h3');
+	if (glyphCardHeading)
+		glyphCardHeading.textContent = `${glyph.displayType} ${glyph.ident || ''}`;
 
 	/*
 		The mark is inside the field, so there is no row of label above it -

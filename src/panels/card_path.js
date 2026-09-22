@@ -20,8 +20,10 @@ export function makeCard_pathAttributes(path) {
 	let pathCard = makeElement({
 		tag: 'div',
 		className: 'panel__card',
-		innerHTML: `<h3>Path ${path.ident || ''}</h3>`,
+		innerHTML: `<h3></h3>`,
 	});
+	const pathCardHeading = pathCard.querySelector('h3');
+	if (pathCardHeading) pathCardHeading.textContent = `Path ${path.ident || ''}`;
 
 	// Path name
 	// log(`path.name: ${path.name}`);

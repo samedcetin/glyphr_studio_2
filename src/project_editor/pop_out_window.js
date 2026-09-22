@@ -324,7 +324,7 @@ function showEditLivePreviewDialog() {
 		const preview = editor.livePreviews[i];
 		const option = makeElement({
 			tag: 'option',
-			innerHTML: `${i}: ${preview.displayName}`,
+			content: `${i}: ${preview.displayName}`,
 			attributes: { note: `${preview.fontSize}px` },
 		});
 		option.addEventListener('click', () => {

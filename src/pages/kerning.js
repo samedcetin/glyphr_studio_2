@@ -538,10 +538,7 @@ export function showDeleteSingleLetterPairDialog() {
 
 		if (!found.removable.length && !found.blocked.length) {
 			resultsArea.appendChild(
-				makeElement({
-					className: 'dialog-empty',
-					innerHTML: `No kern group contains <code>${pair}</code>.`,
-				})
+				makeEmptyPairNote(pair)
 			);
 			return;
 		}
@@ -572,16 +569,7 @@ export function showDeleteSingleLetterPairDialog() {
 
 		if (found.blocked.length) {
 			resultsArea.appendChild(
-				makeElement({
-					className: 'dialog-note',
-					innerHTML: `${
-						found.blocked.length === 1 ? 'One group has' : `${found.blocked.length} groups have`
-					} more than one character on both sides, so
-						<code>${pair}</code> cannot be taken out on its own — removing a character would
-						change every pair it makes. Edit ${
-							found.blocked.length === 1 ? 'it' : 'them'
-						} by hand instead: ${found.blocked.join(', ')}.`,
-				})
+				makeBlockedPairNote(pair, found.blocked)
 			);
 		}
 	}
@@ -696,10 +684,7 @@ function searchForLetterPairs() {
 
 	if (!results.length) {
 		resultsArea.appendChild(
-			makeElement({
-				className: 'dialog-empty',
-				innerHTML: `No kern group contains <code>${pair}</code>.`,
-			})
+			makeEmptyPairNote(pair)
 		);
 		return;
 	}
@@ -750,6 +735,48 @@ function searchForLetterPairs() {
 		resultsArea.appendChild(note);
 	}
 	// log(`searchForLetterPairs`, 'end');
+}
+
+/**
+ * The "no group contains this pair" note.
+ *
+ * A letter pair is two characters someone chose, so it is set as text inside
+ * a <code> element of ours rather than interpolated into markup. There were
+ * three of these built by hand and one of them had already been fixed on its
+ * own, which is how the other two survived — hence one helper.
+ * @param {String} pair - the two characters
+ * @returns {Element}
+ */
+function makeEmptyPairNote(pair) {
+	const note = makeElement({ className: 'dialog-empty', innerHTML: `No kern group contains <code></code>.` });
+	const code = note.querySelector('code');
+	if (code) code.textContent = pair;
+	return note;
+}
+
+/**
+ * The "this pair cannot come out on its own" note. Both the pair and the
+ * group names come off the project, so both are set as text.
+ * @param {String} pair - the two characters
+ * @param {Array} blocked - names of the groups that block removal
+ * @returns {Element}
+ */
+function makeBlockedPairNote(pair, blocked) {
+	const note = makeElement({
+		className: 'dialog-note',
+		innerHTML: `${
+			blocked.length === 1 ? 'One group has' : `${blocked.length} groups have`
+		} more than one character on both sides, so
+			<code></code> cannot be taken out on its own — removing a character would
+			change every pair it makes. Edit ${
+				blocked.length === 1 ? 'it' : 'them'
+			} by hand instead: <span class="dialog-note__groups"></span>.`,
+	});
+	const code = note.querySelector('code');
+	if (code) code.textContent = pair;
+	const list = note.querySelector('.dialog-note__groups');
+	if (list) list.textContent = blocked.join(', ');
+	return note;
 }
 
 /**

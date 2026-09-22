@@ -632,14 +632,14 @@ export function makeLinkReferenceRow(itemID) {
 	row.appendChild(
 		makeElement({
 			className: 'item-link__title',
-			innerHTML: `${targetItem?.name || 'ERROR'}`,
+			content: `${targetItem?.name || 'ERROR'}`,
 		})
 	);
 
 	row.appendChild(
 		makeElement({
 			className: 'item-link__subtitle',
-			innerHTML: `${targetItem?.displayType || 'ERROR'}&ensp;|&ensp;${itemID}`,
+			content: `${targetItem?.displayType || 'ERROR'}\u2002|\u2002${itemID}`,
 		})
 	);
 

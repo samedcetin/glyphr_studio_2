@@ -16,8 +16,13 @@ export function makeCard_pathPointAttributes(selectedPoint) {
 	let pathPointCard = makeElement({
 		tag: 'div',
 		className: 'panel__card',
-		innerHTML: `<h3>Path point ${selectedPoint.pointNumber + 1} ${selectedPoint.ident || ''}</h3>`,
+		innerHTML: `<h3></h3>`,
 	});
+	const pathPointHeading = pathPointCard.querySelector('h3');
+	if (pathPointHeading)
+		pathPointHeading.textContent = `Path point ${selectedPoint.pointNumber + 1} ${
+			selectedPoint.ident || ''
+		}`;
 
 	// -- Point -- //
 	// Point x/y

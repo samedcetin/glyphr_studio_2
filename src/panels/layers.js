@@ -171,7 +171,7 @@ export function makePanel_Layers() {
 
 			const title = makeElement({
 				className: 'item-link__title',
-				innerHTML: `${item.name}`,
+				content: `${item.name}`,
 			});
 			title.addEventListener('dblclick', (event) => {
 				event.stopPropagation();
