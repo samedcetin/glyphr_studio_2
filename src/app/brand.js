@@ -35,12 +35,16 @@ export const PRODUCT_SHORT_NAME = 'Glyva';
 export const VENDOR_NAME = 'Blue Rain';
 
 /**
- * Where the app lives.
+ * Where the app's marketing page lives.
  *
- * TODO: not serving yet. Every link that points at the product goes through
- * this constant, so launching is a one-line change here.
+ * Moved from /glyva to /tools/glyva on 2026-09-22; the old path is a permanent
+ * redirect in the site's vercel.json, so an older build still lands correctly.
+ *
+ * TODO: the EDITOR itself is not served yet. This constant is the marketing
+ * page, not the app — every link that points at the product goes through it,
+ * so launching is a one-line change here.
  */
-export const PRODUCT_URL = 'https://bluerain.studio/glyva';
+export const PRODUCT_URL = 'https://bluerain.studio/tools/glyva';
 
 /**
  * Where feedback goes.
