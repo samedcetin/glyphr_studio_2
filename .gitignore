@@ -214,3 +214,6 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+# scratch previews, not part of the app
+src/common/graphics/_tmp_preview/
