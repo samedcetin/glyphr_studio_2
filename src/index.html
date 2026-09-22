@@ -51,6 +51,25 @@
 		-->
 		<title>Glyva</title>
 		<meta name="viewport" content="width=device-width" />
+		<!--
+			NOINDEX, AND THE REASON IS THE PAGE THIS ONE SITS UNDER.
+
+			The editor is served at bluerain.studio/tools/glyva/app, one level
+			below its own landing page at /tools/glyva. That landing page is
+			what should answer a search for Glyva: it carries the title, the
+			description, a FAQPage block and about 930 words in a prerendered
+			<noscript> layer.
+
+			This page carries none of that. Everything here is drawn by the app
+			after it boots, so the only text a crawler can read on it is the GPL
+			notice at the top of this file. Left indexable, it competes with the
+			landing page for the product's own name and offers the reader
+			nothing when it wins.
+
+			`follow` is deliberate: the About screen links back to
+			/tools/glyva, and that link should still count.
+		-->
+		<meta name="robots" content="noindex, follow" />
 		<link rel="icon" href="./common/graphics/glyva-favicon.ico" sizes="any" />
 		<link rel="icon" type="image/svg+xml" href="./common/graphics/glyva-icon.svg" />
 		<link rel="apple-touch-icon" sizes="180x180" href="./common/graphics/glyva-touch-180.png" />
