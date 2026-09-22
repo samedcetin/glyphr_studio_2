@@ -15,8 +15,9 @@
       "purpose": "any"
     }
   ],
-  "start_url": "https://bluerain.studio/glyva/",
+  "start_url": "https://bluerain.studio/tools/glyva/app/",
   "display": "standalone",
   "theme_color": "#0a0a0f",
-  "background_color": "#0a0a0f"
+  "background_color": "#0a0a0f",
+  "scope": "/tools/glyva/app/"
 }

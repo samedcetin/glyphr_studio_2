@@ -9,7 +9,7 @@ npm install
 npm run dev        # Vite dev server on http://localhost:5173, serving ./src
 npm run test:run   # Vitest, once
 npm run lint       # ESLint over ./src
-npm run build      # production build into ./dist, base /app/
+npm run build      # production build into ./dist, base /tools/glyva/app/
 ```
 
 `npm run dev`, `build` and `stage` first rewrite `src/app/app_config.json` (dev mode flag and ship date) through `scripts.js`; the checked-in values are the shipped ones.
@@ -25,3 +25,20 @@ Glyva numbers its own releases from 3.0. The upstream release underneath the cur
 ## License
 
 GPL-3.0-or-later; see `LICENSE-gpl-3.0.txt`. Glyva is a modified version of Glyphr Studio by Matthew LaGrandeur. The years of work underneath this editor are his; contributions to the upstream project belong at [glyphrstudio.com](https://www.glyphrstudio.com).
+
+## Deploying
+
+The editor is served from the marketing site's deployment, at
+`bluerain.studio/tools/glyva/app/`. It is not a separate host: `npm run build`
+writes `./dist` with that base, and those files are copied into the site repo
+at `bluerain_v2/public/tools/glyva/app/`, where Vercel serves them as static
+assets.
+
+So a change here is not live until that copy is refreshed and the site is
+deployed. Two things have to agree and both are easy to forget:
+
+- the `--base` in this repo's `build` script, and
+- the path under `public/` in the site repo, plus its `rewrites` entries in
+  `vercel.json` for `/tools/glyva/app` and `/tools/glyva/app/`.
+
+`start_url` and `scope` in `src/public/manifest.json` carry the same path.
