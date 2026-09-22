@@ -763,7 +763,7 @@ function showEditCharacterRangeDialog(range = false) {
 			/* The punctuation follows a word rather than a chip. Written the
 				short way - chip, comma, chip - every comma and full stop sat
 				against a padded box and read as a space before it. */
-			content:
+			innerHTML:
 				'Three ways to write one: <code>0x4E</code> hexadecimal, <code>U+4E</code> Unicode, or <code>78</code> decimal. All three are Capital&nbsp;N.',
 		})
 	);
@@ -809,7 +809,7 @@ function showEditCharacterRangeDialog(range = false) {
 	info.appendChild(
 		makeElement({
 			className: 'dialog-info__body',
-			content:
+			innerHTML:
 				'A range decides which characters appear on the Characters page and which are written into the exported font. It is a span of code points and nothing else, so ranges may overlap, and one can exist long before you have drawn anything inside it &ndash; which is how you lay out the shape of a font before you start drawing.',
 		})
 	);
@@ -1142,7 +1142,7 @@ function showUnicodeCharacterRangeDialog() {
 		tag: 'button',
 		className: 'dialog-search__clear',
 		attributes: { type: 'button', 'aria-label': 'Clear the search' },
-		content: '&times;',
+		innerHTML: '&times;',
 	});
 	clearSearch.hidden = true;
 	clearSearch.addEventListener('click', () => {
@@ -1259,7 +1259,7 @@ function showUnicodeCharacterRangeDialog() {
 	*/
 	const previewControls = makeElement({
 		className: 'dialog-empty',
-		content:
+		innerHTML:
 			'Control codes have no visible shape.<br>Adding this block turns on <strong>Settings &rsaquo; App &rsaquo; Show non-graphic control characters</strong>, so the slots appear on the Characters page.',
 	});
 	previewControls.hidden = true;

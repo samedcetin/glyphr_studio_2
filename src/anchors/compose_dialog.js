@@ -364,7 +364,7 @@ function makeInfoBlock() {
 	info.appendChild(
 		makeElement({
 			className: 'dialog-info__body',
-			content:
+			innerHTML:
 				'Each character goes in as <b>component instances</b> of the letter and the marks, positioned by the anchors they already carry — so redrawing the <code>a</code> later updates every accent built on it, and moving an anchor moves every mark that attaches to it.',
 		})
 	);

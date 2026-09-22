@@ -71,7 +71,7 @@ export function makeCard_Move() {
 
 	let effect = makeElement({
 		className: 'global-actions__effect-description',
-		content: `Individual Glyphs, Ligatures, and Components will be moved.
+		innerHTML: `Individual Glyphs, Ligatures, and Components will be moved.
 		<br>
 		<strong>Note:</strong> Component Instances that are linked to Items that are also moved will be skipped. If a Component Root and an Item that contains a Component Instance are both moved, the Component Instance would have been moved twice.`,
 	});
@@ -132,13 +132,13 @@ export function makeCard_ScaleVertical() {
 
 	let description = makeElement({
 		className: 'global-actions__description',
-		content: `Given a multiplier, scale all the glyph shapes in the vertical direction. Entering <code>1</code> will result in no change, between zero and one will scale down the height, and above one will increase the height.`,
+		innerHTML: `Given a multiplier, scale all the glyph shapes in the vertical direction. Entering <code>1</code> will result in no change, between zero and one will scale down the height, and above one will increase the height.`,
 	});
 	card.appendChild(description);
 
 	let effect = makeElement({
 		className: 'global-actions__effect-description',
-		content: `Individual Glyphs, Ligatures, and Components will have a new height calculated based on the overall height of the shapes in that glyph (not the ascender or descender values from the font). The new height will be applied, and the shapes will be moved to maintain a common baseline.
+		innerHTML: `Individual Glyphs, Ligatures, and Components will have a new height calculated based on the overall height of the shapes in that glyph (not the ascender or descender values from the font). The new height will be applied, and the shapes will be moved to maintain a common baseline.
 		<br>
 		<strong>Note:</strong> Component Instances that are linked to Items that are also re-sized will be skipped. If a Component Root and an Item that contains a Component Instance are both re-sized, the Component Instance would have been re-sized twice.`,
 	});
@@ -192,13 +192,13 @@ export function makeCard_ScaleHorizontal() {
 
 	let description = makeElement({
 		className: 'global-actions__description',
-		content: `Given a multiplier, scale all the glyph shapes in the horizontal direction. Entering <code>1</code> will result in no change, between zero and one will reduce the width, and above one will increase the width. Optionally scale the advance width of the glyph as well.`,
+		innerHTML: `Given a multiplier, scale all the glyph shapes in the horizontal direction. Entering <code>1</code> will result in no change, between zero and one will reduce the width, and above one will increase the width. Optionally scale the advance width of the glyph as well.`,
 	});
 	card.appendChild(description);
 
 	let effect = makeElement({
 		className: 'global-actions__effect-description',
-		content: `Individual Glyphs, Ligatures, and Components will have a new width calculated based on the overall width of the shapes in that glyph (not the advance width of the glyph). The new width will be applied.
+		innerHTML: `Individual Glyphs, Ligatures, and Components will have a new width calculated based on the overall width of the shapes in that glyph (not the advance width of the glyph). The new width will be applied.
 		<br>
 		<strong>Note:</strong> Component Instances that are linked to Items that are also re-sized will be skipped. If a Component Root and an Item that contains a Component Instance are both re-sized, the Component Instance would have been re-sized twice.`,
 	});
@@ -265,7 +265,7 @@ export function makeCard_Resize() {
 
 	let effect = makeElement({
 		className: 'global-actions__effect-description',
-		content: `Individual Glyphs, Ligatures, and Components will be re-sized.
+		innerHTML: `Individual Glyphs, Ligatures, and Components will be re-sized.
 		<br>
 		<strong>Note:</strong> Component Instances that are linked to Items that are also re-sized will be skipped. If a Component Root and an Item that contains a Component Instance are both re-sized, the Component Instance would have been re-sized twice.`,
 	});
@@ -346,7 +346,7 @@ export function makeCard_Skew() {
 
 	let description = makeElement({
 		className: 'global-actions__description',
-		content: `Skew all paths by a given angle, measured in degrees. The degrees system starts with the
+		innerHTML: `Skew all paths by a given angle, measured in degrees. The degrees system starts with the
 		twelve o'clock / up position as zero, and positive degrees will slant paths to the right, and
 		negative degrees will slant paths to the left.<br><br>This could be a good first step if you
 		are trying to make an italic version of an existing font.`,
@@ -355,7 +355,7 @@ export function makeCard_Skew() {
 
 	let effect = makeElement({
 		className: 'global-actions__effect-description',
-		content: `Individual Glyphs, Ligatures, and Components will have have all of their paths skewed by the given angle.
+		innerHTML: `Individual Glyphs, Ligatures, and Components will have have all of their paths skewed by the given angle.
 		<br>
 		<strong>Note:</strong> Component Instances will <strong>not</strong> be skewed.`,
 	});
@@ -875,7 +875,7 @@ export function makeCard_Diacritics() {
 
 	let description = makeElement({
 		className: 'global-actions__description',
-		content: `The Latin Supplement character range is mostly made up of Latin-based diacritical (or accented) glyphs.  These are basically normal Latin glyphs, with accents.  Since most of the accents exist as stand-alone glyphs themselves in the Basic Latin range, diacritics in the Latin Supplement range are easy to create from merging two existing glyphs.<br><br><b>Please note</b> - The diacritical glyphs that are in the Basic Latin range are usually designed to be stand-alone. Simply combining them with base glyphs is a good start, but work will be needed to make the resulting character look nice. The "Advanced" Diacritical Glyph Generator below takes a little more work up front, but will probably yield better results.`,
+		innerHTML: `The Latin Supplement character range is mostly made up of Latin-based diacritical (or accented) glyphs.  These are basically normal Latin glyphs, with accents.  Since most of the accents exist as stand-alone glyphs themselves in the Basic Latin range, diacritics in the Latin Supplement range are easy to create from merging two existing glyphs.<br><br><b>Please note</b> - The diacritical glyphs that are in the Basic Latin range are usually designed to be stand-alone. Simply combining them with base glyphs is a good start, but work will be needed to make the resulting character look nice. The "Advanced" Diacritical Glyph Generator below takes a little more work up front, but will probably yield better results.`,
 	});
 	card.appendChild(description);
 
@@ -946,7 +946,7 @@ export function makeCard_DiacriticsAdvanced() {
 
 	let description = makeElement({
 		className: 'global-actions__description',
-		content: `The Latin Supplement and Latin Extended A character ranges are mostly made up of Latin-based diacritical glyphs.  There is also a character range called Combining Diacritical Marks <code>0x300</code> to <code>0x36F</code>. This range is designed to be used in combination with base glyphs from other ranges.  This action will combine glyphs from the Basic Latin range with their appropriate counterparts in the Combining Diacritical Marks range to yield the Latin Supplement and Latin Extended A ranges.<br><br><b>Before you begin</b> - Add the Combining Diacritical Marks range to your project, and design them.`,
+		innerHTML: `The Latin Supplement and Latin Extended A character ranges are mostly made up of Latin-based diacritical glyphs.  There is also a character range called Combining Diacritical Marks <code>0x300</code> to <code>0x36F</code>. This range is designed to be used in combination with base glyphs from other ranges.  This action will combine glyphs from the Basic Latin range with their appropriate counterparts in the Combining Diacritical Marks range to yield the Latin Supplement and Latin Extended A ranges.<br><br><b>Before you begin</b> - Add the Combining Diacritical Marks range to your project, and design them.`,
 	});
 	card.appendChild(description);
 

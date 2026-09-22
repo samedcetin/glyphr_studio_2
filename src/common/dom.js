@@ -4,7 +4,10 @@
  * @param {String=} args.tag - HTML element to create
  * @param {String=} args.className - class to add to the element
  * @param {String=} args.id - id to add to the element
- * @param {String=} args.content - If this is a text node, what text to add
+ * @param {String=} args.content - Text to add. Set as textContent, so any
+ *   markup in it is shown literally rather than parsed. Untrusted values —
+ *   anything out of a font file, a project file, a file name or a search box —
+ *   belong here and NOT in innerHTML.
  * @param {String=} args.title - title attribute for hover tooltips
  * @param {Boolean=} args.tabIndex - make this elem a tab stop
  * @param {Object=} args.attributes - key/value pairs for attr/values
@@ -46,7 +49,19 @@ export function makeElement({
 
 	if (id) newElement.setAttribute('id', id);
 
-	if (content) newElement.innerHTML = content;
+	/*
+		TEXT, NOT MARKUP. This read `newElement.innerHTML = content` while the
+		parameter was documented as text, so 275 call sites looked like they were
+		setting text and were parsing HTML. Several carried values straight out
+		of an imported font's name table, an uploaded file's name and a search
+		box; an <img onerror> in a font's family name ran as script on this
+		origin. innerHTML blocks <script> but not event-handler attributes, so
+		"no <script> tag" was never the protection it looked like.
+
+		Callers that genuinely need markup pass `innerHTML` instead — there were
+		28 of them and they were all converted with this change.
+	*/
+	if (content) newElement.textContent = content;
 
 	if (title) newElement.setAttribute('title', title);
 

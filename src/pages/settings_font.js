@@ -120,7 +120,7 @@ function showPanoseBuilderDialog() {
 	const summaryCaption = makeElement({
 		tag: 'span',
 		className: 'dialog-form__summary-text',
-		content: 'Saved to Settings &rsaquo; Font as Panose-1',
+		innerHTML: 'Saved to Settings &rsaquo; Font as Panose-1',
 	});
 	addAsChildren(summary, [summaryValue, summaryCaption]);
 
@@ -149,7 +149,7 @@ function showPanoseBuilderDialog() {
 
 	const noRows = makeElement({
 		className: 'dialog-empty',
-		content:
+		innerHTML:
 			'<strong>Any</strong> and <strong>No Fit</strong> are complete answers on their own.<br>The nine digits below the family kind carry no meaning for them.',
 	});
 
@@ -161,7 +161,7 @@ function showPanoseBuilderDialog() {
 	info.appendChild(
 		makeElement({
 			className: 'dialog-info__body',
-			content:
+			innerHTML:
 				'A ten digit classification of a typeface&rsquo;s shape, used by systems picking a substitute font. Each position asks one question, and the answers depend on the family kind. <a href="https://monotype.github.io/panose/pan1.htm" target="_blank">Monotype&rsquo;s reference</a> explains every digit.',
 		})
 	);

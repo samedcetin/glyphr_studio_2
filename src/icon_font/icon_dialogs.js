@@ -414,7 +414,7 @@ function makeInfoBlock() {
 	info.appendChild(
 		makeElement({
 			className: 'dialog-info__body',
-			content:
+			innerHTML:
 				'The Private Use Area is the part of Unicode that will never be assigned a meaning, which is where every icon font lives — nothing else can ever claim the code point your icon is on. Icons are named after their files, and <b>Export icon names</b> writes those names out beside the font, so your game refers to <code>heart</code> rather than <code>U+E000</code>.',
 		})
 	);
@@ -435,7 +435,7 @@ export function showIconMapDialog() {
 		content.appendChild(
 			makeElement({
 				className: 'dialog-empty',
-				content:
+				innerHTML:
 					'No icons found in the Private Use Area.<br>Import some SVGs first, or give the glyphs there names — an icon with no name has nothing to export.',
 			})
 		);
@@ -488,7 +488,7 @@ export function showIconMapDialog() {
 		info.appendChild(
 			makeElement({
 				className: 'dialog-info__body',
-				content:
+				innerHTML:
 					'This is the file that keeps <code>U+E000</code> out of your game’s source. JSON for code, CSS for a web build’s <code>::before</code> rules, the text table for anyone reading.',
 			})
 		);

@@ -737,14 +737,17 @@ function searchForLetterPairs() {
 		for anything - advice about a situation you could not yet be in.
 	*/
 	if (results.length > 1) {
-		resultsArea.appendChild(
-			makeElement({
-				className: 'dialog-note',
-				innerHTML: `More than one group covers <code>${pair}</code>, so which value is
-					used may not be the one you expect. It is worth leaving the pair in only one
-					of them.`,
-			})
-		);
+		/* The <code> wrapper is ours; what goes inside it is characters out of
+		   the project, so it is set as text. */
+		const note = makeElement({
+			className: 'dialog-note',
+			innerHTML: `More than one group covers <code></code>, so which value is
+				used may not be the one you expect. It is worth leaving the pair in only one
+				of them.`,
+		});
+		const pairCode = note.querySelector('code');
+		if (pairCode) pairCode.textContent = pair;
+		resultsArea.appendChild(note);
 	}
 	// log(`searchForLetterPairs`, 'end');
 }

@@ -186,8 +186,14 @@ export function makeOneSettingsRow(groupName, propertyName, callback, inputFirst
 	}
 
 	if (settingType === 'Read only') {
+		/*
+			content, not innerHTML: the project ID is read-only to the UI but not
+			to the file. A .gs2 keeps whatever id it arrives with (see
+			glyphr_studio_project.js, "Project ID"), so this value is as
+			untrusted as anything else that file carries.
+		*/
 		input = makeElement({
-			innerHTML: settingValue,
+			content: settingValue,
 			className: 'settings_read-only-value',
 		});
 	}

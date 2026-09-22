@@ -62,7 +62,7 @@ export class OptionChooser extends HTMLElement {
 			className: 'downArrow',
 			/* The same chevron the breadcrumb and the toolbar draw, on
 				currentColor so it takes the control's state with it. */
-			content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+			innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10l4-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 			attributes: { tabIndex: -1 },
 		});
 		// @ts-expect-error 'property does exist'

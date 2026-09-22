@@ -464,7 +464,7 @@ function showFilterDialog() {
 	*/
 	const empty = makeElement({
 		className: 'dialog-empty',
-		content:
+		innerHTML:
 			'No character ranges are enabled in this project.<br>Enable one on Settings &rsaquo; Project, then come back.',
 	});
 

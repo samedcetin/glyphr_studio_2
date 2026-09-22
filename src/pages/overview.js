@@ -655,12 +655,18 @@ function makeContinueEditing() {
 		})
 	);
 
+	/*
+		The arrow is markup and the name is not. An item name is whatever the
+		project file says it is, or whatever an imported icon set named it, so
+		it goes in as a text node rather than through the HTML parser.
+	*/
 	const open = makeElement({
 		tag: 'button',
 		className: 'studio-link',
 		attributes: { type: 'button' },
-		innerHTML: `Open ${editor.project.getItemName(entry.itemID, true)} <span class="studio-link-arrow">&rarr;</span>`,
+		innerHTML: `<span class="studio-link-arrow">&rarr;</span>`,
 	});
+	open.prepend(`Open ${editor.project.getItemName(entry.itemID, true)} `);
 	open.addEventListener('click', () => openItem(entry.itemID));
 	detail.appendChild(open);
 

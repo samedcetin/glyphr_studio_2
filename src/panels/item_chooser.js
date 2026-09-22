@@ -500,7 +500,7 @@ function makeCharacterChooserTileGrid(editor = getCurrentProjectEditor(), compac
 		tileGrid.appendChild(
 			makeElement({
 				tag: 'i',
-				content: `No characters in this range.<br><br>If this is a range of Control Characters, make sure they are enabled in: Settings > App > Show non-graphic control characters.`,
+				innerHTML: `No characters in this range.<br><br>If this is a range of Control Characters, make sure they are enabled in: Settings > App > Show non-graphic control characters.`,
 			})
 		);
 	}

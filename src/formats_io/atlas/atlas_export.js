@@ -589,7 +589,7 @@ export function showAtlasExportDialog() {
 		content.appendChild(
 			makeElement({
 				className: 'dialog-note',
-				content: `This project is a <b>${pixelMode.pixelsPerEm}px pixel font</b>, so the settings below start where they should: one texel per pixel, the least padding the packer allows, and plain coverage.`,
+				innerHTML: `This project is a <b>${pixelMode.pixelsPerEm}px pixel font</b>, so the settings below start where they should: one texel per pixel, the least padding the packer allows, and plain coverage.`,
 			})
 		);
 	}
@@ -799,7 +799,7 @@ function makeInfoBlock() {
 	info.appendChild(
 		makeElement({
 			className: 'dialog-info__body',
-			content: `An atlas is a PNG of every glyph plus an AngelCode <code>.fnt</code> descriptor saying where each one sits, and a <code>.json</code> sidecar carrying the same metrics in em units. <b>Bitmap</b> is the classic format read by Phaser, LÖVE, Godot, Defold, libGDX, MonoGame and PixiJS — one size, drawn exactly as you see it. <b>MSDF</b> stores distances instead of coverage, so one texture stays sharp at any size and gives a shader room for outline and glow — that is what Unity TextMeshPro and Godot 4 want.`,
+			innerHTML: `An atlas is a PNG of every glyph plus an AngelCode <code>.fnt</code> descriptor saying where each one sits, and a <code>.json</code> sidecar carrying the same metrics in em units. <b>Bitmap</b> is the classic format read by Phaser, LÖVE, Godot, Defold, libGDX, MonoGame and PixiJS — one size, drawn exactly as you see it. <b>MSDF</b> stores distances instead of coverage, so one texture stays sharp at any size and gives a shader room for outline and glow — that is what Unity TextMeshPro and Godot 4 want.`,
 		})
 	);
 	return info;

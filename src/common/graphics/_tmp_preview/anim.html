@@ -1,0 +1,53 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="/common/tokens.css"><link rel="stylesheet" href="/common/resets.css">
+<style>
+ body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--dark-gradient-background);font-family:var(--font-ui)}
+ .splash__brand{display:grid;justify-items:center;gap:var(--sp-6);color:hsl(220,18%,92%)}
+ .splash__mark{display:block;width:160px;height:160px;color:hsl(212,92%,56%);overflow:visible}
+ .splash__name{font-size:var(--fs-2xl);font-weight:var(--fw-semibold);letter-spacing:var(--tracking-tight);line-height:var(--lh-tight)}
+
+ .splash__draw{stroke-dasharray:1;stroke-dashoffset:1;animation:splash-draw var(--d) var(--ease) var(--t) forwards}
+ .splash__pop{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:splash-pop 220ms var(--ease-out) var(--t) forwards}
+ .splash__spur{clip-path:inset(0 0 100% 0);opacity:0;animation:splash-set 320ms var(--ease-out) var(--t) forwards}
+ .splash__path{animation:splash-recede 360ms var(--ease) var(--t) forwards}
+ .splash__name{opacity:0;transform:translateY(6px);animation:splash-rise 280ms var(--ease-out) var(--t) forwards}
+ /* the pen: rides each segment for exactly its drawing window, then hands over */
+ .splash__nib{offset-path:var(--p);offset-rotate:0deg;offset-distance:0%;opacity:0;animation:splash-nib var(--d) var(--ease) var(--t) forwards}
+ @keyframes splash-draw{to{stroke-dashoffset:0}}
+ @keyframes splash-pop{to{transform:scale(1)}}
+ @keyframes splash-set{to{clip-path:inset(0 0 0 0);opacity:1}}
+ @keyframes splash-recede{to{opacity:.4}}
+ @keyframes splash-rise{to{opacity:1;transform:none}}
+ @keyframes splash-nib{0%{opacity:1;offset-distance:0%}99%{opacity:1}100%{opacity:0;offset-distance:100%}}
+ button{position:fixed;top:12px;left:12px}
+</style>
+<div class="splash__brand" id="b">
+<svg class="splash__mark" viewBox="0 0 24 24" role="img" aria-label="Glyva">
+ <g class="splash__path" style="--t:1240ms" fill="none" stroke="currentColor" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round">
+  <path class="splash__draw" style="--d:180ms;--t:120ms" pathLength="1" d="M15.75 3.5H12"/>
+  <path class="splash__draw" style="--d:640ms;--t:300ms" pathLength="1" d="M12 3.5A8.5 8.5 0 0 0 12 20.5"/>
+  <path class="splash__draw" style="--d:320ms;--t:1060ms" pathLength="1" d="M12 10H20.5"/>
+ </g>
+ <g fill="currentColor">
+  <path class="splash__pop" style="--t:0ms" d="M16.965 2H17.535C18.41 2 18.75 2.34 18.75 3.215V3.785C18.75 4.66 18.41 5 17.535 5H16.965C16.09 5 15.75 4.66 15.75 3.785V3.215C15.75 2.34 16.09 2 16.965 2Z"/>
+  <circle class="splash__pop" style="--t:300ms" cx="12" cy="3.5" r="1.4"/>
+  <circle class="splash__pop" style="--t:620ms" cx="3.5" cy="12" r="1.4"/>
+  <circle class="splash__pop" style="--t:940ms" cx="12" cy="20.5" r="1.4"/>
+  <circle class="splash__pop" style="--t:1380ms" cx="20.5" cy="10" r="1.4"/>
+  <path class="splash__spur" style="--t:1300ms" d="M12 10.35C17.6 10.35 20.5 10 20.5 16.8V19.96C20.5 20.35 20.35 20.5 19.96 20.5H17.79C17.4 20.5 17.25 20.35 17.25 19.96V15.735C17.25 13.229 15.534 11.019 13.087 10.473C12.739 10.394 12.375 10.35 12 10.35Z"/>
+ </g>
+ <g class="splash__pen" fill="none" stroke="currentColor" stroke-width=".5">
+  <g class="splash__nib" style="--p:path('M15.75 3.5H12');--d:180ms;--t:120ms"><circle r="1.1"/><circle r=".35" fill="currentColor" stroke="none"/></g>
+  <g class="splash__nib" style="--p:path('M12 3.5A8.5 8.5 0 0 0 12 20.5');--d:640ms;--t:300ms"><circle r="1.1"/><circle r=".35" fill="currentColor" stroke="none"/></g>
+  <g class="splash__nib" style="--p:path('M12 20.5V10');--d:120ms;--t:940ms"><circle r="1.1"/><circle r=".35" fill="currentColor" stroke="none"/></g>
+  <g class="splash__nib" style="--p:path('M12 10H20.5');--d:320ms;--t:1060ms"><circle r="1.1"/><circle r=".35" fill="currentColor" stroke="none"/></g>
+ </g>
+</svg>
+<div class="splash__name" style="--t:1360ms">Glyva</div>
+</div>
+<div id="sheet" style="position:fixed;bottom:12px;left:12px;right:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
+<script>
+function sheet(){const src=document.getElementById("b");const host=document.getElementById("sheet");host.innerHTML="";[60,200,400,600,800,1000,1150,1300,1450,1650].forEach(t=>{const c=src.cloneNode(true);c.removeAttribute("id");c.style.transform="scale(.6)";c.style.transformOrigin="top center";const w=document.createElement("div");w.style.width="110px";w.style.height="150px";w.style.position="relative";w.appendChild(c);const l=document.createElement("div");l.textContent=t+"ms";l.style.cssText="position:absolute;bottom:-14px;left:0;right:0;text-align:center;font:11px ui-monospace;color:#8a919a";w.appendChild(l);host.appendChild(w);requestAnimationFrame(()=>{c.getAnimations({subtree:true}).forEach(a=>{a.pause();a.currentTime=t;});});});}
+</script>
+<button style="left:80px" onclick="sheet()">sheet</button>
+<button onclick="const b=document.getElementById('b');const c=b.cloneNode(true);b.replaceWith(c);c.id='b'">replay</button>
