@@ -5,12 +5,11 @@ import {
 	PRODUCT_NAME,
 	PRODUCT_SOURCE_URL,
 	PRODUCT_URL,
-	UPSTREAM_HELP,
+	/* Only the two the legal notice needs. UPSTREAM_HELP, _RELEASES_URL,
+	   _SOURCE_URL and _VERSION went with the courtesy sections; they are still
+	   exported from brand.js because help.js uses the first one. */
 	UPSTREAM_NAME,
-	UPSTREAM_RELEASES_URL,
-	UPSTREAM_SOURCE_URL,
 	UPSTREAM_URL,
-	UPSTREAM_VERSION,
 	VENDOR_NAME,
 } from '../app/brand.js';
 import { getCurrentProjectEditor, getGlyphrStudioApp } from '../app/main.js';
@@ -243,7 +242,10 @@ function makeVersionInfo() {
 		makeElement({
 			tag: 'div',
 			className: 'about__tagline',
-			content: `A font editor by ${VENDOR_NAME}, built on ${UPSTREAM_NAME}.`,
+			/* The provenance lives on the License tab, where the notice is.
+			   Repeating it in the identity line put the upstream name in the
+			   first thing anyone reads about this app. */
+			content: `A font editor by ${VENDOR_NAME}.`,
 		})
 	);
 	identity.appendChild(identityText);
@@ -278,30 +280,24 @@ function makeVersionInfo() {
 	);
 	content.appendChild(columns);
 
-	content.appendChild(makeElement({ tag: 'div', className: 'studio-rule' }));
+	/*
+		THE UPSTREAM SECTION THAT USED TO SIT HERE IS GONE, and what it was
+		doing is worth writing down so nobody puts it back by accident.
 
-	content.appendChild(
-		makeSection(
-			`Built on ${UPSTREAM_NAME}`,
-			`<p class="about__prose">
-				${PRODUCT_NAME} is a modified version of
-				<a href="${UPSTREAM_URL}" target="_blank">${UPSTREAM_NAME}</a> by Matthew
-				LaGrandeur, released under the GPL. The years of work underneath this
-				editor are his, and the upstream project takes contributions at
-				<a href="${UPSTREAM_URL}" target="_blank">glyphrstudio.com</a> — that is
-				where they belong, not with us.
-			</p>
-			<p class="about__prose">
-				${PRODUCT_NAME} numbers its own releases from 3.0, and this build
-				carries ${UPSTREAM_NAME} ${UPSTREAM_VERSION} underneath. What changed in the
-				upstream versions is written up on the
-				<a href="${UPSTREAM_RELEASES_URL}" target="_blank">${UPSTREAM_NAME} releases</a>
-				page and the
-				<a href="${UPSTREAM_HELP}/about/updates.html" target="_blank">${UPSTREAM_NAME} updates</a>
-				page.
-			</p>`
-		)
-	);
+		It ran three paragraphs on the Version tab: that Glyva is a modified
+		version of Glyphr Studio, that contributions belong upstream, that this
+		build carries 2.10.3 underneath, plus links to their releases and
+		updates pages. All of it was manners, none of it was law. Checked:
+		the repo's LICENSE is plain GPL-3.0 with no section 7 additional terms,
+		there is no NOTICE or AUTHORS file, and upstream ships no per-file
+		copyright headers — so nothing obliged this app to carry the upstream
+		project's NAME anywhere.
+
+		What the licence does oblige is on the License tab, where a legal notice
+		belongs: that this is a modified version and when, the GPL, the absence
+		of warranty, both copyright lines, and the offer of source. That is the
+		floor and it is kept in full.
+	*/
 
 	return content;
 }
@@ -337,23 +333,20 @@ function makeContactInfo() {
 		)
 	);
 
-	content.appendChild(makeElement({ tag: 'div', className: 'studio-rule' }));
+	/*
+		The upstream block that sat here — their help, site and source, under
+		the heading "Glyphr Studio" — is gone. It was a courtesy: the licence
+		notice on the License tab already names the project, and a Contact tab
+		is for reaching US. Its one useful sentence, "questions about Glyva
+		should not go to them", only existed because the block invited people
+		to go there in the first place.
 
-	content.appendChild(
-		makeSection(
-			UPSTREAM_NAME,
-			`<p class="about__prose">
-				The project this editor is built on. Its help still covers most of what
-				is here, and its channels are its own — questions about ${PRODUCT_NAME}
-				should not go to them.
-			</p>` +
-				linkTable([
-					['Help', UPSTREAM_HELP],
-					['Site', UPSTREAM_URL],
-					['Source', UPSTREAM_SOURCE_URL],
-				])
-		)
-	);
+		THE HELP MENU STILL LINKS TO THEIR DOCUMENTATION, deliberately and
+		separately (see src/pages/help.js, and the note in brand.js). That is
+		not sentiment, it is the only documentation this editor has; removing
+		it costs users something real, and it goes when Glyva has help of its
+		own — not before.
+	*/
 
 	return content;
 }
@@ -372,14 +365,43 @@ function makeLicenseInfo() {
 	content.appendChild(
 		makeSection(
 			'This app',
+			/*
+				THE LEGAL FLOOR, AND NOTHING ON TOP OF IT.
+
+				Every clause here is carrying a GPL-3.0 obligation:
+				  · "a modified version of ... in 2026" — §5(a), which wants a
+				    notice that the work was modified AND a date. The date used
+				    to live only in the copyright line; it is in the sentence
+				    now so the notice stands on its own.
+				  · "no warranty" — §0's definition of Appropriate Legal
+				    Notices, which §5(d) requires an interactive interface to
+				    display. IT WAS MISSING ENTIRELY. Removing upstream's name
+				    from the rest of the app and leaving this out would have
+				    traded a courtesy we did not owe for a term we do.
+				  · both copyright lines — §4, keep intact. Matthew LaGrandeur
+				    wrote the large majority of the code still running here.
+				  · the source link — §6.
+
+				The upstream name stays in exactly this one sentence. It is not
+				strictly compelled: §5(a) asks us to say the work was modified,
+				not to name what it was modified from, and there is no section 7
+				attribution clause in this repo. It stays because the provenance
+				is trivially checkable anyway — the repository is named
+				glyphr_studio_2, project files are .gs2 — so cutting the name
+				would conceal nothing and look like an attempt to.
+			*/
 			`<p class="about__prose">
 				${PRODUCT_NAME} is a modified version of
-				<a href="${UPSTREAM_URL}" target="_blank">${UPSTREAM_NAME}</a>, and like it
-				is licensed under a
+				<a href="${UPSTREAM_URL}" target="_blank">${UPSTREAM_NAME}</a>, modified in
+				2026 by ${VENDOR_NAME} and, like the original, licensed under the
 				<a href="${GPL_URL}" target="_blank">GNU General Public License</a>,
 				version 3 or later — a free, open source copyleft license. You are free
 				to use, distribute and modify it as long as this license and its
 				freeness stay intact.
+			</p>
+			<p class="about__prose">
+				It comes with <strong>absolutely no warranty</strong>, to the extent
+				permitted by law.
 			</p>` +
 				linkTable([
 					['Site', PRODUCT_URL],
@@ -397,11 +419,13 @@ function makeLicenseInfo() {
 	content.appendChild(
 		makeSection(
 			'Fonts you create',
+			/* The sentence stands without sending the reader to another
+			   project's help site to finish it. Font licensing is not
+			   something this editor decides, and the upstream page it linked
+			   was general advice rather than anything about Glyva. */
 			`<p class="about__prose">
 				Any font you create belongs 100% to you, and you decide how to license
-				it. There is
-				<a href="${UPSTREAM_HELP}/about/licensing.html" target="_blank">more about
-				licensing on the ${UPSTREAM_NAME} help site</a>.
+				it. Nothing in this editor's licence reaches the fonts you make with it.
 			</p>`
 		)
 	);
