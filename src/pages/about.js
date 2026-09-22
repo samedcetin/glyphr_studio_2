@@ -412,8 +412,24 @@ function makeLicenseInfo() {
 		(library) => `
 		<div class="about__library">
 			<div class="about__library-name">${library.name}</div>
+			<!--
+				NO YEAR. This line used to read "Copyright © 2026, Matthew
+				LaGrandeur" for all four libraries, hardcoded in the template.
+				The author is right — every one of these is from
+				github.com/mattlag — but 2026 came from nowhere: it is the year
+				this page was written, not the year any of these was published,
+				and all four predate it. Their own packages carry no copyright
+				line to copy either; the LICENSE files are the plain GPL text,
+				whose 2007 FSF header belongs to the licence document rather
+				than to the software.
+
+				So the year is gone rather than guessed. Naming the holder and
+				the licence is the part we can stand behind; inventing a date on
+				somebody else's notice is the kind of small inaccuracy this
+				project does not accept anywhere else.
+			-->
 			<div class="about__library-meta">
-				GNU General Public License · Copyright © 2026, Matthew LaGrandeur
+				GNU General Public License · Matthew LaGrandeur
 			</div>
 			<div class="about__library-links">
 				<a href="${library.repo}" target="_blank">GitHub</a>
